@@ -1,0 +1,36 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{C7B6BC88-4378-BF46-9575-E0AE50CA669B}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "MyProject",
+			"Type": "Runtime",
+			"LoadingPhase": "PostDefault",
+			"AdditionalDependencies": [
+				"UMG",
+				"GameplayAbilities",
+				"AIModule"
+			]
+		},
+		{
+			"Name": "MyProjectEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "GameplayAbilities",
+			"Enabled": true
+		},
+		{
+			"Name": "RuntimeTests",
+			"Enabled": true
+		}
+	],
+	"TargetPlatforms": [
+		"WindowsNoEditor"
+	]
+}

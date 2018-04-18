@@ -1,0 +1,507 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#include "MyProject.h"
+#include "SaveLoadClass.h"
+#include "UserInput.h"
+#include "BasePlayer.h"
+#include "WorldObjects/Ally.h"
+#include "WorldObjects/Summon.h"
+#include "SpellSystem/MySpell.h"
+#include "Stats/BaseCharacter.h"
+#include "WorldObjects/BaseHero.h"
+#include "AssetRegistryModule.h"
+#include "ResourceManager.h"
+#include "MyGameInstance.h"
+#include "UI/UserWidgets/LoadingWidget.h"
+
+SaveLoadClass::SaveLoadClass(AUserInput* controllerRef)
+{
+	this->controllerRef = controllerRef;
+}
+
+SaveLoadClass::~SaveLoadClass()
+{
+}
+
+//Data about the save itself
+struct FSaveGameDataInfo
+{
+	FName id; //Player can name a save
+	FDateTime timestamp; //time when game is saved
+
+	friend FArchive&	operator<<(FArchive& ar, FSaveGameDataInfo& saveDataInfo)
+	{
+		ar << saveDataInfo.id;
+		ar << saveDataInfo.timestamp;
+		return ar;
+	}
+};
+
+//LevelData - Will contain information about level state 
+struct FSceneSaveInfo 
+{
+	FName					levelName;
+	TArray<FName>			pickedUpInteractables; //what items have been picked up already? - This may be saved in a struct with all the level data  
+
+	friend FArchive&							operator<<(FArchive& ar, FSceneSaveInfo& saveData)
+	{
+		ar << saveData.levelName;
+		ar << saveData.pickedUpInteractables;
+		return ar;
+	}
+};
+
+struct FCameraSaveInfo 
+{
+	FTransform				cameraTransform;
+	int						cameraSpeed;
+	bool					isCamNavDisabled;
+
+	friend FArchive&							operator<<(FArchive& ar, FCameraSaveInfo& saveData)
+	{
+		ar << saveData.cameraTransform;
+		ar << saveData.cameraSpeed;
+		ar << saveData.isCamNavDisabled;
+		return ar;
+	}
+
+	friend void									operator<<(FMemoryReader& ar, FCameraSaveInfo& saveData)
+	{
+		ar << saveData.cameraTransform;
+		ar << saveData.cameraSpeed;
+		ar << saveData.isCamNavDisabled;
+		
+	}
+};
+
+struct FBasePlayerSaveInfo
+{
+	int					money;
+	TArray<FName>		dialogTopics;
+	int					heroNum;
+	int					summonNum;
+	int					npcNum;
+
+	friend FArchive&							operator<<(FArchive& ar, FBasePlayerSaveInfo& saveData)
+	{
+		ar << saveData.money;
+		ar << saveData.dialogTopics;
+		ar << saveData.heroNum << saveData.summonNum << saveData.npcNum;
+		return ar;
+	}
+};
+
+struct FBaseCharacterSaveInfo
+{
+	TArray<int>				attributes;
+	TArray<int>				skills;
+	TArray<int>				vitals;
+	TArray<int>				currentVitals;
+	TArray<int>				mechanics;
+	int						level;
+
+	friend FArchive&		operator<<(FArchive& ar, FBaseCharacterSaveInfo& saveData)
+	{
+		ar << saveData.attributes;
+		ar << saveData.skills;
+		ar << saveData.vitals;
+		ar << saveData.mechanics;
+		ar << saveData.level;
+		return ar;
+	}
+};
+
+struct FAllySaveInfo 
+{
+	FText name;
+	FTransform actorTransform;
+	FBaseCharacterSaveInfo baseCSaveInfo;
+	//TODO: Save buffs and debuffs
+
+	friend FArchive&							operator<<(FArchive& ar, FAllySaveInfo& saveData)
+	{
+		ar << saveData.name;
+		ar << saveData.actorTransform;
+		ar << saveData.baseCSaveInfo;
+		return ar;
+	}
+};
+
+struct FSummonSaveInfo
+{
+	FAllySaveInfo		allyInfo;
+	int					duration;
+
+	friend FArchive&							operator<<(FArchive& ar, FSummonSaveInfo& saveData)
+	{
+		ar << saveData.allyInfo;
+		ar << saveData.duration;
+		return ar;
+	}
+};
+
+struct FHeroSaveInfo
+{
+	FAllySaveInfo			allyInfo;
+	int						currentExp;
+	int						expToNextLevel; //we could technically recalculate this...
+	int						attPoints;
+	int						skillPoints;
+	TArray<int>				spellIDs;
+
+	friend FArchive&		operator<<(FArchive& ar, FHeroSaveInfo& saveData)
+	{
+		ar << saveData.allyInfo;
+		ar << saveData.currentExp;
+		ar << saveData.expToNextLevel;
+		ar << saveData.attPoints;
+		ar << saveData.skillPoints;
+		ar << saveData.spellIDs;
+		return ar; 
+	}
+};
+
+//TODO: Make struct with collection of level data (data on each level), struct with collection of quest data, struct with collection of trigger information
+
+void SaveLoadClass::SaveLoadSaveData(FArchive& ar, FSaveGameDataInfo& saveGameInfo)
+{
+	//TODO: Let player input id
+	//saveGameData->id = 
+	//Append SaveGameInfo at the beginning of the save file, or read it when being loaded first.  Should be read when startup to show times of all the saves and loads
+	saveGameInfo.timestamp = FDateTime::Now();
+	ar << saveGameInfo;
+}
+
+void SaveLoadClass::SaveLoadControllerData(FArchive& ar, AUserInput& userInput, FSceneSaveInfo& sceneInfo, FCameraSaveInfo& cameraInfo) 
+{
+	//Save Scene
+	sceneInfo.levelName = *UGameplayStatics::GetCurrentLevelName(userInput.GetWorld());
+	//TODO: Save scene interactables
+	//Save Camera
+	cameraInfo.cameraTransform = userInput.GetPawn()->GetTransform();
+	cameraInfo.cameraSpeed = userInput.camMoveSpeedMultiplier;
+	cameraInfo.isCamNavDisabled = userInput.isCamNavDisabled;
+	//Save Player Information
+	ar << sceneInfo << cameraInfo; 
+}
+
+void SaveLoadClass::SaveLoadPlayerData(FArchive& ar, ABasePlayer& basePlayer, FBasePlayerSaveInfo& playerInfo)
+{
+	playerInfo.money = basePlayer.money;
+	playerInfo.heroNum = basePlayer.heroes.Num();
+	playerInfo.summonNum = basePlayer.summons.Num();
+	playerInfo.npcNum = basePlayer.npcs.Num();
+
+	for(auto it = basePlayer.GetDialogTopics().CreateConstIterator(); *it == basePlayer.GetDialogTopics().Last(); ++it)
+	{
+		playerInfo.dialogTopics.Add(it->GetTagName());
+	}
+	ar << playerInfo;
+}
+
+void SaveLoadClass::SaveLoadBaseCharacterData(FArchive& ar, const FBaseCharacter& baseChar, FBaseCharacterSaveInfo& saveInfo)
+{
+	for(FGameplayAttributeData* attData : baseChar.GetAttributes())
+	{
+		saveInfo.attributes.Add(attData->GetBaseValue());
+	}
+	for(Stat stat : baseChar.GetSkills())
+	{
+		saveInfo.skills.Add(stat.GetBaseValue());
+	}
+	for(Vital vital : baseChar.GetVitals())
+	{
+		saveInfo.currentVitals.Add(vital.GetCurrValue());
+		saveInfo.vitals.Add(vital.GetBaseValue());
+	}
+	for(FGameplayAttributeData* attData : baseChar.GetMechanics())
+	{
+		saveInfo.mechanics.Add(attData->GetBaseValue());
+	}
+	saveInfo.level = baseChar.GetLevel();
+	ar << saveInfo;
+}
+
+void SaveLoadClass::SaveLoadAllyData(FArchive& ar, AAlly& ally, FAllySaveInfo& allyInfo)
+{
+	allyInfo.name = ally.GetGameName();
+	allyInfo.actorTransform = ally.GetTransform();
+	
+	//TODO: Move image data to DataAsset so we can reconfigure it when we load character
+
+	SaveLoadBaseCharacterData(ar, ally.GetBaseCharacter(), allyInfo.baseCSaveInfo);
+	ar << allyInfo;
+}
+
+void SaveLoadClass::SaveLoadSummonData(FArchive& ar, ASummon& summon, FSummonSaveInfo& summonInfo)
+{
+	SaveLoadAllyData(ar, summon, summonInfo.allyInfo);
+	summonInfo.duration = summon.timeLeft;
+	ar << summonInfo;
+}
+
+
+void SaveLoadClass::SaveLoadHeroData(FArchive& ar, ABaseHero& hero, FHeroSaveInfo& heroInfo)
+{
+	SaveLoadAllyData(ar, hero, heroInfo.allyInfo);
+	heroInfo.currentExp = hero.GetCurrentExp();
+	heroInfo.expToNextLevel = hero.GetExpToLevel();
+	heroInfo.attPoints = hero.attPoints;
+	heroInfo.skillPoints = hero.skillPoints;
+
+	//save our spells
+	for(TSubclassOf<UMySpell> spell : hero.abilities)
+	{	
+		//TODO: Properly setup namespace and keys for each spell in table
+		if(spell.GetDefaultObject())
+			heroInfo.spellIDs.Add(spell.GetDefaultObject()->spellDefaults.id);
+	}
+
+	//TODO: Save these things as well!
+	//save inventory
+	//save equipment
+	//save spellbook
+
+	ar << heroInfo;
+}
+
+void SaveLoadClass::SetupLoadedData(FSceneSaveInfo& sceneSaveInfo, FCameraSaveInfo& cameraSaveInfo,
+	FBasePlayerSaveInfo& playerSaveInfo, TArray<FAllySaveInfo>& npcSaveInfo, TArray<FHeroSaveInfo>& heroSaveInfo,
+	TArray<FSummonSaveInfo>& summonSaveInfo)
+{
+	SetupController(sceneSaveInfo, cameraSaveInfo);
+	SetupPlayer(playerSaveInfo);
+	SetupAlliedUnits(npcSaveInfo, heroSaveInfo, summonSaveInfo);
+}
+
+void SaveLoadClass::SetupController(FSceneSaveInfo& sceneSaveInfo, FCameraSaveInfo& cameraSaveInfo)
+{
+	if(*UGameplayStatics::GetCurrentLevelName(controllerRef->GetWorld()) != sceneSaveInfo.levelName)
+	{
+		UGameplayStatics::GetStreamingLevel(controllerRef->GetWorld(), sceneSaveInfo.levelName)->OnLevelShown.AddDynamic(this, &SaveLoadClass::test);
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, sceneSaveInfo.levelName.ToString());
+		controllerRef->GetMyGameInstance()->LoadLevelAsync(sceneSaveInfo.levelName.ToString());
+	}
+	FPlatformProcess::Sleep(2.f);
+	GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Red, TEXT("Testing to see if code can be called after level load!"));
+	controllerRef->GetPawn()->SetActorTransform(cameraSaveInfo.cameraTransform);
+	controllerRef->camMoveSpeedMultiplier = cameraSaveInfo.cameraSpeed;
+	controllerRef->isCamNavDisabled = cameraSaveInfo.isCamNavDisabled;
+}
+
+void SaveLoadClass::SetupPlayer(FBasePlayerSaveInfo& playerSaveInfo)
+{
+	for(FName dialogTopic : playerSaveInfo.dialogTopics)
+	{
+		controllerRef->GetBasePlayer()->LearnDialogTopic(FGameplayTag::RequestGameplayTag(dialogTopic));
+	}
+
+	controllerRef->GetBasePlayer()->money = playerSaveInfo.money;
+}
+
+void SaveLoadClass::SetupAlliedUnits(TArray<FAllySaveInfo>& npcSaveInfo, TArray<FHeroSaveInfo>& heroSaveInfo, TArray<FSummonSaveInfo>& summonSaveInfo)
+{
+	FActorSpawnParameters spawnParams;
+
+	for(FAllySaveInfo npc : npcSaveInfo)
+	{
+		if(AAlly* spawnedNPCAlly = ResourceManager::FindTriggerObjectInWorld<AAlly>(*npc.name.ToString()))
+		{
+			spawnedNPCAlly->name = npc.name;
+			spawnedNPCAlly->SetActorTransform(npc.actorTransform);
+			SetupBaseCharacter(spawnedNPCAlly, npc.baseCSaveInfo);	
+		}
+		else
+		{
+			FAssetRegistryModule& assetReg = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+			//TArray<FAssetData> allyAssets; 
+			//checkf(assetReg.Get().GetAssetsByPath("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects",allyAssets,false), TEXT("Cannot find ally assets to load, check validity of installation!"));
+			//allyAssets.FindByPredicate([&](FAssetData assetData){ return *npc.name.ToString() == assetData.AssetName ;})->GetAsset();
+			//!!!---INVARIANT: Names of files of characters must be the same name as their name in the game--!!!
+			FAssetData npcAllyAsset = assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/") + npc.name.ToString()));
+			spawnedNPCAlly = controllerRef->GetWorld()->SpawnActorDeferred<AAlly>(npcAllyAsset.GetAsset()->GetClass(), npc.actorTransform);
+			spawnedNPCAlly->name = npc.name;
+			SetupBaseCharacter(spawnedNPCAlly, npc.baseCSaveInfo);
+			spawnedNPCAlly->FinishSpawning(npc.actorTransform);
+		}
+	}
+
+	for(FHeroSaveInfo hero : heroSaveInfo)
+	{
+		if(ABaseHero* spawnedHero = ResourceManager::FindTriggerObjectInWorld<ABaseHero>(*hero.allyInfo.name.ToString()))
+		{
+			spawnedHero->name = hero.allyInfo.name;
+			spawnedHero->SetActorTransform(hero.allyInfo.actorTransform);
+			SetupBaseCharacter(spawnedHero, hero.allyInfo.baseCSaveInfo);	
+			for(int i = 0; i < hero.spellIDs.Num(); ++i)
+			{
+				spawnedHero->abilities[i] = USpellManager::Get().spellClasses[hero.spellIDs[i]];
+			}
+			spawnedHero->attPoints = hero.attPoints;
+			spawnedHero->SetCurrentExp(hero.currentExp);
+			spawnedHero->expForLevel = hero.expToNextLevel;
+		}
+		else
+		{
+			FAssetRegistryModule& assetReg = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+			FAssetData heroAsset = assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/Allies") + hero.allyInfo.name.ToString()));
+			spawnedHero = controllerRef->GetWorld()->SpawnActorDeferred<ABaseHero>(heroAsset.GetAsset()->GetClass(), hero.allyInfo.actorTransform);
+			spawnedHero->name = hero.allyInfo.name;
+			SetupBaseCharacter(spawnedHero, hero.allyInfo.baseCSaveInfo);
+			for(int i = 0; i < hero.spellIDs.Num(); ++i)
+			{
+				spawnedHero->abilities[i] = USpellManager::Get().spellClasses[hero.spellIDs[i]];
+			}
+			spawnedHero->attPoints = hero.attPoints;
+			spawnedHero->SetCurrentExp(hero.currentExp);
+			spawnedHero->expForLevel = hero.expToNextLevel;
+			spawnedHero->FinishSpawning(hero.allyInfo.actorTransform);}
+	}
+	
+	for(FSummonSaveInfo summon : summonSaveInfo)
+	{
+		if(ASummon* spawnedSummon = ResourceManager::FindTriggerObjectInWorld<ASummon>(*summon.allyInfo.name.ToString()))
+		{
+			spawnedSummon->name = summon.allyInfo.name;
+			spawnedSummon->SetActorTransform(summon.allyInfo.actorTransform);
+			SetupBaseCharacter(spawnedSummon, summon.allyInfo.baseCSaveInfo);	
+			spawnedSummon->timeLeft = summon.duration;
+		}
+		else
+		{
+			FAssetRegistryModule& assetReg = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+			FAssetData summonAsset = assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/") + summon.allyInfo.name.ToString()));
+			spawnedSummon = controllerRef->GetWorld()->SpawnActorDeferred<ASummon>(summonAsset.GetAsset()->GetClass(), summon.allyInfo.actorTransform);
+			spawnedSummon->name = summon.allyInfo.name;
+			spawnedSummon->SetActorTransform(summon.allyInfo.actorTransform);
+			SetupBaseCharacter(spawnedSummon, summon.allyInfo.baseCSaveInfo);	
+			spawnedSummon->timeLeft = summon.duration;
+			spawnedSummon->FinishSpawning(summon.allyInfo.actorTransform);
+		}
+	}
+}
+
+void SaveLoadClass::SetupBaseCharacter(AAlly* spawnedAlly, FBaseCharacterSaveInfo& baseCSaveInfo)
+{
+	for(int i = 0; i < baseCSaveInfo.attributes.Num(); ++i)
+	{
+		spawnedAlly->baseC->GetAttribute(i)->SetBaseValue(baseCSaveInfo.attributes[i]);
+	}
+	for(int i = 0; i < baseCSaveInfo.skills.Num(); ++i)
+	{
+		spawnedAlly->baseC->GetSkill(i)->SetBaseValue(baseCSaveInfo.skills[i]);
+	}
+	for(int i = 0; i < baseCSaveInfo.vitals.Num(); ++i)
+	{
+		spawnedAlly->baseC->GetVital(i)->SetBaseValue(baseCSaveInfo.vitals[i]);
+	}
+	for(int i = 0; i < baseCSaveInfo.mechanics.Num(); ++i)
+	{
+		spawnedAlly->baseC->GetMechanic(i)->SetBaseValue(baseCSaveInfo.mechanics[i]);
+	}
+}
+
+bool SaveLoadClass::SaveToFilePath(const FString& filePath)
+{
+	FBufferArchive binaryArray;
+
+	FSaveGameDataInfo gameSaveSaveData;
+	FSceneSaveInfo sceneSaveData;
+	FCameraSaveInfo cameraSaveData;
+	FBasePlayerSaveInfo playerSaveData;
+	TArray<FAllySaveInfo> npcsSaveData;
+	TArray<FSummonSaveInfo> summonsSaveData;
+	TArray<FHeroSaveInfo> heroesSaveData;
+
+	SaveLoadFunction(binaryArray, gameSaveSaveData, sceneSaveData, cameraSaveData, playerSaveData, npcsSaveData, heroesSaveData, summonsSaveData);
+
+	if(binaryArray.Num() <= 0 ) return false;
+
+	if(FFileHelper::SaveArrayToFile(binaryArray, *filePath))
+	{
+		binaryArray.FlushCache(); 
+		binaryArray.Empty();
+		//Client message from Controller
+		controllerRef->ClientMessage("Save Success!");
+		return true;
+	}
+
+	//Free Binary ARray
+	binaryArray.FlushCache();
+	binaryArray.Empty();
+	controllerRef->ClientMessage("File Could Not Be Saved!");
+	return false;
+}
+
+bool SaveLoadClass::LoadFromFilePath(const FString& filePath)
+{
+	TArray<uint8> binaryArray;
+	if(!FFileHelper::LoadFileToArray(binaryArray, *filePath))
+	{
+		//controllerRef->ClientMessage("FFILEHELPER:>> Invalid File");
+		return false;
+	}
+	//Testing
+	controllerRef->ClientMessage("Loaded file size");
+	controllerRef->ClientMessage(FString::FromInt(binaryArray.Num()));
+
+	if(binaryArray.Num() <= 0) return false;
+	FMemoryReader fromBinary = FMemoryReader(binaryArray, true); //free data after done
+	fromBinary.Seek(0); 
+
+	FSaveGameDataInfo gameSaveSaveData;
+	FSceneSaveInfo sceneSaveData;
+	FCameraSaveInfo cameraSaveData;
+	FBasePlayerSaveInfo playerSaveData;
+	TArray<FAllySaveInfo> npcsSaveData;
+	TArray<FSummonSaveInfo> summonsSaveData;
+	TArray<FHeroSaveInfo> heroesSaveData;
+
+	SaveLoadFunction(fromBinary, gameSaveSaveData, sceneSaveData, cameraSaveData, playerSaveData, npcsSaveData, heroesSaveData, summonsSaveData);
+	SetupLoadedData(sceneSaveData, cameraSaveData, playerSaveData, npcsSaveData, heroesSaveData, summonsSaveData);
+
+	fromBinary.FlushCache();
+	binaryArray.Empty();
+	fromBinary.Close();
+	return true;
+}
+
+void SaveLoadClass::SaveLoadFunction(FArchive& ar, FSaveGameDataInfo& saveGameInfo, FSceneSaveInfo& sceneSaveInfo, FCameraSaveInfo& cameraSaveInfo, FBasePlayerSaveInfo& playerSaveInfo,
+	TArray<FAllySaveInfo>& npcSaveInfo, TArray<FHeroSaveInfo>& heroSaveInfo, TArray<FSummonSaveInfo>& summonSaveInfo)
+{
+	SaveLoadSaveData(ar, saveGameInfo);
+	SaveLoadControllerData(ar,*controllerRef, sceneSaveInfo, cameraSaveInfo);
+	SaveLoadPlayerData(ar, *controllerRef->GetBasePlayer(), playerSaveInfo);
+
+	ABasePlayer* basePlayerRef = controllerRef->GetBasePlayer();
+	//Save data for every hero
+	for(int i = 0; i < playerSaveInfo.heroNum; ++i)
+	{
+		if(basePlayerRef->heroes[i]) //check because heroes is always length 4 and can have some empty entries. 
+									 //Other arrays will be resized as summons and npcs leave and enter so we don't have to check
+		{
+			heroSaveInfo.Emplace();
+			SaveLoadHeroData(ar, *basePlayerRef->heroes[i], heroSaveInfo[i]);
+		}
+	}
+
+	//Save data for every summon
+	for(int i = 0; i < playerSaveInfo.summonNum; ++i)
+	{
+		summonSaveInfo.Emplace();
+		SaveLoadSummonData(ar, *basePlayerRef->summons[i], summonSaveInfo[i]);
+	}
+
+	//Save data for every NPC
+	for(int i = 0; i < playerSaveInfo.npcNum; ++i)
+	{
+		npcSaveInfo.Emplace();
+		SaveLoadAllyData(ar, *basePlayerRef->npcs[i], npcSaveInfo[i]);
+	}
+
+	//TODO: Save the other things too
+	//SaveQuestManager()
+	//SaveTriggerManager()
+}
+
+
