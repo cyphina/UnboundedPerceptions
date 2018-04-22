@@ -7,31 +7,31 @@
 #include "InteractState.h"
 #include "CastingState.h"
 #include "ItemState.h"
-
-class IdleState;
-class MovingState;
-class AttackState;
-class InteractState;
-class CastingState;
-class ItemState;
+#include "ChannelingState.h"
 
 class StateMachine
 {
 public:
-	StateMachine();
+	StateMachine(AUnit* unitOwner);
 	~StateMachine();
 
-	IUnitState* GetCurrentState() const { return currentState; }
-	void ChangeState(AUnit& unit, IUnitState* newState);
+	EUnitState GetCurrentState() const { return currentState->GetName(); }
+	void ChangeState(EUnitState newState);
+	void Update(float deltaSeconds);
 
+	//As long as our states don't actually hold any state, we can keep em static 
 	static IdleState Idle;
 	static MovingState Moving;
 	static AttackState Attacking;
 	static InteractState Interacting;
 	static CastingState Casting;
 	static ItemState UsingItem;
+	static ChannelingState Channeling; 
 
 private:
-	IUnitState* currentState = &Idle;
+
+	AUnit* unitOwner = nullptr;
+	IUnitState* currentState;
+	IUnitState* getStateFromEnum(EUnitState enumVal);
 };
 

@@ -146,7 +146,7 @@ private:
 	//Using some kind of item, consumeable, utility, etc.  We need to target some target for this item
 	void						UseItem();
 	//Here's where we do all the checks and repositioning for interacting.  Continuously called as long as we have an interaction target
-	void						Interact();	
+	void						PrepareInteract();	
 	//functions for adding and removing bonuses when equipping and unequipping.  Set isEquip to true when equipping, and to false when unequipping
 	void						SetupBonuses(UEquip* e, bool isEquip);
 
@@ -167,5 +167,7 @@ private:
 	//0 - Head, 1 - Body, 2 - Legs, 3 - Acc1, 4 - Codex, 5-9 - Codex Weapons
 	TArray<UEquip*>								equips; //a container of what we have equipped
 	friend void									USaveLoadClass::SetupAlliedUnits();
+
+	friend void									InteractState::Update(AUnit& unit, float deltaSeconds);
 };
 

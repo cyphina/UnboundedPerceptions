@@ -112,6 +112,7 @@ void AUnit::BeginPlay()
 void AUnit::Tick(float deltaSeconds)
 {
 	Super::Tick(deltaSeconds);
+
 	//Calculate when we can attack again 
 	if (!readyToAttack && currentAttTime < 2 / GetSkillAdjValue(static_cast<int>(UnitStats::Attack_Speed)))
 	{
@@ -126,30 +127,13 @@ void AUnit::Tick(float deltaSeconds)
 		}
 	}
 
-	if (GetState() == &StateMachine::Casting)
-	{
-		if (GetTargetData().Num() > 0) //due to polymorphic nature of this data structure, its num will be greater than 0 when it has relevant information
-		{
-			PrepareCastSpell();
-		}
-	}
-
-	if (GetState() == &StateMachine::Attacking)  //if we have a target
-	{
-		PrepareAttack();
-	}
-
+	state.Update(deltaSeconds);
 }
 
 #pragma region Accessors
-IUnitState* AUnit::GetState() const
+EUnitState AUnit::GetState() const
 {
 	return state.GetCurrentState();
-}
-
-FName AUnit::GetStateName()
-{
-	return GetState()->GetName();
 }
 
 void AUnit::UpdateStats()
@@ -257,7 +241,7 @@ bool AUnit::AdjustPosition(float range, FVector targetLoc)
 {
 	if(!IsTargetInRange(range, targetLoc))
 	{
-		//GEngine->AddOnScreenDebugMessage(13, 5.f, FColor::Orange, FString::FromInt(range));
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, targetLoc.ToString());
 		controller->MoveToLocation(targetLoc, UPathFollowingComponent::DefaultAcceptanceRadius);
 		return false;
 	}
@@ -283,7 +267,7 @@ void AUnit::Move(FVector newLocation)
 			//shift location a little bit if we're moving multiple units so they can group together ok
 			FVector shiftedLocation = newLocation - GetActorLocation().GetSafeNormal() * GetCapsuleComponent()->GetScaledCapsuleRadius() / 2;
 			controller->MoveToLocation(shiftedLocation, 10);
-			state.ChangeState(*this, &StateMachine::Moving);
+			state.ChangeState(EUnitState::STATE_MOVING);
 		}
 	}
 }
@@ -327,7 +311,7 @@ void AUnit::BeginAttack(AUnit * target)
 	//Set the target because attacking is a looped process where we need to keep checking things to see if we're in position
 	Stop();
 	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString("Attack!"));
-	state.ChangeState(*this, &StateMachine::Attacking);
+	state.ChangeState(EUnitState::STATE_ATTACKING);
 	targetUnit = target;
 	targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(target);
 }
@@ -343,7 +327,6 @@ void AUnit::PrepareAttack()
 			//{
 			if (AdjustPosition(GetMechanicAdjValue(static_cast<int>(Mechanics::AttackRange)), targetLoc))
 			{
-				state.ChangeState(*this, &StateMachine::Attacking);
 				Attack();
 			}
 		}
@@ -422,8 +405,8 @@ bool AUnit::BeginCastSpell(int spellToCastIndex, FGameplayAbilityTargetDataHandl
 
 			if (spell->GetTargetting().GetTagName() == "Skill.Targetting.None") //non targetted?  Then just cast it
 			{
-				state.ChangeState(*this, &StateMachine::Casting);
-				CastSpell(currentSpell);
+				state.ChangeState(EUnitState::STATE_CASTING);
+				PreCastChannelingCheck(currentSpell);
 				return true;
 			}
 			else
@@ -439,10 +422,10 @@ bool AUnit::BeginCastSpell(int spellToCastIndex, FGameplayAbilityTargetDataHandl
 					else
 						targetUnit = Cast<AUnit>(UAbilitySystemBlueprintLibrary::GetActorsFromTargetData(targetData, 0)[0]);
 
-					if (targetUnit == this)
-						CastSpell(currentSpell);
+					if (targetUnit == this || FVector::Dist2D(targetLocation, GetActorLocation()) < 5.f)
+						PreCastChannelingCheck(currentSpell);
 
-					state.ChangeState(*this, &StateMachine::Casting);
+					state.ChangeState(EUnitState::STATE_CASTING);
 					return true;
 				}
 			}
@@ -469,7 +452,7 @@ void AUnit::PrepareCastSpell()
 		}
 		if (AdjustPosition(spell->GetRange(GetAbilitySystemComponent()), targetLoc))
 		{
-			CastSpell(currentSpell);
+			PreCastChannelingCheck(currentSpell);
 		}
 	}
 }
@@ -493,7 +476,20 @@ bool AUnit::CastSpell(TSubclassOf<UMySpell> spellToCast)
 		return true;
 	}
 	return false;
-}     
+}
+
+void AUnit::PreCastChannelingCheck(TSubclassOf<UMySpell> spellToCast)
+{
+	//if there isn't a cast time
+	if(!currentSpell.GetDefaultObject()->GetCastTime(GetAbilitySystemComponent()))
+	{
+		CastSpell(currentSpell);
+	}
+	else
+	{
+		state.ChangeState(EUnitState::STATE_CHANNELING); 	//start channeling
+	}
+}
 
 void AUnit::Stop()
 {
@@ -504,7 +500,7 @@ void AUnit::Stop()
 	targetLocation = FVector();
 	readyToAttack = false;
 	controller->StopMovement();
-	state.ChangeState(*this, &StateMachine::Idle);
+			state.ChangeState(EUnitState::STATE_IDLE);
 }
 
 //Relic of when I did this manually
@@ -547,7 +543,7 @@ void AUnit::Stop()
 
 void AUnit::OnMoveCompleted(FAIRequestID RequestID, const EPathFollowingResult::Type Result)
 {
-	if(GetState() == &StateMachine::Moving)
+	if(GetState() == EUnitState::STATE_MOVING)
 		Stop();
 	//Possible move callback unusued so far
 }

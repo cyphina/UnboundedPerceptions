@@ -13,7 +13,6 @@ public:
 	~CastingState();
 	virtual void Enter(AUnit& unit) override;
 	virtual void Exit(AUnit& unit) override;
-	virtual void Update(AUnit& unit) override;
-	virtual FName GetName() const override { return "CastingState"; }
-
+	virtual void Update(AUnit& unit, float deltaSeconds) override;
+	virtual EUnitState GetName() const override { return EUnitState::STATE_CASTING; }
 };

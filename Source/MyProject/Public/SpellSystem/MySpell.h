@@ -96,6 +96,9 @@ public:
 	float								GetPeriod(UAbilitySystemComponent* abilityComponent) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Spell")
+	float								GetCastTime(UAbilitySystemComponent* abilityComponent) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Spell")
 	float								GetAOE(UAbilitySystemComponent* abilityComponent) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Spell")

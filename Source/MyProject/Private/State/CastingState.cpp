@@ -22,9 +22,12 @@ void CastingState::Exit(AUnit& unit)
 
 }
 
-void CastingState::Update(AUnit& unit)
+void CastingState::Update(AUnit& unit, float deltaSeconds)
 {
-
+	if (unit.targetData.Data[0].Get()->GetActors()[0].IsValid()) //due to polymorphic nature of this data structure, its num will be greater than 0 when it has relevant information
+	{
+		unit.PrepareCastSpell();
+	}
 }
 
 

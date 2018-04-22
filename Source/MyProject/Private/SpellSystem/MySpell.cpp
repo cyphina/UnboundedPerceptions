@@ -206,6 +206,13 @@ float UMySpell::GetPeriod(UAbilitySystemComponent* abilityComponent) const
 	return 0;
 }
 
+float UMySpell::GetCastTime(UAbilitySystemComponent* abilityComponent) const
+{
+	FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
+	checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
+	return USpellManager::Get().GetSpellInfo(spellDefaults.id)->casttime;
+}
+
 float UMySpell::GetAOE(UAbilitySystemComponent* abilityComponent) const
 {
 	FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());

@@ -45,7 +45,7 @@ void AAlly::Tick(float deltaSeconds)
 {
 	Super::Tick(deltaSeconds);
 
-	if(!controllerRef->IsInputKeyDown(EKeys::LeftShift) && GetState() == &StateMachine::Idle && !commandQueue.IsEmpty())
+	if(!controllerRef->IsInputKeyDown(EKeys::LeftShift) && GetState() == EUnitState::STATE_IDLE && !commandQueue.IsEmpty())
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, FString(TEXT("Command Dequeued")));
 		TFunction<void()> command;
@@ -139,8 +139,8 @@ bool AAlly::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
 
 				if (spell->GetTargetting().GetTagName() == "Skill.Targetting.None") //non targetted?  Then just cast it
 				{
-					state.ChangeState(*this, &StateMachine::Casting);
-					CastSpell(currentSpell);
+					state.ChangeState(EUnitState::STATE_CASTING);
+					PreCastChannelingCheck(currentSpell);
 				}
 				else
 				{
@@ -272,7 +272,7 @@ bool AAlly::SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellC
 				
 				//If casting on ourselves, then we can just instantly cast
 				if (targetUnit == this)
-					CastSpell(spellClass);
+					PreCastChannelingCheck(spellClass);
 
 			}
 			else
@@ -282,7 +282,7 @@ bool AAlly::SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellC
 			}
 		}
 		controllerRef->ChangeCursor(ECursorStateEnum::Select); //just turn it back to select so the loop will quickly change the cursor back to normal after spell casted
-		state.ChangeState(*this, &StateMachine::Casting);
+		state.ChangeState(EUnitState::STATE_CASTING);
 		return true;
 	}
 	return false;

@@ -99,7 +99,11 @@ void USkillSlot::UpdateSkillSlot(TSubclassOf<UMySpell> spellClass)
 		}
 	}
 	else
+	{
 		SetImage(nullptr); 
+		cdTimeline.Stop(); //stop the timeline so it doens't tick anymore 
+		HideCDVisuals(); //and hide skill indicators
+	}
 }
 
 

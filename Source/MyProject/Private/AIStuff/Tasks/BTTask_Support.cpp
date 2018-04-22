@@ -25,6 +25,8 @@ EBTNodeResult::Type UBTTask_Support::ExecuteTask(UBehaviorTreeComponent& ownerCo
 {
 	FBTSupportTaskMemory* myMemory = (FBTSupportTaskMemory*)nodeMemory;
 
+	myMemory->supportSpell = nullptr;
+	myMemory->supportSpellIndex = -1;
 	myMemory->unitControllerRef = Cast<AUnitController>(ownerComp.GetAIOwner());
 	myMemory->unitRef = myMemory->unitControllerRef->GetUnitOwner();
 
@@ -38,12 +40,12 @@ EBTNodeResult::Type UBTTask_Support::ExecuteTask(UBehaviorTreeComponent& ownerCo
 	//If we have any support spells equipped and they aren't on cd, grab first one
 	//TArray<TSubclassOf<UMySpell>> supportSpells = myMemory->unitRef->abilities.FilterByPredicate(pred);
 
-	//Get support spells off cooldown
+	//Get support spells that are castable (off cd and we have enough mana to cast them)
 	for (int i = 0; i < myMemory->unitRef->abilities.Num(); ++i)
 	{
 		if (IsValid(myMemory->unitRef->abilities[i]))
 		{
-			if (myMemory->unitRef->abilities[i].GetDefaultObject()->AbilityTags.HasAny(ResourceManager::supportTags) && !myMemory->unitRef->abilities[i].GetDefaultObject()->isOnCD(myMemory->unitRef->GetAbilitySystemComponent()))
+			if (myMemory->unitRef->abilities[i].GetDefaultObject()->AbilityTags.HasAny(ResourceManager::supportTags) && myMemory->unitRef->CanCast(myMemory->unitRef->abilities[i]))
 			{
 				myMemory->supportSpell = myMemory->unitRef->abilities[i].GetDefaultObject();
 				myMemory->supportSpellIndex = i;
@@ -54,6 +56,7 @@ EBTNodeResult::Type UBTTask_Support::ExecuteTask(UBehaviorTreeComponent& ownerCo
 
 	if (IsValid(myMemory->supportSpell))
 	{
+		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Blue, FString(myMemory->supportSpell->GetName().ToString()));
 		//if its an aoe spell find the best part by running the AOE EQS
 		if (myMemory->supportSpell->GetTargetting() == FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))
 		{
@@ -68,7 +71,6 @@ EBTNodeResult::Type UBTTask_Support::ExecuteTask(UBehaviorTreeComponent& ownerCo
 			myMemory->unitControllerRef->FindWeakestTarget(myMemory->supportSpellIndex);
 		}
 		return EBTNodeResult::InProgress;
-
 	}
 	return EBTNodeResult::Failed;
 }

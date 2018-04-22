@@ -22,6 +22,7 @@ UDIRender::UDIRender()
 
 void UDIRender::BeginPlay()
 {
+	Super::BeginPlay();
 	controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 }
 

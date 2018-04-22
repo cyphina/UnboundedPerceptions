@@ -19,6 +19,6 @@ void ItemState::Exit(AUnit& unit)
 {
 }
 
-void ItemState::Update(AUnit& unit)
+void ItemState::Update(AUnit& unit, float deltaSeconds)
 {
 }

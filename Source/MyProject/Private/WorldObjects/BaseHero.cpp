@@ -78,17 +78,6 @@ void ABaseHero::BeginPlay()
 void ABaseHero::Tick(float deltaSeconds)
 {
 	Super::Tick(deltaSeconds);
-	if (GetState() == &StateMachine::UsingItem) //if we are using the item on our target
-	{
-		if (GetTargetData().Num() > 0) //make sure 
-		{
-			UseItem();
-		}
-	}
-	if (GetState() == &StateMachine::Interacting)
-	{
-		Interact();
-	}
 	//if (dMat)
 	//	CheckShadows();
 }
@@ -180,7 +169,7 @@ void ABaseHero::BeginInteract(AActor* interactor)
 {
 	if (IInteractable* intractable = Cast<IInteractable>(interactor))
 	{
-		state.ChangeState(*this, &StateMachine::Interacting);
+		state.ChangeState(EUnitState::STATE_INTERACTING);
 		currentInteractable = intractable;
 	}
 }
@@ -188,13 +177,13 @@ void ABaseHero::BeginInteract(AActor* interactor)
 void ABaseHero::BeginUseItem(UConsumable* itemToUse)
 {
 	SetCurrentItem(itemToUse);
-	state.ChangeState(*this, &StateMachine::UsingItem);
+	state.ChangeState(EUnitState::STATE_ITEM);
 	PressedCastSpell(itemToUse->ability);
 	if (itemToUse->ability.GetDefaultObject()->GetTargetting() != FGameplayTag::RequestGameplayTag("Skill.Targetting.None"))
 		controllerRef->SetSecondaryCursor(ECursorStateEnum::Item);
 }
 
-void ABaseHero::Interact()
+void ABaseHero::PrepareInteract()
 {
 	if (!IsStunned() && currentInteractable)
 	{
@@ -212,7 +201,7 @@ void ABaseHero::UseItem()
 {
 	if (currentItem)
 	{
-		CastSpell(currentItem->ability);
+		PreCastChannelingCheck(currentItem->ability);
 	}
 }
 #pragma endregion

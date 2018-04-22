@@ -3,6 +3,7 @@
 #include "WorldObject.h"
 #include "GameFramework/Character.h"
 #include "State/StateMachine.h"
+#include "State/IUnitState.h"
 #include "AbilitySystemInterface.h"
 #include "GameplayEffect.h"
 #include "SpellSystem/Calcs/DamageCalculation.h"
@@ -46,7 +47,7 @@ private:
 protected:
 
 	bool							isEnemy = false; //protected so we can set this in enemy class
-	StateMachine					state = StateMachine(); //reference to statemachine
+	StateMachine					state = StateMachine(this); //reference to statemachine
 	TUniquePtr<FBaseCharacter>		baseC = nullptr; //Reference to statmanager.  Is a pointer so we can make it and give it a reference to the attribute set
 	AAIController*					controller = nullptr; //reference to AIController
 	ARTSGameState*					gameState = nullptr; //gamestate ref to keep track of game speed modifiers 
@@ -94,10 +95,9 @@ private:
 //Accessing our private data members
 #pragma region Accessors
 public:
-	IUnitState* GetState() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-	FName							 GetStateName(); //Gets name of current state in statemachine
+	EUnitState						 GetState() const; //Gets name of current state in statemachine
 
 	UFUNCTION(BlueprintCallable, Category = "Accessors")
 	void							 SetGameName(FText value) final override { name = value; }
@@ -137,8 +137,6 @@ public:
 
 	const FBaseCharacter&			 GetBaseCharacter() const { return *baseC; }
 
-	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-	TSubclassOf<UMySpell>			 GetCurrentSpell() const { return currentSpell; }
 
 ///--expose stats to blueprints and other units but only change the stats from C++ which is why we don't see any setters--
 #pragma region Stats
@@ -286,7 +284,17 @@ public:
 	void								ShowDamageDealt(FText occurance);
 
 	//Apply the modifiers of some gameplayeffect to the unit
-	//void								ApplyGameplayEffects(const FGameplayEffectSpec& effect);							
+	//void								ApplyGameplayEffects(const FGameplayEffectSpec& effect);		
+	
+	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	TSubclassOf<UMySpell>				GetCurrentSpell() const { return currentSpell; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
+	float								GetChannelTime() const { return channelTime; } 
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
+	float								GetCurrentChannelTime() const { return currentChannelTime; } 
+
 #pragma region Skills
 public:
 	//List of abilities that are in unit's skill slots
@@ -296,18 +304,27 @@ public:
 	//Function called when ability is activated to allow spell to drain resources.  Public because MySpell needs to reference it
 	void								CommitCast(UMySpell* spell);
 
-protected:
-	//current spell attempting to be casted
-	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "Abilities")
-	TSubclassOf<UMySpell>				currentSpell = nullptr; 
-
-	//Actually activates the ability and triggers abilities that wait for click events to continue
-	virtual bool						CastSpell(TSubclassOf<UMySpell> spellToCast);
-	
 	//Do we have the resources necessary to cast this spell
 	bool								CanCast(TSubclassOf<UMySpell> spellToCheck); 
 
+protected:
+	//CURRENT spell ATTEMPTED to be casted.  Used every tick during casting, and can be a spell not in abilities (when using an item)
+	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "Abilities")
+	TSubclassOf<UMySpell>				currentSpell = nullptr; 
+
+	/**Actually activates the ability and triggers abilities that wait for click events to continue
+	 * @param spellToCast - Spell we want to cast.  Left as a parameter because we can cast spells that aren't our current spells in some scenarios like item usage
+	 */
+	virtual bool						CastSpell(TSubclassOf<UMySpell> spellToCast);
+
+	/**Checks to see if spell has a cast time, and if so, it will start channeling process.  Else it will just cast the spell*/
+	void								PreCastChannelingCheck(TSubclassOf<UMySpell> spellToCast);
+
 private:
+
+	float								currentChannelTime = 0; //Time spent channeling by unit
+	float								channelTime = 0; //How long unit has to channel
+
 	UMyAbilitySystemComponent*			abilitySystem; //Skill component
 
 	//Adjust position for spell casting and check if stunned
@@ -315,6 +332,10 @@ private:
 
 
 	friend void							USaveLoadClass::SetupBaseCharacter(AAlly* spawnedAlly, FBaseCharacterSaveInfo& baseCSaveInfo);
+	friend 								ChannelingState;
+	friend void							CastingState::Update(AUnit& unit, float deltaSeconds);
+	friend void							AttackState::Update(AUnit& unit, float deltaSeconds);
+
 #pragma endregion
 #pragma endregion
 };

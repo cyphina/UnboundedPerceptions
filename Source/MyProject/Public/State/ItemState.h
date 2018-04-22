@@ -2,6 +2,7 @@
 #pragma once
 #include "IUnitState.h"
 
+/**State when using an item: Similar to channeling state?*/
 class MYPROJECT_API ItemState : public IUnitState
 {
 public:
@@ -10,6 +11,6 @@ public:
 
 	virtual void Enter(AUnit& unit) override;
 	virtual void Exit(AUnit& unit) override;
-	virtual void Update(AUnit& unit) override;
-	virtual FName GetName() const override { return "ItemState"; }
+	virtual void Update(AUnit& unit, float deltaSeconds) override;
+	virtual EUnitState GetName() const override { return EUnitState::STATE_ITEM; }
 };

@@ -7,8 +7,15 @@ IdleState StateMachine::Idle = IdleState();
 InteractState StateMachine::Interacting = InteractState();
 CastingState StateMachine::Casting = CastingState();
 ItemState StateMachine::UsingItem = ItemState();
+ChannelingState StateMachine::Channeling = ChannelingState();
 
-void StateMachine::ChangeState(AUnit & unit, IUnitState * newState)
+StateMachine::StateMachine(AUnit* unitOwner)
+{
+	currentState = &Idle;
+	this->unitOwner = unitOwner;
+}
+
+void StateMachine::ChangeState(EUnitState newState)
 {
 	//if we currently have a state in our state machine
 	if (!currentState)
@@ -16,23 +23,33 @@ void StateMachine::ChangeState(AUnit & unit, IUnitState * newState)
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Error, currentState is nullptr"));
 	}
 
-	if(newState != currentState) //make sure we're not just switching to the same state >_>
-	{ 
-		currentState->Exit(unit);
-		if (newState)
-		{
-			currentState = newState;
-			currentState->Enter(unit);
-		}
+	if (newState != currentState->GetName()) //make sure we're not just switching to the same state >_>
+	{
+		currentState->Exit(*unitOwner);
+		currentState = getStateFromEnum(newState);
+		currentState->Enter(*unitOwner);
 	}
-
 }
 
-StateMachine::StateMachine()
+void StateMachine::Update(float deltaSeconds)
 {
-	currentState = &StateMachine::Idle;
+	currentState->Update(*unitOwner, deltaSeconds);
 }
 
+IUnitState* StateMachine::getStateFromEnum(EUnitState enumVal)
+{
+	switch (enumVal)
+	{
+		case EUnitState::STATE_IDLE: return &Idle;
+		case EUnitState::STATE_ATTACKING: return &Attacking;
+		case EUnitState::STATE_CASTING: return &Casting;
+		case EUnitState::STATE_CHANNELING: return &Channeling;
+		case EUnitState::STATE_INTERACTING: return &Interacting;
+		case EUnitState::STATE_ITEM: return &UsingItem;
+		case EUnitState::STATE_MOVING: return &Moving;
+		default: return nullptr;
+	}
+}
 
 StateMachine::~StateMachine()
 {

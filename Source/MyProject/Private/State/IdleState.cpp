@@ -21,6 +21,6 @@ void IdleState::Exit(AUnit & unit)
 	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Exiting Idle"));
 }
 
-void IdleState::Update(AUnit & unit)
+void IdleState::Update(AUnit & unit, float deltaSeconds)
 {
 }
