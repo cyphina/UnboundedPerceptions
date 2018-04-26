@@ -241,7 +241,6 @@ bool AUnit::AdjustPosition(float range, FVector targetLoc)
 {
 	if(!IsTargetInRange(range, targetLoc))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, targetLoc.ToString());
 		controller->MoveToLocation(targetLoc, UPathFollowingComponent::DefaultAcceptanceRadius);
 		return false;
 	}
@@ -500,7 +499,7 @@ void AUnit::Stop()
 	targetLocation = FVector();
 	readyToAttack = false;
 	controller->StopMovement();
-			state.ChangeState(EUnitState::STATE_IDLE);
+	state.ChangeState(EUnitState::STATE_IDLE);
 }
 
 //Relic of when I did this manually
@@ -544,7 +543,7 @@ void AUnit::Stop()
 void AUnit::OnMoveCompleted(FAIRequestID RequestID, const EPathFollowingResult::Type Result)
 {
 	if(GetState() == EUnitState::STATE_MOVING)
-		Stop();
+		state.ChangeState(EUnitState::STATE_IDLE);
 	//Possible move callback unusued so far
 }
 

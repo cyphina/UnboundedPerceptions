@@ -14,6 +14,7 @@ void UQuestJournal::Construct_Implementation()
 	if(questManagerRef)
 	{
 		questManagerRef->questJournalRef = this;
+		questManagerRef->partyLeader = CPC->GetBasePlayer()->heroes[0];
 	}
 }
 

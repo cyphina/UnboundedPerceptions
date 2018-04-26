@@ -79,10 +79,10 @@ public:
 	AHUDManager*			GetHUDManager() const;
 	
 	UFUNCTION(BlueprintGetter)
-	FORCEINLINE ABasePlayer* GetBasePlayer() const { return basePlayer; }
+	ABasePlayer* GetBasePlayer() const { return basePlayer; }
 
 	UFUNCTION(BlueprintGetter)
-	FORCEINLINE UMyGameInstance* GetMyGameInstance() const { return gameInstance; }
+	UMyGameInstance* GetMyGameInstance() const { return gameInstance; }
 
 private:
 	//These references store information about hit in member so we don't have to reconstruct every tick

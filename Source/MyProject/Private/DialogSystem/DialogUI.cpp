@@ -5,6 +5,11 @@
 #include "UserInput.h"
 #include "UI/HUDManager.h"
 
+void UDialogUI::Construct_Implementation()
+{
+	Super::Construct_Implementation();
+}
+
 void UDialogUI::SetMainView()
 {
 	if (bConvView)

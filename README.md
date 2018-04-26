@@ -1,5 +1,17 @@
 # Unbounded Peceptions
 
+Setup:
+
+Create a UE4 empty project and copy the folders except RTS_Tutorial and Extras to the project directory.  RTS_Tutorial should be copied into the content folder. 
+There will be missing textures and materials possibly after copying, due to some assets being from marketplace packages.  If you really want to see them download the Infinity Blade assets, and the Kite Demo.  Run either the start map or the test map to begin seeing the contents of this project.
+
+Folders:
+*Source folder contains C++ code
+*RTS_Tutorial contains lot of gameplay blueprints and assets.  Names of the subfolders represent what kind of assets in them.  Blueprints is the largest subfolder with blueprints for AI, some visual effects that are triggered by the characters, the quest system, and the spell system.
+*Extras contains some artwork and possibly one day my story although I'd like to keep it private just becuase I worked very hard on it and don't want those ideas stolen.
+
+Story Synopsis:
+
 Unbounded Perceptions is a game with one goal: To help us understand each other.  To accomplish this, there are some reoccuring themes present in the story that will keep being reiterated such as:
 
 * The real horror comes from the hearts of human beings not the bloody mess

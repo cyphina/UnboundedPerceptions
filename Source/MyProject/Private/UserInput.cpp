@@ -129,7 +129,6 @@ void AUserInput::Inventory()
 	int numSelectedHeroes = basePlayer->selectedHeroes.Num();
 	if (numSelectedHeroes > 0)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("WTF HOMIE!"));
 		GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_Inventory));
 	}
 }

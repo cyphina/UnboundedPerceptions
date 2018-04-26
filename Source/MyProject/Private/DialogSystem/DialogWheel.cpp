@@ -59,7 +59,7 @@ void UDialogWheel::SelectPreviousConversationTopics()
 void UDialogWheel::NativeConstruct()
 {
 	Super::NativeConstruct();
-	//socialWindowRef = CPC->GetHUDManager()->GetSocialWindow();
+	socialWindowRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController())->GetHUDManager()->GetSocialWindow();
 }
 
 bool UDialogWheel::OnWidgetAddToViewport_Implementation()
@@ -74,6 +74,7 @@ bool UDialogWheel::OnWidgetAddToViewport_Implementation()
 		if (CPC->GetBasePlayer()->GetDialogTopics().HasTag(it->GetSingleTagContainer().First()))
 			conversationTopicTagNodes.Add(it.Get());
 	}
+
 	UpdateDialogWheelText();
 	return true;
 }

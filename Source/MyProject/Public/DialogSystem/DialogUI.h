@@ -18,12 +18,14 @@ class MYPROJECT_API UDialogUI : public UMyUserWidget
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Category = "References", Meta=(AllowPrivateAccess=true))
-	ANPC* npcRef;
+	ANPC*								npcRef = nullptr;
 
 	/** True for conversation, false for intimate*/
-	bool bConvView;
+	bool								bConvView = false;
 
 public:
+
+	void								Construct_Implementation() override;
 
 	/** Called after greeting the IntimateNPC*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Callbacks")

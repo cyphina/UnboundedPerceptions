@@ -188,7 +188,7 @@ void ABaseHero::PrepareInteract()
 	if (!IsStunned() && currentInteractable)
 	{
 		FVector targetLoc = currentInteractable->GetInteractableLocation_Implementation();
-		if (AdjustPosition(interactRange, targetLocation))
+		if (AdjustPosition(interactRange, targetLoc))
 		{
 			AActor* interactor = Cast<AActor>(currentInteractable);
 			currentInteractable->Execute_Interact(interactor, this);
