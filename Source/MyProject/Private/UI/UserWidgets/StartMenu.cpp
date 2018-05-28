@@ -38,7 +38,7 @@ bool UStartMenu::CheckIfSaveFileExists(FString saveFileName)
 
 void UStartMenu::LevelTransition()
 {
-	controllerRef->GetMyGameInstance()->LoadLevelAsync(gameModeRef->GetIntroductionLevelName());
+	gameModeRef->StreamLevelAsync(*gameModeRef->GetIntroductionLevelName());
 	
 	//Renable ticks that are stopped in the level script
 	controllerRef->SetActorTickEnabled(true);

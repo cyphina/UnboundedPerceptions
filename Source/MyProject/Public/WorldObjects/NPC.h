@@ -113,11 +113,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "NPCMovement")
 	void						MoveToCurrentPatrolPoint();
 #pragma endregion
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
-	void 						Interact(ABaseHero* hero);
+
 	virtual void 				Interact_Implementation(ABaseHero* hero) override;
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
-	FVector 					GetInteractableLocation();
 	virtual FVector				GetInteractableLocation_Implementation() override;
 };

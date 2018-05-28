@@ -49,12 +49,13 @@ const FDialogData& UDialogBox::GetNextLine()
 			if (dialogLines[currentNodeNum].actorName == "Trigger")
 			{
 				//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, FString("WEEPUPS"));
-				dialogLines[currentNodeNum].dialog.ToString().ParseIntoArrayLines(triggerInfo);
-				FTriggerData triggerData;
-				triggerData.triggerType = static_cast<TriggerType>(FCString::Atoi(*triggerInfo[0]));
-				triggerInfo[1].ParseIntoArray(triggerData.triggerObjects, TEXT(","));
-				triggerInfo[2].ParseIntoArray(triggerData.triggerValues, TEXT(","));
-				gameInstanceRef->GetTriggerManager()->ActivateTrigger(triggerData);
+				if(dialogLines[currentNodeNum].dialog.ToString().ParseIntoArrayLines(triggerInfo) > 0) {
+					FTriggerData triggerData;
+					triggerData.triggerType = static_cast<TriggerType>(FCString::Atoi(*triggerInfo[0]));
+					triggerInfo[1].ParseIntoArray(triggerData.triggerObjects, TEXT(","));
+					triggerInfo[2].ParseIntoArray(triggerData.triggerValues, TEXT(","));
+					gameInstanceRef->GetTriggerManager()->ActivateTrigger(triggerData);
+				}
 			}
 			currentNodeNum = dialogLines[currentNodeNum].nextDialogs[0];
 		}

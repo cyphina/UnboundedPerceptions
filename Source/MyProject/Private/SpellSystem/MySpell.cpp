@@ -255,13 +255,23 @@ FGameplayEffectSpecHandle UMySpell::SetPeriod(FGameplayEffectSpecHandle specHand
 FGameplayEffectSpecHandle UMySpell::CreateGameplayEffectFromTableValues(TSubclassOf<UGameplayEffect> effectClass, FGameplayTag name, FGameplayTagContainer assetTags)
 {
 	UAbilitySystemComponent* abilityComp = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetActorInfo().AvatarActor.Get());
-	FGameplayEffectSpecHandle effect = USpellFunctionLibrary::MakeGameplayEffect(this, effectClass, GetLevel(abilityComp), GetSpellDuration(abilityComp), GetPeriod(abilityComp), USpellManager::Get().GetSpellInfo(spellDefaults.id)->elem, name, assetTags);
+	FGameplayEffectSpecHandle effect = MakeOutgoingGameplayEffectSpec(effectClass, GetLevel(abilityComp));
+	effect.Data->DynamicAssetTags.AddTag(GetElemTag()); //Use add tag to check if tag is valid and prevents duplicate tags. 
+	effect.Data->DynamicAssetTags.AddTag(name); 
+	effect.Data->DynamicAssetTags.AppendTags(assetTags);
+	if(effect.Data->Def->DurationPolicy != EGameplayEffectDurationType::Instant) //Do this check since some instant effects rely on this procedure too
+	{
+		effect.Data->Period = GetPeriod(abilityComp);
+		effect.Data->SetDuration(GetSpellDuration(abilityComp), true); //if we don't lock the duration, the duration will be recalcuated somewhere in active effect creation ...
+	}
+
 	if(effectClass->IsChildOf(UDamageEffect::StaticClass()))
 		SetScaling(effect);
+
 	return effect;
 }
 
-FORCEINLINE UAbilitySystemComponent* UMySpell::GetOwnerAbilitySystemComponent() const
+UAbilitySystemComponent* UMySpell::GetOwnerAbilitySystemComponent() const
 {
 	return UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwningActorFromActorInfo());
 }

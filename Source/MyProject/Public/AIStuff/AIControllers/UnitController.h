@@ -45,25 +45,51 @@ public:
 
 	/**Make sure to call UseBlackboard/InitializeBlackboard in the children classes depending on how they use their blackboards as well as starting the tree*/
 	void								Possess(APawn* InPawn) override;
+	void								BeginPlay() override;
 
 	inline AUnit*						GetUnitOwner() const { return ownerRef; } 
 	inline AUserInput*					GetCPCRef() const { return CPCRef; }
 
-	void								FindBestAOELocation(int spellIndex);
-	void								FindWeakestTarget(int spellIndex);
+	/**
+	 *Find the best spot for targetting an AOE spell
+	 *@param isSupport - Find best AOE location to hit the most enemies (false) or friends (true)?
+	 */
+	virtual void						FindBestAOELocation(int spellIndex, bool isSupport);
+
+	/**
+	 *Find the best unit to target a single spell
+	 *@param isSupport - Find best AOE location to hit the most enemies (false) or friends (true)?
+	 */
+	virtual void						FindWeakestTarget(int spellIndex, bool isSupport);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "AIModes")
+	FORCEINLINE int						GetAggresionLevel() const { return aggressionLevel; }
+
+protected:
+	/*Describes from 1-5 how aggressive the unit is (1 = Passive, 3 = Neutral, 5 = Aggresive).
+	 *Not all units (enemies) need the complexity of having 5 states so we have an int to represent this*/
+	int									aggressionLevel;
 
 private:
 
 	/**Spell to cast after target is found*/
 	int									spellToCastIndex;
 
-	/**Environment query to find the best place to cast an AOE spell for maximum target hits*/
+	/**Environment query to find the best place to cast an AOE spell for maximum target hits when healing*/
 	UPROPERTY(EditDefaultsOnly)
-	UEnvQuery*							findBestAOELocation;
+	UEnvQuery*							findBestAOESupportLocation;
+
+	/**Environment query to find the best place to cast an AOE spell for maximum target hits when casting an AOE spell*/
+	UPROPERTY(EditDefaultsOnly)
+	UEnvQuery*							findBestAOEAssaultLocation;
 
 	/**Environment query to find the weakest allied unit.  Allies and enemies have should have different EQueries set*/
 	UPROPERTY(EditDefaultsOnly)
-	UEnvQuery*							findWeakestTarget;
+	UEnvQuery*							findWeakestAllyTarget;
+
+	/**Environment query to find the weakest enemy unit.  Allies and enemies have should have different EQueries set*/
+	UPROPERTY(EditDefaultsOnly)
+	UEnvQuery*							findWeakestEnemyTarget;
 
 	void								OnAOELocationFound(TSharedPtr<FEnvQueryResult> result);
 	void								OnWeakestTargetFound(TSharedPtr<FEnvQueryResult> result);

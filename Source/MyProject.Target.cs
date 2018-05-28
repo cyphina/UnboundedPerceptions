@@ -8,8 +8,8 @@ public class MyProjectTarget : TargetRules
 	public MyProjectTarget(TargetInfo targetInfo) : base(targetInfo)
 	{
 		Type = TargetType.Game;
-	    ExtraModuleNames.AddRange(new string[] {
+		ExtraModuleNames.AddRange(new string[] {
 	        "MyProject"
-	    });
-    }
+		});
+	}
 }

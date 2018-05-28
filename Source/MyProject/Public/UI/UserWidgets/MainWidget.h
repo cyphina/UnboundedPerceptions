@@ -73,9 +73,15 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Help") 
 	void							DisplayHelpText(const FText& hText);
 	
-	/**tooltip box display -- ttText is description and ttText2 is another box for more situational information*/
+	/**tooltip box display -- ttText is description and ttText2 is another box for more situational information
+	 * @param name - Title block for the tooltip window
+	 * @param ttText - First block for information.  If any ttText's are empty strings, the corresponding blocks will be hidden
+	 * @param ttText2 - Second block for information
+	 * @param ttText3 - Third block for information
+	 * @param ttText4 - Fourth block for information
+	 */
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Help")
-	void							DisplayTTBoxText(const FText& name, const FText& ttText, const FText& ttText2); 
+	void							DisplayTTBoxText(const FText& name, const FText& ttText, const FText& ttText2, const FText& ttText3, const FText& ttText4); 
 
 	/**Needed to move description box when hovering over action slot*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintPure, Category = "Accessor")

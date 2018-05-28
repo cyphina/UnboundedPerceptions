@@ -59,13 +59,20 @@ public:
 	void 						ChangeAttribute(Attributes att, bool isIncrementing);
 
 	///---Equipment---
-	UFUNCTION(BlueprintCallable, Category = "Equipment") //When we click on an item to use it and it's a piece of equipment
+	/**When we click on an item to use it and it's a piece of equipment*/
+	UFUNCTION(BlueprintCallable, Category = "Equipment") 
 	void 						EquipItem(UEquip* e);
-	//When we click on an item and it's a piece of equipment and we already have a piece of equipment on that slot, swap them
-	void 						UnequipItem(int slot);
 
+	/**When we click on an item and it's a piece of equipment and we already have a piece of equipment on that slot, swap them*/
+	void 						UnequipItem(int slot);	
+
+	/**Allows us to swap weapons and accessory equips*/
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	void 						SwapEquips(UEquip* e1, int equipSlot);	//swap equip to whatever is in the equipslot
+	void 						SwapEquips(int equipSlot1, int equipSlot2);	
+
+	/**Equip some new equipment and return any equipment in that slot back to inventory*/
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	void 						SwapEquipsFromInventory(UEquip* e1, int equipSlot);	
 
 	//---Actions---
 	void 						Stop() override;
@@ -86,27 +93,27 @@ public:
 	void 						SetCurrentExp(int amount);
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Equips")
-	TArray<UEquip*>				GetEquips() const { return equips; }
+	FORCEINLINE TArray<UEquip*>				GetEquips() const { return equips; }
 
 	//Get the item set to be used currently by this hero
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Items")
-	UConsumable*				GetCurrentItem() const { return currentItem; }
+	UConsumable*							GetCurrentItem() const { return currentItem; }
 
 	//Set the item set to be used currently by this hero
 	UFUNCTION(BlueprintCallable, Category = "Items")
-	void						SetCurrentItem(UConsumable* item) { currentItem = item; }
+	void									SetCurrentItem(UConsumable* item) { currentItem = item; }
 
 	//Get the interactable this hero is targetted to interact with
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Interactable")
-	UObject*					GetCurrentInteractable() const;
+	UObject*								GetCurrentInteractable() const;
 
 	//Set the interactable this hero is targetted to interact with
 	UFUNCTION(BlueprintCallable, Category = "Interactable")
-	void						SetCurrentInteractable(AActor* interactable);
+	void									SetCurrentInteractable(AActor* interactable);
 
 	//Get a copy of our spellbook
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-	USpellBook*					GetSpellBook() const { return spellbook; }
+	USpellBook*								GetSpellBook() const { return spellbook; }
 
 #pragma endregion
 

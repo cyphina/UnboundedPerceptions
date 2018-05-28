@@ -1,7 +1,7 @@
 #include "MyProjectEditor.h"
 
 #include "SpellSystem/MySpell.h"
-#include "SpellSystem/SpellManager.h"
+#include "SpellSystem/SpellFunctionLibrary.h"
 #include "GameplayEffect.h"
 
 #include "KismetCompiler.h"

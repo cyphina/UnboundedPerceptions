@@ -9,12 +9,16 @@
 #include "SaveLoadClass.h"
 
 void AUPLevelScript::BeginPlay()
-{
-	Super::BeginPlay();
+{	
 	controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+
 	if(shouldTimePass)
 		Cast<ARTSGameState>(GetWorld()->GetGameState())->AddGameTime(timeToPass);
 
 	UMyGameInstance* gameInstance = Cast<UMyGameInstance>(GetGameInstance());
+
+	//When a new UPLevel is loaded, if this load was due to loading a save game, then setup what was saved.  May need some kind of delay?
 	gameInstance->GetSaveManager()->SetupLoad();
+
+	Super::BeginPlay(); //remember this calls blueprint BeginPlay()
 }

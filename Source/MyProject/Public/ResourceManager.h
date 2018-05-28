@@ -12,6 +12,7 @@ namespace ResourceManager
 	void										InitResourceManager();
 	void										InitElementalMap();
 	void										InitSupportTags();
+	void										InitOffensiveTags();
 
 	//Make sure when you pass a world reference to this class, you pass it one from an actor or from a function that has (meta=WorldContextObject)
 	template<class T>
@@ -32,4 +33,5 @@ namespace ResourceManager
 
 	//Tags that make an ability considered a support ability
 	extern FGameplayTagContainer				supportTags; 
+	extern FGameplayTagContainer				offensiveTags; 
 }

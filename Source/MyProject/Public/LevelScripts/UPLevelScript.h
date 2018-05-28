@@ -22,20 +22,32 @@ class MYPROJECT_API AUPLevelScript : public ALevelScriptActor
 {
 	GENERATED_BODY()
 	
+	/**If time should pass entering/leaving or just chilling in the level*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "DefaultValues")
 	bool				shouldTimePass = false;
 
+	/**How much time passes from entering/leaving*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "DefaultValues")
 	FDateTime			timeToPass;
 
+	/**What triggers should be run when this level is loaded
+	 * Should be saved
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Triggers")
+	TArray<FTriggerData>	triggersToRun;
+
 protected:
-	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "References")
+
+	UPROPERTY(BlueprintReadOnly, Category = "References")
 	AUserInput*			controllerRef = nullptr;
 
 public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "OnLevelLoaded")
 	FTriggerData		OnLevelLoadedTrigger;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "References")
+	AUserInput*			GetControllerRef() const { return controllerRef; } 
 
 	void				BeginPlay() override;
 	

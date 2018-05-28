@@ -19,7 +19,7 @@ void UESkillContainer::NativeConstruct()
 	//}
 }
 
-USkillSlot* UESkillContainer::GetSkill(int index) const
+USkillSlot* UESkillContainer::GetSkillSlot(int index) const
 {
 	if(index >= 0 && index < allyRef->abilities.Num())
 	{
@@ -30,11 +30,8 @@ USkillSlot* UESkillContainer::GetSkill(int index) const
 
 void UESkillContainer::UseSkill(int skillToUseIndex)
 {
-	if (allyRef)
+	if (skillToUseIndex >= 0 && skillToUseIndex < allyRef->abilities.Num())
 	{
-		if (skillToUseIndex >= 0 && skillToUseIndex < allyRef->abilities.Num())
-		{
-			GetSkill(skillToUseIndex)->PerformAction();
-		}
-	}
+		GetSkillSlot(skillToUseIndex)->PerformAction();
+	}	
 }

@@ -146,61 +146,6 @@ UAbilitySystemComponent* AUnit::GetAbilitySystemComponent() const
 	return abilitySystem;
 }
 
-FORCEINLINE int AUnit::GetAttributeBaseValue(int index) const
-{
-	return baseC->GetAttribute(index)->GetBaseValue();
-}
-
-FORCEINLINE float AUnit::GetSkillBaseValue(int index) const
-{
-	return baseC->GetSkill(index)->GetBaseValue();
-}
-
-FORCEINLINE float AUnit::GetVitalBaseValue(int index) const
-{
-	return baseC->GetVital(index)->GetBaseValue();
-}
-
-FORCEINLINE float AUnit::GetMechanicBaseValue(int index) const
-{
-	return baseC->GetMechanic(index)->GetBaseValue();
-}
-
-FORCEINLINE int AUnit::GetAttributeAdjValue(int index) const
-{
-	return baseC->GetAttribute(index)->GetCurrentValue();
-}
-
-FORCEINLINE float AUnit::GetSkillAdjValue(int index) const
-{
-	return baseC->GetSkill(index)->GetAdjustedValue();
-}
-
-FORCEINLINE float AUnit::GetVitalCurValue(int index) const 
-{
-	return baseC->GetVital(index)->GetCurrValue();
-}
-
-FORCEINLINE void AUnit::SetVitalCurValue(int index, int vitValue) const
-{
-	baseC->GetVital(index)->SetCurrValue(vitValue);
-}
-
-FORCEINLINE int AUnit::GetLevel() const
-{
-	return baseC->GetLevel();
-}
-
-FORCEINLINE float AUnit::GetMechanicAdjValue(int index) const
-{
-	return baseC->GetMechanic(index)->GetCurrentValue();
-}
-
-FORCEINLINE float AUnit::GetVitalAdjValue(int index) const
-{
-	return baseC->GetVital(index)->GetAdjustedValue();
-}
-
 #pragma endregion
 
 #pragma region Helpers
@@ -241,6 +186,7 @@ bool AUnit::AdjustPosition(float range, FVector targetLoc)
 {
 	if(!IsTargetInRange(range, targetLoc))
 	{
+		//GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange, TEXT("MOVING TO TARGET!!!"));
 		controller->MoveToLocation(targetLoc, UPathFollowingComponent::DefaultAcceptanceRadius);
 		return false;
 	}
@@ -249,6 +195,7 @@ bool AUnit::AdjustPosition(float range, FVector targetLoc)
 		controller->StopMovement();
 		if (!IsFacingTarget(targetLoc))
 		{
+			//GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange, TEXT("TURNING TOWARDS TARGET!!!"));
 			TurnTowardsTarget(targetLoc);
 			return false;
 		}		
@@ -376,6 +323,20 @@ void AUnit::Attack()
 	}
 }
 
+UMySpell* AUnit::GetSpellCDO(TSubclassOf<UMySpell> spellClass) const
+{
+#if UE_EDITOR
+	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::FromInt(abilitySystem->GetActivatableAbilities().Num()));
+#endif
+	if (spellClass)
+	{ 
+		//If we have the ability
+		if (GetAbilitySystemComponent()->FindAbilitySpecFromClass(spellClass)->Ability)
+			return spellClass->GetDefaultObject<UMySpell>();
+	}
+	return nullptr;
+}
+
 bool AUnit::CanCast(TSubclassOf<UMySpell> spellToCheck)
 {
 	UMySpell* spell = spellToCheck.GetDefaultObject();
@@ -421,8 +382,12 @@ bool AUnit::BeginCastSpell(int spellToCastIndex, FGameplayAbilityTargetDataHandl
 					else
 						targetUnit = Cast<AUnit>(UAbilitySystemBlueprintLibrary::GetActorsFromTargetData(targetData, 0)[0]);
 
+					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("%f"), FVector::Dist2D(targetLocation, GetActorLocation())));
 					if (targetUnit == this || FVector::Dist2D(targetLocation, GetActorLocation()) < 5.f)
+					{
 						PreCastChannelingCheck(currentSpell);
+						return true;
+					}
 
 					state.ChangeState(EUnitState::STATE_CASTING);
 					return true;

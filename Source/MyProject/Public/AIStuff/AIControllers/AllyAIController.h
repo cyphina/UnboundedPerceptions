@@ -18,9 +18,9 @@ enum class AllyBehavioralMode : uint8
 {
 	ABM_Passive, //Heal and buff allies but run away of enemies are nearby
 	ABM_Defensive, //Avoid enemies, focus on healing and attack if the enemy isn't attacking back
-	ABM_Neutral, //Player controlled behavior
-	ABM_Offensive, //Attack closest enemy 
- 	ABM_Aggressive //Attack lowest hp enemy
+	ABM_Neutral, //Player controlled behavior (may change this to doing both controlled attack and defensive options)
+	ABM_Offensive, //Attack closest enemy and try to use spells as efficiently as possible
+ 	ABM_Aggressive //Attack lowest hp enemy and drop all spells on weak enemy
 };
 
 UENUM(BlueprintType)
@@ -60,7 +60,6 @@ class MYPROJECT_API AAllyAIController : public AUnitController
 
 	/*If this unit was part of a group tactic assignment, then set its tactic mode here*/
 	AllyGroupTacticsMode			tacticsBehavior;
-	AUserInput*						controllerRef;
 	AAlly*							allyRef;
 
 	UFUNCTION()

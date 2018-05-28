@@ -1,5 +1,4 @@
 #pragma once
-#include "K2Node.h"
 #include "K2Node_ConstructObjectFromClass.h"
 #include "BPNode_CreateGameplayEffect.generated.h"
 

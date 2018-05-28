@@ -213,27 +213,27 @@ void ABaseHero::SetupBonuses(UEquip* e, bool isEquip)
 	{
 		if (e->GetBonuses()[i] < CombatInfo::AttCount)
 		{
-			baseC->GetAttribute(e->GetBonuses()[i])->SetBaseValue(GetAttributeBaseValue(e->GetBonuses()[i]) + (2*isEquip-1)*e->GetBonusValues()[i]);
+			baseC->GetAttribute(e->GetBonuses()[i])->SetCurrentValue(GetAttributeBaseValue(e->GetBonuses()[i]) + (2*isEquip-1)*e->GetBonusValues()[i]);
 		}
 		else if (e->GetBonuses()[i] >= CombatInfo::AttCount && e->GetBonuses()[i] < CombatInfo::AttCount + CombatInfo::StatCount)
 		{
 			int index = e->GetBonuses()[i] - CombatInfo::AttCount;
-			baseC->GetSkill(index)->SetBaseValue(GetSkillBaseValue(index) + (2 * isEquip - 1)*e->GetBonusValues()[i]);
+			baseC->GetSkill(index)->SetBuffValue(GetSkillBaseValue(index) + (2 * isEquip - 1)*e->GetBonusValues()[i]);
 		}
 		else if (e->GetBonuses()[i] >= CombatInfo::AttCount + CombatInfo::StatCount && e->GetBonuses()[i] < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount)
 		{
 			int index = e->GetBonuses()[i] - CombatInfo::AttCount - CombatInfo::StatCount;
-			baseC->GetVital(index)->SetBaseValue(GetVitalBaseValue(index) + (2 * isEquip - 1)*e->GetBonusValues()[i]);
+			baseC->GetVital(index)->SetBuffValue(GetVitalBaseValue(index) + (2 * isEquip - 1)*e->GetBonusValues()[i]);
 		}
 		else
 		{
 			int index = e->GetBonuses()[i] - CombatInfo::AttCount - CombatInfo::StatCount - CombatInfo::VitalCount;
-			baseC->GetMechanic(index)->SetBaseValue(GetMechanicBaseValue(index) + (2 * isEquip - 1) * e->GetBonusValues()[i]);
+			baseC->GetMechanic(index)->SetCurrentValue(GetMechanicBaseValue(index) + (2 * isEquip - 1) * e->GetBonusValues()[i]);
 		}
 	}
 }
 
-void ABaseHero::SwapEquips(UEquip* e, int equipSlot)
+void ABaseHero::SwapEquipsFromInventory(UEquip* e, int equipSlot)
 {
 	if (equips[equipSlot])
 	{
@@ -254,27 +254,43 @@ void ABaseHero::SwapEquips(UEquip* e, int equipSlot)
 	}
 }
 
+void ABaseHero::SwapEquips(int equipSlot1, int equipSlot2)
+{
+	if (equipSlot1 != equipSlot2)
+	{
+		if (equips[equipSlot1])
+		{
+			if (equips[equipSlot1]->itemInfo.itemType == equips[equipSlot2]->itemInfo.itemType)
+			{
+				UEquip* equipInFirstSlot = MoveTemp(equips[equipSlot1]);
+				equips[equipSlot1] = MoveTemp(equips[equipSlot2]);
+				equips[equipSlot2] = MoveTemp(equipInFirstSlot);
+			}
+		}
+	}
+}
+
 void ABaseHero::EquipItem(UEquip* e)
 {
 	//Depending on what kind of equip we have, swap item into different slots allocated for that equip
 	if (e->itemInfo.itemType.GetTagName() == "Item.Equippable.Armor.Helmet")
 	{
-		SwapEquips(e, 0);
+		SwapEquipsFromInventory(e, 0);
 	}
 	else if (e->itemInfo.itemType.GetTagName() == "Item.Equippable.Armor.Body")
 	{
-		SwapEquips(e, 1);
+		SwapEquipsFromInventory(e, 1);
 	}
 	else if (e->itemInfo.itemType.GetTagName() == "Item.Equippable.Armor.Legs")
 	{
-		SwapEquips(e, 2);
+		SwapEquipsFromInventory(e, 2);
 	}
 	else if (e->itemInfo.itemType.GetTagName() == "Item.Equippable.Armor.Accessory")
 	{
 		if (!equips[3])
-			SwapEquips(e, 3);
+			SwapEquipsFromInventory(e, 3);
 		else
-			SwapEquips(e, 4);
+			SwapEquipsFromInventory(e, 4);
 	}
 	else if (e->itemInfo.itemType.GetTagName() == "Item.Equippable.Weapon")
 	{
@@ -282,11 +298,11 @@ void ABaseHero::EquipItem(UEquip* e)
 		{
 			if(!equips[i])
 			{
-				SwapEquips(e, i);
+				SwapEquipsFromInventory(e, i);
 				return;
 			}
 		} //if our equip slots are full, just swap with the last equip
-		SwapEquips(e, 10);
+		SwapEquipsFromInventory(e, 10);
 	}
 	else
 	{

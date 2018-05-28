@@ -5,14 +5,8 @@
 #include "../ESkillContainer.h"
 #include "ActionbarInterface.h"
 
-#include "UserInput.h"
-#include "BasePlayer.h"
-#include "WorldObjects/Unit.h"
-
-#include "GameplayEffect.h"
-#include "AbilitySystemComponent.h"
 #include "../Slots/SkillSlot.h"
-#include "ResourceManager.h"
+
 
 void UActionbarInterface::UseSkill(int skillIndex)
 {
@@ -21,7 +15,7 @@ void UActionbarInterface::UseSkill(int skillIndex)
 
 void UActionbarInterface::ShowSkillVisualCD(int skillIndex)
 {
-	if(skillContainerRef->GetSkill(skillIndex))
-		skillContainerRef->GetSkill(skillIndex)->PlayTimeline(0);
+	if(skillContainerRef->GetSkillSlot(skillIndex))
+		skillContainerRef->GetSkillSlot(skillIndex)->PlayTimeline(0);
 }
 

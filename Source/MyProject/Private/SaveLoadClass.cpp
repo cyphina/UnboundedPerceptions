@@ -11,7 +11,7 @@
 #include "WorldObjects/BaseHero.h"
 #include "AssetRegistryModule.h"
 #include "ResourceManager.h"
-#include "MyGameInstance.h"
+#include "RTSGameMode.h"
 
 USaveLoadClass::~USaveLoadClass()
 {
@@ -354,7 +354,7 @@ bool USaveLoadClass::LoadFromFilePath(const FString& filePath)
 	binaryArray.Empty();
 	fromBinary.Close();
 
-	controllerRef->GetMyGameInstance()->LoadLevelAsync(sceneSaveData.levelName.ToString());
+	controllerRef->GetGameMode()->StreamLevelAsync(sceneSaveData.levelName);
 	loadSuccess = true;
 
 	return true;

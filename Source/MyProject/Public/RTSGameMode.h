@@ -7,7 +7,7 @@
 #include "RTSGameMode.generated.h"
 
 /**
- * 
+ * Game mode only exists on server.  Things we want clients not see goes here.
  */
 
 UCLASS()
@@ -19,17 +19,26 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
 	const FString			startingLevelName = "StartMap";
 	const FString			theIntroduction = "TheIntroduction";
 	
+	UPROPERTY(BlueprintReadWrite, Category = "Levels", Meta = (AllowPrivateAccess = "true"))
+	FString					currentLevelName;
+
 	void BeginPlay() override;
-	//list of all our widgets
 
 public:
 	
 	ARTSGameMode();
+
+	UFUNCTION(BlueprintCallable, Category = Levels)
+	FString					GetCurrentLevelName() const { return currentLevelName; }
 
 	UFUNCTION(BlueprintCallable, Category = "Levels")
 	FString					GetStartingLevelName() const { return startingLevelName; }
 
 	UFUNCTION(BlueprintCallable, Category = "Levels")
 	FString					GetIntroductionLevelName() const { return theIntroduction; }
+
+	/**Stream in a level and put in the loading screen*/
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "LevelLoading")
+	void					StreamLevelAsync(FName levelName);
 
 };

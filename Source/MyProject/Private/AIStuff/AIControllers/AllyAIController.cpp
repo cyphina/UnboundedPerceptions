@@ -2,7 +2,6 @@
 
 #include "MyProject.h"
 #include "AllyAIController.h"
-#include "UserInput.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "WorldObjects/Ally.h"
@@ -23,7 +22,6 @@ void AAllyAIController::Tick(float deltaTime)
 void AAllyAIController::Possess(APawn* InPawn)
 {
 	Super::Possess(InPawn);
-	controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 	allyRef = Cast<AAlly>(GetPawn());
 	currentAllyBehavior = AllyBehavioralMode::ABM_Neutral;
 }
@@ -47,5 +45,6 @@ void AAllyAIController::SwitchAIModes(AllyBehavioralMode newMode)
 	}
 
 	currentAllyBehavior = newMode;
+	aggressionLevel = static_cast<uint8>(newMode);
 }
 

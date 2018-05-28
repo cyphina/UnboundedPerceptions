@@ -16,7 +16,7 @@ FTriggerData FTriggerData::defaultTrigger = FTriggerData();
 
 FTriggerData::FTriggerData()
 {
-
+	
 }
 
 void UTriggerManager::ActivateTrigger(UPARAM(ref) FTriggerData& triggerData)
@@ -62,16 +62,29 @@ void UTriggerManager::OpenHUDTrigger(const FTriggerData& tdata)
 	cpcRef->GetHUDManager()->AddHUD(FCString::Atoi(*tdata.triggerValues[0]));
 }
 
-void UTriggerManager::ChangePartyTrigger(const FTriggerData& tdata)
+void UTriggerManager::ChangeParty(const FTriggerData& tdata)
 {
-	checkf(tdata.triggerObjects.Num() <= 4, TEXT("Incorrect number of parameters for ChangePartyTrigger"))
+	checkf(tdata.triggerObjects.Num() <= 4, TEXT("Incorrect number of parameters %d for ChangePartyTrigger"), tdata.triggerObjects.Num());
 	int index = 0;
+	TArray<ABaseHero*> newHeroes;
+
 	for(FString heroName : tdata.triggerObjects)
 	{
-		if(ABaseHero* hero = ResourceManager::FindTriggerObjectInWorld<ABaseHero>(heroName, cpcRef->GetWorld()))
-			cpcRef->GetBasePlayer()->heroes[index];
 		++index;
+		//empty string means no hero at that slot
+		if(heroName.IsEmpty())
+		{
+			break;
+		}
+
+		ABaseHero* hero = ResourceManager::FindTriggerObjectInWorld<ABaseHero>(heroName, cpcRef->GetWorld());
+		if(hero)
+		{
+			newHeroes.Add(hero);
+		}
 	}
+	cpcRef->GetBasePlayer()->UpdateParty(newHeroes);
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::FromInt(newHeroes.Num()));
 }
 
 void UTriggerManager::ActivateOtherTrigger(const FTriggerData& tdata)
@@ -86,7 +99,7 @@ void UTriggerManager::ChangeTriggerType(const FTriggerData& tdata)
 {
 }
 
-void UTriggerManager::AddQuestTrigger(const FTriggerData& tdata)
+void UTriggerManager::AddQuest(const FTriggerData& tdata)
 {
 	checkf(tdata.triggerObjects.Num() == 0 && tdata.triggerValues.Num() == 2, TEXT("Incorrect parameters for OPENHUDTRIGGER"))
 	checkf(tdata.triggerValues[1].IsNumeric(), TEXT("ADDQUESTTRIGGER triggerValue 2 should be numeric"))
@@ -95,12 +108,17 @@ void UTriggerManager::AddQuestTrigger(const FTriggerData& tdata)
 
 void UTriggerManager::TriggerEffect(FTriggerData& triggerData)
 {
+	#if UE_EDITOR
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::FromInt(static_cast<uint8>(triggerData.triggerType)) + " Type Trigger Activated");
+	#endif
+
 	switch (triggerData.triggerType)
 	{
 		case TriggerType::None: return; break;
 		case TriggerType::OpenHUDTrigger: OpenHUDTrigger(triggerData); break;
 		case TriggerType::ActivateOtherTrigger: ActivateTrigger(UPARAM(ref) triggerData); break;
 		case TriggerType::ChangeDialog: ChangeDialog(triggerData); break;
+		case TriggerType::ChangePartyTrigger: ChangeParty(triggerData); break;
 		default: UE_LOG(LogTemp, Warning, TEXT("Unknown Trigger type attempted to be activated!"));
 	}
 }

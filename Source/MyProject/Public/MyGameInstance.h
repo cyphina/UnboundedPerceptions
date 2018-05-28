@@ -24,8 +24,10 @@ class MYPROJECT_API UMyGameInstance : public UGameInstance
 
 	UPROPERTY(BlueprintGetter = GetEventManager)
 	UEventManager*					eventManager;
+
 	UPROPERTY(BlueprintGetter = GetTriggerManager)
 	UTriggerManager*				triggerManager;
+
 	UPROPERTY(BlueprintGetter = GetQuestManager)
 	UQuestManager*					questManager;
 
@@ -35,8 +37,6 @@ class MYPROJECT_API UMyGameInstance : public UGameInstance
 
 	/**number of characters in the file path to get to the folder with all the maps*/
 	const int						numCharsInFilePathLocation = 24;
-	/**Helper function to save and load data since << operator is used for both depending on the archive type*/
-	void							SaveLoadData(FArchive& ar);
 
 public:
 	
@@ -50,8 +50,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
 	TSubclassOf<UQuestManager>		questManagerClass;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Loading Screen Class")
-	TSubclassOf<ULoadingWidget>		loadingWidgetClass;
+	/*UPROPERTY(EditDefaultsOnly, Category = "Loading Screen Class")
+	TSubclassOf<ULoadingWidget>		loadingWidgetClass;*/
 
 	UPROPERTY()
 	UWorld*							worldBeingLoaded;
@@ -59,15 +59,12 @@ public:
 	UPROPERTY()
 	UPackage*						packageToBeLoaded;
 
-	UPROPERTY(BlueprintReadOnly)
-	ULoadingWidget*					loadingWidget;
-
 	/**GameInstance::Init is only called once, not per level loaded.  Called when play button is pressed.*/
 	void							Init() override;
 	void							Shutdown() override;
 	void							SetupManagerRefs(AUserInput* CPC); //called by userinput
 
-	/**Called when level package is finished loading*/
+	/**Called when level package is finished loading.  Deprecated since we now use level streaming*/
 	void							OnFinishedStreamingLevel(const FName& packageName, UPackage* levelPackage, EAsyncLoadingResult::Type Result);
 	/**Called when world is added*/
 	void							OnWorldAdded(UWorld* world, const UWorld::InitializationValues values);
@@ -88,7 +85,7 @@ public:
 	bool							LoadGame(FString fileName);
 
 	/**Load another level's package asynchronously*/
-	UFUNCTION(BlueprintCallable, Category = "LevelLoading")
-	void							LoadLevelAsync(FString levelName);
+	//UFUNCTION(BlueprintCallable, Category = "LevelLoading")
+	//void							LoadLevelAsync(FString levelName);
 	
 };

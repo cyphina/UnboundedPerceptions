@@ -22,6 +22,7 @@ AAlly::AAlly(const FObjectInitializer& oI) : AUnit(oI)
 {
 	/* ABILITY SETUP!!! */
 	abilities.SetNum(MAX_NUM_SPELLS); //size of abilities that can be used on actionbar
+	GetCapsuleComponent()->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel9); 
 }
 
 void AAlly::BeginPlay()
@@ -38,7 +39,7 @@ void AAlly::BeginPlay()
 
 	controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 	Cast<ABasePlayer>(controllerRef->PlayerState)->allies.Add(this);
-	queryParamVision.AddObjectTypesToQuery(ECC_GameTraceChannel6);
+	queryParamVision.AddObjectTypesToQuery(ECC_GameTraceChannel6); //VisionBlockers
 }
 
 void AAlly::Tick(float deltaSeconds)
@@ -80,31 +81,12 @@ void AAlly::SetSelected(bool value)
 	}
 }
 
-FORCEINLINE void AAlly::SetSpellIndex(int index)
+void AAlly::SetSpellIndex(int index)
 {		
 #if UE_EDITOR
 	check(index >= 0 && index < MAX_NUM_SPELLS)
 #endif
 	spellIndex = index;	
-}
-
-FORCEINLINE AAllyAIController* AAlly::GetAllyAIController() 
-{
-	return allyControllerRef;
-}
-
-UMySpell* AAlly::GetSpellCDO(TSubclassOf<UMySpell> spellClass) const
-{
-#if UE_EDITOR
-	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::FromInt(abilitySystem->GetActivatableAbilities().Num()));
-#endif
-	if (spellClass)
-	{ 
-		//If we have the ability
-		if (GetAbilitySystemComponent()->FindAbilitySpecFromClass(spellClass)->Ability)
-			return spellClass->GetDefaultObject<UMySpell>();
-	}
-	return nullptr;
 }
 
 UGameplayAbility* AAlly::GetSpellInstance(TSubclassOf<UMySpell> spellClass) const
@@ -265,14 +247,18 @@ bool AAlly::SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellC
 				}
 
 				targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(result);
-				targetUnit = Cast<AUnit>(UAbilitySystemBlueprintLibrary::GetActorsFromTargetData(targetData, 0)[0]);
+				targetUnit = unit;
 
 				//Stop any queued commands since we're interrupting them to cast a spell
 				ClearCommandQueue();
 				
 				//If casting on ourselves, then we can just instantly cast
-				if (targetUnit == this)
+				if (targetUnit == this || FVector::Dist2D(targetLocation, GetActorLocation()) < 5.f)
+				{
 					PreCastChannelingCheck(spellClass);
+					controllerRef->ChangeCursor(ECursorStateEnum::Select);
+					return true;
+				}
 
 			}
 			else

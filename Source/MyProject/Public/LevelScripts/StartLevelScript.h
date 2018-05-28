@@ -15,6 +15,7 @@ class MYPROJECT_API AStartLevelScript : public AUPLevelScript
 	GENERATED_BODY()
 	
 public:
+
 	void				BeginPlay() override;
 	
 };

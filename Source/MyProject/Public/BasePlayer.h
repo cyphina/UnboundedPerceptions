@@ -33,6 +33,9 @@ class MYPROJECT_API ABasePlayer : public APlayerState
 	
 public:
 #pragma region PartyInfo
+
+	static const int			MAX_NUM_HEROES = 4;
+
 	/**Party leader should always be at slot 0*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
 	TArray<ABaseHero*>			heroes;
@@ -73,6 +76,12 @@ public:
 	FOnDialogTopicLearned		OnDialogLearned;
 
 	ABasePlayer();
+
+	/**Change a party around
+	 *@param newparty - This is an array with the new heroes that will be in the party.  Must be of sizes 1-4
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void						UpdateParty(TArray<ABaseHero*> newHeroes);
 
 	/**Update the coins
 	@param amount - this is the amount to update the coins by, and can be positive or negative

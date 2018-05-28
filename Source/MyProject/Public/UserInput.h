@@ -33,6 +33,7 @@ class AEnemy;
 class ABaseHero;
 class UMyGameInstance;
 class AHUDManager;
+class ARTSGameMode;
 class UQuestManager;
 
 //Callback delegates
@@ -67,8 +68,11 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintGetter = GetMyGameInstance, Category = "References")
 	UMyGameInstance*		gameInstance;
 
-	/**HUDManager ref.  Set this in userinput because it depends on userinput being created first */
+	/**HUDManager ref.  Set this in userinput because it depends on userinput being created first.  Also client-side HUD manipulation doesn't do very much,
+	 *since we don't store any important data in the huds */
 	AHUDManager*			hudManager;
+
+	ARTSGameMode*			gameMode;
 
 public:
 	/**offset used for widgets when dragging around*/
@@ -76,7 +80,10 @@ public:
 	FVector2D				offset;
 
 	UFUNCTION(BlueprintCallable, Category = "Accessors") 
-	AHUDManager*			GetHUDManager() const;
+	AHUDManager*			GetHUDManager() const {return hudManager; }
+
+	UFUNCTION(BlueprintCallable, Category = "Accessors") 
+	ARTSGameMode*			GetGameMode() const { return gameMode; }
 	
 	UFUNCTION(BlueprintGetter)
 	ABasePlayer* GetBasePlayer() const { return basePlayer; }
@@ -179,6 +186,7 @@ private:
 	void									Spellbook();
 	void									RightClick();
 	void									ToggleBreakMenu();
+	void									TabNextAlly();
 
 #pragma endregion
 

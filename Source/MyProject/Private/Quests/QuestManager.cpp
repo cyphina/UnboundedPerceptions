@@ -58,11 +58,12 @@ void UQuestManager::OnSwitchSubGoal()
 		if(currentGoalActor)
 		{
 			currentGoalActor->Destroy();
-			if(questListRef->currentlySelectedQuest->questInfo.subgoals[questListRef->GetQuestListSlot(questListRef->currentlySelectedQuest)->GetSelectedGoalIndex()].goalLocation != FGoalInfo::invalidGoalLocation)
-			{
-				currentGoalActor = GetWorld()->SpawnActorAbsolute<AGoalActor>(goalActorClass, FTransform(), FActorSpawnParameters());
-			}
 		}
+	}
+
+	if(questListRef->currentlySelectedQuest->questInfo.subgoals[questListRef->GetQuestListSlot(questListRef->currentlySelectedQuest)->GetSelectedGoalIndex()].goalLocation != FGoalInfo::invalidGoalLocation)
+	{
+		currentGoalActor = controllerRef->GetWorld()->SpawnActorAbsolute<AGoalActor>(goalActorClass, FTransform(questListRef->currentlySelectedQuest->questInfo.subgoals[questListRef->GetQuestListSlot(questListRef->currentlySelectedQuest)->GetSelectedGoalIndex()].goalLocation), FActorSpawnParameters());
 	}
 
 	currentDistance = GetDistanceToGoal();

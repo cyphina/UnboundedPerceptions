@@ -2,8 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "../UserWidgetExtensions/MyUserWidget.h"
+#include "UI/UserWidgetExtensions/MyUserWidget.h"
 #include "ActionbarInterface.generated.h"
 
 

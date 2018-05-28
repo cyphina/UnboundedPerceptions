@@ -3,10 +3,12 @@
 
 TMap<FGameplayTag, FColor>	ResourceManager::elementalMap = TMap<FGameplayTag, FColor>();
 FGameplayTagContainer		ResourceManager::supportTags = FGameplayTagContainer();
+FGameplayTagContainer		ResourceManager::offensiveTags = FGameplayTagContainer();
 
 void ResourceManager::InitResourceManager() {
 	InitElementalMap();
 	InitSupportTags();
+	InitOffensiveTags();
 }
 
 void ResourceManager::InitElementalMap()
@@ -32,3 +34,7 @@ void ResourceManager::InitSupportTags()
 	supportTags.AddTag(FGameplayTag::RequestGameplayTag("Skill.Category.Support"));
 }
 
+void ResourceManager::InitOffensiveTags()
+{
+	offensiveTags.AddTag(FGameplayTag::RequestGameplayTag("Skill.Category.Offensive"));
+}

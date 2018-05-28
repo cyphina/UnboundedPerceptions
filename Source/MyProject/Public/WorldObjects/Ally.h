@@ -42,8 +42,9 @@ class MYPROJECT_API AAlly : public AUnit
 	//object query that only includes visionblockers
 	FCollisionObjectQueryParams					queryParamVision;
 
+	/*SpellIndex to remember what slot was used so we can set it on CD after casting spell.  Don't make it part of begincast because items don't need it*/
 	UPROPERTY(BlueprintSetter = SetSpellIndex, BlueprintGetter = GetSpellIndex, Category = "Spells")
-	int											spellIndex = -1; //spellIndex to remember what slot was used so we can set it on CD after casting spell.  Don't make it part of begincast because items don't need it
+	int											spellIndex = -1; 
 
 	AAllyAIController*							allyControllerRef;
 
@@ -69,11 +70,6 @@ public:
 	//Get the class of the spell at this slot (CHECKED INDEX ACCESS)
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells") 
 	TSubclassOf<UMySpell>						GetSpellAtSlot(int index) const { if (index >= 0 && index < abilities.Num()) return abilities[index]; return TSubclassOf<UMySpell>(); }
-	
-	//Gets CDO of any spell.  CDOs of objects can only be given a struct, this function lets us get the CDO as the type of the object.  Also checks to see if hero has spell, else it won't work
-	//Trying to get instances only returns active instances, that is, spells that are marked "Active" and haven't been committed because they are on pause.  Use GetSpellInstance to get actual instance
-	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells") 
-	UMySpell*									GetSpellCDO(TSubclassOf<UMySpell> spellClass) const;
 
 	//Sees if there's any active instances of a spell and gets them -- Used to get current spell CD timer
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells") 
@@ -86,7 +82,7 @@ public:
 	void										SetSpellIndex(int index);
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
-	AAllyAIController*							GetAllyAIController();
+	FORCEINLINE AAllyAIController*				GetAllyAIController() const { return allyControllerRef; }
 #pragma endregion
 /*---Utility---*/
 

@@ -15,6 +15,7 @@ class MYPROJECT_API IInteractable
 	GENERATED_IINTERFACE_BODY()
 
 public:	
+
 	/** classes using this interface must implement this function 
 	 * @param hero - The hero who interacted with this interactable
 	 */

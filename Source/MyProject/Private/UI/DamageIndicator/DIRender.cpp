@@ -29,7 +29,7 @@ void UDIRender::BeginPlay()
 void UDIRender::TickComponent(float deltaSeconds, ELevelTick tickType, FActorComponentTickFunction * thisTickFunction)
 {
 	Super::TickComponent(deltaSeconds, tickType, thisTickFunction);
-	SetRelativeRotation(FRotator(0,-90,0) + controllerRef->GetCameraPawnRotation());
+	SetWorldRotation(FRotator(0,-180,0) + controllerRef->GetCameraPawnRotation());
 	TickTimeLine(deltaSeconds);
 }
 

@@ -83,6 +83,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Spell")
 	FText								GetName() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->name; }
 
+	/**Get the name of the primary element this spell is associated with*/
+	UFUNCTION(BlueprintCallable, Category = "Spell")
+	FText								GetElem() const { return FText::FromString(USpellManager::Get().GetSpellInfo(spellDefaults.id)->elem.ToString().RightChop(15)); }
+
+	/**Get the name of the primary element this spell is associated with*/
+	UFUNCTION(BlueprintCallable, Category = "Spell")
+	FGameplayTag						GetElemTag() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->elem; }
+
 	UFUNCTION(BlueprintCallable, Category = "Spell")
 	TArray<int>							GetPreReqs() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->preReqs; }
 	

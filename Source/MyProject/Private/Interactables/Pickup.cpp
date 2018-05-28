@@ -17,6 +17,9 @@ APickup::APickup()
 	sphereCollider = CreateDefaultSubobject<USphereComponent>(FName("Trigger"));
 	sphereCollider->SetupAttachment(sceneComponent);
 	interactableMesh->SetSimulatePhysics(true);
+	interactableMesh->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel3);
+	interactableMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore); //Enemy
+	interactableMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel9, ECollisionResponse::ECR_Ignore); //Friendly
 }
 
 void APickup::BeginPlay()

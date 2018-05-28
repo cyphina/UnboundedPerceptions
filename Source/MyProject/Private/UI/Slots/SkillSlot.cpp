@@ -100,9 +100,24 @@ void USkillSlot::UpdateSkillSlot(TSubclassOf<UMySpell> spellClass)
 	}
 	else
 	{
+		eSkillContainer->GetAllyRef()->abilities[actionSlotRef->slotIndex] = nullptr;
 		SetImage(nullptr); 
 		cdTimeline.Stop(); //stop the timeline so it doens't tick anymore 
 		HideCDVisuals(); //and hide skill indicators
+	}
+}
+
+void USkillSlot::ShowDescription()
+{
+	UMySpell* spellAtSlot = eSkillContainer->GetAllyRef()->GetSpellAtSlot(actionSlotRef->slotIndex).GetDefaultObject();
+	if(spellAtSlot)
+	{
+		UAbilitySystemComponent* allySpellComp = eSkillContainer->GetAllyRef()->GetAbilitySystemComponent();
+		FString relevantSpellInfo = "Costs " + FString::FromInt(spellAtSlot->GetCost(allySpellComp)) + " mana\r\n" + 
+									FString::FromInt(spellAtSlot->GetCDDuration(allySpellComp)) + " second CD \r\n" +
+									FString::FromInt(spellAtSlot->GetRange(allySpellComp)) + " range";
+		actionSlotRef->CPCRef->GetHUDManager()->GetMainHUD()->DisplayTTBoxText(spellAtSlot->GetName(), 
+		spellAtSlot->GetDescription(), spellAtSlot->GetElem(), FText::FromString(relevantSpellInfo), FText::GetEmpty());
 	}
 }
 

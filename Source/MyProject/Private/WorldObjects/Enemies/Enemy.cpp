@@ -17,7 +17,7 @@ AEnemy::AEnemy(const FObjectInitializer& oI) : AUnit(oI)
 	aggroRange = 20;
 	isEnemy = true;
 	SetActorHiddenInGame(true); //set hidden by default so won't be revealed by vision
-	GetMesh()->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel5);
+	GetMesh()->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel2);
 }
 
 void AEnemy::BeginPlay()

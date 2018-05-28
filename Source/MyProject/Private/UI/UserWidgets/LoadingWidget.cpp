@@ -19,5 +19,4 @@ void ULoadingWidget::Construct_Implementation()
 {
 	Super::Construct_Implementation();
 	SetTip(tipList[FMath::RandRange(0,tipList.Num() - 1)]);
-	Cast<UMyGameInstance>(GetWorld()->GetGameInstance())->loadingWidget = this;
 }

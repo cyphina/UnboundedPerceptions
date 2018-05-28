@@ -29,7 +29,7 @@ class UMySpell;
 struct FBTSupportTaskMemory
 {
 	UMySpell*						supportSpell = nullptr;
-	int								supportSpellIndex = -1;
+	int								supportSpellIndex = -1; //use index because we need it to properly set CD
 	AUnit*							unitRef = nullptr;
 	AUnitController*				unitControllerRef = nullptr;
 };

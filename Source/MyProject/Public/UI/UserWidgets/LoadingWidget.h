@@ -28,12 +28,14 @@ public:
 	/**Current loading screen tip that is displayed*/
 	UPROPERTY(BlueprintReadWrite, Category = "Data")
 	FText			tip;
-	/**Stored level name to load when player clicks continue*/
-	UPROPERTY(BlueprintReadWrite, Category = "Data")
-	FString			loadedLevelName;
+
 	/**Callback when level finished precaching*/
+
+	/**Display a message when loading is finished*/
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Callbacks")
-	void			OnLoadingFinished(const FString& newLoadedLevelName);
+	void			OnLoadingFinished();
+
+	/**Show a random game tip*/
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Data")
 	void			SetTip(const FText& newTip);
 };

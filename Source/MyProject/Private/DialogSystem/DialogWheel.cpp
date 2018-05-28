@@ -56,10 +56,9 @@ void UDialogWheel::SelectPreviousConversationTopics()
 	UpdateDialogWheelText();
 }
 
-void UDialogWheel::NativeConstruct()
+void UDialogWheel::Construct_Implementation()
 {
-	Super::NativeConstruct();
-	socialWindowRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController())->GetHUDManager()->GetSocialWindow();
+	Super::Construct_Implementation();
 }
 
 bool UDialogWheel::OnWidgetAddToViewport_Implementation()

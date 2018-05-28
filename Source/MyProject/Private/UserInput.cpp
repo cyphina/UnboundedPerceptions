@@ -3,6 +3,7 @@
 #include "MyProject.h"
 #include "UserInput.h"
 #include "MyGameInstance.h"
+#include "RTSGameMode.h"
 #include "Engine.h"
 #include "SceneViewport.h"
 #include "Extras/FlyComponent.h"
@@ -15,6 +16,7 @@
 #include "UI/UserWidgets/MainWidget.h"
 #include "AbilitySystemComponent.h"
 #include "SpellSystem/MySpell.h"
+#include "ActionbarInterface.h"
 #include "MyCheatManager.h"
 
 
@@ -27,11 +29,14 @@ AUserInput::AUserInput()
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Type::GrabHandClosed;
 
-	queryableTargetObjects.Add(EObjectTypeQuery::ObjectTypeQuery1);
-	queryableTargetObjects.Add(EObjectTypeQuery::ObjectTypeQuery7);
-	queryableTargetObjects.Add(EObjectTypeQuery::ObjectTypeQuery8);
+	//ObjectTypeQueries can be seen in enum list ObjectTypeQuery in the blueprints
+	queryableTargetObjects.Add(EObjectTypeQuery::ObjectTypeQuery1); //WorldActor
+	queryableTargetObjects.Add(EObjectTypeQuery::ObjectTypeQuery7); //Enemy
+	queryableTargetObjects.Add(EObjectTypeQuery::ObjectTypeQuery8); //Interactable
+	queryableTargetObjects.Add(EObjectTypeQuery::ObjectTypeQuery9); //NPC
 	//queryableTargetObjects.Add(EObjectTypeQuery::ObjectTypeQuery10); don't hit buildings for these click traces
-	queryableTargetObjects.Add(EObjectTypeQuery::ObjectTypeQuery11);
+	//queryableTargetObjects.Add(EObjectTypeQuery::ObjectTypeQuery11); //VisionBlocker
+	queryableTargetObjects.Add(EObjectTypeQuery::ObjectTypeQuery12); //Friendly
 
 	queryParamVision.AddObjectTypesToQuery(ECC_GameTraceChannel6); //Query vision blockers only
 	//HitResultTraceDistance = 100000.f; set in parent
@@ -43,6 +48,8 @@ void AUserInput::BeginPlay()
 	gameInstance = Cast<UMyGameInstance>(GetGameInstance());
 	gameInstance->GetQuestManager()->controllerRef = this;
 	gameInstance->SetupManagerRefs(this);
+
+	gameMode = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
 
 	//There should only be one player
 	basePlayer = Cast<ABasePlayer>(PlayerState);
@@ -86,11 +93,7 @@ void AUserInput::SetupInputComponent()
 	InputComponent->BindAction("QuestKey", IE_Pressed, this, &AUserInput::QuestJournal);
 	InputComponent->BindAction("ToggleQuestWidget", IE_Pressed, this, &AUserInput::QuestList);
 	InputComponent->BindAction("Break", IE_Pressed, this, &AUserInput::ToggleBreakMenu);
-}
-
-AHUDManager* AUserInput::GetHUDManager() const
-{
-	return hudManager;
+	InputComponent->BindAction("SelectNext", IE_Pressed, this, &AUserInput::TabNextAlly);
 }
 
 void AUserInput::StopSelectedAllyCommands()
@@ -173,6 +176,29 @@ void AUserInput::Spellbook()
 void AUserInput::ToggleBreakMenu()
 {
 	GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_Break));
+}
+
+void AUserInput::TabNextAlly()
+{
+	int selectedHeroIndex = -1;
+	if(basePlayer->selectedAllies.Num() > 1)
+	{
+		basePlayer->unitIndex = (basePlayer->unitIndex + 1) % basePlayer->selectedAllies.Num();
+		//Make sure any other selected heroes are actually in hero array.  If a hero is on the map, it better be in our party else spawn the NPC version of it
+		hudManager->GetActionHUD()->SingleAllyViewIndexFree(basePlayer->selectedAllies[basePlayer->unitIndex]);
+	}
+	else
+	{
+		//tab through heroes if one/zero allies are selected
+		if(basePlayer->selectedAllies.Num() > 0)
+		{
+			selectedHeroIndex = basePlayer->selectedHeroes[0]->heroIndex;
+			basePlayer->heroes[selectedHeroIndex]->SetSelected(false);
+		}
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Purple, FString::FromInt(basePlayer->heroes.Num()));
+		basePlayer->heroes[(selectedHeroIndex+1)%basePlayer->heroes.Num()]->SetSelected(true);
+		OnAllySelectedDelegate.Broadcast();
+	}
 }
 
 void AUserInput::RightClick()
@@ -291,7 +317,7 @@ void AUserInput::CursorHover()
 				case ECollisionChannel::ECC_WorldStatic: ChangeCursor(ECursorStateEnum::Moving); break;
 				case ECollisionChannel::ECC_GameTraceChannel3: ChangeCursor(ECursorStateEnum::Interact); break;
 				case ECollisionChannel::ECC_GameTraceChannel4: ChangeCursor(ECursorStateEnum::Talking); break;
-				case ECollisionChannel::ECC_GameTraceChannel8: if (Cast<AUnit>(hitActor)->GetIsEnemy() && hitActor->GetDefaultAttachComponent()->bVisible) ChangeCursor(ECursorStateEnum::Attack); break;
+				case ECollisionChannel::ECC_GameTraceChannel2: ChangeCursor(ECursorStateEnum::Attack); break;
 				default: ChangeCursor(ECursorStateEnum::Select); break;
 				}
 			}

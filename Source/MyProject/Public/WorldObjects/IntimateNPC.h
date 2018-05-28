@@ -43,6 +43,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
 	void 						Interact(ABaseHero* hero);
+
 	virtual void 				Interact_Implementation(ABaseHero* hero) override;
 	virtual FVector				GetInteractableLocation_Implementation() override { return Super::GetInteractableLocation_Implementation(); }
 };

@@ -11,8 +11,8 @@ public class MyProject : ModuleRules
         bUseRTTI = true;                
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "GameplayTasks", "GameplayTags", "GameplayAbilities", "AIModule", "MyProjectEditor"});
-		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" ,"Json", "JsonUtilities", "GameplayAbilities", "AIModule"});
-		
+		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "GameplayAbilities", "AIModule"});
+
 		// Uncomment if you are using online features
 		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
 		// if ((Target.Platform == UnrealTargetPlatform.Win32) || (Target.Platform == UnrealTargetPlatform.Win64))

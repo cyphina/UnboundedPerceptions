@@ -30,14 +30,14 @@ TArray<TWeakObjectPtr<AActor>> AGAbilityFHeroRadius::PerformOverlap2(const FVect
 {
 	static FName RadiusTargetingOverlap = FName(TEXT("RadiusTargetingOverlap"));
 	bool bTraceComplex = false;
-
 	FCollisionQueryParams Params(RadiusTargetingOverlap, bTraceComplex);
 	Params.bReturnPhysicalMaterial = false;
 	Params.bTraceAsyncScene = false;
 
 	TArray<FOverlapResult> Overlaps;
 	FCollisionObjectQueryParams p;
-	p.AddObjectTypesToQuery(ECC_GameTraceChannel8);
+	p.AddObjectTypesToQuery(ECC_GameTraceChannel2);
+	p.AddObjectTypesToQuery(ECC_GameTraceChannel9);
 	SourceActor->GetWorld()->OverlapMultiByObjectType(Overlaps, Origin, FQuat::Identity, FCollisionObjectQueryParams(p), FCollisionShape::MakeSphere(Radius), Params);
 
 	TArray<TWeakObjectPtr<AActor>>	HitActors;

@@ -141,38 +141,39 @@ public:
 ///--expose stats to blueprints and other units but only change the stats from C++ which is why we don't see any setters--
 #pragma region Stats
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
-	int								 GetAttributeBaseValue(int att) const;
+	FORCEINLINE int					 GetAttributeBaseValue(int att) const { return baseC->GetAttribute(att)->GetBaseValue(); };
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
-	float							 GetSkillBaseValue(int skill) const;
+	FORCEINLINE float				 GetSkillBaseValue(int skill) const { return baseC->GetSkill(skill)->GetBaseValue(); }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
-	float							 GetVitalBaseValue(int vit) const;
+	FORCEINLINE float				 GetVitalBaseValue(int vit) const { return baseC->GetVital(vit)->GetBaseValue(); };
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
-	float							 GetMechanicBaseValue(int mec) const;
+	FORCEINLINE float				 GetMechanicBaseValue(int mec) const { return baseC->GetMechanic(mec)->GetBaseValue(); }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
-	int								 GetAttributeAdjValue(int att) const;
+	FORCEINLINE int					 GetAttributeAdjValue(int att) const { return baseC->GetAttribute(att)->GetCurrentValue(); }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
-	float							 GetSkillAdjValue(int skill) const;
+	FORCEINLINE float				 GetSkillAdjValue(int skill) const { return baseC->GetSkill(skill)->GetAdjustedValue(); }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
-	float							 GetMechanicAdjValue(int mec) const;
+	FORCEINLINE float				 GetMechanicAdjValue(int mec) const { return baseC->GetMechanic(mec)->GetCurrentValue(); }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
-	float							 GetVitalAdjValue(int vit) const;
+	FORCEINLINE float				 GetVitalAdjValue(int vit) const { return baseC->GetVital(vit)->GetAdjustedValue(); }
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
-	float							 GetVitalCurValue(int vit) const;
+	FORCEINLINE float				 GetVitalCurValue(int vit) const { return baseC->GetVital(vit)->GetCurrValue(); }
 
 	/**Only used to force hp to change to another value by triggers or cheatmenu*/
 	UFUNCTION(BlueprintCallable, Category = "StatAccessors")
-	void							 SetVitalCurValue(int vit, int vitValue) const;
+	void							SetVitalCurValue(int vit, int vitValue) const { baseC->GetVital(vit)->SetCurrValue(vitValue); }
 
+	/**Get Level of unit from baseCharacter*/
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
-	int							     GetLevel() const; //Get Level of unit from BaseC
+	FORCEINLINE int					 GetLevel() const { return baseC->GetLevel(); }
 
 	UFUNCTION(BlueprintCallable, Category = "Stats")
 	void							 UpdateStats(); //call whenever stats get changed
@@ -300,6 +301,11 @@ public:
 	//List of abilities that are in unit's skill slots
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
 	TArray<TSubclassOf<class UMySpell>> abilities; 	
+
+	//Gets CDO of any spell.  CDOs of objects can only be given a struct, this function lets us get the CDO as the type of the object.  Also checks to see if hero has spell, else it won't work
+	//Trying to get instances only returns active instances, that is, spells that are marked "Active" and haven't been committed because they are on pause.  Use GetSpellInstance to get actual instance
+	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells") 
+	UMySpell*							GetSpellCDO(TSubclassOf<UMySpell> spellClass) const;
 
 	//Function called when ability is activated to allow spell to drain resources.  Public because MySpell needs to reference it
 	void								CommitCast(UMySpell* spell);

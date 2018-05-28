@@ -33,5 +33,5 @@ void UBreakMenu::Options()
 
 void UBreakMenu::Exit()
 {
-	gameInstanceRef->LoadLevelAsync(gameModeRef->GetStartingLevelName());
+	gameModeRef->StreamLevelAsync(*gameModeRef->GetStartingLevelName());
 }

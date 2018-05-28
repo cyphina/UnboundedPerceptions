@@ -68,7 +68,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
 	void							SetImage(UTexture2D* image);
 
-	/**Used wehn changing the skill to a new one*/
+	/**Used when changing the skill to a new one*/
 	UFUNCTION(BlueprintCallable, Category = "Update skills")
 	void							UpdateSkillSlot(TSubclassOf<UMySpell> spell);
+
+	/**Used to generate tooltip description*/
+	UFUNCTION(BlueprintCallable)
+	void							ShowDescription();
+
 };

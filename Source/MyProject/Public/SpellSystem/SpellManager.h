@@ -4,7 +4,6 @@
 
 #include "GameplayTagContainer.h"
 #include "GameplayTagsManager.h"
-#include "GameplayEffectTypes.h"
 #include "StatChangeEffect.h"
 #include "DamageStructs.h"
 #include "SpellManager.generated.h"
@@ -158,6 +157,7 @@ public:
 
 	FORCEINLINE FSpellInfo* GetSpellInfo(int spellID)
 	{
+		checkf(spells.Contains(spellID), TEXT("SpellID %d missing from spellList"), spellID);
 		return &spells[spellID];
 	}
 
@@ -178,42 +178,4 @@ private:
 	void									SetupSpells();
 };
 
-//A class that holds a blueprint library, that is it can be used anywhere inside blueprints so we can get our spellInfo via the manager in our blueprints
-UCLASS(MinimalAPI)
-class USpellFunctionLibrary : public UObject
-{
-	GENERATED_UCLASS_BODY()
-
-	static TArray<FStatChange>									statChanges;
-
-public:
-	//Pass in spell id to get a spell's spellinfo.  
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "SpellManager")
-	static FORCEINLINE FSpellInfo&						GetSpellInfo(int spellID)
-	{
-		return *USpellManager::Get().GetSpellInfo(spellID);
-	}
-
-	/**Function with custom BPNode which wraps around make gameplay effect to provide it with more functionality*/
-	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Gameplay Effect", BlueprintInternalUseOnly = "true"), Category = "Spell Creation Helper")
-	static struct FGameplayEffectSpecHandle				MakeGameplayEffect(UMySpell* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, 
-																		   float Duration, float Period, FGameplayTag Elem, 
-																		   FGameplayTag Name, FGameplayTagContainer assetTags);
-
-	/**Creates gameplay damage effect*/
-	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Damage Effect", BlueprintInternalUseOnly = "true"), Category = "EffectFactory")
-	static struct FGameplayEffectSpecHandle				MakeDamageEffect(UMySpell* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration,
-																		 float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
-																		 FDamageScalarStruct damageValues);
-
-
-	/**WARNING NOT CURRENTLY WORKING Creates gameplay stat change effect*/
-	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Stat Change Effect", BlueprintInternalUseOnly = "true"), Category = "EffectFactory")
-	static struct FGameplayEffectSpecHandle				MakeStatChangeEffect(UMySpell* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration, 
-																			 float Period, FGameplayTag Elem, FGameplayTag Name, 
-																			 FGameplayTagContainer assetTags, TArray<FStatChange> StatChanges);
-
-	static TArray<FStatChange>							GetStatChanges() { return statChanges; }
-
-};
 

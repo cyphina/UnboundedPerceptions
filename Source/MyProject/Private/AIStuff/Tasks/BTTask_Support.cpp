@@ -60,7 +60,7 @@ EBTNodeResult::Type UBTTask_Support::ExecuteTask(UBehaviorTreeComponent& ownerCo
 		//if its an aoe spell find the best part by running the AOE EQS
 		if (myMemory->supportSpell->GetTargetting() == FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))
 		{
-			myMemory->unitControllerRef->FindBestAOELocation(myMemory->supportSpellIndex);
+			myMemory->unitControllerRef->FindBestAOELocation(myMemory->supportSpellIndex, true);
 		}
 		else if (myMemory->supportSpell->GetTargetting() == FGameplayTag::RequestGameplayTag("Skill.Targetting.None"))
 		{
@@ -68,7 +68,7 @@ EBTNodeResult::Type UBTTask_Support::ExecuteTask(UBehaviorTreeComponent& ownerCo
 		}
 		else
 		{
-			myMemory->unitControllerRef->FindWeakestTarget(myMemory->supportSpellIndex);
+			myMemory->unitControllerRef->FindWeakestTarget(myMemory->supportSpellIndex, true);
 		}
 		return EBTNodeResult::InProgress;
 	}

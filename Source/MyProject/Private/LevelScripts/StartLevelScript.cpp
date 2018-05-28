@@ -11,6 +11,7 @@ void AStartLevelScript::BeginPlay()
 {
 	Super::BeginPlay();
 	controllerRef->SetActorTickEnabled(false);
+	controllerRef->ChangeCursor(ECursorStateEnum::Select);
 	//UGameplayStatics::GetGameMode()->SetActorTickEnabled(false);
 	//GetWorld()->GetGameState()->SetActorTickEnabled(false);
 }

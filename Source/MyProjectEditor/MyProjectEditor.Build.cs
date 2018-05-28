@@ -10,7 +10,7 @@ public class MyProjectEditor : ModuleRules
 		PrivateIncludePaths.AddRange(new string[] {"MyProjectEditor/Private"});
 		PublicDependencyModuleNames.AddRange(new string[]{});
 		PrivateDependencyModuleNames.AddRange(new string[]{
-            "MyProject",
+			"MyProject",
 			"Core",
             "Engine",
             "CoreUObject",

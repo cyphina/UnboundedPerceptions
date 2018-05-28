@@ -26,6 +26,13 @@ void ABasePlayer::OnConstruction(const FTransform& transform)
 	Super::OnConstruction(transform);
 }
 
+void ABasePlayer::UpdateParty(TArray<ABaseHero*> newHeroes)
+{
+	checkf(newHeroes.Num() > 0 && newHeroes.Num() <= MAX_NUM_HEROES, TEXT("Inappropriate size (%d) of hero array"), newHeroes.Num());
+	heroes = newHeroes;
+}
+
+
 void ABasePlayer::UpdateGold(int32 amount)
 {
 	money = money + amount;
@@ -35,7 +42,8 @@ void ABasePlayer::UpdateEXP(int32 amount)
 {
 	for(ABaseHero* hero : heroes)
 	{
-		hero->SetCurrentExp(amount);
+		if(IsValid(hero))
+			hero->SetCurrentExp(amount);
 	}
 }
 

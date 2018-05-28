@@ -81,5 +81,4 @@ class MYPROJECT_API UMyCheatManager : public UCheatManager
 	 */
 	UFUNCTION(exec, Category = "Cheats")
 	virtual void										SetUnitCurHP(FString unitName, int hpVal);
-
 };
