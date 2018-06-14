@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "GameplayTagContainer.h"
 #include "QuestManager.generated.h"
 
 class ABasePlayer;
@@ -15,25 +16,44 @@ class AEnemy;
 class ANPC;
 class AGoalActor;
 
+UCLASS()
+class MYPROJECT_API UQuestMap : public UDataAsset
+{
+	GENERATED_BODY()
+
+public:
+
+	/**Map of classes from which we can activate quests from*/
+	UPROPERTY(EditAnywhere)
+	TMap<FGameplayTag, TSubclassOf<AQuest>>		questClassList;
+};
+
+//TODO: Add a delegate for if quest failed
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnQuestCompleted);
+
+
 UCLASS(Blueprintable)
 class MYPROJECT_API UQuestManager : public UObject
 {
 	GENERATED_BODY()
 	
 public:	
-	
+
 	UPROPERTY(BlueprintReadWrite, Category = "References")
 	AUserInput*								controllerRef;
 
+	/**
+	 * UI element that lists all the quests in a sidebar
+	 */
 	UPROPERTY(BlueprintReadWrite, Category = "References") 
 	UQuestList*								questListRef;
 
 	UPROPERTY(BlueprintReadWrite, Category = "References")
 	UQuestJournal*							questJournalRef;
 
-	/**we need a ref to the leader to determine how far away it is from the goal actor*/
-	UPROPERTY(BlueprintReadWrite, Category = "References")
-	ABaseHero*								partyLeader;
+	/**Map of quest GameplayTagName to quest class*/
+	UPROPERTY(EditAnywhere, Category = "Quest Data")
+	UQuestMap*								questMap;
 
 	/**actor that determies location of the quest*/
 	UPROPERTY(BlueprintReadWrite, Category = "References")
@@ -54,13 +74,15 @@ public:
 	/**failed quests*/
 	UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
 	TArray<AQuest*>							failedQuests;
-
-	/**Map of classes from which we can add quests*/
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Quest Class List")
-	TMap<FName, TSubclassOf<AQuest>>		questClassList;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Quest HUD")
 	TSubclassOf<AGoalActor>					goalActorClass;
+
+	/**Called when a quest is completed to unlock new quests or such*/
+	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+	FOnQuestCompleted						OnQuestCompletedDelegate;
+
+	void									Init();
 
 	/**Select a new quest in the quest list*/
 	UFUNCTION(BlueprintCallable, Category = "Quest Managing")

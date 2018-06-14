@@ -13,6 +13,7 @@ class ULoadingWidget;
 /**
  * GameInstance information kept across levels.  Does not make ACTORS persistant, only data
  * However GameInstance itself is persistent
+ * Stores client data
  */
 
 UCLASS()
@@ -21,17 +22,6 @@ class MYPROJECT_API UMyGameInstance : public UGameInstance
 	GENERATED_BODY()	
 	//private constructor, don't make this bad boy
 	UMyGameInstance(); 
-
-	UPROPERTY(BlueprintGetter = GetEventManager)
-	UEventManager*					eventManager;
-
-	UPROPERTY(BlueprintGetter = GetTriggerManager)
-	UTriggerManager*				triggerManager;
-
-	UPROPERTY(BlueprintGetter = GetQuestManager)
-	UQuestManager*					questManager;
-
-	USaveLoadClass*					saveLoadManager;
 
 	FString							levelPathToLoad;
 
@@ -42,13 +32,7 @@ public:
 	
 	static const FString			saveFilePath;
 
-	/**Expose these classes so we can spawn a more derived blueprint class version of each manager in the code*/
-	UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
-	TSubclassOf<UEventManager>		eventManagerClass;
-	UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
-	TSubclassOf<UTriggerManager>	triggerManagerClass;
-	UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
-	TSubclassOf<UQuestManager>		questManagerClass;
+	
 
 	/*UPROPERTY(EditDefaultsOnly, Category = "Loading Screen Class")
 	TSubclassOf<ULoadingWidget>		loadingWidgetClass;*/
@@ -59,30 +43,21 @@ public:
 	UPROPERTY()
 	UPackage*						packageToBeLoaded;
 
-	/**GameInstance::Init is only called once, not per level loaded.  Called when play button is pressed.*/
+	/**
+	 *GameInstance::Init is only called once, not per level loaded.  Called when play button is pressed.
+	 */
 	void							Init() override;
 	void							Shutdown() override;
-	void							SetupManagerRefs(AUserInput* CPC); //called by userinput
 
-	/**Called when level package is finished loading.  Deprecated since we now use level streaming*/
+	/**
+	 *Called when level package is finished loading.  Deprecated since we now use level streaming
+	 */
 	void							OnFinishedStreamingLevel(const FName& packageName, UPackage* levelPackage, EAsyncLoadingResult::Type Result);
-	/**Called when world is added*/
-	void							OnWorldAdded(UWorld* world, const UWorld::InitializationValues values);
-							
-	///Manager class accessors///
-	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
-	UEventManager*					GetEventManager() const { return eventManager; }
-	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
-	UTriggerManager*				GetTriggerManager() const { return triggerManager; }
-	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
-	UQuestManager*					GetQuestManager() const { return questManager; }
-	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
-	USaveLoadClass*					GetSaveManager() const { return saveLoadManager; }
 
-	UFUNCTION(BlueprintCallable, Category = "Managers")
-	bool							SaveGame(FString saveName);
-	UFUNCTION(BlueprintCallable, Category = "Managers")
-	bool							LoadGame(FString fileName);
+	/**
+	 *Called when world is added
+	 */
+	void							OnWorldAdded(UWorld* world, const UWorld::InitializationValues values);
 
 	/**Load another level's package asynchronously*/
 	//UFUNCTION(BlueprintCallable, Category = "LevelLoading")

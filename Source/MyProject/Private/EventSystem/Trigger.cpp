@@ -2,7 +2,7 @@
 
 #include "MyProject.h"
 #include "Trigger.h"
-#include "MyGameInstance.h"
+#include "RTSGameMode.h"
 #include "ResourceManager.h"
 #include "UserInput.h"
 #include "BasePlayer.h"
@@ -17,6 +17,12 @@ FTriggerData FTriggerData::defaultTrigger = FTriggerData();
 FTriggerData::FTriggerData()
 {
 	
+}
+
+void UTriggerManager::Init()
+{
+	cpcRef = Cast<AUserInput>(GetOuter()->GetWorld()->GetFirstPlayerController());
+	gameModeRef = Cast<ARTSGameMode>(GetOuter());
 }
 
 void UTriggerManager::ActivateTrigger(UPARAM(ref) FTriggerData& triggerData)
@@ -65,12 +71,10 @@ void UTriggerManager::OpenHUDTrigger(const FTriggerData& tdata)
 void UTriggerManager::ChangeParty(const FTriggerData& tdata)
 {
 	checkf(tdata.triggerObjects.Num() <= 4, TEXT("Incorrect number of parameters %d for ChangePartyTrigger"), tdata.triggerObjects.Num());
-	int index = 0;
-	TArray<ABaseHero*> newHeroes;
+	TArray<ABaseHero*> newHeroes = TArray<ABaseHero*>();
 
 	for(FString heroName : tdata.triggerObjects)
 	{
-		++index;
 		//empty string means no hero at that slot
 		if(heroName.IsEmpty())
 		{
@@ -83,6 +87,7 @@ void UTriggerManager::ChangeParty(const FTriggerData& tdata)
 			newHeroes.Add(hero);
 		}
 	}
+	//GetBasePlayer will return null if we don't go through persistent level setup first
 	cpcRef->GetBasePlayer()->UpdateParty(newHeroes);
 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::FromInt(newHeroes.Num()));
 }
@@ -103,7 +108,7 @@ void UTriggerManager::AddQuest(const FTriggerData& tdata)
 {
 	checkf(tdata.triggerObjects.Num() == 0 && tdata.triggerValues.Num() == 2, TEXT("Incorrect parameters for OPENHUDTRIGGER"))
 	checkf(tdata.triggerValues[1].IsNumeric(), TEXT("ADDQUESTTRIGGER triggerValue 2 should be numeric"))
-	gameInstanceRef->GetQuestManager()->AddNewQuest(gameInstanceRef->GetQuestManager()->questClassList[*tdata.triggerValues[0]], FCString::Atoi(*tdata.triggerValues[0]) != 0);
+	gameModeRef->GetQuestManager()->AddNewQuest(gameModeRef->GetQuestManager()->questMap->questClassList[FGameplayTag::RequestGameplayTag(*(FString("QuestName.")+tdata.triggerValues[0]))], FCString::Atoi(*tdata.triggerValues[0]) != 0);
 }
 
 void UTriggerManager::TriggerEffect(FTriggerData& triggerData)
@@ -119,6 +124,7 @@ void UTriggerManager::TriggerEffect(FTriggerData& triggerData)
 		case TriggerType::ActivateOtherTrigger: ActivateTrigger(UPARAM(ref) triggerData); break;
 		case TriggerType::ChangeDialog: ChangeDialog(triggerData); break;
 		case TriggerType::ChangePartyTrigger: ChangeParty(triggerData); break;
+		case TriggerType::AddQuestTrigger: AddQuest(triggerData); break;
 		default: UE_LOG(LogTemp, Warning, TEXT("Unknown Trigger type attempted to be activated!"));
 	}
 }

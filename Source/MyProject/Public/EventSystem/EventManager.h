@@ -9,7 +9,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSectionCompleted, FGameplayTag, sectionName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChapterCompleted, FGameplayTag, chapterName);
 
-class UMyGameInstance;
+class ARTSGameMode;
 
 UCLASS()
 class MYPROJECT_API UEventManager : public UActorComponent
@@ -28,7 +28,7 @@ class MYPROJECT_API UEventManager : public UActorComponent
 	int						currentChapter = 1;
 	int						currentSection = 1;
 	 
-	UMyGameInstance*		gameInstance = nullptr;
+	ARTSGameMode*			gameModeRef = nullptr;
 
 public:
 

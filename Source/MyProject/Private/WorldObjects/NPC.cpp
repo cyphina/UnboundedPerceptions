@@ -14,10 +14,12 @@ ANPC::ANPC()
 	PrimaryActorTick.bCanEverTick = true;
 	onDialogEndTriggerData.triggerType = TriggerType::OpenHUDTrigger;
 	onDialogEndTriggerData.enabled = true;
+
 	TArray<FString> triggerValues;
 	triggerValues.Add(FString("11"));
 	onDialogEndTriggerData.triggerValues = triggerValues;
 	onDialogEndTriggerData.numCalls = -1;
+
 	GetMesh()->SetCollisionProfileName("NPC");
 }
 
@@ -49,23 +51,42 @@ FName ANPC::GetConversationName(FGameplayTag conversationTopic) const
 void ANPC::Interact_Implementation(ABaseHero* hero)
 {
 	GetController()->StopMovement();
+	currentlyTalkingHero = hero;
+
 	FVector currentLocation = GetActorLocation();
 	FVector difference = hero->GetActorLocation() - currentLocation;
 	FVector projectedDirection = FVector(difference.X, difference.Y, 0);
 	SetActorRotation(FRotationMatrix::MakeFromX(FVector(projectedDirection)).Rotator());
+
+	//If this npc wants to converse, we go to another screen after the initial conversation where we can interact more
+	controllerRef->GetHUDManager()->GetDialogBox()->SetDialogPortraits(*hero->GetGameName().ToString(), *GetGameName().ToString());
 	if (bWantsToConverse)
 	{
 		controllerRef->GetHUDManager()->GetSocialWindow()->SetNPC(this);
-		controllerRef->GetHUDManager()->GetSocialWindow()->SetConversationView();
+		SetupAppropriateView();
 		controllerRef->GetHUDManager()->AddHUDDialog(conversationStarterName, onDialogEndTriggerData);
+		controllerRef->GetHUDManager()->GetDialogBox()->SetDialogPortraits(*hero->GetGameName().ToString(), *GetGameName().ToString());
 	}
 	else
+	//Just close dialog screen after we're finished talking
 		controllerRef->GetHUDManager()->AddHUDDialog(conversationStarterName, FTriggerData::defaultTrigger);
+
+	AddConversedDialog(conversationStarterName);
+}
+
+void ANPC::SetupAppropriateView()
+{
+	controllerRef->GetHUDManager()->GetSocialWindow()->SetConversationView();
 }
 
 FVector ANPC::GetInteractableLocation_Implementation()
 {
 	return GetActorLocation();
+}
+
+bool ANPC::CanInteract_Implementation()
+{
+	return true;
 }
 
 

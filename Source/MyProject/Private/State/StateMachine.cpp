@@ -4,9 +4,7 @@
 MovingState StateMachine::Moving = MovingState();
 AttackState StateMachine::Attacking = AttackState();
 IdleState StateMachine::Idle = IdleState();
-InteractState StateMachine::Interacting = InteractState();
 CastingState StateMachine::Casting = CastingState();
-ItemState StateMachine::UsingItem = ItemState();
 ChannelingState StateMachine::Channeling = ChannelingState();
 
 StateMachine::StateMachine(AUnit* unitOwner)
@@ -36,7 +34,7 @@ void StateMachine::Update(float deltaSeconds)
 	currentState->Update(*unitOwner, deltaSeconds);
 }
 
-IUnitState* StateMachine::getStateFromEnum(EUnitState enumVal)
+IUnitState* StateMachine::getStateFromEnum(EUnitState enumVal) 
 {
 	switch (enumVal)
 	{
@@ -44,8 +42,6 @@ IUnitState* StateMachine::getStateFromEnum(EUnitState enumVal)
 		case EUnitState::STATE_ATTACKING: return &Attacking;
 		case EUnitState::STATE_CASTING: return &Casting;
 		case EUnitState::STATE_CHANNELING: return &Channeling;
-		case EUnitState::STATE_INTERACTING: return &Interacting;
-		case EUnitState::STATE_ITEM: return &UsingItem;
 		case EUnitState::STATE_MOVING: return &Moving;
 		default: return nullptr;
 	}

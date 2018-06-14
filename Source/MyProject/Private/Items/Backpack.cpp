@@ -232,6 +232,18 @@ TArray<int> UBackpack::GetItemIndices()
 	return indicesToGet;
 }
 
+int UBackpack::FindItemByName(FString name)
+{
+	for (auto it = items.CreateIterator(); it; ++it)
+	{
+		if((*it)->itemInfo.name.ToString() == name)
+		{
+			return it.GetIndex();
+		}
+	}
+	return -1;
+}
+
 int UBackpack::FindEmptySlot() const
 {
 	for(int i = 0; i < items.GetMaxIndex(); i++)

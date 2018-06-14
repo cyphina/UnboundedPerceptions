@@ -19,62 +19,90 @@ class MYPROJECT_API ABaseHero : public AAlly
 	GENERATED_BODY()
 	
 public: 
-	/*--CONSTANTS--*/
+	///--CONSTANTS--
 	static const int			interactRange = 200; //range of how close we have to be to an object to interact with it. 
 	static const int			shadowRange = 600; //range of how far we cast in front to see if shadows are blocking us along the direction of the directional light parameter set in our shader
 	static const float			nextExpMultiplier; //multiplier to increase amount of xp needed for next level
 
-	// Sets default values for this character's properties
+	/** 
+	 * Constructors set default values for this character's properties
+	 */
 	ABaseHero(const FObjectInitializer& oI);
 
 #pragma region Callbacks
-	// Called when the game starts or when spawned
+	/**
+	 * Called when the game starts or when spawned
+	 */
 	void						BeginPlay() override;
 
-	// Called every frame
+	/**
+	 * Called every frame
+	 */
 	void						Tick(float deltaSeconds) override;
 
-	//When hero gets destroyed
+	/**
+	 * When this actor gets destroyed
+	 */
 	void						Destroyed() override;
 
-	//When game ends
+	/**
+	 * Called when game ends
+	 */
 	void						EndPlay(const EEndPlayReason::Type epr) override;
 #pragma endregion
 
 #pragma region HeroCharacterStuff
-	//Use an item on something
+
+	/**
+	 * Use an item on something
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Items")
 	void						BeginUseItem(UConsumable* itemToUse);
 	
-	/*Interacts with an object, provided there is one*/
+	/*
+	 * Interacts with an object, provided there is one
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Misc")
 	void						BeginInteract(AActor* interactor);
 
-	//Levelup functionality mostly in blueprints so we can add some effects
+	/**
+	 * Levelup functionality mostly in blueprints so we can add some effects
+	 */
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Stats") //BlueprintNativeEvent allows you to override in blueprints
 	void						LevelUp();
 
-	//Interface to add points to some category
+	/**
+	 *Interface to add points to some category
+	 */
 	UFUNCTION(BlueprintCallable)
 	void 						ChangeAttribute(Attributes att, bool isIncrementing);
 
-	///---Equipment---
-	/**When we click on an item to use it and it's a piece of equipment*/
+#pragma region Equipment
+	/**
+	 *When we click on an item to use it and it's a piece of equipment
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Equipment") 
 	void 						EquipItem(UEquip* e);
 
-	/**When we click on an item and it's a piece of equipment and we already have a piece of equipment on that slot, swap them*/
+	/*
+	 *When we click on an item and it's a piece of equipment and we already have a piece of equipment on that slot, swap them
+	 */
 	void 						UnequipItem(int slot);	
 
-	/**Allows us to swap weapons and accessory equips*/
+	/**
+	 * Allows us to swap weapons and accessory equips
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	void 						SwapEquips(int equipSlot1, int equipSlot2);	
 
-	/**Equip some new equipment and return any equipment in that slot back to inventory*/
+	/**
+	 * Equip some new equipment and return any equipment in that slot back to inventory
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	void 						SwapEquipsFromInventory(UEquip* e1, int equipSlot);	
+#pragma endregion
 
-	//---Actions---
+	///---Actions---
 	void 						Stop() override;
 #pragma endregion
 
@@ -95,83 +123,121 @@ public:
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Equips")
 	FORCEINLINE TArray<UEquip*>				GetEquips() const { return equips; }
 
-	//Get the item set to be used currently by this hero
+	/**
+	 *Get the item set to be used currently by this hero
+	 */
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Items")
 	UConsumable*							GetCurrentItem() const { return currentItem; }
 
-	//Set the item set to be used currently by this hero
+	/**
+	 *Set the item set to be used currently by this hero
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Items")
 	void									SetCurrentItem(UConsumable* item) { currentItem = item; }
 
-	//Get the interactable this hero is targetted to interact with
+	/**
+	 *Get the interactable this hero is targetted to interact with
+	 */
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Interactable")
 	UObject*								GetCurrentInteractable() const;
 
-	//Set the interactable this hero is targetted to interact with
+	/**
+	 *Set the interactable this hero is targetted to interact with
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Interactable")
 	void									SetCurrentInteractable(AActor* interactable);
 
-	//Get a copy of our spellbook
+	/**
+	 *Get a copy of our spellbook
+	 */
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
 	USpellBook*								GetSpellBook() const { return spellbook; }
 
 #pragma endregion
 
-	//default material color
+	/**
+	 *Default material color
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FLinearColor				baseColor;
 
-	//different color
+	/**
+	 *Color of the hero currently (Depreciated - Back when I first started this project, instead of using a selection box, I changed the colors on selection
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FLinearColor				currentColor;
 
-	//dynamic material instance reference used to change material's color
+	/**
+	 *Dynamic material instance reference used to change material's color
+	 */
 	UMaterialInstanceDynamic*	dMat;
 
-	//Index inside party.  -1 means we're not in the party
+	/**
+	 *Index inside party.  -1 means we're not in the party
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int							heroIndex = -1;
 
-	//attribute points to divy up
+	/**
+	 *Attribute points to divy up
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int							attPoints = 100; 
 
-	//attribute points to divy up
+	/**Skill (spellbook) points to divy up
+	 *
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int							skillPoints = 5;
 
-	//Our character's backpack
+	/**
+	 *Reference to our character's backpack
+	 */
 	UPROPERTY(BlueprintReadWrite)
 	UBackpack*					backpack;
 
+	/**
+	 * Reference to our character's spellbook
+	 */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	USpellBook*					spellbook;
 
 private:
-	//see if some object is in front of us so we know its casting a shadow upon us
+	/**
+	 *see if some object is in front of us so we know its casting a shadow upon us
+	 */
 	void						CheckShadows();
-	//Using some kind of item, consumeable, utility, etc.  We need to target some target for this item
+	/**
+	 *Using some kind of item, consumeable, utility, etc.  We need to target some target for this item
+	 */
 	void						UseItem();
-	//Here's where we do all the checks and repositioning for interacting.  Continuously called as long as we have an interaction target
+	/**
+	 *Here's where we do all the checks and repositioning for interacting.  Continuously called as long as we have an interaction target
+	 */
 	void						PrepareInteract();	
-	//functions for adding and removing bonuses when equipping and unequipping.  Set isEquip to true when equipping, and to false when unequipping
+	/**
+	 *functions for adding and removing bonuses when equipping and unequipping.  Set isEquip to true when equipping, and to false when unequipping
+	 */
 	void						SetupBonuses(UEquip* e, bool isEquip);
 
-	//--References--//
+	///--References--
 	ABasePlayer*				player; //reference to our player class, which has information on our team
 	IInteractable*				currentInteractable; //reference to the interactable which we are trying to interact with						
 	UConsumable*				currentItem = nullptr; //the item that is going to be used by this character
 	
-	//--Lighting effect--//
+	///--Lighting effect--
 	UMaterialParameterCollection*				lightSource = nullptr; //We need this parameter to figure out light direction based on our directional light we made
 	UMaterialParameterCollectionInstance*		lightDirectionPV = nullptr;
 	FVector lightVector =						FVector::ZeroVector; 	//A reference we use in calculating if there's shadows
-	//--Leveling information---//
+
+	///--Leveling information--
 	int											currentExp = 0; //how much xp we have 
 	int											expForLevel = 100; //how much we need for next level
 
-	//--equipment information--//
-	//0 - Head, 1 - Body, 2 - Legs, 3 - Acc1, 4 - Codex, 5-9 - Codex Weapons
+	///<summary>
+	///--Equipment information--
+	///0 - Head, 1 - Body, 2 - Legs, 3 - Acc1, 4 - Codex, 5-9 - Codex Weapons
+	///</summary>
 	TArray<UEquip*>								equips; //a container of what we have equipped
 	friend void									USaveLoadClass::SetupAlliedUnits();
 

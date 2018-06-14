@@ -4,9 +4,11 @@
 #include "InteractState.h"
 #include "WorldObjects/BaseHero.h"
 
-InteractState::InteractState()
-{
+DECLARE_CYCLE_STAT(TEXT("Hero Interaction"), STAT_HeroInteraction, STATGROUP_UnitStateMachine)
 
+InteractState::InteractState(ABaseHero* newHeroRef)
+{
+	heroRef = newHeroRef;
 }
 
 InteractState::~InteractState()
@@ -16,7 +18,6 @@ InteractState::~InteractState()
 
 void InteractState::Enter(AUnit& unit)
 {
-	heroRef = Cast<ABaseHero>(&unit);
 }
 
 void InteractState::Exit(AUnit& unit)
@@ -25,5 +26,9 @@ void InteractState::Exit(AUnit& unit)
 
 void InteractState::Update(AUnit& unit, float deltaSeconds)
 {
+	//Only times what is in scope.  Remove after fixing hotspots, since stat tracking is expensive
+	SCOPE_CYCLE_COUNTER(STAT_HeroInteraction);
+	{
 	heroRef->PrepareInteract();
+	}
 }

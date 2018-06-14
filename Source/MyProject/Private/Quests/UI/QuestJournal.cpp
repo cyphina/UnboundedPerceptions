@@ -14,13 +14,11 @@ void UQuestJournal::Construct_Implementation()
 	if(questManagerRef)
 	{
 		questManagerRef->questJournalRef = this;
-		questManagerRef->partyLeader = CPC->GetBasePlayer()->heroes[0];
 	}
 }
 
 bool UQuestJournal::OnWidgetAddToViewport_Implementation()
 {
-	questManagerRef->partyLeader = CPC->GetBasePlayer()->heroes[0];
 	return true;
 }
 

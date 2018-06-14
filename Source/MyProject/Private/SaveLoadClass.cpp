@@ -17,6 +17,11 @@ USaveLoadClass::~USaveLoadClass()
 {
 }
 
+void USaveLoadClass::Init()
+{
+	controllerRef = Cast<AUserInput>(GetOuter()->GetWorld()->GetFirstPlayerController());
+}
+
 //TODO: Make struct with collection of level data (data on each level), struct with collection of quest data, struct with collection of trigger information
 
 void USaveLoadClass::SetupSaveData()

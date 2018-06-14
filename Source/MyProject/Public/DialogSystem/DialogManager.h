@@ -4,32 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "DialogStructs.h"
 #include "DialogManager.generated.h"
 
 /**
  * Claass for managing dialogue, including changes due to events, and loading dialog
  * Purpose for centralizing these functions is so they can be used throughout different game systems that may need dialog, like cutscenes, talking, etc.
  */
-
-template<class T>
-class DialogGraph;
-
-USTRUCT(BlueprintType)
-struct FDialogData
-{
-	GENERATED_USTRUCT_BODY()
-
-	FDialogData() : nextDialogs(TArray<int>()), dialog(FText::GetEmpty()), actorName(FName()) {}
-	FDialogData(const FDialogData& data) : nextDialogs(data.nextDialogs), dialog(data.dialog), actorName(data.actorName) {}
-	FDialogData(TArray<int> nextDialogs, FText dialog, FName actorName) : nextDialogs(nextDialogs), dialog(dialog), actorName(actorName) {}
-
-	UPROPERTY(BlueprintReadOnly, Category = "Dialog")
-	TArray<int> nextDialogs;
-	UPROPERTY(BlueprintReadOnly, Category = "Dialog")
-	FText dialog;
-	UPROPERTY(BlueprintReadOnly, Category = "Dialog")
-	FName actorName;
-};
 
 USTRUCT(Blueprintable)
 struct FDialogLookupRow : public FTableRowBase

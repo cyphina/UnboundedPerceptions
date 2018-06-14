@@ -4,14 +4,12 @@
 #include "BreakMenu.h"
 #include "UserInput.h"
 #include "UI/HUDManager.h"
-#include "MyGameInstance.h"
 #include "RTSGameMode.h"
 
 void UBreakMenu::Construct_Implementation()
 {
 	Super::Construct_Implementation();
 	gameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
-	gameInstanceRef = Cast<UMyGameInstance>(GetWorld()->GetGameInstance());
 }
 
 void UBreakMenu::Resume()

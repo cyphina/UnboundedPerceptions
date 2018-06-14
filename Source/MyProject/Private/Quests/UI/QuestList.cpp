@@ -16,7 +16,6 @@ void UQuestList::Construct_Implementation()
 
 bool UQuestList::OnWidgetAddToViewport_Implementation()
 {
-	questManager->partyLeader = CPC->GetBasePlayer()->heroes[0];
 	return true;
 }
 

@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Info.h"
+#include "GameplayTagContainer.h"
+#include "EventSystem/Trigger.h"
 #include "Quest.generated.h"
 
 class UMyItem;
@@ -15,7 +17,7 @@ class UQuestListSlot;
  */
 
 ///---ENUMS---
-//State of a subgoal
+/**State of a subgoal*/
 UENUM(BlueprintType)
 enum class EGoalState : uint8
 {
@@ -23,7 +25,7 @@ enum class EGoalState : uint8
 	completedGoal,
 	failedGoal
 };
-//What task we must perform to complete a goal
+/**What task we must perform to complete a goal*/
 UENUM(BlueprintType)
 enum class EGoalType : uint8
 {
@@ -32,7 +34,7 @@ enum class EGoalType : uint8
 	Find,
 	Talk
 };
-//Organize quest types based on importance to story
+/**Organize quest types based on importance to story*/
 UENUM(BlueprintType)
 enum class EQuestCategory : uint8
 {
@@ -40,7 +42,7 @@ enum class EQuestCategory : uint8
 	SideQuest,
 	Event
 };
-//State of quest completion
+/**State of quest completion*/
 UENUM(BlueprintType)
 enum class EQuestState : uint8
 {
@@ -49,7 +51,7 @@ enum class EQuestState : uint8
 	failedQuests
 };
 ///--Structs---
-//Information about goals
+/**Information about goals*/
 USTRUCT(BlueprintType, NoExport)
 struct FGoalInfo
 {
@@ -66,30 +68,48 @@ struct FGoalInfo
 	EGoalType						goalType;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EGoalState						goalState;
+	/**Custom goal will have a specific trigger to succeed*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool							isCustomGoal;
+	/**Goal's description*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText							goalText;
+	/**Name used for various things
+	 *If the goalType is hunting, this is the name of one monster to hunt (at least for this goal)
+	 *If the goalType is finding, this is the item you should have in your inventory
+	 *If the goalType is talking, this is the NPC you need to talk to
+	 *If the goalType is custom, we can use this for something else
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText							additionalName;
+	/**If this is a hunt quest, how many things do we have to hunt*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int								amountToHunt;
+	/**Do we update the quest description after this goal is completed?*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool							shouldUpdateQuestDescription;
+	/**If we update the quest description after this goal is completed, do so here*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText							updatedDescription;
+	/**Does this subgoal unlock another?  Stores index of the next goal that should be stored in questinfo*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<int>						followingSubGoalIndices; //does this subgoal lead to another?  Stores index of the next goal that should be stored in questinfo
+	TArray<int>						followingSubGoalIndices; 
+	/**Do we have a location tracker on the minimap?*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool							shouldUseRadius;
+	/**What's the size of this location tracker?*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float							radius;
+	/**What's the color of the location tracker*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FLinearColor					circleColor;
+	/**If we fail this goal the quest will fail*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool							canFailQuest; //if we finish this goal the quest will fail
+	bool							canFailQuest; 
+	/**If we finish this goal the quest will be done*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool							canCompleteQuest; //if we finish this goal the quest will be done
+	bool							canCompleteQuest; 
+	/**Location to spawn the tracker*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FVector							goalLocation = invalidGoalLocation;
 
@@ -109,10 +129,16 @@ struct FQuestReward
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<UMyItem*>				items;
 };
-//struct for quest properties
+
+//Struct for quest properties (that may be replicated?)
 USTRUCT(BlueprintType, NoExport)
 struct FQuestInfo
 {
+	/**Unique quest id*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FGameplayTag					id;
+	/**Displayed name of the quest.  We can have quests with the same 
+	 *display name which we can troll around with or something*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText							name;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -125,8 +151,9 @@ struct FQuestInfo
 	float							difficulty;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EQuestCategory					questCategory;
+	/**A list of all the goals in this quest information*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FGoalInfo>				subgoals; //stores information about next goals
+	TArray<FGoalInfo>				subgoals; 
 };
 
 UCLASS(Blueprintable) //actor info has replication details incase we ever go multiplayer
@@ -192,6 +219,11 @@ public:
 	/**Initiates completing a subgoal*/
 	UFUNCTION(BlueprintCallable, Category = "Updating")
 	void							CompleteSubGoal(int goalIndex, bool fail); //transition between next goal
+
+	/**Trigger to activate on quest finished.
+	UPROPERTY(EditDefaultsOnly, Category = "Updating")
+	FTriggerData					onQuestCompletedTrigger; 
+	*/
 
 	/**Initiates completing the quest*/
 	UFUNCTION(BlueprintNativeEvent, Category = "Updating")

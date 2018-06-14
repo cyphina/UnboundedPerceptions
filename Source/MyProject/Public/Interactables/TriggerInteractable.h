@@ -6,9 +6,11 @@
 #include "GameFramework/Actor.h"
 #include "Interactables/Interactable.h"
 #include "EventSystem/Trigger.h"
+#include "EventSystem/RTSConditional.h"
 #include "TriggerInteractable.generated.h"
 
 class UMyGameInstance;
+class ARTSGameMode;
 
 /*An object that activates a trigger when interacted with*/
 
@@ -17,7 +19,8 @@ class MYPROJECT_API ATriggerInteractable : public AActor, public IInteractable
 {
 	GENERATED_BODY()
 	
-	UMyGameInstance*			gameInstanceRef;
+	ARTSGameMode*				gameModeRef;
+
 public:	
 
 	ATriggerInteractable();
@@ -28,10 +31,14 @@ public:
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent*		staticMesh;
 
+	UPROPERTY(EditAnywhere)
+	TArray<FConditionData>		useConditions;
+
 	virtual void				BeginPlay() override;
 
 	void 						Interact_Implementation(ABaseHero* hero) override;
 	FVector 					GetInteractableLocation_Implementation() override;
+	bool 						CanInteract_Implementation() override;
 
 	/**Set this trigger to something when you want to interact*/
 	UPROPERTY(EditAnywhere, Category = "Trigger")

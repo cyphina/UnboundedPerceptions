@@ -8,10 +8,13 @@
 
 /**
  * Class for creating an event that changes only a few objects at a time
+ * Think of triggers like function objects, but since we have some set layout for creaing triggers, we can
+ * create all types of functions by changing the trigger types and arguments, allowing us to easily
+ * modify them in the property editor as oppposed to function objects
  */
 
 class AUserInput;
-class UMyGameInstance;
+class ARTSGameMode;
 
 UENUM(BlueprintType)
 enum class TriggerType : uint8
@@ -40,6 +43,8 @@ USTRUCT(BlueprintType, NoExport)
 struct FTriggerData 
 {
 	FTriggerData();
+	FTriggerData(bool isEnabled, TriggerType trigType, int numberOfCalls, TArray<FString> triggerObj, TArray<FString> triggerVals) : 
+		enabled(isEnabled), triggerType(trigType), numCalls(numberOfCalls), triggerObjects(triggerObj), triggerValues(triggerVals) {} 
 
 	static FTriggerData defaultTrigger; //not const so can be passed through trigger functionality but should never be modified
 
@@ -48,7 +53,7 @@ struct FTriggerData
 	bool										enabled = true;
 	/**Type of the trigger*/
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Properties")
-	TriggerType									triggerType = TriggerType::None;
+	TriggerType									triggerType = TriggerType::None;	
 	/**Number of times this trigger can activate.  Set to -1 to be able to call this infinately*/
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Properties")
 	int											numCalls = 1;
@@ -75,8 +80,10 @@ class MYPROJECT_API UTriggerManager : public UObject
 
 public:
 
+	void							Init();
+
 	AUserInput*						cpcRef;
-	UMyGameInstance*				gameInstanceRef;
+	ARTSGameMode*					gameModeRef;
 
 	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
 	TMap<FName, FTriggerData>		GetTriggerRecords() const { return triggerRecords; }

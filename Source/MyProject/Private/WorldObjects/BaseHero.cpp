@@ -5,7 +5,7 @@
 #include "Interactables/Interactable.h"
 #include "BasePlayer.h"
 #include "UserInput.h"
-#include "State/StateMachine.h"
+#include "State/HeroStateMachine.h"
 #include "Items/Weapon.h"
 #include "Items/Consumable.h"
 #include "AbilitySystemComponent.h"
@@ -20,6 +20,7 @@ ABaseHero::ABaseHero(const FObjectInitializer& oI) : AAlly(oI)
 {	
 	isEnemy = false;
 	backpack = CreateDefaultSubobject<UBackpack>(FName("Backpack"));
+	state = TUniquePtr<HeroStateMachine>(new HeroStateMachine(this));
 
 	ConstructorHelpers::FObjectFinder<UMaterialParameterCollection> materialPC(TEXT("/Game/RTS_Tutorial/Materials/CelShade/LightSource"));
 	if (materialPC.Object)
@@ -169,7 +170,7 @@ void ABaseHero::BeginInteract(AActor* interactor)
 {
 	if (IInteractable* intractable = Cast<IInteractable>(interactor))
 	{
-		state.ChangeState(EUnitState::STATE_INTERACTING);
+		state->ChangeState(EUnitState::STATE_INTERACTING);
 		currentInteractable = intractable;
 	}
 }
@@ -177,7 +178,7 @@ void ABaseHero::BeginInteract(AActor* interactor)
 void ABaseHero::BeginUseItem(UConsumable* itemToUse)
 {
 	SetCurrentItem(itemToUse);
-	state.ChangeState(EUnitState::STATE_ITEM);
+	state->ChangeState(EUnitState::STATE_ITEM);
 	PressedCastSpell(itemToUse->ability);
 	if (itemToUse->ability.GetDefaultObject()->GetTargetting() != FGameplayTag::RequestGameplayTag("Skill.Targetting.None"))
 		controllerRef->SetSecondaryCursor(ECursorStateEnum::Item);
@@ -185,6 +186,7 @@ void ABaseHero::BeginUseItem(UConsumable* itemToUse)
 
 void ABaseHero::PrepareInteract()
 {
+	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Black, FString("Interacting ") + GetGameName().ToString());
 	if (!IsStunned() && currentInteractable)
 	{
 		FVector targetLoc = currentInteractable->GetInteractableLocation_Implementation();

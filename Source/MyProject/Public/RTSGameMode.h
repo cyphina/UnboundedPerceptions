@@ -3,12 +3,19 @@
 #pragma once
 
 #include "GameFramework/GameModeBase.h"
+#include "SaveLoadClass.h"
 #include "BasePlayer.h"
 #include "RTSGameMode.generated.h"
 
 /**
  * Game mode only exists on server.  Things we want clients not see goes here.
  */
+
+class UEventManager;
+class UTriggerManager;
+class UQuestManager;
+class ULoadingWidget;
+class UConditionalManager;
 
 UCLASS()
 class MYPROJECT_API ARTSGameMode : public AGameModeBase
@@ -28,17 +35,92 @@ public:
 	
 	ARTSGameMode();
 
+	///---Expose these classes so we can spawn a more derived blueprint class version of each manager in the code---
+
+	/**
+	 * EventManager - Handles progressing in story and activating story based triggers
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
+	TSubclassOf<UEventManager>		eventManagerClass;
+
+	/**
+	 * TriggerManager - Handles activating and storing of trigger data across levels
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
+	TSubclassOf<UTriggerManager>	triggerManagerClass;
+
+	/**
+	 * QuestManager - Handles everything quest related
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
+	TSubclassOf<UQuestManager>		questManagerClass;
+
+	UPROPERTY(BlueprintGetter = GetEventManager)
+	UEventManager*					eventManager;
+
+	UPROPERTY(BlueprintGetter = GetTriggerManager)
+	UTriggerManager*				triggerManager;
+
+	UPROPERTY(BlueprintGetter = GetQuestManager)
+	UQuestManager*					questManager;
+
+	USaveLoadClass*					saveLoadManager;
+
+	UPROPERTY(BlueprintGetter = GetConditionalManager)
+	UConditionalManager*			conditionalManager;
+
+	///---Manager class accessors---
+	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
+	UEventManager*					GetEventManager() const { return eventManager; }
+
+	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
+	UTriggerManager*				GetTriggerManager() const { return triggerManager; }
+
+	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
+	UQuestManager*					GetQuestManager() const { return questManager; }
+
+	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
+	USaveLoadClass*					GetSaveManager() const { return saveLoadManager; }
+
+	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
+	UConditionalManager*			GetConditionalManager() const { return conditionalManager; }
+
+	///---Level Things---
+	/**
+	 * Gets the name of the current level that has been last streamed in
+	 */
 	UFUNCTION(BlueprintCallable, Category = Levels)
 	FString					GetCurrentLevelName() const { return currentLevelName; }
 
+	/**
+	 * Gets the name of the start level (main screen when game is loaded)
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Levels")
 	FString					GetStartingLevelName() const { return startingLevelName; }
 
+	/**
+	 * Gets the name of the introduction level (first level in demo with Zone waking up in Chapter 2)
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Levels")
 	FString					GetIntroductionLevelName() const { return theIntroduction; }
 
 	/**Stream in a level and put in the loading screen*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "LevelLoading")
 	void					StreamLevelAsync(FName levelName);
+
+	///---Saving---
+	/**
+	 * Saves the game in the SavedGames folder (in main project folder)
+	 * @param fileName - Filename of the new save file to be created
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Managers")
+	bool							SaveGame(FString saveName);
+	
+	/**
+	 * Loads a game in the SavedGames folder (in main project folder)
+	 * @param fileName - Filename of save file to load
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Managers")
+	bool							LoadGame(FString fileName);
 
 };

@@ -57,6 +57,11 @@ void APickup::OnPickedUp()
 	CPCRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
 }
 
+bool APickup::CanInteract_Implementation()
+{
+	return true;
+}
+
 void APickup::OnComponentBeginOverlap(UPrimitiveComponent* hitComp, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex, bool bFromSweep, const FHitResult& sweepResult)
 {
 

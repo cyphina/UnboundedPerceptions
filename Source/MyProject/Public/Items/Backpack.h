@@ -6,7 +6,7 @@
 #include "Backpack.generated.h"
 /**
  * Container class for items
- * Every hero has a backpack. 
+ * Every hero has a backpack. Implemented using a sparse array 
  */
 UCLASS(BlueprintType, ClassGroup=InventoryContainer, meta=(BlueprintSpawnableComponent))
 class MYPROJECT_API UBackpack : public UActorComponent
@@ -22,58 +22,70 @@ public:
 	UBackpack();
 	~UBackpack();
 
-	//returns true if all the items were successfully added
+	/**returns true if all the items were successfully added*/
 	//UFUNCTION(BlueprintCallable)
-	bool AddItemToSlot(UMyItem* newItem, int slot);
+	bool				AddItemToSlot(UMyItem* newItem, int slot);
 
-	//add item to last slot in inventory
+	/**Adds item to last slot in inventory*/
 	UFUNCTION(BlueprintCallable)
-	bool AddItem(UMyItem* newItem);
+	bool				AddItem(UMyItem* newItem);
 
-	//add several items to the backpack WARNING SHOULDNT WORK SINCE WE CAN'T SIMPLY ADD
-	bool AddItems(TArray<UMyItem*> newItems); 
-
-	UFUNCTION(BlueprintCallable)
-	bool RemoveItemAtSlot(int slot);
-
-	//remove particular item from inventory
-	bool RemoveItem(UMyItem* itemToRemove);
-
-	//remove items from the backpack
-	bool RemoveItems(TArray<UMyItem*> itemsToRemove); 
-
-	//clear the backpack
-	bool RemoveAll(); 
-
-	//Swap two items location in backpack.  Exposed through inventory
-	void SwapItems(UBackpack* otherPack, int slot1, int slot2);
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Read Inventory Info")
-		UMyItem* GetItem(int slot); //item accessor
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Read Inventory Info") //Problems returning pointers to non-uobjects in blueprints.  Only returns array of items that are "allocated" in bit array
-		TArray<UMyItem*> GetItems();
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Read Inventory Info") //this is the slots of all the items
-		TArray<int> GetItemIndices();
-
-	int FindEmptySlot() const;
-
-	//refers to our constant so we can use it in BP
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Information")
-		int MAX_STACK() const { return STACKMAX; }
-
-	//max capacity of backpack
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Information") 
-		int GetItemMax() const { return itemMax; }
-
-	//change max capacity of backpack
-	UFUNCTION(BlueprintCallable, Category = "Inventory Information") 
-		void SetItemMax(int newMax);
+	/**Add several items to the backpack: WARNING SHOULDNT WORK SINCE WE CAN'T SIMPLY ADD (Have to revisit this)*/
+	bool				AddItems(TArray<UMyItem*> newItems); 
 	
-	//how many items in inventory?
+	/**Remove an item at a certain slot*/
+	UFUNCTION(BlueprintCallable)
+	bool				RemoveItemAtSlot(int slot);
+
+	/**Remove particular item from inventory*/
+	bool				RemoveItem(UMyItem* itemToRemove);
+
+	/**Remove items from the backpack*/
+	bool				RemoveItems(TArray<UMyItem*> itemsToRemove); 
+
+	/**Clears the backpack*/
+	bool				RemoveAll(); 
+
+	/**Swap two items location in backpack*/
+	void				SwapItems(UBackpack* otherPack, int slot1, int slot2);
+
+	/**Item accessor*/
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Read Inventory Info")
+	UMyItem*			GetItem(int slot); 
+
+	/**Problems returning pointers to non-uobjects in blueprints.  Only returns array of items that are "allocated" in bit array*/
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Read Inventory Info") 
+	TArray<UMyItem*>	GetItems();
+
+	/**Returns the slot indices of all the items currently in the backpack*/
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Read Inventory Info") 
+	TArray<int>			GetItemIndices();
+
+	/**Find if an item is in the backpack
+	 * @param name - Name of item to look for
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Read Inventory Info") 
+	int					FindItemByName(FString name);
+
+	/**Find the first empty slot in the backpack*/
+	int					FindEmptySlot() const;
+
+	/**Refers to constant denoting how large a stack of items can go to so we can use it in BP*/
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Information")
-		int Count() const; 
+	int					MAX_STACK() const { return STACKMAX; }
+
+	/**Max capacity of backpack*/
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Information") 
+	int					GetItemMax() const { return itemMax; }
+
+	/**Change max capacity of backpack*/
+	UFUNCTION(BlueprintCallable, Category = "Inventory Information") 
+	void				SetItemMax(int newMax);
+	
+	/**how many items in inventory*/
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Information")
+	int					Count() const; 
+
 private:
-	int FindItem(UMyItem* item);
+	int					FindItem(UMyItem* item);
 };

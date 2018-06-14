@@ -27,7 +27,9 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
 	bool 					canTarget = true; 
 
-	/** Does this NPC allow us to have a conversation (open up social menu) or does he/she just say something then walk away*/
+	/**
+	 * Does this NPC allow us to have a conversation (open up social menu) or does he/she just say something then walk away
+	 */
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true), Category = "NPCConversationSettings")
 	bool					bWantsToConverse = false; 
 
@@ -36,16 +38,28 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
 	 * because our table is a map (constant time searches) */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true), Category = "NPCConversationSettings")
 	FName 					conversationStarterName;
-	/** Name of the conversation the NPC will have if it doesn't know the topic asked about */
+
+	/** 
+	 *Name of the conversation the NPC will have if it doesn't know the topic asked about
+	 */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true), Category = "NPCConversationSettings")
 	FName 					defaultResponseName;
-	/*Maps DialogTopics to names in the dialogTable*/
+
+	/**
+	 *Maps DialogTopics to names in the dialogTable. For names not in the map, the NPC will not have a detailed conversation when asked about that topic
+	 */
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true), Category = "NPCConversationSettings")
 	TMap<FGameplayTag, FName>	conversationTopics;
 
 	FTriggerData				onDialogEndTriggerData;
 
+	/**
+	 * List of dialogs (not topics) that we've already talked to this NPC about. 
+	 */
+	TSet<FName>					dialogAlreadyConversed;
+
 protected:
+
 	AUserInput*					controllerRef;
 
 public:
@@ -54,12 +68,22 @@ public:
 	void 						BeginPlay() override;
 	virtual void 				Tick(float DeltaTime) override;	
 
+	/**Does this NPC move around or does it just stand still?*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NPCMovement")
 	bool						doesPatrol;
+
+	/**List of NPC patrol points.  NPC will go to each point in order and loop.*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NPCMovement")
 	TArray<FVector>				patrolPoints;
+
+	/**Current point the NPC has patrolled to*/
 	UPROPERTY(BlueprintReadWrite, Category = "NPCMovement")
 	int							currentPatrolIndex;
+	/** 
+	 *Is this NPC already talking to a hero?
+	 */
+	UPROPERTY(BlueprintReadWrite, Category = "NPCConversationSettings")
+	ABaseHero*				currentlyTalkingHero = false; 
 
 #pragma region informationAccess
 
@@ -103,10 +127,18 @@ public:
 	/**Accessor to grab response when first talked to*/
 	UFUNCTION(BlueprintCallable, Category = "Accessors")
 	FName						GetStartingConversationName() const { return conversationStarterName; }
+	/**Accessor to see if NPC wants to have a conversation*/
 	UFUNCTION(BlueprintCallable, Category = "Accessors")
 	bool						GetWantsToConverse() const { return bWantsToConverse; }
+	/**Accessor to see what happens after finishing talking with an NPC*/
 	UFUNCTION(BlueprintCallable, Category = "Accessors")
 	FTriggerData&				GetOnDialogFinishedTrigger() { return onDialogEndTriggerData; }
+	/**Get a list of dialogs already talked about with this NPC*/
+	UFUNCTION(BlueprintCallable, Category = "Accessors")
+	TArray<FName>				GetAlreadyConversedDialogs() { return dialogAlreadyConversed.Array(); }
+	/**Adds a new DIALOG to the list of DIALOGS alredy talked about*/
+	UFUNCTION(BlueprintCallable, Category = "Accessors")
+	void						AddConversedDialog(FName conversedDialog) { dialogAlreadyConversed.Add(conversedDialog); }
 	
 	UFUNCTION(BlueprintCallable, Category = "Accessors")
 	int							GetCurrentPatrolIndex() const { return currentPatrolIndex; }
@@ -115,6 +147,11 @@ public:
 #pragma endregion
 
 	virtual void 				Interact_Implementation(ABaseHero* hero) override;
-
+	/**
+	 *Sets up the dialogue UI to the proper state (conversation/intimate view) after interacting with this NPC
+	 */
+	virtual void				SetupAppropriateView();
 	virtual FVector				GetInteractableLocation_Implementation() override;
+	/**Can this interactable be used?  NPCs can always be interacted with.  To create an NPC that doesn't interact at all, just create some blank humanoid static mesh (Persona Like)*/
+	bool 						CanInteract_Implementation() override;
 };

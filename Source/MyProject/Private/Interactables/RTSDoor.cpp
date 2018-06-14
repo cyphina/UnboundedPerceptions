@@ -1,5 +1,10 @@
 #include "MyProject.h"
 #include "RTSDoor.h"
+#include "RTSGameMode.h"
+#include "EventSystem/RTSConditional.h"
+#include "UserInput.h"
+#include "HUDManager.h"
+#include "WorldObjects/BaseHero.h"
 
 
 // Sets default values
@@ -37,6 +42,9 @@ void ARTSDoor::BeginPlay()
 	}
 	initialRotation = doorMesh->GetComponentRotation();
 	finalRotation = initialRotation + FRotator(0, 90, 0);
+
+	gameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
+	cpcRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 }
 
 // Called every frame
@@ -49,29 +57,49 @@ void ARTSDoor::Tick(float DeltaTime)
 void ARTSDoor::Interact_Implementation(ABaseHero* hero)
 {
 	//Put code here that places the item in the characters inventory
-	if (!isOpen)
+	if (CanInteract_Implementation())
 	{
-		tL.Play();
-		//SetActorEnableCollision(false);
-		doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore); //Friendly
-		doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore); //Enemy
-		doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel9, ECollisionResponse::ECR_Ignore); //Friendly
+		if (!isOpen)
+		{
+			tL.Play();
+			//SetActorEnableCollision(false);
+			doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore); //Friendly
+			doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore); //Enemy
+			doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel9, ECollisionResponse::ECR_Ignore); //Friendly
+		}
+		else
+		{
+			tL.Reverse();
+			doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block); //Friendly
+			doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Block); //Enemy
+			doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel9, ECollisionResponse::ECR_Block); //Friendly
+
+		}
+		isOpen = !isOpen;
 	}
 	else
 	{
-		tL.Reverse();
-		doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block); //Friendly
-		doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Block); //Enemy
-		doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel9, ECollisionResponse::ECR_Block); //Friendly
-		
+		TArray<FDialogData> dialogData;
+		dialogData.Emplace(TArray<int>(), gameModeRef->GetConditionalManager()->GetConditionString(useConditions), *hero->GetGameName().ToString());
+		cpcRef->GetHUDManager()->AddHUDDialogString(MoveTemp(dialogData));
 	}
-	isOpen = !isOpen;
 }
 
 FVector ARTSDoor::GetInteractableLocation_Implementation()
 {
-
 	return GetActorLocation();
+}
+
+bool ARTSDoor::CanInteract_Implementation()
+{
+	for (FConditionData condition : useConditions)
+	{
+		if (!gameModeRef->GetConditionalManager()->GetCondition(condition))
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 void ARTSDoor::HandleProgress(float value)

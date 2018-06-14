@@ -47,6 +47,9 @@ class MYPROJECT_API UDialogWheel : public UMyUserWidget
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Dialog Wheel Functionality")
 	int											GetCurrentConversationTopicCount() const { return conversationTopicTagNodes.Num(); }
 public:
+
+	UDialogWheel();
+
 	void										Construct_Implementation() override;
 		
 	UFUNCTION(BlueprintImplementableEvent, Category = "Dialog Wheel Functionality")

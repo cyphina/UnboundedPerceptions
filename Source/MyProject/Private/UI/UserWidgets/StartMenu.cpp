@@ -14,9 +14,6 @@ void UStartMenu::NativeConstruct()
 	gameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
 	controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 
-	//Setup settings menu since we don't want to create the MainHUD yet
-	USettingsMenu* settingMenuRef = controllerRef->GetHUDManager()->GetSettingsMenu();
-	settingMenuRef->RemoveFromParent();
 	//Add setting menu to overlay in blueprints
 	Super::NativeConstruct(); //This calls blueprint Construct so call at end
 }

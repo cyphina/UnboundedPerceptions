@@ -1,14 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyProject.h"
-#include "UI/HUDManager.h"
 #include "ResourceManager.h"
 #include "EventSystem/EventManager.h"
 #include "EventSystem/Trigger.h"
 #include "Quests/QuestManager.h"
 #include "UserInput.h"
 #include "UI/UserWidgets/LoadingWidget.h"
-#include "WorldObjects/Ally.h"
 #include "MyGameInstance.h"
 
 const FString UMyGameInstance::saveFilePath = FPaths::ProjectDir().Append("\\SavedGames\\");
@@ -24,24 +22,6 @@ void UMyGameInstance::Init()
 	//Set up resourcemanager globals
 	ResourceManager::InitResourceManager();
 
-	//Setup Manager Singletons
-	FActorSpawnParameters spawnParams;
-	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	eventManager = NewObject<UEventManager>(this, TEXT("EventManager"), RF_NoFlags);
-	triggerManager = NewObject<UTriggerManager>(this, TEXT("TriggerManager"), RF_NoFlags);
-	//AUserInput* CPC = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()); WON'T WORK SINCE CPC Doesn't exist at Init time
-	eventManager->Init();
-
-	triggerManager->gameInstanceRef = this;
-	questManager = NewObject<UQuestManager>(this, TEXT("QuestManager"), RF_NoFlags);
-
-	saveLoadManager = NewObject<USaveLoadClass>(this, TEXT("SaveManager"), RF_NoFlags);
-
-	eventManager->AddToRoot();
-	questManager->AddToRoot();
-	triggerManager->AddToRoot();
-	saveLoadManager->AddToRoot();
-
 	//Setup Post Async Level Load Callback
 	//FWorldDelegates::OnPostWorldInitialization.AddUObject(this, &UMyGameInstance::OnWorldAdded);
 	//!!!---Make sure this is set in the blueprints.  Can get removed after hotreload---!!!
@@ -50,17 +30,6 @@ void UMyGameInstance::Init()
 void UMyGameInstance::Shutdown()
 {
 	Super::Shutdown();
-	eventManager->RemoveFromRoot();
-	questManager->RemoveFromRoot();
-	triggerManager->RemoveFromRoot();
-	saveLoadManager->RemoveFromRoot();
-}
-
-void UMyGameInstance::SetupManagerRefs(AUserInput* CPC)
-{
-	triggerManager->cpcRef = CPC;
-	saveLoadManager->controllerRef = CPC;
-	questManager->controllerRef = CPC;
 }
 
 void UMyGameInstance::OnFinishedStreamingLevel(const FName& packageName, UPackage* levelPackage, EAsyncLoadingResult::Type Result)
@@ -82,16 +51,6 @@ void UMyGameInstance::OnWorldAdded(UWorld* world, const UWorld::InitializationVa
 	worldBeingLoaded = nullptr;
 	packageToBeLoaded = nullptr;
 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("World Loading Finished!"));
-}
-
-bool UMyGameInstance::SaveGame(FString saveName)
-{
-	return saveLoadManager->SaveToFilePath(FPaths::ProjectDir().Append("\\SavedGames\\" + saveName));
-}
-
-bool UMyGameInstance::LoadGame(FString fileName)
-{
-	return saveLoadManager->LoadFromFilePath(FPaths::ProjectDir().Append("\\SavedGames\\" + fileName));
 }
 
 //void UMyGameInstance::LoadLevelAsync(FString levelName) 

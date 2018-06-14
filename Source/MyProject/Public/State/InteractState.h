@@ -15,7 +15,7 @@ class MYPROJECT_API InteractState : public IUnitState
 
 public:
 
-	InteractState();
+	InteractState(ABaseHero* newHeroRef);
 	~InteractState();
 
 	virtual void Enter(AUnit& unit) override;

@@ -12,7 +12,7 @@
  * NPC class for social links
  */
 
-class UMyGameInstance;
+class ARTSGameMode;
 
 UCLASS()
 class MYPROJECT_API AIntimateNPC : public ANPC
@@ -21,7 +21,7 @@ class MYPROJECT_API AIntimateNPC : public ANPC
 
 	int							relationshipPoints;
 	int							currentRelationshipEventIndex = 0;
-	UMyGameInstance*			gameInstanceRef;
+	ARTSGameMode*				gameModeRef;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
 	TArray<int>					relationshipEventPointValues;
@@ -45,5 +45,9 @@ public:
 	void 						Interact(ABaseHero* hero);
 
 	virtual void 				Interact_Implementation(ABaseHero* hero) override;
+	/**
+	 *Sets up the dialogue UI to the proper state (conversation/intimate view) after interacting with this NPC
+	 */
+	void						SetupAppropriateView() override;
 	virtual FVector				GetInteractableLocation_Implementation() override { return Super::GetInteractableLocation_Implementation(); }
 };

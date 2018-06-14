@@ -47,7 +47,7 @@ private:
 protected:
 
 	bool							isEnemy = false; //protected so we can set this in enemy class
-	StateMachine					state = StateMachine(this); //reference to statemachine
+	TUniquePtr<StateMachine>		state = nullptr; //reference to statemachine
 	TUniquePtr<FBaseCharacter>		baseC = nullptr; //Reference to statmanager.  Is a pointer so we can make it and give it a reference to the attribute set
 	AAIController*					controller = nullptr; //reference to AIController
 	ARTSGameState*					gameState = nullptr; //gamestate ref to keep track of game speed modifiers 
@@ -246,11 +246,22 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Combat")
 	bool							isDead; 
 
-	//Get data on our spell target
+	/**
+	 *Get data on our spell target.  Is reset after the spell is sucessfully casted 
+	 */
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
 	FGameplayAbilityTargetDataHandle	GetTargetData() const { return targetData; } 
 
-	//Set data on our spell target
+	/**
+	 *Get data on targetted unit.  Used in single target spellcasting and attacking.  Reset after spell casted and if we attack a new target or stop. 
+	 *Faster to use this then cast GetTargetData() to some unit type
+	 */
+	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
+	AUnit*								GetTargetUnit() const { return targetUnit; } 
+
+	/**
+	 *Get data on our spell target
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Spells")
 	void								SetTarget(AUnit* target) { targetUnit = target; }
 
@@ -263,7 +274,9 @@ public:
 	//Remove the modifiers of some gameplayeffect to the unit when they expire
 	//void								RemoveGameplayEffects(const FActiveGameplayEffect& effect);
 
-	/**Preparations before we can actually execute an attack with our weapon like getting in range and turning the right way*/
+	/**
+	 *Preparations before we can actually execute an attack with our weapon like getting in range and turning the right way
+	 */
 	void								PrepareAttack(); // PURE_VIRTUAL(AUnit::PrepareAttack, );
 
 protected:
@@ -278,10 +291,14 @@ protected:
 	FGameplayTag						combatStyle; //type of attack we autoattack with
 
 public:
-	//Create some text to display the damage dealt
+	/**
+	 *Create some text to display the damage dealt
+	 */
 	void								ShowDamageDealt(Damage& damage);
 
-	//Overload of ShowDamageDealt incase we get a dodge or block perhaps
+	/**
+	 *Overload of ShowDamageDealt incase we get a dodge or block perhaps
+	 */
 	void								ShowDamageDealt(FText occurance);
 
 	//Apply the modifiers of some gameplayeffect to the unit

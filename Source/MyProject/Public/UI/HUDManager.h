@@ -5,6 +5,7 @@
 #include "UserWidgetExtensions/AnimHudWidget.h"
 #include "UserWidgetExtensions/MyUserWidget.h"
 #include "EventSystem/Trigger.h"
+#include "DialogStructs.h"
 #include "HUDManager.generated.h"
 
 class ARTSGameMode;
@@ -21,6 +22,7 @@ class UDialogUI;
 class UDialogBox;
 class UBreakMenu;
 class USettingsMenu;
+struct FDialogData;
 
 /**All the togglable huds/huds that need some callback when added or hidden 
 in the game should be listed here.  Modify HUDCount if we add more.  Dont have HUDCount inside since it makes iterating through huds harder*/
@@ -98,10 +100,23 @@ public:
 	 * @param conversationName - Name of the conversation.  Leave blank to just close
 	 * @param onDialogEndTrigger - Trigger which will activate on dialog end.  Could be something game changing, or just open up another menu.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation")
-	void											AddHUDDialog(FName conversationName, FTriggerData& onDialogEndTrigger);
+	void											AddHUDDialog(FName conversationName, FTriggerData& onDialogEndTrigger = FTriggerData::defaultTrigger);
 
-	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation")
+	/**Variant of AddHUDDialog for text that not in the conversation order
+	 * @param linesToDisplay - DialogInformation to pass in
+	 * @param onDialogEndTrigger - Trigger which will activate on dialog end.  Could be something game changing, or just open up another menu.  By default just does nothing
+	 */
+	void											AddHUDDialogString(TArray<FDialogData> linesToDisplay, FTriggerData& onDialogEndTrigger = FTriggerData::defaultTrigger);
+
+	/**BP version of AddHUDDialog*/
+	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Hud Dialog with Topic", AutoCreateRefTerm = "onDialogEndTrigger"))
+	void											BP_AddHUDDialog(FName conversationName, FTriggerData& onDialogEndTrigger) { AddHUDDialog(conversationName, onDialogEndTrigger); }
+
+		/**BP version of AddHUDDialog*/
+	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Hud Dialog with Dialog Lines", AutoCreateRefTerm = "onDialogEndTrigger"))
+	void											BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, FTriggerData& onDialogEndTrigger) { AddHUDDialogString(linesToDisplay, onDialogEndTrigger); }
+
+	UFUNCTION(BlueprintCallable, Category = "HUDManager")
 	bool											IsWidgetOnScreen(HUDs hudToCheck) const { return currentlyDisplayedWidgetsBitSet[static_cast<int>(hudToCheck)]; }
 #pragma region accessors
 

@@ -37,6 +37,8 @@ public:
 		UFUNCTION(BlueprintCallable, Category = "Interact")
 		void						OnPickedUp();
 
+		/**Can this interactable be used?*/
+		bool 						CanInteract_Implementation() override;
 		//Properties
 		/*assume all pickups have a static mesh, also making things have properties besides visibleanywhere makes them not editable in blueprints window for some odd reason*/
 		UPROPERTY(VisibleAnywhere)

@@ -2,11 +2,16 @@
 #pragma once
 #include "IUnitState.h"
 
+class ABaseHero;
+
 /**State when using an item: Similar to channeling state?*/
 class MYPROJECT_API ItemState : public IUnitState
 {
+
+	ABaseHero* heroRef;
+
 public:
-	ItemState();
+	ItemState(ABaseHero* hero);
 	~ItemState();
 
 	virtual void Enter(AUnit& unit) override;

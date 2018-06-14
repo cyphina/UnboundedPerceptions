@@ -127,13 +127,13 @@ void AUnit::Tick(float deltaSeconds)
 		}
 	}
 
-	state.Update(deltaSeconds);
+	state->Update(deltaSeconds);
 }
 
 #pragma region Accessors
 EUnitState AUnit::GetState() const
 {
-	return state.GetCurrentState();
+	return state->GetCurrentState();
 }
 
 void AUnit::UpdateStats()
@@ -169,7 +169,7 @@ bool AUnit::IsFacingTarget(FVector targetLoc)
 	int cross =  FVector::CrossProduct(currentLocation, targetLocation);
 	float angle = FMath::Atan2(cross, dot);
 	*/
-	if (dot > .95) //18 degrees lenient.  
+	if (dot > .95) //18 degrees lenient (only from right side).  
 		return true;
 	return false;
 }
@@ -213,7 +213,7 @@ void AUnit::Move(FVector newLocation)
 			//shift location a little bit if we're moving multiple units so they can group together ok
 			FVector shiftedLocation = newLocation - GetActorLocation().GetSafeNormal() * GetCapsuleComponent()->GetScaledCapsuleRadius() / 2;
 			controller->MoveToLocation(shiftedLocation, 10);
-			state.ChangeState(EUnitState::STATE_MOVING);
+			state->ChangeState(EUnitState::STATE_MOVING);
 		}
 	}
 }
@@ -254,10 +254,9 @@ void AUnit::CommitCast(UMySpell* spell)
 
 void AUnit::BeginAttack(AUnit * target)
 {
-	//Set the target because attacking is a looped process where we need to keep checking things to see if we're in position
-	Stop();
+	Stop(); //Stop any other actions we're doing
 	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString("Attack!"));
-	state.ChangeState(EUnitState::STATE_ATTACKING);
+	state->ChangeState(EUnitState::STATE_ATTACKING);
 	targetUnit = target;
 	targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(target);
 }
@@ -365,7 +364,7 @@ bool AUnit::BeginCastSpell(int spellToCastIndex, FGameplayAbilityTargetDataHandl
 
 			if (spell->GetTargetting().GetTagName() == "Skill.Targetting.None") //non targetted?  Then just cast it
 			{
-				state.ChangeState(EUnitState::STATE_CASTING);
+				state->ChangeState(EUnitState::STATE_CASTING);
 				PreCastChannelingCheck(currentSpell);
 				return true;
 			}
@@ -389,7 +388,7 @@ bool AUnit::BeginCastSpell(int spellToCastIndex, FGameplayAbilityTargetDataHandl
 						return true;
 					}
 
-					state.ChangeState(EUnitState::STATE_CASTING);
+					state->ChangeState(EUnitState::STATE_CASTING);
 					return true;
 				}
 			}
@@ -451,7 +450,7 @@ void AUnit::PreCastChannelingCheck(TSubclassOf<UMySpell> spellToCast)
 	}
 	else
 	{
-		state.ChangeState(EUnitState::STATE_CHANNELING); 	//start channeling
+		state->ChangeState(EUnitState::STATE_CHANNELING); 	//start channeling
 	}
 }
 
@@ -464,7 +463,7 @@ void AUnit::Stop()
 	targetLocation = FVector();
 	readyToAttack = false;
 	controller->StopMovement();
-	state.ChangeState(EUnitState::STATE_IDLE);
+	state->ChangeState(EUnitState::STATE_IDLE);
 }
 
 //Relic of when I did this manually
@@ -508,7 +507,7 @@ void AUnit::Stop()
 void AUnit::OnMoveCompleted(FAIRequestID RequestID, const EPathFollowingResult::Type Result)
 {
 	if(GetState() == EUnitState::STATE_MOVING)
-		state.ChangeState(EUnitState::STATE_IDLE);
+		state->ChangeState(EUnitState::STATE_IDLE);
 	//Possible move callback unusued so far
 }
 

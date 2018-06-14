@@ -3,7 +3,7 @@
 #include "MyProject.h"
 #include "MyCheatManager.h"
 
-#include "MyGameInstance.h"
+#include "RTSGameMode.h"
 #include "RTSGameState.h"
 #include "UserInput.h"
 #include "BasePlayer.h"
@@ -22,13 +22,11 @@
 #include "WorldObjects/Unit.h"
 #include "WorldObjects/BaseHero.h"
 
-
-
 void UMyCheatManager::InitCheatManager()
 {
 	Super::InitCheatManager();
 	userInputRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
-	gameInstanceRef = Cast<UMyGameInstance>(GetWorld()->GetGameInstance());
+	gameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
 	gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
 }
 
@@ -65,7 +63,7 @@ void UMyCheatManager::GodMode(FString objectID, int toggleGodMode)
 
 void UMyCheatManager::FinishQuest(FString questName, int isSucessful)
 {
-	AQuest* quest = *gameInstanceRef->GetQuestManager()->quests.FindByPredicate([questName](AQuest* quest) { return quest->questInfo.name.ToString() == questName; });
+	AQuest* quest = *gameModeRef->GetQuestManager()->quests.FindByPredicate([questName](AQuest* quest) { return quest->questInfo.name.ToString() == questName; });
 	if(quest)
 	{
 		isSucessful == 0 ? quest->CompleteQuest(false) : quest->CompleteQuest(true);

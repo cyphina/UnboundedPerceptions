@@ -2,7 +2,7 @@
 
 #include "MyProject.h"
 #include "TriggerInteractable.h"
-#include "MyGameInstance.h"
+#include "RTSGameMode.h"
 
 ATriggerInteractable::ATriggerInteractable()
 {
@@ -17,17 +17,29 @@ ATriggerInteractable::ATriggerInteractable()
 void ATriggerInteractable::BeginPlay()
 {
 	Super::BeginPlay();
-	gameInstanceRef = Cast<UMyGameInstance>(GetGameInstance());
+	gameModeRef = Cast<ARTSGameMode>(GetGameInstance());
 }
 
 void ATriggerInteractable::Interact_Implementation(ABaseHero* hero)
 {
-	gameInstanceRef->GetTriggerManager()->ActivateTrigger(triggerActivatedOnInteract);
+	gameModeRef->GetTriggerManager()->ActivateTrigger(triggerActivatedOnInteract);
 }
 
 FVector ATriggerInteractable::GetInteractableLocation_Implementation()
 {
 	return GetActorLocation();
+}
+
+bool ATriggerInteractable::CanInteract_Implementation()
+{
+	for(FConditionData condition : useConditions)
+	{
+		if(!gameModeRef->GetConditionalManager()->GetCondition(condition))
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 

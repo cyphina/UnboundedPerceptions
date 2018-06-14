@@ -2,7 +2,7 @@
 
 #include "MyProject.h"
 #include "EventManager.h"
-#include "MyGameInstance.h"
+#include "RTSGameMode.h"
 
 UEventManager::UEventManager()
 {
@@ -13,7 +13,7 @@ UEventManager::UEventManager()
 
 void UEventManager::Init()
 {
-	gameInstance = Cast<UMyGameInstance>(GetOuter());
+	gameModeRef = Cast<ARTSGameMode>(GetOuter());
 }
 
 void UEventManager::MoveToNextSection()
@@ -31,7 +31,7 @@ void UEventManager::MoveToNextSection()
 
 	for (FTriggerData trigger : storybook->chapters[currentChapter - 1].sections[currentSection - 1].triggers)
 	{
-		gameInstance->GetTriggerManager()->ActivateTrigger(trigger);
+		gameModeRef->GetTriggerManager()->ActivateTrigger(trigger);
 	}
 	//currentSection = currentSection % chapters[currentChapter].sections.Num() + 1;
 }

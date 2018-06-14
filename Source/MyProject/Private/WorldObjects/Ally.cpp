@@ -21,6 +21,7 @@ FText const AAlly::filledQueueText = NSLOCTEXT("HelpMessages", "Queue", "Command
 AAlly::AAlly(const FObjectInitializer& oI) : AUnit(oI)
 {
 	/* ABILITY SETUP!!! */
+	state = TUniquePtr<StateMachine>(new StateMachine(this));
 	abilities.SetNum(MAX_NUM_SPELLS); //size of abilities that can be used on actionbar
 	GetCapsuleComponent()->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel9); 
 }
@@ -121,7 +122,7 @@ bool AAlly::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
 
 				if (spell->GetTargetting().GetTagName() == "Skill.Targetting.None") //non targetted?  Then just cast it
 				{
-					state.ChangeState(EUnitState::STATE_CASTING);
+					state->ChangeState(EUnitState::STATE_CASTING);
 					PreCastChannelingCheck(currentSpell);
 				}
 				else
@@ -268,7 +269,7 @@ bool AAlly::SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellC
 			}
 		}
 		controllerRef->ChangeCursor(ECursorStateEnum::Select); //just turn it back to select so the loop will quickly change the cursor back to normal after spell casted
-		state.ChangeState(EUnitState::STATE_CASTING);
+		state->ChangeState(EUnitState::STATE_CASTING);
 		return true;
 	}
 	return false;

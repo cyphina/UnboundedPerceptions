@@ -75,6 +75,16 @@ void AHUDManager::AddHUDDialog(FName conversationName, FTriggerData& onDialogEnd
 	ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
 }
 
+void AHUDManager::AddHUDDialogString(TArray<FDialogData> linesToDisplay, FTriggerData& onDialogEndTrigger)
+{
+	if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) //if not on screen
+	{
+		GetDialogBox()->SetDialogLines(linesToDisplay);
+		GetDialogBox()->SetOnDialogFinishedTrigger(&onDialogEndTrigger);
+	}
+	ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
+}
+
 bool AHUDManager::ApplyHUD(uint8 newState, bool bShowMouseCursor, bool bEnableClickEvents, bool canOpenCombat, bool hasAnim)
 {
 	check(newState >= 0 && newState < widgetReferences.Num());

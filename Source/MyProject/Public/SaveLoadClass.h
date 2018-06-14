@@ -170,6 +170,7 @@ class MYPROJECT_API USaveLoadClass : public UObject
 public:
 
 	~USaveLoadClass();
+	void							Init();
 
 	/**@param filePath: The absolute filepath of the folder we should save the data to*/
 	bool							SaveToFilePath(const FString& filePath);

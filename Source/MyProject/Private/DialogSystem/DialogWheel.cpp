@@ -8,16 +8,26 @@
 #include "DialogSystem/DialogUI.h"
 #include "WorldObjects/NPC.h"
 
+UDialogWheel::UDialogWheel()
+{
+	
+}
+
 void UDialogWheel::SelectNextConversationTopics(int selectedIndex)
 {
 	previouslySelectedTopicNode = currentlySelectedTopicNode;
 	currentlySelectedTopicNode = conversationTopicTagNodes[selectedIndex];
 
 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, FString::FromInt(currentlySelectedTopicNode->GetChildTagNodes().Num()));
+	
+	//If this is a root node in our tree of dialog options (gameplaytag tree)
 	if (currentlySelectedTopicNode->GetChildTagNodes().Num() == 0)
 	{
+		//Close the social menu, and add the textbox withh the conversation loaded up
 		CPC->GetHUDManager()->AddHUD(static_cast<int>(HUDs::HS_Social));
 		CPC->GetHUDManager()->AddHUDDialog(socialWindowRef->GetNPC()->GetConversationName(currentlySelectedTopicNode->GetCompleteTag()), socialWindowRef->GetNPC()->GetOnDialogFinishedTrigger());
+		//Add this to our list of conversed dialogs (its a set so don't worry about doubles)
+		socialWindowRef->GetNPC()->AddConversedDialog(socialWindowRef->GetNPC()->GetConversationName(currentlySelectedTopicNode->GetCompleteTag()));
 		return;
 	}
 

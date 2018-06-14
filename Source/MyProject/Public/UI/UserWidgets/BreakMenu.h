@@ -11,7 +11,6 @@
  */
 
 class ARTSGameMode;
-class UMyGameInstance;
 
 UCLASS()
 class MYPROJECT_API UBreakMenu : public UMyDraggableWidget
@@ -25,7 +24,6 @@ public:
 private:
 
 	ARTSGameMode*				gameModeRef;
-	UMyGameInstance*			gameInstanceRef;
 
 	UFUNCTION(BlueprintCallable, Category = "BreakMenu Functionality")
 	void						Resume();

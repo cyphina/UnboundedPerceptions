@@ -10,8 +10,8 @@
  * Cheat manager class to hold console commands
  */
 
-class UMyGameInstance;
 class ARTSGameState;
+class ARTSGameMode;
 class AUserInput;
 class AUnit;
 class ABaseHero;
@@ -23,7 +23,7 @@ class MYPROJECT_API UMyCheatManager : public UCheatManager
 	GENERATED_BODY()
 
 	AUserInput*									userInputRef;
-	UMyGameInstance*							gameInstanceRef;
+	ARTSGameMode*								gameModeRef;
 	ARTSGameState*								gameStateRef;
 
 	virtual void								InitCheatManager() override;

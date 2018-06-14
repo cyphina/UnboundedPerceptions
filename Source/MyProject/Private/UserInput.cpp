@@ -46,8 +46,6 @@ AUserInput::AUserInput()
 void AUserInput::BeginPlay()
 {
 	gameInstance = Cast<UMyGameInstance>(GetGameInstance());
-	gameInstance->GetQuestManager()->controllerRef = this;
-	gameInstance->SetupManagerRefs(this);
 
 	gameMode = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
 

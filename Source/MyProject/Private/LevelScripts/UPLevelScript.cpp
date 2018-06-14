@@ -5,7 +5,7 @@
 #include "UserInput.h"
 #include "RTSGameState.h"
 #include "Quests/QuestManager.h"
-#include "MyGameInstance.h"
+#include "RTSGameMode.h"
 #include "SaveLoadClass.h"
 
 void AUPLevelScript::BeginPlay()
@@ -15,10 +15,10 @@ void AUPLevelScript::BeginPlay()
 	if(shouldTimePass)
 		Cast<ARTSGameState>(GetWorld()->GetGameState())->AddGameTime(timeToPass);
 
-	UMyGameInstance* gameInstance = Cast<UMyGameInstance>(GetGameInstance());
+	ARTSGameMode* gameMode = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
 
 	//When a new UPLevel is loaded, if this load was due to loading a save game, then setup what was saved.  May need some kind of delay?
-	gameInstance->GetSaveManager()->SetupLoad();
+	gameMode->GetSaveManager()->SetupLoad();
 
 	Super::BeginPlay(); //remember this calls blueprint BeginPlay()
 }

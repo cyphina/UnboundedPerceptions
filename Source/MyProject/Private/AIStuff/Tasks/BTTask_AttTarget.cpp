@@ -5,6 +5,7 @@
 #include "WorldObjects/Unit.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIControllers/UnitController.h"
+#include "State/AttackState.h"
 
 EBTNodeResult::Type UBTTask_AttTarget::ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory)
 {
@@ -15,8 +16,12 @@ EBTNodeResult::Type UBTTask_AttTarget::ExecuteTask(UBehaviorTreeComponent& owner
 		if (target && target->GetCanTarget())
 		{
 			//AICon->GetUnitOwner()->SetTarget(target);
-			AICon->GetUnitOwner()->BeginAttack(target);
-			return EBTNodeResult::Succeeded;
+			//if we aren't already attacking this target
+			if(AICon->GetUnitOwner()->GetState() == EUnitState::STATE_ATTACKING && AICon->GetUnitOwner()->GetTargetUnit() != target)
+			{
+				AICon->GetUnitOwner()->BeginAttack(target);
+				return EBTNodeResult::Succeeded;
+			}
 		}
 		else
 		{

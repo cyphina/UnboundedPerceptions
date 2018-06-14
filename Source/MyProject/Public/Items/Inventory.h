@@ -21,8 +21,6 @@ class MYPROJECT_API UInventory : public UMyUserWidget
 public:
 	virtual void		Construct_Implementation() override;	
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Callback")
-	bool				OnWidgetAddToViewport();
 	bool				OnWidgetAddToViewport_Implementation() override;
 
 	/**Uses item at a given inventory slot.  Triggers when item is clicked on  If some kind of container's inventory, just loot the items quickly

@@ -11,7 +11,7 @@
 
 class AUserInput;
 class UMyItem;
-class UMyGameInstance;
+class ARTSGameMode;
 
 USTRUCT(BlueprintType, NoExport)
 struct FSpellCombination
@@ -25,10 +25,14 @@ UCLASS()
 class MYPROJECT_API AEnemy : public AUnit
 {
 	GENERATED_BODY()
-	//range enemy will attack you
+	/**
+	 *range enemy will attack you
+	 */
 	int										aggroRange;
 	
-	/**Counter for number of enemies (units with opposite value of isEnemy) that can see this unit*/
+	/**
+	 *Counter for number of enemies (units with opposite value of isEnemy) that can see this unit
+	 */
 	int										enemyVisionCount;
 
 public:
@@ -49,6 +53,7 @@ public:
 #pragma region callbacks
 	void									BeginPlay() override;
 	//Enemy tick behavior will be controlled by AI
+	void									Tick(float deltaSeconds) override;
 	void									Die() override;
 #pragma endregion
 
@@ -63,6 +68,7 @@ public:
 	void							 DecVisionCount() { --enemyVisionCount;}
 
 private:
+
 	AUserInput* controllerRef;
-	UMyGameInstance* gameInstanceRef;
+	ARTSGameMode* gameModeRef;
 };

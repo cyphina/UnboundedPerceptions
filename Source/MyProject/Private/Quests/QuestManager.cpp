@@ -16,6 +16,14 @@
 #include "UserInput.h"
 #include "GoalActor.h"
 
+void UQuestManager::Init()
+{
+	controllerRef = Cast<AUserInput>(GetOuter()->GetWorld()->GetFirstPlayerController());
+	///Quest manager setup is done in PlayerController after huds are made
+	//questListRef = controllerRef->GetHUDManager()->GetQuestList();
+	//questJournalRef = controllerRef->GetHUDManager()->GetQuestJournal();
+}
+
 void UQuestManager::SelectNewQuest(AQuest* quest)
 {
 	if(IsValid(quest))
@@ -68,7 +76,7 @@ void UQuestManager::OnSwitchSubGoal()
 
 	currentDistance = GetDistanceToGoal();
 	questListRef->SetDistanceText(currentDistance);
-	controllerRef->GetHUDManager()->GetMinimap()->UpdateDirectionArrow(FMath::RadiansToDegrees(FMath::Acos(FVector::ForwardVector.CosineAngle2D(partyLeader->GetActorLocation() - currentGoalActor->GetActorLocation()))));
+	controllerRef->GetHUDManager()->GetMinimap()->UpdateDirectionArrow(FMath::RadiansToDegrees(FMath::Acos(FVector::ForwardVector.CosineAngle2D(controllerRef->GetBasePlayer()->heroes[0]->GetActorLocation() - currentGoalActor->GetActorLocation()))));
 	questListRef->ToggleDistanceIndicatorVisibility(true);
 	if (currentDistance > 10)
 		controllerRef->GetHUDManager()->GetMinimap()->ToggleDirectionArrowVisibility(true);
@@ -78,7 +86,7 @@ void UQuestManager::OnSwitchSubGoal()
 
 int UQuestManager::GetDistanceToGoal()
 {
-	FVector partyLeaderLocationXY = FVector(partyLeader->GetActorLocation().X, partyLeader->GetActorLocation().Y, 0);
+	FVector partyLeaderLocationXY = FVector(controllerRef->GetBasePlayer()->heroes[0]->GetActorLocation().X, controllerRef->GetBasePlayer()->heroes[0]->GetActorLocation().Y, 0);
 	FVector goalActorLocationXY = FVector(currentGoalActor->GetActorLocation().X, currentGoalActor->GetActorLocation().Y, 0);
 	return FMath::RoundToInt((partyLeaderLocationXY - goalActorLocationXY).Size2D() / 100);
 }
@@ -88,20 +96,24 @@ void UQuestManager::EndQuest(AQuest* questToEnd)
 	quests.Remove(questToEnd);
 	switch(questToEnd->GetQuestState())
 	{
-		case EQuestState::currentQuests: quests.Add(questToEnd);
-		case EQuestState::failedQuests: quests.Add(questToEnd);
-		case EQuestState::completedQuests: quests.Add(questToEnd);
+		case EQuestState::currentQuests: break;
+		case EQuestState::failedQuests: failedQuests.Add(questToEnd); break;
+		case EQuestState::completedQuests: completedQuests.Add(questToEnd); break;
 	}
 
-	questJournalRef->AddEntry(questToEnd); //add our quest to the quest journal under its new category
+	//add our quest to the quest journal under its new category
+	questJournalRef->AddEntry(questToEnd); 
 
-	if (questListRef->GetQuestListSlot(questToEnd)) //remove from quest list if its in quest list
+	//remove from quest list if we added it to the quest list
+	if (questListRef->GetQuestListSlot(questToEnd)) 
 		questListRef->RemoveFromQuestList(questToEnd);
 
-	if(questToEnd == questListRef->currentlySelectedQuest) //if it is selected in the questlistwidget
+	//If it is selected in the questlistwidget
+	if(questToEnd == questListRef->currentlySelectedQuest) 
 	{
 		questListRef->currentlySelectedQuest = nullptr;
 		
+		//Also remove the goal actor from the minimap
 		if(IsValid(currentGoalActor))
 		{
 			currentGoalActor->Destroy();
@@ -112,16 +124,20 @@ void UQuestManager::EndQuest(AQuest* questToEnd)
 
 	//questJournalRef->RemoveFromQuestJournal(questToEnd);
 
+	//if we have another quest, then select it
 	if (IsValid(quests[0]))
 		SelectNewQuest(quests[0]);
 
+	//if we selected this quest in the journal as it ends, deselect4 it
 	if(questJournalRef->GetSelectedQuest() == questToEnd)
 		questJournalRef->OnQuestEntryClicked(nullptr, nullptr);
 
+	//if this quest was completed sucessfully, give us the rewards!
 	if(questToEnd->GetQuestState() == EQuestState::completedQuests)
 	{
 		controllerRef->GetBasePlayer()->UpdateEXP(questToEnd->questInfo.questReward.exp);
 		controllerRef->GetBasePlayer()->UpdateGold(questToEnd->questInfo.questReward.gold);
+		OnQuestCompletedDelegate.Broadcast();
 	}
 
 }
@@ -146,7 +162,7 @@ void UQuestManager::OnPartyLeaderMove()
 		}
 		else
 		{
-			controllerRef->GetHUDManager()->GetMinimap()->UpdateDirectionArrow(FMath::RadiansToDegrees(FMath::Acos(FVector::ForwardVector.CosineAngle2D(partyLeader->GetActorLocation() - currentGoalActor->GetActorLocation()))));
+			controllerRef->GetHUDManager()->GetMinimap()->UpdateDirectionArrow(FMath::RadiansToDegrees(FMath::Acos(FVector::ForwardVector.CosineAngle2D(controllerRef->GetBasePlayer()->heroes[0]->GetActorLocation() - currentGoalActor->GetActorLocation()))));
 			controllerRef->GetHUDManager()->GetMinimap()->ToggleDirectionArrowVisibility(true);
 		}
 	}

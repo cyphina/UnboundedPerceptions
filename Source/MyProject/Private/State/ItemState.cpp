@@ -3,8 +3,9 @@
 #include "MyProject.h"
 #include "ItemState.h"
 
-ItemState::ItemState()
+ItemState::ItemState(ABaseHero* hero)
 {
+	heroRef = hero;
 }
 
 ItemState::~ItemState()

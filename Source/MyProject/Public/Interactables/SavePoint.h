@@ -16,21 +16,20 @@ public:
 	ASavePoint();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
-		void Interact(ABaseHero* hero);
-		virtual void Interact_Implementation(ABaseHero* hero) override;
+		void					Interact(ABaseHero* hero);
+		virtual void			Interact_Implementation(ABaseHero* hero) override;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
-		FVector GetInteractableLocation();
-		virtual FVector GetInteractableLocation_Implementation() override;
+		FVector					GetInteractableLocation();
+		virtual FVector			GetInteractableLocation_Implementation() override;
 
 protected:
 	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	virtual void				BeginPlay() override;
 
 public:	
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	
+	virtual void				Tick(float DeltaTime) override;
+	bool 						CanInteract_Implementation() override;
 	
 };

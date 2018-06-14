@@ -2,7 +2,7 @@
 
 #include "MyProject.h"
 #include "IntimateNPC.h"
-#include "MyGameInstance.h"
+#include "RTSGameMode.h"
 #include "UserInput.h"
 #include "UI/HUDManager.h"
 #include "DialogSystem/DialogUI.h"
@@ -14,7 +14,7 @@ AIntimateNPC::AIntimateNPC() : ANPC()
 
 void AIntimateNPC::BeginPlay()
 {
-	gameInstanceRef = Cast<UMyGameInstance>(GetGameInstance());
+	gameModeRef = Cast<ARTSGameMode>(GetGameInstance());
 }
 
 void AIntimateNPC::SetRelationshipPoints(int pointsToAdd)
@@ -22,19 +22,17 @@ void AIntimateNPC::SetRelationshipPoints(int pointsToAdd)
 	relationshipPoints += pointsToAdd;
 	if (relationshipPoints > relationshipEventPointValues[currentRelationshipEventIndex])
 	{
-		gameInstanceRef->GetTriggerManager()->ActivateTrigger(relationshipTriggers[currentRelationshipEventIndex]);
+		gameModeRef->GetTriggerManager()->ActivateTrigger(relationshipTriggers[currentRelationshipEventIndex]);
 	}
 }
 
 void AIntimateNPC::Interact_Implementation(ABaseHero* hero)
 {
-	if (GetWantsToConverse())
-	{
-		controllerRef->GetHUDManager()->GetSocialWindow()->SetNPC(this);
-		controllerRef->GetHUDManager()->GetSocialWindow()->SetIntimateView();
-		controllerRef->GetHUDManager()->AddHUDDialog(GetStartingConversationName(), GetOnDialogFinishedTrigger());
-	}
-	else
-		controllerRef->GetHUDManager()->AddHUDDialog(GetStartingConversationName(), FTriggerData::defaultTrigger);
+	Super::Interact_Implementation(hero);
+}
+
+void AIntimateNPC::SetupAppropriateView()
+{
+	controllerRef->GetHUDManager()->GetSocialWindow()->SetIntimateView();
 }
 
