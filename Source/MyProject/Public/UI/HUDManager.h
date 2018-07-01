@@ -13,6 +13,8 @@ class AUserInput;
 class UMainWidget;
 class UCharacterMenu;
 class UInventory;
+class UHeroInventory;
+class UStoreInventory;
 class UEquipmentMenu;
 class UActionbarInterface;
 class UQuestList;
@@ -22,6 +24,8 @@ class UDialogUI;
 class UDialogBox;
 class UBreakMenu;
 class USettingsMenu;
+class UBackpack;
+class AShopNPC;
 struct FDialogData;
 
 /**All the togglable huds/huds that need some callback when added or hidden 
@@ -29,20 +33,37 @@ in the game should be listed here.  Modify HUDCount if we add more.  Dont have H
 UENUM(BlueprintType)
 enum class HUDs : uint8
 {
-	HS_Ingame, //Basic Combat HUD
-	HS_Inventory, //Inventory
-	HS_Shop_General, //Shops
-	HS_Equipment, //Equipment
-	HS_Character, //Character Menu
-	HS_Actionbar, //Action bar
-	HS_Spellbook, //Spellbook
-	HS_QuestJournal, //Quest Journal
-	HS_QuestList, //Quest list (like mmo list) widget and minimap indicators
-	HS_Dialog, //Dialog prompt for dialog situations
-	HS_Minimap, //Minimap
-	HS_Social, //More interaction options for socialble NPCs
-	HS_Break, //Save/Load/Options menu
-	HS_Settings, //Settings Menu
+	/**Used to be used to display all the hero information simulaneously, but replaced by actionbar*/
+	HS_Ingame, 
+	/**Inventory for all heroes in party*/
+	HS_Inventory, 
+	/**Inventory for any storage interactable*/
+	HS_Storage, 
+	/**Inventory for any NPC shops... or whatever has a backpack to sell stuff*/
+	HS_Shop_General,
+	/**Equipment menu*/
+	HS_Equipment, 
+	/**Character Information Menu - Shows information about one character at a time (whoever is first in selection)*/
+	HS_Character, 
+	/**Action bar for information about selected heroes, commands, AI options, channeling bar, etc.*/
+	HS_Actionbar, 
+	/**Spellbook to level up and change spells in actionbar slot*/
+	HS_Spellbook, 
+	/**Quest journal to see detailed information about what quests we're on, what quests we've finished, etc.*/
+	HS_QuestJournal, 
+	/**Quest list is a widget on the side that can change what quest is being tracked on the minimap as well as conveys condensed information about quest*/
+	HS_QuestList, 
+	/**Dialog prompt for dialog situations*/
+	HS_Dialog, 
+	/**Minimap*/
+	HS_Minimap, 
+	/**More interaction options for socialble NPCs*/
+	HS_Social, 
+	/**Menu that leads to Save/Load/Options menu*/
+	HS_Break, 
+	/**Allows graphical and gameplay settings changes*/
+	HS_Settings, 
+	/**Save/Load Menu*/
 	HS_SaveLoad
 };
 
@@ -57,7 +78,7 @@ class MYPROJECT_API AHUDManager : public AInfo
 {
 	GENERATED_BODY()
 
-	static const int								HUDCount = 15; //Number of huds we have total.  Change if adding more. Assertion fails if we dont have enough space to remind us to update this size
+	static const int								HUDCount = 16; //Number of huds we have total.  Change if adding more. Assertion fails if we dont have enough space to remind us to update this size
 	
 	ARTSGameMode*									gameMode;
 	AUserInput*										playerControllerRef;
@@ -90,72 +111,106 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "HUDManager")
 	void											SetWidget(uint8 newState, UMyUserWidget* widgetRef);
 
-	/**Toggle a hud on the screen on/off.  Do not call with dialogbox hud, instead call AddHUDDialog */
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "HUDManager")
+	/**Toggle a hud on the screen on/off.  C++ version.*/
 	void											AddHUD(uint8 newState);
-	virtual void									AddHUD_Implementation(uint8 newState);
 
 	/**Allows us to quickly add dialogBox loaded up with conversation.  Else we would have to set the dialog manually, then call AddHUD.  Plus it allows us to 
 	 * setup a trigger when we finish conversation which may lead to something else.
 	 * @param conversationName - Name of the conversation.  Leave blank to just close
+	 * @param interactingHero - If there's any hero that prompted this dialog, set the reference in basePlayer.  If it was played automatically, no need to set
 	 * @param onDialogEndTrigger - Trigger which will activate on dialog end.  Could be something game changing, or just open up another menu.
 	 */
-	void											AddHUDDialog(FName conversationName, FTriggerData& onDialogEndTrigger = FTriggerData::defaultTrigger);
+	void											AddHUD(FName conversationName, FTriggerData& onDialogEndTrigger = FTriggerData::defaultTrigger, ABaseHero* interactingHero = nullptr);
 
-	/**Variant of AddHUDDialog for text that not in the conversation order
+	/**Variant of AddHUDDialog for text that not in the convesrsation table.
 	 * @param linesToDisplay - DialogInformation to pass in
+	 * @param interactingHero - If there's any hero that prompted this dialog, set the reference in basePlayer.  If it was played automatically, no need to set
 	 * @param onDialogEndTrigger - Trigger which will activate on dialog end.  Could be something game changing, or just open up another menu.  By default just does nothing
 	 */
-	void											AddHUDDialogString(TArray<FDialogData> linesToDisplay, FTriggerData& onDialogEndTrigger = FTriggerData::defaultTrigger);
+	void											AddHUD(TArray<FDialogData> linesToDisplay, FTriggerData& onDialogEndTrigger = FTriggerData::defaultTrigger,  ABaseHero* interactingHero = nullptr);
 
-	/**BP version of AddHUDDialog*/
+	/**Allows us to add a HUD that requires a backpack parameter (storageHUD).  
+	 * @param backpack - The backpack of the storage interactable or NPC
+	 * @param interactingHero - If there's any hero that prompted this dialog, set the reference in basePlayer.  If it was played automatically, no need to set
+	 */
+	void											AddHUD(UBackpack* backpack, ABaseHero* interactingHero = nullptr);
+
+	/**Allows us to add a HUD that requires a NPC seller parameter (shopHUD).  
+	 * @param shopNPC - The NPC selling us items
+	 * @param interactingHero - If there's any hero that prompted this dialog, set the reference in basePlayer.  If it was played automatically, no need to set
+	 */
+	void											AddHUD(AShopNPC* shopNPC, ABaseHero* interactingHero = nullptr);
+
+	/**Toggle a hud on the screen on/off.  BP_Version.  Do not call with huds that require open parameters, instead call their respective AddHUD function.*/
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "HUDManager", meta = (DisplayName = "Add Hud"))
+	void											BP_AddHUD(uint8 newState);
+	virtual void									BP_AddHUD_Implementation(uint8 newState) { AddHUD(newState); }
+
+	/**Add dialog HUD by passing in a conversation name*/
 	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Hud Dialog with Topic", AutoCreateRefTerm = "onDialogEndTrigger"))
-	void											BP_AddHUDDialog(FName conversationName, FTriggerData& onDialogEndTrigger) { AddHUDDialog(conversationName, onDialogEndTrigger); }
+	void											BP_AddHUDDialog(FName conversationName, FTriggerData& onDialogEndTrigger, ABaseHero* interacter) { AddHUD(conversationName, onDialogEndTrigger, interacter); }
 
-		/**BP version of AddHUDDialog*/
+	/**Add dialog HUD by passing in dialogLines rather than reading off dialogTable*/
 	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Hud Dialog with Dialog Lines", AutoCreateRefTerm = "onDialogEndTrigger"))
-	void											BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, FTriggerData& onDialogEndTrigger) { AddHUDDialogString(linesToDisplay, onDialogEndTrigger); }
+	void											BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, FTriggerData& onDialogEndTrigger, ABaseHero* interacter) { AddHUD(linesToDisplay, onDialogEndTrigger, interacter); }
+
+	/**Add the storage HUD by passing in a backpack with storage items*/
+	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Storage HUD"))
+	void											BP_AddHUDStorage(UBackpack* backpack, ABaseHero* interacter) { AddHUD(backpack); }
+
+	/**Add the shop HUD by passing in a shopkeeper NPC*/
+	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Shop HUD"))
+	void											BP_AddHUDShop(AShopNPC* shopNPC, ABaseHero* interacter) { AddHUD(shopNPC); }
 
 	UFUNCTION(BlueprintCallable, Category = "HUDManager")
 	bool											IsWidgetOnScreen(HUDs hudToCheck) const { return currentlyDisplayedWidgetsBitSet[static_cast<int>(hudToCheck)]; }
+
+		
 #pragma region accessors
 
 	///--Accessors--///
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-	UMainWidget*									GetMainHUD();
+	FORCEINLINE UMainWidget*									GetMainHUD();
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-	UCharacterMenu*									GetCharacterHUD();
+	FORCEINLINE UCharacterMenu*									GetCharacterHUD();
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-	UEquipmentMenu*									GetEquipHUD() const;
+	FORCEINLINE UEquipmentMenu*									GetEquipHUD() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-	UInventory*										GetInventoryHUD() const;
+	FORCEINLINE UHeroInventory*									GetInventoryHUD() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-	UActionbarInterface*							GetActionHUD() const;
+	FORCEINLINE UStoreInventory*								GetShopHUD() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-	UQuestList*										GetQuestList() const;
+	FORCEINLINE UInventory*										GetStorageHUD() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-	UQuestJournal*									GetQuestJournal() const;
+	FORCEINLINE UActionbarInterface*							GetActionHUD() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-	UMinimap*										GetMinimap() const;
+	FORCEINLINE UQuestList*										GetQuestList() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-	UDialogBox*										GetDialogBox() const;
+	FORCEINLINE UQuestJournal*									GetQuestJournal() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-	UDialogUI*										GetSocialWindow() const;
+	FORCEINLINE UMinimap*										GetMinimap() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-	UBreakMenu*										GetBreakMenu() const;
+	FORCEINLINE UDialogBox*										GetDialogBox() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-	USettingsMenu*									GetSettingsMenu() const;
+	FORCEINLINE UDialogUI*										GetSocialWindow() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+	FORCEINLINE UBreakMenu*										GetBreakMenu() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+	FORCEINLINE USettingsMenu*									GetSettingsMenu() const;
+
 #pragma endregion
 };
 

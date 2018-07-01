@@ -3,7 +3,11 @@
 #pragma once
 #include "Interactable.generated.h"
 
-//Use this uobject to expose to blueprints the interface
+/**Interfaces are good when we want different objects in different hierarchies to be able to communicate
+ * Interfaces take no memory because of empty base optimization (or so I assume)
+ */
+
+/**Use this uobject to expose the interface to blueprints*/
 UINTERFACE(BlueprintType)
 class MYPROJECT_API UInteractable : public UInterface
 {

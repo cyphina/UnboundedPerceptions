@@ -9,7 +9,10 @@
 class UGameplayAbility;
 class UGameplayEffect;
 
-//A class that holds a blueprint library, that is it can be used anywhere inside blueprints so we can get our spellInfo via the manager in our blueprints
+/**A class that holds a blueprint library, that is it can be used anywhere inside blueprints so we can get our spellInfo via the manager in our blueprints
+ * Recently I've exposed all the information inside UMySpell, so if you can use one of the accesors to get a default instance of the spell, you can get all the data
+ * from that.
+ */
 UCLASS(MinimalAPI)
 class USpellFunctionLibrary : public UBlueprintFunctionLibrary
 {
@@ -22,12 +25,13 @@ public:
 	static struct FGameplayEffectSpecHandle				MakeGameplayEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, 
 																		   float Duration, float Period, FGameplayTag Elem, 
 																		   FGameplayTag Name, FGameplayTagContainer assetTags);
-
+	
 	/**Creates gameplay damage effect*/
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Damage Effect", BlueprintInternalUseOnly = "true"), Category = "EffectFactory")
 	static struct FGameplayEffectSpecHandle				MakeDamageEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration,
 																		 float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
 																		 FDamageScalarStruct damageValues);
+
 	/**WARNING NOT CURRENTLY WORKING Creates gameplay stat change effect*/
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Stat Change Effect", BlueprintInternalUseOnly = "true"), Category = "EffectFactory")
 	static struct FGameplayEffectSpecHandle				MakeStatChangeEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration, 

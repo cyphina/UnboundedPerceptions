@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GameFramework/Actor.h"
+#include "Interactables/InteractableBase.h"
 #include "Items/Item.h"
 #include "Searchable.generated.h"
 
@@ -8,7 +8,7 @@
  * Examples: Treasure chests, table, shelf, and cupboard.  
  */
 UCLASS()
-class MYPROJECT_API ASearchable : public AActor
+class MYPROJECT_API ASearchable : public AInteractableBase
 {
 	GENERATED_BODY()
 	
@@ -17,7 +17,7 @@ public:
 
 	/**Items that can be looted from this place*/
 	UPROPERTY(EditAnywhere)
-	TArray<UMyItem*>			lootableItems;
+	TArray<FMyItem>			lootableItems;
 
 	UPROPERTY(EditAnywhere)
 	bool					isLocked;

@@ -5,18 +5,27 @@
 #include "HUDManager.h"
 #include "UserInput.h"
 #include "UserWidgets/MainWidget.h"
+
 #include "UserWidgets/ActionbarInterface.h"
 #include "Stats/CharacterMenu.h"
 #include "Items/EquipmentMenu.h"
+
 #include "Items/Inventory.h"
+#include "Items/HeroInventory.h"
+#include "Items/StoreInventory.h"
+#include "WorldObjects/ShopNPC.h"
+
 #include "Quests/UI/QuestList.h"
 #include "Quests/UI/QuestJournal.h"
 #include "Quests/UI/Minimap.h"
+
 #include "DialogSystem/DialogBox.h"
 #include "DialogSystem/DialogUI.h"
 #include "EventSystem/Trigger.h"
+
 #include "UI/UserWidgets/BreakMenu.h"
 #include "UI/UserWidgets/SettingsMenu.h"
+
 
 // Sets default values
 AHUDManager::AHUDManager()
@@ -39,22 +48,23 @@ void AHUDManager::SetWidget(uint8 newState, UMyUserWidget* widgetRef)
 	widgetReferences[newState] = widgetRef;
 }
 
-void AHUDManager::AddHUD_Implementation(uint8 newState)
+void AHUDManager::AddHUD(uint8 newState)
 {
 	switch (newState)
 	{
 		case HUDs::HS_Ingame: ApplyHUD(newState, true, true, true, false); break;
 		case HUDs::HS_Inventory: ApplyHUD(newState, true, true, true, false); break;
 		case HUDs::HS_Equipment: ApplyHUD(newState, true, true, false, false); break;
-		case HUDs::HS_Shop_General: ApplyHUD(newState, true, true, true, false); break;
 		case HUDs::HS_Character: ApplyHUD(newState, true, true, true, false); break;
 		case HUDs::HS_QuestJournal: ApplyHUD(newState, true, true, false, false); break;
 		case HUDs::HS_QuestList: ApplyHUD(newState, true, true, true, true); break;
 		case HUDs::HS_Spellbook: ApplyHUD(newState, true, true, false, false); break;
 		case HUDs::HS_Dialog: 
+		case HUDs::HS_Storage:
+		case HUDs::HS_Shop_General:
 		#if UE_EDITOR 
-			UE_LOG(LogTemp, Warning, TEXT("Don't call AddHUD for Dialog Widget.  Instead use Initiate Dialog"));
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("Don't call AddHUD for Dialog Widget.  Instead use Initiate Dialog"));
+			UE_LOG(LogTemp, Warning, TEXT("Don't call AddHUD(uint8) for widgets with parameters.  Call their respective AddHUD"));
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("Don't call AddHUD(uint8) for widgets with parameters.  Call their respective AddHUD"));
 		#endif
 			break;
 		case HUDs::HS_Social: ApplyHUD(newState, true, true, false, false); break;
@@ -65,24 +75,92 @@ void AHUDManager::AddHUD_Implementation(uint8 newState)
 	}
 }
 
-void AHUDManager::AddHUDDialog(FName conversationName, FTriggerData& onDialogEndTrigger)
+void AHUDManager::AddHUD(FName conversationName, FTriggerData& onDialogEndTrigger, ABaseHero* interactingHero)
 {
-	if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) //if not on screen
+	if (!playerControllerRef->GetBasePlayer()->interactedHero)
 	{
-		GetDialogBox()->SetConversation(conversationName);
-		GetDialogBox()->SetOnDialogFinishedTrigger(&onDialogEndTrigger);
+		if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) //if not on screen
+		{
+			playerControllerRef->GetBasePlayer()->interactedHero = interactingHero;
+			GetDialogBox()->SetConversation(conversationName);
+			GetDialogBox()->SetOnDialogFinishedTrigger(&onDialogEndTrigger);
+			ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
+		}
 	}
-	ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
+	else
+	{
+		if (currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) //if on screen
+		{
+			playerControllerRef->GetBasePlayer()->interactedHero = nullptr;
+			ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
+		}
+	}
 }
 
-void AHUDManager::AddHUDDialogString(TArray<FDialogData> linesToDisplay, FTriggerData& onDialogEndTrigger)
+void AHUDManager::AddHUD(TArray<FDialogData> linesToDisplay, FTriggerData& onDialogEndTrigger, ABaseHero* interactingHero)
 {
-	if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) //if not on screen
+	if (!playerControllerRef->GetBasePlayer()->interactedHero)
 	{
-		GetDialogBox()->SetDialogLines(linesToDisplay);
-		GetDialogBox()->SetOnDialogFinishedTrigger(&onDialogEndTrigger);
+		if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) //if not on screen
+		{
+			playerControllerRef->GetBasePlayer()->interactedHero = interactingHero;
+			GetDialogBox()->SetDialogLines(linesToDisplay);
+			GetDialogBox()->SetOnDialogFinishedTrigger(&onDialogEndTrigger);
+			ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
+		}
 	}
-	ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
+	else
+	{
+		if (currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) //if on screen
+		{
+			playerControllerRef->GetBasePlayer()->interactedHero = nullptr;
+			ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
+		}
+	}
+}
+
+void AHUDManager::AddHUD(UBackpack* backpack, ABaseHero* interactingHero)
+{
+	if (!playerControllerRef->GetBasePlayer()->interactedHero)
+	{
+		if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Storage)]) //if not on screen (impossible state reached if on screen and there's no interactedHero)
+		{
+			playerControllerRef->GetBasePlayer()->interactedHero = interactingHero;
+			GetStorageHUD()->SetBackPack(backpack);
+			ApplyHUD(static_cast<int>(HUDs::HS_Storage), true, true, true, false);
+		}
+	}
+	else
+	{
+		if (currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Storage)]) //if on screen
+		{
+			playerControllerRef->GetBasePlayer()->interactedHero = nullptr;
+			ApplyHUD(static_cast<int>(HUDs::HS_Storage), true, true, true, false);
+		}
+	}
+}
+
+void AHUDManager::AddHUD(AShopNPC* shopNPC, ABaseHero* interactingHero)
+{
+	if (!playerControllerRef->GetBasePlayer()->interactedHero)
+	{
+		if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Storage)]) //if not on screen
+		{
+			playerControllerRef->GetBasePlayer()->interactedHero = interactingHero;
+			GetShopHUD()->SetBackPack(shopNPC->itemsToSellBackpack);
+			GetShopHUD()->shopkeeper = shopNPC;
+			ApplyHUD(static_cast<int>(HUDs::HS_Shop_General), true, true, true, false);
+		}
+
+	}
+	else
+	{
+		if (currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Storage)]) //if on screen
+		{
+			playerControllerRef->GetBasePlayer()->interactedHero = nullptr;
+			ApplyHUD(static_cast<int>(HUDs::HS_Shop_General), true, true, true, false);
+		}
+	}
 }
 
 bool AHUDManager::ApplyHUD(uint8 newState, bool bShowMouseCursor, bool bEnableClickEvents, bool canOpenCombat, bool hasAnim)
@@ -184,9 +262,19 @@ UEquipmentMenu* AHUDManager::GetEquipHUD() const
 	return Cast<UEquipmentMenu>(widgetReferences[static_cast<int>(HUDs::HS_Equipment)]);
 }
 
-UInventory* AHUDManager::GetInventoryHUD() const
+UHeroInventory* AHUDManager::GetInventoryHUD() const
 {
-	return Cast<UInventory>(widgetReferences[static_cast<int>(HUDs::HS_Inventory)]);
+	return Cast<UHeroInventory>(widgetReferences[static_cast<int>(HUDs::HS_Inventory)]);
+}
+
+UStoreInventory* AHUDManager::GetShopHUD() const
+{
+	return Cast<UStoreInventory>(widgetReferences[static_cast<int>(HUDs::HS_Shop_General)]);
+}
+
+UInventory* AHUDManager::GetStorageHUD() const
+{
+	return Cast<UInventory>(widgetReferences[static_cast<int>(HUDs::HS_Storage)]);
 }
 
 UActionbarInterface* AHUDManager::GetActionHUD() const

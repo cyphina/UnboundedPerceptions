@@ -8,7 +8,7 @@
 #include "EventSystem/Trigger.h"
 #include "Quest.generated.h"
 
-class UMyItem;
+struct FMyItem;
 class UQuestManager;
 class UQuestListSlot;
 
@@ -25,15 +25,28 @@ enum class EGoalState : uint8
 	completedGoal,
 	failedGoal
 };
+
 /**What task we must perform to complete a goal*/
 UENUM(BlueprintType)
 enum class EGoalType : uint8
 {
-	Custom,
+	/**Needs a trigger to complete/update
+	 * Includes:
+	 * Use a certain item on something
+	 * Complete a puzzle (can be a puzzle activated by an interactable like an arcade machine)
+	 * Craft/Combine an item
+	 */
+	Custom, 
+	/**Kill some enemies to complete it*/
 	Hunt,
+	/**Obtain a certain number of items to complete*/
 	Find,
-	Talk
+	/**Talk to an NPC about a certain topic to complete*/
+	Talk,
+	/**Interact with a certain interactable*/
+	Interact
 };
+
 /**Organize quest types based on importance to story*/
 UENUM(BlueprintType)
 enum class EQuestCategory : uint8
@@ -42,6 +55,7 @@ enum class EQuestCategory : uint8
 	SideQuest,
 	Event
 };
+
 /**State of quest completion*/
 UENUM(BlueprintType)
 enum class EQuestState : uint8
@@ -50,6 +64,7 @@ enum class EQuestState : uint8
 	completedQuests,
 	failedQuests
 };
+
 ///--Structs---
 /**Information about goals*/
 USTRUCT(BlueprintType, NoExport)
@@ -78,7 +93,7 @@ struct FGoalInfo
 	 *If the goalType is hunting, this is the name of one monster to hunt (at least for this goal)
 	 *If the goalType is finding, this is the item you should have in your inventory
 	 *If the goalType is talking, this is the NPC you need to talk to
-	 *If the goalType is custom, we can use this for something else
+	 *If the goalType is custom, we can use this for something else (identifier for this goal so that trigger can complete it)
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText							additionalName;
@@ -127,7 +142,7 @@ struct FQuestReward
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int								exp;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<UMyItem*>				items;
+	TArray<FMyItem>				items;
 };
 
 //Struct for quest properties (that may be replicated?)
@@ -147,8 +162,10 @@ struct FQuestInfo
 	int								suggestedLvl;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FQuestReward					questReward;
+	/**Difficulty from 1 (easy) to 10 (extremely hard)*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float							difficulty;
+	/**What kind of quest is this?*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EQuestCategory					questCategory;
 	/**A list of all the goals in this quest information*/
@@ -204,7 +221,7 @@ public:
 	UFUNCTION()
 	void							BeginPlay() override;
 
-	/**Accessor to current goal indices*/
+	/**Accessor to current goal indices, that is the index of the goal within the quest (default value)*/
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessor")
 	TArray<int>						GetCurrentGoalIndices() const { return currentGoalIndices; }
 

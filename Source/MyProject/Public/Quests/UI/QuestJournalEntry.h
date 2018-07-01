@@ -31,5 +31,4 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (ExposeOnSpawn = true))
 		AQuest* assignedQuest;
 	
-	
 };

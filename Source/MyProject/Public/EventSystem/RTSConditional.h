@@ -16,12 +16,17 @@ enum class EConditionalType : uint8
 {
 	/** Doesn't do anything */
 	None, 
+	/** Checks to see if the quest named (value1 = the id without parent tag) is being done currently*/
+	HasQuestCond,
 	/** Checks for when a certain quest is completed.  Value1 = (Quest GameplayTag ID (without parent tag appended))*/
 	QuestCompletionCond,
 	/**	Checks for when an item is owned in the inventory.  Value1 = (Item Tag ID)*/
 	OwnsItemCond,
 	/** Talked to NPC about this topic.  Value1 = (NPC NameTag w/o parent tag), Value2 = (Conversation Topic ID w/o parent tag)*/
-	HadConversationCond
+	HadConversationCond,
+	/** A condition where (value1) is passed in dynamically to essentially make this condition a boolean wrapper.  
+	 * Set Value1 to != 0 to make it true, and set it to 0 to make it false*/
+	CustomCond
 };
 
 USTRUCT(BlueprintType, NoExport)
@@ -62,7 +67,7 @@ public:
 	/**Returns a boolean representing the condition of the condition data*/
 	UFUNCTION(BlueprintCallable, Category = "ConditionalActivation")
 	bool							GetCondition(UPARAM(ref) FConditionData& condData) const;
-
+	/**Returns a basic string representing what needs to be done to satisfy this condition*/
 	FText							GetConditionString(TArray<FConditionData> conditions) const;
 
 private:
@@ -76,4 +81,6 @@ private:
 	bool							GetOwnedItemConditionVal(FConditionData& condData) const;
 	/**Look through NPC's conversation record to see if there was a conversation had with the name passed*/
 	bool							GetHadConversationConditionVal(FConditionData& condData) const;
+	/*Look through questManager current quests for quest with this name*/
+	bool							GetHasCurrentQuestConditionVal(FConditionData& condData) const;
 };

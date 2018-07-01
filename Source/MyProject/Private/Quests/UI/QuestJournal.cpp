@@ -3,17 +3,16 @@
 #include "MyProject.h"
 #include "QuestJournal.h"
 #include "QuestJournalEntry.h"
-#include "UserInput.h"
+#include "RTSGameMode.h"
 #include "../QuestManager.h"
-#include "BasePlayer.h"
 
 
 void UQuestJournal::Construct_Implementation()
 {
 	Super::Construct_Implementation();
-	if(questManagerRef)
+	if(gameModeRef->GetQuestManager())
 	{
-		questManagerRef->questJournalRef = this;
+		gameModeRef->GetQuestManager()->questJournalRef = this;
 	}
 }
 

@@ -42,9 +42,6 @@ void ARTSDoor::BeginPlay()
 	}
 	initialRotation = doorMesh->GetComponentRotation();
 	finalRotation = initialRotation + FRotator(0, 90, 0);
-
-	gameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
-	cpcRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 }
 
 // Called every frame
@@ -77,29 +74,11 @@ void ARTSDoor::Interact_Implementation(ABaseHero* hero)
 		}
 		isOpen = !isOpen;
 	}
-	else
-	{
-		TArray<FDialogData> dialogData;
-		dialogData.Emplace(TArray<int>(), gameModeRef->GetConditionalManager()->GetConditionString(useConditions), *hero->GetGameName().ToString());
-		cpcRef->GetHUDManager()->AddHUDDialogString(MoveTemp(dialogData));
-	}
 }
 
 FVector ARTSDoor::GetInteractableLocation_Implementation()
 {
 	return GetActorLocation();
-}
-
-bool ARTSDoor::CanInteract_Implementation()
-{
-	for (FConditionData condition : useConditions)
-	{
-		if (!gameModeRef->GetConditionalManager()->GetCondition(condition))
-		{
-			return false;
-		}
-	}
-	return true;
 }
 
 void ARTSDoor::HandleProgress(float value)

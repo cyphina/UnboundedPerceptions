@@ -25,7 +25,7 @@ void UDialogWheel::SelectNextConversationTopics(int selectedIndex)
 	{
 		//Close the social menu, and add the textbox withh the conversation loaded up
 		CPC->GetHUDManager()->AddHUD(static_cast<int>(HUDs::HS_Social));
-		CPC->GetHUDManager()->AddHUDDialog(socialWindowRef->GetNPC()->GetConversationName(currentlySelectedTopicNode->GetCompleteTag()), socialWindowRef->GetNPC()->GetOnDialogFinishedTrigger());
+		CPC->GetHUDManager()->AddHUD(socialWindowRef->GetNPC()->GetConversationName(currentlySelectedTopicNode->GetCompleteTag()), socialWindowRef->GetNPC()->GetOnDialogFinishedTrigger(), socialWindowRef->GetNPC()->currentlyTalkingHero);
 		//Add this to our list of conversed dialogs (its a set so don't worry about doubles)
 		socialWindowRef->GetNPC()->AddConversedDialog(socialWindowRef->GetNPC()->GetConversationName(currentlySelectedTopicNode->GetCompleteTag()));
 		return;

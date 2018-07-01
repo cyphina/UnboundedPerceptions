@@ -24,13 +24,20 @@ class UAbilitySystemComponent;
 UENUM(BlueprintType)
 enum class Attributes : uint8
 {
-	Strength = 0, // Skill Damage
-	Understanding, // Elemental Affinity, Elemental Resistance, PPC Shield
-	Intelligence, // Spell Damage
-	Explosiveness, // Physical Affinity, Dodge Ratio, AttackSpeed
-	Endurance, // Physical Resistance, Hitpoints
-	Agility, // Skill Damage 
-	Luck, // Hit Ratio, Critical Ratio, Critical Strike Damage
+	// Skill Damage
+	Strength = 0, 
+	// Elemental Affinity, Elemental Resistance, PPC Shield
+	Understanding, 
+	// Spell Damage
+	Intelligence, 
+	// Physical Affinity, Dodge Ratio, AttackSpeed
+	Explosiveness, 
+	// Physical Resistance, Hitpoints
+	Endurance, 
+	// Skill Damage 
+	Agility, 
+	// Hit Ratio, Critical Ratio, Critical Strike Damage
+	Luck, 
 };
 
 //Impactful qualities

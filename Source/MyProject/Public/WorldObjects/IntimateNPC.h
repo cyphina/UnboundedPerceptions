@@ -23,10 +23,13 @@ class MYPROJECT_API AIntimateNPC : public ANPC
 	int							currentRelationshipEventIndex = 0;
 	ARTSGameMode*				gameModeRef;
 
+	/** Point values at which events occur*/
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
 	TArray<int>					relationshipEventPointValues;
 
-	/** Triggers to activate special effects when the relationshipEventPointValues are met*/
+	/** Triggers to activate special effects when the relationshipEventPointValues are met
+	 * May require a special trigger struct specifically for this.
+	 */
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
 	TArray<FTriggerData>		relationshipTriggers;
 

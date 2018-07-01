@@ -11,10 +11,11 @@ USpellManager* USpellManager::SingletonManager = nullptr;
 
 USpellManager::USpellManager()
 {
-	static ConstructorHelpers::FObjectFinder<UDataTable> SpellLookupTableFinder(TEXT("/Game/RTS_Tutorial/Blueprints/SpellSystem/SpellList"));
+	static ConstructorHelpers::FObjectFinder<UDataTable> SpellLookupTableFinder(TEXT("/Game/RTS_Tutorial/Tables/SpellList"));
 	if (SpellLookupTableFinder.Object)
 		spellLookupTable = SpellLookupTableFinder.Object;	
 
+	//Caching the data table information can be problematic if we reimport
 	SetupSpells();
 }
 
@@ -36,7 +37,7 @@ void USpellManager::SetupSpells()
 			{
 				rowName = FCString::Atoi(*rowNames[i].ToString());
 				spellInfo.name = table[i]->Name;
-				spellInfo.elem = UGameplayTagsManager::Get().RequestGameplayTag(*(FString("Combat.Element.") + table[i]->Elem.ToString()));			
+				spellInfo.elem = table[i]->Elem;
 				spellInfo.desc = table[i]->Desc;
 				spellInfo.casttime = table[i]->Casttime;
 				spellInfo.cdDuration = table[i]->Cooldown;
@@ -44,16 +45,16 @@ void USpellManager::SetupSpells()
 				spellInfo.range = table[i]->Range;
 				spellInfo.reqLevel = table[i]->LevelReq;
 				spellInfo.cost = table[i]->Cost;
-				spellInfo.targetting = UGameplayTagsManager::Get().RequestGameplayTag(*(FString("Skill.Targetting.") + table[i]->Targetting.ToString()));
+				spellInfo.targetting = table[i]->Targetting;
 				spellInfo.duration = table[i]->Duration;			
 				spellInfo.damage = table[i]->Damage;
 				spellInfo.period = table[i]->Period;
 				spellInfo.AOE = table[i]->AOE;
 				spellInfo.preReqs = table[i]->PreReqs;
 				
-				ConstructorHelpers::FClassFinder<UMySpell> spellClassFinder(*(FString("/Game/RTS_Tutorial/Blueprints/SpellSystem/Spells/") + table[i]->FilePath));
-				if (spellClassFinder.Class)
-					spellClasses.Add(rowName, spellClassFinder.Class);
+				/*ConstructorHelpers::FClassFinder<UMySpell> spellClassFinder(*(FString("/Game/RTS_Tutorial/Blueprints/SpellSystem/Spells/") + table[i]->FilePath));
+				if (spellClassFinder.Class)*/
+				spellClasses.Add(rowName, table[i]->spellClass);
 				spells.Add(rowName, spellInfo);
 			}
 		}

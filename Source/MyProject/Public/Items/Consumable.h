@@ -1,32 +1,29 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-#include "Item.h"
 #include "Consumable.generated.h"
 
 /**
- * Potion item that can either heal or buff.
- * Bonuses can only increase buffvalue
+ * Consumables are just a spell in disguise.
  */
 
 class UMySpell;
 
-UCLASS()
-class MYPROJECT_API UConsumable : public UMyItem
+USTRUCT(Blueprintable)
+struct FConsumableLookupRow : public FTableRowBase
 {
-	GENERATED_BODY()
+	GENERATED_USTRUCT_BODY()
 
-public:
-	UConsumable();
-	~UConsumable();
+	/**Multiplier for the effect*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int potency = 1; 
+	
+	/**How many times can we use this item?  -1 = infinity times*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int doses = 1; 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
-		TSubclassOf<UMySpell> ability;
-
-	int GetPotency() const { return potency; }
-	int GetDoses() const { return doses; }
-
-private:
-	int potency = 1; //multiplier of this consuming items effect
-	int doses = 1; //how many times can we use this potion
+	/**Class of ability that is activated when this consumable is used*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UMySpell> abilityClass; 
 };
+

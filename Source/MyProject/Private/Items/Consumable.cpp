@@ -4,11 +4,4 @@
 #include "Consumable.h"
 
 
-UConsumable::UConsumable()
-{
-	itemInfo.itemType = FGameplayTag::RequestGameplayTag("Item.Consumeable");
-}
 
-UConsumable::~UConsumable()
-{
-}

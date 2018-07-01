@@ -3,6 +3,7 @@
 #include "MyProject.h"
 #include "DIRender.h"
 #include "UserInput.h"
+#include "RTSCameraPawn.h"
 
 AUserInput* UDIRender::controllerRef = nullptr;
 
@@ -17,6 +18,11 @@ UDIRender::UDIRender()
 		tL.SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
 		tL.SetLooping(false);
 	}
+	
+	static ConstructorHelpers::FObjectFinder<UMaterialInstance> materialFinder(TEXT("/Game/RTS_Tutorial/Materials/GlowText_Inst"));
+	if(materialFinder.Succeeded())
+		SetTextMaterial(materialFinder.Object);
+
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
@@ -29,7 +35,7 @@ void UDIRender::BeginPlay()
 void UDIRender::TickComponent(float deltaSeconds, ELevelTick tickType, FActorComponentTickFunction * thisTickFunction)
 {
 	Super::TickComponent(deltaSeconds, tickType, thisTickFunction);
-	SetWorldRotation(FRotator(0,-180,0) + controllerRef->GetCameraPawnRotation());
+	SetWorldRotation(FRotator(0,-180,0) + controllerRef->GetCameraPawn()->GetActorRotation());
 	TickTimeLine(deltaSeconds);
 }
 

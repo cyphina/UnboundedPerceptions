@@ -13,50 +13,7 @@ bool UEquipmentMenu::OnWidgetAddToViewport_Implementation()
 	return Super::OnWidgetAddToViewport_Implementation();
 }
 
-void UEquipmentMenu::Equip(UEquip* equip)
-{
-
-	if (equip->itemInfo.itemType.GetTagName() == "Item.Equippable.Armor.Helmet")
-	{
-
-	}
-	else if (equip->itemInfo.itemType.GetTagName() == "Item.Equippable.Armor.Body")
-	{
-
-	}
-	else if (equip->itemInfo.itemType.GetTagName() == "Item.Equippable.Armor.Legs")
-	{
-
-	}
-	else if (equip->itemInfo.itemType.GetTagName() == "Item.Equippable.Armor.Helmet")
-	{
-
-	}
-	else if (equip->itemInfo.itemType.GetTagName() == "Item.Equippable.Armor.Codex")
-	{
-
-	}
-	else if (equip->itemInfo.itemType.GetTagName() == "Item.Equippable.Armor.Weapon")
-	{
-
-	}
-	else
-	{
-
-	}
-
-}
-
-void UEquipmentMenu::Unequip(int slotToUnequip)
-{
-	hero->UnequipItem(slotToUnequip);
-}
-
 void UEquipmentMenu::Update_Implementation()
 {
 
-}
-
-void UEquipmentMenu::SwapWeps(UWeapon* weapon)
-{
 }

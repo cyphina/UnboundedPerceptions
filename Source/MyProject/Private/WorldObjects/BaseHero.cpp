@@ -1,15 +1,27 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyProject.h"
-#include "BaseHero.h"
-#include "Interactables/Interactable.h"
-#include "BasePlayer.h"
+
+#include "RTSGameMode.h"
 #include "UserInput.h"
+#include "BasePlayer.h"
+
+#include "BaseHero.h"
 #include "State/HeroStateMachine.h"
-#include "Items/Weapon.h"
+
+#include "Interactables/Interactable.h"
+
+#include "Trigger.h"
+
+#include "ItemManager.h"
+#include "Items/Equip.h"
+#include "Items/Equipment.h"
 #include "Items/Consumable.h"
+
+
 #include "AbilitySystemComponent.h"
 #include "SpellSystem/MySpell.h"
+
 #include "Materials/MaterialInstanceDynamic.h"
 
 const float ABaseHero::nextExpMultiplier = 1.5f;
@@ -64,8 +76,9 @@ void ABaseHero::BeginPlay()
 	lightDirectionPV = GetWorld()->GetParameterCollectionInstance(lightSource);
 	//Default backpack size is 40 items
 	backpack->SetItemMax(40);
-	//this is the size of a hero's equipment 
-	equips.InsertDefaulted(0,10);
+	//This is the size of the hero equipment array.  Could make this a class later 
+	equipment = NewObject<UEquipment>(this);
+	equipment->OnEquipped.BindUObject(this, &ABaseHero::SetupBonuses);
 	
 #if UE_EDITOR
 	for(int i = 0; i < 70; i++)
@@ -73,6 +86,14 @@ void ABaseHero::BeginPlay()
 		baseC->LevelUp();
 	}
 #endif
+
+	//Load up any stored triggers that tried to activate on this object but it wasn't alive
+	TArray<FTriggerData> savedTriggers;
+	Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode())->GetTriggerManager()->GetTriggerRecords().MultiFind(*GetGameName().ToString(),savedTriggers);
+	for(FTriggerData& trigger : savedTriggers)
+	{
+		controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(trigger);
+	}
 }
 
 // Called every frame
@@ -175,12 +196,13 @@ void ABaseHero::BeginInteract(AActor* interactor)
 	}
 }
 
-void ABaseHero::BeginUseItem(UConsumable* itemToUse)
+void ABaseHero::BeginUseItem(int itemToUseID)
 {
-	SetCurrentItem(itemToUse);
+	SetCurrentItem(itemToUseID);
 	state->ChangeState(EUnitState::STATE_ITEM);
-	PressedCastSpell(itemToUse->ability);
-	if (itemToUse->ability.GetDefaultObject()->GetTargetting() != FGameplayTag::RequestGameplayTag("Skill.Targetting.None"))
+	TSubclassOf<UMySpell> itemAbility = UItemManager::Get().GetConsumableInfo(itemToUseID)->abilityClass;
+	PressedCastSpell(itemAbility);
+	if (itemAbility.GetDefaultObject()->GetTargetting() != FGameplayTag::RequestGameplayTag("Skill.Targetting.None"))
 		controllerRef->SetSecondaryCursor(ECursorStateEnum::Item);
 }
 
@@ -203,122 +225,39 @@ void ABaseHero::UseItem()
 {
 	if (currentItem)
 	{
-		PreCastChannelingCheck(currentItem->ability);
+		PreCastChannelingCheck(UItemManager::Get().GetConsumableInfo(currentItem)->abilityClass);
 	}
 }
 #pragma endregion
 
 #pragma region equipment
-void ABaseHero::SetupBonuses(UEquip* e, bool isEquip)
+
+void ABaseHero::SetupBonuses(int equipID, bool isEquip)
 {
-	for (int i = 0; i < e->GetBonuses().Num(); i++)
+	FEquipLookupRow* e = UItemManager::Get().GetEquipInfo(equipID);
+
+	for (int i = 0; i < e->bonuses.Num(); ++i)
 	{
-		if (e->GetBonuses()[i] < CombatInfo::AttCount)
+		int bonusValue = static_cast<uint8>(e->bonuses[i]); 
+		if (bonusValue < CombatInfo::AttCount)
 		{
-			baseC->GetAttribute(e->GetBonuses()[i])->SetCurrentValue(GetAttributeBaseValue(e->GetBonuses()[i]) + (2*isEquip-1)*e->GetBonusValues()[i]);
+			baseC->GetAttribute(bonusValue)->SetCurrentValue(GetAttributeBaseValue(bonusValue) + (2 * isEquip - 1)*e->bonusValues[i]);
 		}
-		else if (e->GetBonuses()[i] >= CombatInfo::AttCount && e->GetBonuses()[i] < CombatInfo::AttCount + CombatInfo::StatCount)
+		else if (bonusValue >= CombatInfo::AttCount && bonusValue < CombatInfo::AttCount + CombatInfo::StatCount)
 		{
-			int index = e->GetBonuses()[i] - CombatInfo::AttCount;
-			baseC->GetSkill(index)->SetBuffValue(GetSkillBaseValue(index) + (2 * isEquip - 1)*e->GetBonusValues()[i]);
+			int index = bonusValue - CombatInfo::AttCount;
+			baseC->GetSkill(index)->SetBuffValue(GetSkillBaseValue(index) + (2 * isEquip - 1)*e->bonusValues[i]);
 		}
-		else if (e->GetBonuses()[i] >= CombatInfo::AttCount + CombatInfo::StatCount && e->GetBonuses()[i] < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount)
+		else if (bonusValue >= CombatInfo::AttCount + CombatInfo::StatCount && bonusValue < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount)
 		{
-			int index = e->GetBonuses()[i] - CombatInfo::AttCount - CombatInfo::StatCount;
-			baseC->GetVital(index)->SetBuffValue(GetVitalBaseValue(index) + (2 * isEquip - 1)*e->GetBonusValues()[i]);
+			int index = bonusValue - CombatInfo::AttCount - CombatInfo::StatCount;
+			baseC->GetVital(index)->SetBuffValue(GetVitalBaseValue(index) + (2 * isEquip - 1)*e->bonusValues[i]);
 		}
 		else
 		{
-			int index = e->GetBonuses()[i] - CombatInfo::AttCount - CombatInfo::StatCount - CombatInfo::VitalCount;
-			baseC->GetMechanic(index)->SetCurrentValue(GetMechanicBaseValue(index) + (2 * isEquip - 1) * e->GetBonusValues()[i]);
+			int index = bonusValue - CombatInfo::AttCount - CombatInfo::StatCount - CombatInfo::VitalCount;
+			baseC->GetMechanic(index)->SetCurrentValue(GetMechanicBaseValue(index) + (2 * isEquip - 1) * e->bonusValues[i]);
 		}
-	}
-}
-
-void ABaseHero::SwapEquipsFromInventory(UEquip* e, int equipSlot)
-{
-	if (equips[equipSlot])
-	{
-		//if we sucessfully add our item that is equipped to the inventory
-		if (backpack->AddItem(equips[equipSlot]))
-		{
-			//remove bonuses and replace equipment
-			SetupBonuses(equips[equipSlot], false);
-			equips[equipSlot] = e;
-			SetupBonuses(e, true);
-		}
-	}
-	else
-	{
-		//just remove item and set bonuses
-		equips[equipSlot] = e;
-		SetupBonuses(e, true);
-	}
-}
-
-void ABaseHero::SwapEquips(int equipSlot1, int equipSlot2)
-{
-	if (equipSlot1 != equipSlot2)
-	{
-		if (equips[equipSlot1])
-		{
-			if (equips[equipSlot1]->itemInfo.itemType == equips[equipSlot2]->itemInfo.itemType)
-			{
-				UEquip* equipInFirstSlot = MoveTemp(equips[equipSlot1]);
-				equips[equipSlot1] = MoveTemp(equips[equipSlot2]);
-				equips[equipSlot2] = MoveTemp(equipInFirstSlot);
-			}
-		}
-	}
-}
-
-void ABaseHero::EquipItem(UEquip* e)
-{
-	//Depending on what kind of equip we have, swap item into different slots allocated for that equip
-	if (e->itemInfo.itemType.GetTagName() == "Item.Equippable.Armor.Helmet")
-	{
-		SwapEquipsFromInventory(e, 0);
-	}
-	else if (e->itemInfo.itemType.GetTagName() == "Item.Equippable.Armor.Body")
-	{
-		SwapEquipsFromInventory(e, 1);
-	}
-	else if (e->itemInfo.itemType.GetTagName() == "Item.Equippable.Armor.Legs")
-	{
-		SwapEquipsFromInventory(e, 2);
-	}
-	else if (e->itemInfo.itemType.GetTagName() == "Item.Equippable.Armor.Accessory")
-	{
-		if (!equips[3])
-			SwapEquipsFromInventory(e, 3);
-		else
-			SwapEquipsFromInventory(e, 4);
-	}
-	else if (e->itemInfo.itemType.GetTagName() == "Item.Equippable.Weapon")
-	{
-		for(int i = 5; i < 9; i++)
-		{
-			if(!equips[i])
-			{
-				SwapEquipsFromInventory(e, i);
-				return;
-			}
-		} //if our equip slots are full, just swap with the last equip
-		SwapEquipsFromInventory(e, 10);
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, "Error, equipping unknown type of item");
-	}
-}
-
-void ABaseHero::UnequipItem(int slot)
-{
-	if (equips[slot])
-	{
-		backpack->AddItem(equips[slot]);
-		SetupBonuses(equips[slot], false);
-		equips[slot] = nullptr;
 	}
 }
 
@@ -326,7 +265,7 @@ void ABaseHero::Stop()
 {
 	Super::Stop();
 	currentInteractable = nullptr;
-	currentItem = nullptr;
+	currentItem = 0;
 }
 
 void ABaseHero::SetSelected(bool value)

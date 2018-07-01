@@ -10,7 +10,7 @@ UDialogManager* UDialogManager::dialogManager = nullptr;
 
 UDialogManager::UDialogManager()
 {
-	static ConstructorHelpers::FObjectFinder<UDataTable> SpellLookupTableFinder(TEXT("/Game/RTS_Tutorial/Dialogs/Dialoglist"));
+	static ConstructorHelpers::FObjectFinder<UDataTable> SpellLookupTableFinder(TEXT("/Game/RTS_Tutorial/Tables/Dialogs/Dialoglist"));
 	if (SpellLookupTableFinder.Object)
 		dialogLookupTable = SpellLookupTableFinder.Object;
 }

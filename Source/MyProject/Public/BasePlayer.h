@@ -7,7 +7,7 @@
 #include "BasePlayer.generated.h"
 
 /**
- * 	Class for data specific to the player
+ * 	Class for data specific to the player.  Holds information that is replicated amongst clients about other clients
  */
 
 class AUnit;
@@ -26,7 +26,7 @@ class MYPROJECT_API ABasePlayer : public APlayerState
 
 	/**List of what the player knows what to talk about*/
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Meta = (AllowPrivateAccess = true), Category = "Dialog")
-	FGameplayTagContainer		dialogTopics;
+	FGameplayTagContainer		dialogTopics = FGameplayTagContainer();
 	
 	void						BeginPlay() override;
 	virtual void				OnConstruction(const FTransform& transform) override;
@@ -42,6 +42,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
 	TArray<ABaseHero*>			selectedHeroes;
+
+	/**If there's any hero that is interacting currently with something blocking (preventing other actions)*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
+	ABaseHero*					interactedHero;
 
 	/**Returns list of alive heroes and friendly units.  Heroes should be first in the list*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
@@ -69,7 +73,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Quest")
 	UQuestManager*				questManager;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	int							money;
 	
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
@@ -99,8 +103,12 @@ public:
 	 *@param topic - This is the new conversation topic learned by MC
 	 */
 	UFUNCTION(BlueprintCallable, Category = "DialogAccessor")
-	void						LearnDialogTopic(FGameplayTag topic);
+	void									LearnDialogTopic(FGameplayTag topic);
 
 	UFUNCTION(BlueprintCallable, Category = "DialogAccessor")
-	FGameplayTagContainer		GetDialogTopics() const { return dialogTopics; }
+	FGameplayTagContainer					GetDialogTopics() const { return dialogTopics; }
+
+	/**Check to see if the player has learned this topic*/
+	UFUNCTION(BlueprintCallable, Category = "DialogAccessor")
+	FORCEINLINE bool						HasDialogTopic(FGameplayTag tagToCheck) const { return dialogTopics.HasTagExact(tagToCheck); }
 };

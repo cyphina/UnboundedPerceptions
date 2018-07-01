@@ -26,17 +26,8 @@ void ASavePoint::Tick(float DeltaTime)
 
 }
 
-bool ASavePoint::CanInteract_Implementation()
-{
-	return true;
-}
-
 void ASavePoint::Interact_Implementation(ABaseHero* hero)
 {
 
 }
 
-FVector ASavePoint::GetInteractableLocation_Implementation()
-{
-	return GetActorLocation();
-}

@@ -52,11 +52,36 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
 	TMap<FGameplayTag, FName>	conversationTopics;
 
 	FTriggerData				onDialogEndTriggerData;
-
+	 
 	/**
 	 * List of dialogs (not topics) that we've already talked to this NPC about. 
 	 */
 	TSet<FName>					dialogAlreadyConversed;
+
+	/**Number of available quests to partake currently
+	 * This can be determined by looking at the number of conversationTopics + defaultConversationTopics to see which topics start with Quest
+	 * since topics which start with Quest will have a quest trigger.  A quest trigger is always followed by a conversation change trigger which will
+	 * change the topic to a conversation that doesn't involve accepting a quest.  
+	 */
+	int							numAvailableQuests;
+
+	/**Counts how many dialogs we can have with this NPC currently that gives us quests*/
+	void						CountQuestDialogs();
+
+	/**Checks if a dialog is a quest dialog by checking if its name starts with Quest*/
+	bool						IsQuestDialog(FName conversationName);
+
+	/**Checks to see if this topic is already learned by the player*/
+	inline bool					IsTopicLearned(FGameplayTag topic);
+
+	/**Bound to OnTopicLearned delegate in BasePlayer to check if the questCount changes*/
+	UFUNCTION()
+	void						OnTopicLearned(FGameplayTag topicLearned);
+
+	//We need this if we're trying to debug a level in the editor.  We don't need this for the real game since they start at the starting level where things are initialized
+#if UE_EDITOR
+	FTimerHandle				BeginPlayDelayTimer;
+#endif
 
 protected:
 
@@ -115,9 +140,12 @@ public:
 	/**Set the dialog key to lookup in table for what the NPC will say when we begin talking to it*/
 	UFUNCTION(BlueprintCallable, Category = "Accessors")
 	virtual void 				SetCurrentDialog(FName conversationName) { conversationStarterName = conversationName; }
-	/**Sets the dialog key to lookup in the table what the NPC will say when we talk to it about a specific topic*/
+	/**Sets the dialog key to lookup in the table what the NPC will say when we talk to it about a specific topic
+	 * @param topic - The dialogTopic the player talks to the NPC about that will have a different response
+	 * @param newConversationName - The name of the new conversation that the NPC will talk about when asked about this topic
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Accessors")
-	virtual void 				SetSpecificDialog(FName key, FName conversationName) { conversationTopics[FGameplayTag::RequestGameplayTag(key)] = conversationName; }
+	virtual void 				SetSpecificDialog(FGameplayTag topic, FName newConversationName);
 	/** Used when trying to talk to NPC about some topic.  If NPC knows nothing about topic, return defaultConversationName */
 	UFUNCTION(BlueprintCallable, Category = "Accessors")
 	FName						GetConversationName(FGameplayTag conversationTopic) const;

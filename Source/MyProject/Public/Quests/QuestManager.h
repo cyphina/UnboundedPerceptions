@@ -4,6 +4,7 @@
 
 #include "GameFramework/Actor.h"
 #include "GameplayTagContainer.h"
+#include "Items/Item.h"
 #include "QuestManager.generated.h"
 
 class ABasePlayer;
@@ -15,6 +16,7 @@ class UQuestJournal;
 class AEnemy;
 class ANPC;
 class AGoalActor;
+class UNamedInteractableSpawner;
 
 UCLASS()
 class MYPROJECT_API UQuestMap : public UDataAsset
@@ -55,23 +57,23 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Quest Data")
 	UQuestMap*								questMap;
 
-	/**actor that determies location of the quest*/
+	/**Actor that determies location of the quest*/
 	UPROPERTY(BlueprintReadWrite, Category = "References")
 	AGoalActor*								currentGoalActor;
 		
-	/**list of all quests currently happening*/
+	/**List of all quests currently happening*/
 	UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
 	TArray<AQuest*>							quests;
 
-	/**distance away from goalactor*/
+	/**Distance away from goalactor*/
 	UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
 	int										currentDistance;
 
-	/**completed quests*/
+	/**Completed quests*/
 	UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
 	TArray<AQuest*>							completedQuests;
 
-	/**failed quests*/
+	/**Failed quests*/
 	UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
 	TArray<AQuest*>							failedQuests;
 	
@@ -88,9 +90,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Quest Managing")
 	void									SelectNewQuest(AQuest* quest);
 
-	/**Add a new current quest*/
+	/**Add a new current quest.  Returns true on success, false on failure*/
 	UFUNCTION(BlueprintCallable, Category = "Quest Managing")
-	void									AddNewQuest(TSubclassOf<AQuest> questClassToSpawn, bool forcedStart);
+	bool									AddNewQuest(TSubclassOf<AQuest> questClassToSpawn, bool forcedStart);
 
 	/**Called when switching subgoals to change goal actor location and change UI*/
 	UFUNCTION(BlueprintCallable, Category = "Quest Managing")
@@ -112,11 +114,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Callbacks")
 	void									OnPartyLeaderMove();
 
-	/**Callback when enemy dies to check to see if this quest condition is fufilled*/
+	/**Callback when enemy dies to check to see if this quest condition is fufilled 
+	 * Need callbacks here since we specifically need that parameter
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Callbacks")
 	void									OnEnemyDie(TSubclassOf<AEnemy> enemyClass);
 
 	/**Callback when NPC is talked to to check to see if this quest condition is fufilled*/
 	UFUNCTION(BlueprintCallable, Category = "Callbacks")
-	void									OnTalkNPC(TSubclassOf<ANPC> NPCClass);
+	void									OnTalkNPC(TSubclassOf<ANPC> nPCClass);
+
+	/**Callback when Item is picked up to see if this quest condition is fulfilled*/
+	UFUNCTION(BlueprintCallable, Category = "Callbacks")
+	void									OnItemPickup(FMyItem newItem);
+
+	/**Callback when Interactable is sucessfully interacted with*/
+	UFUNCTION(BlueprintCallable, Category = "Callbacks")
+	void									OnInteracted(UNamedInteractableSpawner* interactable);
 };

@@ -7,117 +7,94 @@
 #include "Equip.generated.h"
 
 /**
- * 
+ * Equippable objects are/will be stored in an equipment class.  They give us stat bonuses, and eventually may impact our auto attack or something. 
  */
 
-UCLASS(BlueprintType)
-class UEquip : public UMyItem
+UENUM(BlueprintType)
+enum class EStatList : uint8
 {
-	GENERATED_BODY()
+	// Skill Damage
+	Strength = 0, 
+	// Elemental Affinity, Elemental Resistance, PPC Shield
+	Understanding, 
+	// Spell Damage
+	Intelligence, 
+	// Physical Affinity, Dodge Ratio, AttackSpeed
+	Explosiveness, 
+	// Physical Resistance, Hitpoints
+	Endurance, 
+	// Skill Damage 
+	Agility, 
+	// Hit Ratio, Critical Ratio, Critical Strike Damage
+	Luck, 
 
-public:
-	UEquip() : UMyItem(), bonuses(TArray<int>()), bonusValues(TArray<int>()), effects(TArray<FName>()), level(1) {}
-	UEquip(FText name, UTexture2D* image, FText desc, bool isStackable, int count, ERarity rarity,
-		TArray<int> bonuses, TArray<int> bonusValues, TArray<FName> effects, FName etype, int level) : 
-		UMyItem(name, image, desc, UGameplayTagsManager::Get().RequestGameplayTag("Item.Equippable.Weapon"), isStackable, count, rarity), 
-		bonuses(bonuses), bonusValues(bonusValues), effects(effects), level(level)
-	{
-	
-	}
+	Critical_Chance,
+	Critical_Damage,
+	Accuracy,
+	Dodge,
+	Attack_Speed,
+	Cast_Speed,
 
-	~UEquip() {}
+	Physical_Aff,
+	Fire_Aff,
+	Water_Aff,
+	Wind_Aff,
+	Earth_Aff,
+	Electric_Aff,
+	Darkness_Aff,
+	Light_Aff,
+	Arcane_Aff,
+	Chaos_Aff,
+	Poison_Aff,
+	Blood_Aff,
+	Ethereal_Aff,
 
-	//Sets up the names and values in description
-	//UFUNCTION(BlueprintCallable, Category = "CALL THIS TO INITIALIZE DATA")
-	//	void InitParams()
-	//{	
-	//	//Appends new bonus to previous description including previous bonuses
-	//	for (int i = 0; i < bonuses.Num(); i++)
-	//	{
-	//		FFormatOrderedArguments args;
-	//		args.Add(itemInfo.description);
-	//		args.Add(BonusToName(bonuses[i]));
-	//		args.Add(bonusValues[i]);
-	//		itemInfo.description = FText::Format(NSLOCTEXT("Items", "ItemDesc", "{0} \r\n+{2} {1}"), args); 
-	//	}
-	//}
+	Physical_Resist,
+	Fire_Resist,
+	Water_Resist,
+	Wind_Resist,
+	Earth_Resist,
+	Electric_Resist,
+	Darkness_Resist,
+	Light_Resist,
+	Arcane_Resist,
+	Chaos_Resist,
+	Poison_Resist,
+	Blood_Resist,
+	Ethereal_Resist,
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "DescriptionHeler")
-	FText					GetBonusDescription() const
-	{
-		FText bonusDescription = FText::GetEmpty();
-		for (int i = 0; i < bonuses.Num() - 1; i++)
-		{
-			FFormatOrderedArguments args;
-			args.Add(bonusDescription);
-			args.Add(BonusToName(bonuses[i]));
-			args.Add(bonusValues[i]);
-			bonusDescription = FText::Format(NSLOCTEXT("Items", "BonusDesc", "{0} +{2} {1} \r\n"), args); 
-		}
+	Health,
+	Mana,
+	Psyche,
+	Moxie, //only increasable by items, normal cap of 100
+	Shield, //only increasable by items and buffs
 
-		//Last line doesn't have a line break.  Also make sure bonuses have same num as bonusValues
-		#if UE_EDITOR
-			checkf(bonuses.Num() == bonusValues.Num(), TEXT("Item doesn't have same number of bonuses and bonusvalues"));
-		#endif
-		FFormatOrderedArguments args;
-		args.Add(bonusDescription);
-		args.Add(BonusToName(bonuses[bonuses.Num() - 1]));
-		args.Add(bonusValues[bonusValues.Num() - 1]);
-		bonusDescription = FText::Format(NSLOCTEXT("Items", "BonusDesc", "{0} +{2} {1}"), args);
+	MovementSpeed, //max walking speed in ue4 is based off of centimeters per second.  Average persom walks 5km in an hour, which is around 138 cm/s which is how max speed is measured
+	AttackRange,
+	WeaponPower,
+	GlobalDamageModifier //damage reduction modifier, 0 = no damage reduction, 100 = no damage recieved
+};
 
-		return bonusDescription;
-	}
+USTRUCT(Blueprintable)
+struct FEquipLookupRow : public FTableRowBase
+{
+	GENERATED_USTRUCT_BODY()
 
-	TArray<int>				GetBonuses() const { return bonuses; }  
-	TArray<int>				GetBonusValues() const { return bonusValues; } 
-	TArray<FName>			GetEffects() const { return effects; }
-	int						GetLevel() const{ return level; }
+	/**What bonuses are increased: 0-6 attributes, 7-38 stats, 39-43 vitals, and rest are mechanics*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<EStatList>		bonuses; 
 
-private:
-	/**indices of what bonuses to increase (0-AttCount, AttCount-SkillCount, SkillCount-VitCount, VitCount-MechanicCount)*/
-	UPROPERTY(BlueprintReadWrite, Category = "Equipment", Meta = (ExposeOnSpawn = true, AllowPrivateAccess = true))
-	TArray<int>				bonuses; 
-
-	/**how much the bonus is increased by 0-6 attributes, 7-40 stats, 41-45 vitals, and rest are mechanics*/
-	UPROPERTY(BlueprintReadWrite, Category = "Equipment", Meta = (ExposeOnSpawn = true, AllowPrivateAccess = true))
+	/**How much the bonus is increased by*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<int>				bonusValues; 
 
-    //**special effects of the weapon to be considered*/
-	UPROPERTY(BlueprintReadWrite, Category = "Equipment", Meta = (ExposeOnSpawn = true, AllowPrivateAccess = true))
+    /**Special effects of the weapon to be considered*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FName>			effects; 
 
-	/**level of equipment*/
-	UPROPERTY(BlueprintReadWrite, Category = "Equipment", Meta = (ExposeOnSpawn = true, AllowPrivateAccess = true))
+	/**Level of equipment*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int						level = 1;
-
-	//Finds name of bonus based on index
-	FText BonusToName(int bonusValue) const
-	{
-		if (bonusValue > CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount)
-		{
-			const UEnum* eBonus = FindObject<UEnum>(ANY_PACKAGE, TEXT("Mechanics"), true);
-			if (!eBonus) return FText();
-				return eBonus->GetDisplayNameTextByIndex(bonusValue - (CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount));
-		}
-		else if(bonusValue > CombatInfo::AttCount + CombatInfo::StatCount)
-		{
-			const UEnum* eBonus = FindObject<UEnum>(ANY_PACKAGE, TEXT("Vitals"), true);
-			if (!eBonus) return FText();
-				return eBonus->GetDisplayNameTextByIndex(bonusValue - (CombatInfo::AttCount + CombatInfo::StatCount));
-		}
-		else if (bonusValue > CombatInfo::AttCount)
-		{
-			const UEnum* eBonus = FindObject<UEnum>(ANY_PACKAGE, TEXT("UnitStats"), true);
-			if (!eBonus) return FText();
-				return eBonus->GetDisplayNameTextByIndex(bonusValue - CombatInfo::AttCount);
-		}
-		else
-		{
-			const UEnum* eBonus = FindObject<UEnum>(ANY_PACKAGE, TEXT("Attributes"), true);
-			if (!eBonus) return FText();
-				return eBonus->GetDisplayNameTextByIndex(bonusValue);
-		}
-	}
 };
 
 

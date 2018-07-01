@@ -16,9 +16,9 @@ void AQuest::BeginPlay()
 	int num = 0;
 	for(FGoalInfo goal : questInfo.subgoals)
 	{
-		if (goal.goalType == EGoalType::Hunt && goal.amountToHunt > 0)
+		if ((goal.goalType == EGoalType::Hunt || goal.goalType == EGoalType::Interact) && goal.amountToHunt > 0)
 		{
-			currentHuntedAmounts.Add(num,0);		
+			currentHuntedAmounts.Add(num,0); 	
 		}
 		++num;
 	}

@@ -5,7 +5,7 @@
 #include "Pickup.h"
 #include "UserInput.h"
 #include "UI/HUDManager.h"
-#include "Items/Inventory.h"
+#include "Items/HeroInventory.h"
 
 APickup::APickup()
 {
@@ -38,9 +38,13 @@ void APickup::Tick(float deltaSeconds)
 void APickup::Interact_Implementation(ABaseHero* hero)
 {
 	//Put code here that places the item in the characters inventory
-	if (hero->backpack && hero->backpack->AddItem(item))
+	if (CanInteract_Implementation())
 	{
-		OnPickupDelegate.Broadcast();
+		if (hero->backpack)
+		{
+			item.count -= hero->backpack->AddItem(item);
+			OnPickupDelegate.Broadcast();
+		}
 	}
 }
 
@@ -51,15 +55,13 @@ FVector APickup::GetInteractableLocation_Implementation()
 
 void APickup::OnPickedUp()
 {
-	interactableMesh->SetVisibility(false); //don't want to destroy since our inventory has this as the reference but we may later on make data and vision seperate
-	interactableMesh->SetSimulatePhysics(false);
-	interactableMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	if (item.count == 0)
+	{
+		interactableMesh->SetVisibility(false); //don't want to destroy since our inventory has this as the reference but we may later on make data and vision seperate
+		interactableMesh->SetSimulatePhysics(false);
+		interactableMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
 	CPCRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
-}
-
-bool APickup::CanInteract_Implementation()
-{
-	return true;
 }
 
 void APickup::OnComponentBeginOverlap(UPrimitiveComponent* hitComp, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex, bool bFromSweep, const FHitResult& sweepResult)

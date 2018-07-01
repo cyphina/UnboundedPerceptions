@@ -34,6 +34,8 @@ class ABaseHero;
 class UMyGameInstance;
 class AHUDManager;
 class ARTSGameMode;
+class ARTSGameState;
+class ARTSCameraPawn;
 class UQuestManager;
 
 //Callback delegates
@@ -61,11 +63,11 @@ public:
 
 private:
 	/*PlayerState reference*/
-	UPROPERTY(VisibleAnywhere, BlueprintGetter = GetBasePlayer, Category = "References")
+	UPROPERTY(VisibleAnywhere, BlueprintGetter = "GetBasePlayer", Category = "References")
 	ABasePlayer*			basePlayer;
 
 	/**GameInstance reference.  GameInstance is used for storing consistant data between levels*/
-	UPROPERTY(VisibleAnywhere, BlueprintGetter = GetMyGameInstance, Category = "References")
+	UPROPERTY(VisibleAnywhere, BlueprintGetter = "GetMyGameInstance", Category = "References")
 	UMyGameInstance*		gameInstance;
 
 	/**HUDManager ref.  Set this in userinput because it depends on userinput being created first.  Also client-side HUD manipulation doesn't do very much,
@@ -74,22 +76,32 @@ private:
 
 	ARTSGameMode*			gameMode;
 
+	ARTSGameState*			gameState;
+
+	ARTSCameraPawn*			cameraPawn;
+
 public:
 	/**offset used for widgets when dragging around*/
 	UPROPERTY(BlueprintReadWrite)
 	FVector2D				offset;
 
-	UFUNCTION(BlueprintCallable, Category = "Accessors") 
-	AHUDManager*			GetHUDManager() const {return hudManager; }
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors") 
+	FORCEINLINE AHUDManager*			GetHUDManager() const { return hudManager; }
 
-	UFUNCTION(BlueprintCallable, Category = "Accessors") 
-	ARTSGameMode*			GetGameMode() const { return gameMode; }
+	UFUNCTION(BlueprintCallable, BlueprintPure,  Category = "Accessors") 
+	FORCEINLINE ARTSGameState*			GetGameState() const { return gameState; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure,  Category = "Accessors") 
+	FORCEINLINE ARTSGameMode*			GetGameMode() const { return gameMode; }
 	
-	UFUNCTION(BlueprintGetter)
-	ABasePlayer* GetBasePlayer() const { return basePlayer; }
+	UFUNCTION(BlueprintCallable, BlueprintPure,  Category = "Accessors")
+	FORCEINLINE ABasePlayer*			GetBasePlayer() const { return basePlayer; }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors") 
+	FORCEINLINE ARTSCameraPawn*			GetCameraPawn() const { return cameraPawn; }
 
 	UFUNCTION(BlueprintGetter)
-	UMyGameInstance* GetMyGameInstance() const { return gameInstance; }
+	FORCEINLINE UMyGameInstance*		GetMyGameInstance() const { return gameInstance; }
 
 private:
 	//These references store information about hit in member so we don't have to reconstruct every tick
@@ -109,36 +121,57 @@ public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
 	FOnUnitSelected			OnUnitSelectedDelegate;
 
-	//Stores what object collision types we hit when querying for them
+	/**Stores what object collision types we hit when querying for them*/
 	UPROPERTY(BlueprintReadOnly, Category = "Control Settings")
 	TArray<TEnumAsByte<EObjectTypeQuery>>	queryableTargetObjects;
 
-	//Creates a dot where we click
+	/**Helper function when all selected ally units are cleared */
+	UFUNCTION(BlueprintCallable, Category = "Helper")
+	void						ClearSelectedAllies();
+
+	/*UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
+	FORCEINLINE AAllyAIController*			GetAllyAIController() const { return allyControllerRef; }*/
+
+	/**Creates a dot where we click*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Visual")
 	void									CreateClickVisual(FVector visualLocation);
+	 
 #pragma endregion
 
 #pragma region camera
-	UPROPERTY(BlueprintReadWrite, Category = "Control Settings")
-	bool									isEdgeMoving;
+
+	static const int						baseCameraMoveSpeed = 30;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Control Settings")
 	bool									isCamNavDisabled;
 
 	/**Camera move speed multiplier*/
-	UPROPERTY(BlueprintReadOnly, Category = "Control Settings")
+	UPROPERTY(BlueprintReadWrite, Category = "Control Settings")
 	float									camMoveSpeedMultiplier = 1;	
-
-	/**Get Camera Pawn Rotation*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Helper")
-	FRotator								GetCameraPawnRotation();
 
 	/**Set Camera move speed between clamped values 0 and 3*/
 	UFUNCTION(exec, Category = "Control Settings")
 	void									SetCamMoveSpeedMultiplier(float newCamMoveSpeed) { camMoveSpeedMultiplier = FMath::Clamp<float>(newCamMoveSpeed,0,3); }
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helper")
+	FORCEINLINE bool						IsUnitOnScreen(AUnit* unitToCheck);	
+
+private:
+	UFUNCTION(BlueprintCallable, Category = "Camera Movement")
+	void									MoveX(float axisValue);
+
+	UFUNCTION(BlueprintCallable, Category = "Camera Movement")
+	void									MoveY(float axisValue);
+
+	UFUNCTION(BlueprintCallable, Category = "Camera Movement")
+	void									EdgeMovementX();
+
+	UFUNCTION(BlueprintCallable, Category = "Camera Movement")
+	void									EdgeMovementY();
 #pragma endregion
 
 #pragma region Cursor
+public:
 	UPROPERTY(BlueprintReadWrite, Category = "Control Settings")
 	TArray<ECursorStateEnum>				cursorDirections;
 

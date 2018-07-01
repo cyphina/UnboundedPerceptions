@@ -8,7 +8,7 @@
 #include "RTSGameMode.generated.h"
 
 /**
- * Game mode only exists on server.  Things we want clients not see goes here.
+ * Game mode only exists on server.  Put things that only the server needs to know and use.  
  */
 
 class UEventManager;
@@ -16,6 +16,7 @@ class UTriggerManager;
 class UQuestManager;
 class ULoadingWidget;
 class UConditionalManager;
+class IWorldObject;
 
 UCLASS()
 class MYPROJECT_API ARTSGameMode : public AGameModeBase
@@ -23,11 +24,15 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 	///<summary> Level Names </summary>
-	const FString			startingLevelName = "StartMap";
-	const FString			theIntroduction = "TheIntroduction";
+	const FString				startingLevelName = "StartMap";
+	const FString				theIntroduction = "TheIntroduction";
 	
+	/**Stores the currently loaded level name*/
 	UPROPERTY(BlueprintReadWrite, Category = "Levels", Meta = (AllowPrivateAccess = "true"))
-	FString					currentLevelName;
+	FString						currentLevelName;
+
+	/**Stores a list of all the worldobjects for quick access.  For now enemies won't be here since enemies don't have unique names*/
+	TMap<FName, IWorldObject*>	worldObjectReferences;
 
 	void BeginPlay() override;
 

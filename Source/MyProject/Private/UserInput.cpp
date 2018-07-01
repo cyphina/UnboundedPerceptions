@@ -4,6 +4,8 @@
 #include "UserInput.h"
 #include "MyGameInstance.h"
 #include "RTSGameMode.h"
+#include "RTSGameState.h"
+#include "RTSCameraPawn.h"
 #include "Engine.h"
 #include "SceneViewport.h"
 #include "Extras/FlyComponent.h"
@@ -46,8 +48,9 @@ AUserInput::AUserInput()
 void AUserInput::BeginPlay()
 {
 	gameInstance = Cast<UMyGameInstance>(GetGameInstance());
-
 	gameMode = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
+	gameState = Cast<ARTSGameState>(GetWorld()->GetGameState());
+	cameraPawn = Cast<ARTSCameraPawn>(GetPawn());
 
 	//There should only be one player
 	basePlayer = Cast<ABasePlayer>(PlayerState);
@@ -55,15 +58,14 @@ void AUserInput::BeginPlay()
 	if (basePlayer)
 	{
 		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Black, TEXT("Input component here"));
-		basePlayer->heroes.SetNum(4, false);
+		TArray<ABaseHero*> heroesInWorld;
+
 		for (TActorIterator<ABaseHero> heroItr(GetWorld()); heroItr; ++heroItr)
 		{
-			//if this hero 
-			if ((*heroItr)->heroIndex >= 0 && (*heroItr)->heroIndex < 4)
-			{
-				basePlayer->heroes[(*heroItr)->heroIndex] = *heroItr;
-			}
+			heroesInWorld.Add(*heroItr);
 		}
+
+		basePlayer->UpdateParty(heroesInWorld);
 	}
 	//Super Beginplay calls the blueprint BeginPlay 
 	hudManager = GetWorld()->SpawnActor<AHUDManager>(AHUDManager::StaticClass(), FTransform(), FActorSpawnParameters());
@@ -199,6 +201,92 @@ void AUserInput::TabNextAlly()
 	}
 }
 
+void AUserInput::ClearSelectedAllies()
+{
+	for(AAlly* ally : basePlayer->selectedAllies)
+	{
+		ally->SetSelected(false);
+	}
+	basePlayer->focusedUnit = nullptr;
+	OnAllyDeselectedDelegate.Broadcast();
+}
+
+bool AUserInput::IsUnitOnScreen(AUnit* unitToCheck)
+{
+	FBox2D unitBoundaryScreenCoords = unitToCheck->FindBoundary();
+	int sizeX, sizeY;
+	GetViewportSize(sizeX,sizeY);
+	return unitBoundaryScreenCoords.Max.X < sizeX || unitBoundaryScreenCoords.Max.Y < sizeY;
+}
+
+FORCEINLINE void AUserInput::MoveX(float axisValue)
+{
+	if(!isCamNavDisabled)
+	cameraPawn->SetActorLocation(cameraPawn->GetActorTransform().TransformPosition(FVector(axisValue*baseCameraMoveSpeed*camMoveSpeedMultiplier,0,0)));
+}
+
+FORCEINLINE void AUserInput::MoveY(float axisValue)
+{
+	if(!isCamNavDisabled)
+	cameraPawn->SetActorLocation(cameraPawn->GetActorTransform().TransformPosition(FVector(0,axisValue*baseCameraMoveSpeed*camMoveSpeedMultiplier,0)));
+}
+
+void AUserInput::EdgeMovementX()
+{
+	if (!isCamNavDisabled)
+	{
+		int viewX, viewY;
+		float mouseX, mouseY;
+		GetViewportSize(viewX, viewY);
+		if (GetMousePosition(mouseX, mouseY))
+		{
+			if (mouseX / viewX < .025)
+			{
+				cameraPawn->AddActorLocalOffset(FVector(0, -1 * baseCameraMoveSpeed * camMoveSpeedMultiplier, 0));
+				cursorDirections.AddUnique(ECursorStateEnum::PanLeft);
+			}
+			else if (mouseX / viewX > .975)
+			{
+				cameraPawn->AddActorLocalOffset(FVector(0, baseCameraMoveSpeed * camMoveSpeedMultiplier, 0));
+				cursorDirections.AddUnique(ECursorStateEnum::PanRight);
+			}
+			else
+			{
+				cursorDirections.Remove(ECursorStateEnum::PanLeft);
+				cursorDirections.Remove(ECursorStateEnum::PanRight);
+			}
+		}
+	}
+}
+
+void AUserInput::EdgeMovementY()
+{
+	if (!isCamNavDisabled)
+	{
+		int viewX, viewY;
+		float mouseX, mouseY;
+		GetViewportSize(viewX, viewY);
+		if (GetMousePosition(mouseX, mouseY))
+		{
+			if (mouseY / viewY < .025)
+			{
+				cameraPawn->AddActorLocalOffset(FVector(baseCameraMoveSpeed * camMoveSpeedMultiplier, 0, 0));
+				cursorDirections.AddUnique(ECursorStateEnum::PanUp);
+			}
+			else if (mouseY / viewY > .975)
+			{
+				cameraPawn->AddActorLocalOffset(FVector(-1 * baseCameraMoveSpeed * camMoveSpeedMultiplier, 0, 0));
+				cursorDirections.AddUnique(ECursorStateEnum::PanDown);
+			}
+			else
+			{
+				cursorDirections.Remove(ECursorStateEnum::PanUp);
+				cursorDirections.Remove(ECursorStateEnum::PanDown);
+			}
+		}
+	}
+}
+
 void AUserInput::RightClick()
 {
 	if (cursorState == ECursorStateEnum::Magic)
@@ -298,7 +386,7 @@ void AUserInput::CursorHover()
 
 	if (!hasSecondaryCursor)
 	{
-		if (isEdgeMoving && !isCamNavDisabled)
+		if (cursorDirections.Num() > 0 && !isCamNavDisabled)
 		{
 			ChangeCursor(cursorDirections.Last());
 			return;

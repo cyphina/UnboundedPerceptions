@@ -6,6 +6,7 @@
 #include "UI/UserWidgetExtensions/MyUserWidget.h"
 #include "InventoryView.generated.h"
 
+
 /**
  * An inventory view is a way to display the inventories contents.  Examples include paged inventory and scrollbar inventory views.
  */
@@ -18,8 +19,7 @@ class MYPROJECT_API UInventoryView : public UMyUserWidget
 	GENERATED_BODY()
 	
 public:
-	/** Call this when inventory is added to screen */
-
+	/**Reference to the container that lists the items we have.  The slots need this.*/
 	UPROPERTY(BlueprintReadWrite, Category = "References", Meta = (ExposeOnSpawn = true))
 	UInventory*				inventoryRef;
 

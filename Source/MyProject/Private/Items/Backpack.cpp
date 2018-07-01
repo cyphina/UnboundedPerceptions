@@ -2,148 +2,148 @@
 
 #include "MyProject.h"
 #include "Backpack.h"
+#include "ItemManager.h"
 
 UBackpack::UBackpack()
 {	
-	items = TSparseArray<UMyItem*>();
-	//items.Reserve(itemMax);
+	items = TSparseArray<FMyItem>();
+	items.Reserve(itemMax);
 }
 
 UBackpack::~UBackpack()
 {
 }
 
-bool UBackpack::AddItem(UMyItem* newItem)
+int UBackpack::AddItem(FMyItem newItem)
 {
-#if UE_EDITOR 
-	if (!newItem)
-		return false;
-#endif
-	if (newItem->itemInfo.isStackable)
-	{
-		for (UMyItem* i : items) //loop through items and see if there's one already inside
-		{
-			if (i->itemInfo.name.EqualTo(newItem->itemInfo.name) && i->itemInfo.isStackable) //if we have this item already and it is stackable
-			{
-				if (i->itemInfo.count + newItem->itemInfo.count <= STACKMAX) //if the number of items we have is less than the max stack
-				{
-					i->itemInfo.count += newItem->itemInfo.count; //add the count of the newitems to our original item count
-					//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, FString::FromInt(i.count));
-					return true;
-				}
-				else //make this stack full and try to find another
-				{
-					newItem->itemInfo.count = 99 - i->itemInfo.count; //the newItem now has less in it
-					i->itemInfo.count = 99; //but our stack is 99
-				}
-			}
-		}
-	}
-	if (items.Num() < itemMax) //if item is not stackable, or there is no other instances of it, just add items to a new slot
-	{	
-#if UE_EDITOR 
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Purple, newItem->itemInfo.name.ToString());
-#endif
-		TArray<int> indices = GetItemIndices();
-		if (indices.Num() > 0)
-		{
-			int i = 0;
-			for (; i < itemMax; ++i)
-			{
-				if (!items.IsAllocated(i))
-					break;
-			}
-			items.Insert(i, newItem); //else we don't have this item already so lets add it in
-		}
-		else
-			items.Add(newItem);
+	FMyItem& newItemReference = newItem;
+	int newID = newItemReference.id;
+	int	newCount = newItemReference.count;
 
-		return true;
+#if UE_EDITOR 
+	check(newID > 0)
+#endif
+
+	if (UItemManager::Get().GetItemInfo(newID)->isStackable) //if this is a stackable item
+	{
+		for (FMyItem& i : items) //loop through items and see if there's one already inside
+		{
+			if (i.id == newID && i.count != STACKMAX) //if there's a matching slot with this type of item and it's not already full
+			{
+				if (i.count + newCount <= STACKMAX) //if the slot has enough room to add these additional items
+				{
+					i.count += newCount; //add the count of the newitems to our original item count
+					return 0;
+				}
+				else //if this slot doesn't have enough room for all the additional item amount we're trying to add
+				{
+					newCount = newCount - (99 - i.count); //lower the item count since we added some items
+					i.count = STACKMAX; //fill up the slot 
+					return AddItem(newItem); //try to add the rest of the item again to a new slot
+				}
+			}
+		}
 	}
-	return false;
+
+	//if item is not stackable, or there is no other instances of it or the instances of it are already full, just add items to a new slot
+	if (items.Num() < itemMax) //if there's extra room in the 
+	{
+		//Insert into the empty slot the item
+		items.Insert(FindEmptySlot(), newItem);
+		return 0;
+	}
+
+	return newCount;
 }
 
-bool UBackpack::AddItemToSlot(UMyItem* newItem, int slot) //<--FIX HERE
+int UBackpack::AddItemToSlot(FMyItem newItem, int slot) //<--FIX HERE
 {
+	int newID = newItem.id;
+	int	newCount = newItem.count;
+
 #if UE_EDITOR 
-	if (!newItem)
-		return false;
+	check(newID > 0)
 #endif
+
 	check(slot >= 0 && slot <= itemMax); //is this a valid slot
-	if (items.IsAllocated(slot) && items[slot]->itemInfo.name.EqualTo(newItem->itemInfo.name) && items[slot]->itemInfo.isStackable) //if we have an item in our slot already
+	bool isSlotAllocated = items.IsAllocated(slot);
+
+	if (isSlotAllocated && items[slot].id == newID && UItemManager::Get().GetItemInfo(items[slot].id)->isStackable) //if we have an item in our slot already
 	{
-		if (items[slot]->itemInfo.count + newItem->itemInfo.count < STACKMAX) //if we have enough room in our stack to add these items
+		if (items[slot].count + newCount < STACKMAX) //if we have enough room in our stack to add these items
 		{
-			items[slot]->itemInfo.count += newItem->itemInfo.count;
-			return true;
+			items[slot].count += newCount;
+			return 0;
 		}
 		else //if we don't have enough room we add the item to a full slot, and the rest of the item is still in our cursor
 		{
-			newItem->itemInfo.count = items[slot]->itemInfo.count + newItem->itemInfo.count - 99;
-			items[slot]->itemInfo.count = 99;
-			return false;
+			newCount = items[slot].count + newCount - 99;
+			items[slot].count = 99;
+			return newCount;
 		}
 	}
-	else //if there's nothing in that slot
+	else //if this item is stackable
 	{
-		if (items.IsAllocated(slot))
-			items[slot] = newItem;
+		if (isSlotAllocated) //Already taken
+			return newCount;
 		else
 			items.Insert(slot, newItem);
-		return true;
+
+		return 0;
 	}
-	return false;
 }
 	
-bool UBackpack::AddItems(TArray<UMyItem*> newItems)
+TArray<FMyItem> UBackpack::AddItems(TArray<FMyItem> newItems)
 {
 	if (items.Num() <= itemMax - newItems.Num())
 	{
-		for (UMyItem* newIt : newItems)
+		for (FMyItem& newIt : newItems)
 		{
-			AddItem(newIt);
+			if(AddItem(newIt) != 0)
+				return newItems;
 		}
-		return true;
 	}
-	return false;
+	return TArray<FMyItem>();
 }
 
-bool UBackpack::RemoveItem(UMyItem* itemToRemove)
+bool UBackpack::RemoveItem(const FMyItem& itemToRemove)
 {
+	int newID = itemToRemove.id;
+	int newCount = itemToRemove.count;
+
 #if UE_EDITOR 
-	if (!itemToRemove)
-		return false;
+	check(newID > 0)
 #endif
+
 	if(items.Num() > 0)
 	{
-		int index = FindItem(itemToRemove);
+		int index = FindItem(newID);
 
 		if (index == -1) return false;
 
-		if (items[index]->itemInfo.count > 1)
+		if (items[index].count > newCount)
 		{
-			items[index]->itemInfo.count -= 1;
+			items[index].count -= newCount;
 			return true;
 		}
 		else
-			items.RemoveAtUninitialized(index);
+			EmptySlot(index);
 	}
 	return false;
 }
 
-bool UBackpack::RemoveItemAtSlot(int slot)
+bool UBackpack::RemoveItemAtSlot(int slot, int removeCount)
 {
 	if (items.Num() > 0)
 	{
 		if (items.IsAllocated(slot))
 		{
-			if(items[slot]->itemInfo.isStackable && items[slot]->itemInfo.count > 1)
+			if(UItemManager::Get().GetItemInfo(items[slot].id)->isStackable && items[slot].count > removeCount)
 			{
-				items[slot]->itemInfo.count -= 1;
+				items[slot].count -= removeCount;
 			}
 			else
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Magenta, FString::FromInt(slot));
 				items.RemoveAtUninitialized(slot);
 			}
 			return true;
@@ -152,23 +152,43 @@ bool UBackpack::RemoveItemAtSlot(int slot)
 	return false;
 }
 
-
-bool UBackpack::RemoveItems(TArray<UMyItem*> itemsToRemove)
+bool UBackpack::RemoveItems(const TArray<FMyItem> itemsToRemove)
 {
-	if (items.Num() <= itemMax - itemsToRemove.Num())
+	bool success = true;
+	for (const FMyItem& newIt : itemsToRemove)
 	{
-		for (UMyItem* newIt : itemsToRemove)
-		{
-			RemoveItem(newIt);
-		}
-		return true;
+		if(!RemoveItem(newIt))
+			success = false;
 	}
-	return false;
+	return success;
 }
 
-bool UBackpack::RemoveAll()
+FORCEINLINE void UBackpack::EmptySlot(int slot)
 {
-	return false;
+	items.RemoveAtUninitialized(slot);
+}
+
+FORCEINLINE void UBackpack::EmptyAll()
+{
+	items.Empty(itemMax);
+}
+
+void UBackpack::TransferItems(UBackpack* otherPack, int transferSlot)
+{
+	if (otherPack->items.IsAllocated(transferSlot))
+	{
+		int initalItemCount = otherPack->GetItem(transferSlot).count;
+		int numItemsLeft = AddItem(otherPack->GetItem(transferSlot));
+
+		if(numItemsLeft == 0) //sucessfully transferred everything
+		{
+			otherPack->EmptySlot(transferSlot);
+		}
+		else //we have leftovers
+		{
+			otherPack->RemoveItemAtSlot(initalItemCount - numItemsLeft);
+		}
+	}
 }
 
 void UBackpack::SwapItems(UBackpack* otherPack, int slot1, int slot2)
@@ -177,7 +197,7 @@ void UBackpack::SwapItems(UBackpack* otherPack, int slot1, int slot2)
 	{
 		if (items.IsAllocated(slot2)) //if there's an item in the slot we want to swap
 		{
-			UMyItem* item1 = otherPack->items[slot1];
+			FMyItem item1 = otherPack->items[slot1];
 			items[slot1] = items[slot2];
 			items[slot2] = item1;
 		}
@@ -185,12 +205,11 @@ void UBackpack::SwapItems(UBackpack* otherPack, int slot1, int slot2)
 		{
 			items.Insert(slot2, otherPack->items[slot1]);
 			otherPack->items.RemoveAt(slot1);	
-			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Purple, FString::FromInt(items[slot1].count));
 		}
 	}
 }
 
-UMyItem* UBackpack::GetItem(int slot)
+FMyItem UBackpack::GetItem(int slot) const
 {
 	if (slot >= 0 && slot < itemMax)
 	{
@@ -204,7 +223,7 @@ UMyItem* UBackpack::GetItem(int slot)
 			return items[slot];
 		}
 	}
-	return nullptr;
+	return FMyItem();
 }
 
 int UBackpack::Count() const
@@ -212,9 +231,9 @@ int UBackpack::Count() const
 	return items.Num();
 }
 
-TArray<UMyItem*> UBackpack::GetItems()
+TArray<FMyItem> UBackpack::GetItems()
 {
-	TArray<UMyItem*> itemsToGet;
+	TArray<FMyItem> itemsToGet;
 	for (auto it = items.CreateIterator(); it; ++it)
 	{
 		itemsToGet.Add(*it);
@@ -232,18 +251,6 @@ TArray<int> UBackpack::GetItemIndices()
 	return indicesToGet;
 }
 
-int UBackpack::FindItemByName(FString name)
-{
-	for (auto it = items.CreateIterator(); it; ++it)
-	{
-		if((*it)->itemInfo.name.ToString() == name)
-		{
-			return it.GetIndex();
-		}
-	}
-	return -1;
-}
-
 int UBackpack::FindEmptySlot() const
 {
 	for(int i = 0; i < items.GetMaxIndex(); i++)
@@ -256,19 +263,35 @@ int UBackpack::FindEmptySlot() const
 	return -1;
 }
 
-void UBackpack::SetItemMax(int newMax)
+bool UBackpack::IsEmptySlot(int slotIndex) const
+{
+	return !items.IsAllocated(slotIndex) ? true : false;
+}
+
+FORCEINLINE void UBackpack::SetItemMax(int newMax)
 {
 	itemMax = newMax;
 	items.Reserve(itemMax);
 }
 
-int UBackpack::FindItem(UMyItem* item)
+int UBackpack::FindItem(int itemID)
 {
 	for(auto it = items.CreateIterator(); it; ++it)
 	{
-		if ((*it) == item)
+		if ((*it).id == itemID)
 			return it.GetIndex();
 	}
 	return -1;
+}
+
+int UBackpack::FindItemCount(int itemID)
+{
+	int itemCount = 0;
+	for(auto it = items.CreateIterator(); it; ++it)
+	{
+		if ((*it).id == itemID)
+			itemCount += (*it).count; 
+	}
+	return itemCount;
 }
 

@@ -2,34 +2,32 @@
 
 #pragma once
 
-#include "Interactable.h"
+#include "InteractableBase.h"
 #include "GameFramework/Actor.h"
 #include "SavePoint.generated.h"
 
+class UInteractableActorDecoratorBase;
+
 UCLASS()
-class MYPROJECT_API ASavePoint : public AActor, public IInteractable
+class MYPROJECT_API ASavePoint : public AInteractableBase
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	ASavePoint();
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
-		void					Interact(ABaseHero* hero);
-		virtual void			Interact_Implementation(ABaseHero* hero) override;
+	UPROPERTY(EditAnywhere)
+	UInteractableActorDecoratorBase*						decoratedInteractable; 
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
-		FVector					GetInteractableLocation();
-		virtual FVector			GetInteractableLocation_Implementation() override;
+	virtual void			Interact_Implementation(ABaseHero* hero) override;
 
 protected:
-	// Called when the game starts or when spawned
+
 	virtual void				BeginPlay() override;
 
-public:	
-	// Called every frame
+public:
+
 	virtual void				Tick(float DeltaTime) override;
-	bool 						CanInteract_Implementation() override;
-	
+
 };

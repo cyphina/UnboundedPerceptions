@@ -3,15 +3,14 @@
 #include "MyProject.h"
 #include "QuestList.h"
 #include "QuestListSlot.h"
+#include "RTSGameMode.h"
 #include "../QuestManager.h"
-#include "UserInput.h"
-#include "BasePlayer.h"
 
 void UQuestList::Construct_Implementation()
 {
 	Super::Construct_Implementation();
-	if(questManager)
-		questManager->questListRef = this;
+	if(gameModeRef->GetQuestManager())
+		gameModeRef->GetQuestManager()->questListRef = this;
 }
 
 bool UQuestList::OnWidgetAddToViewport_Implementation()

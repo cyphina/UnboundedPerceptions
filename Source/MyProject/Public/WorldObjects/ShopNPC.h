@@ -1,0 +1,48 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "WorldObjects/IntimateNPC.h"
+#include "Backpack.h"
+#include "ShopNPC.generated.h"
+
+
+/**
+ * Depending on your friendship, shopkeepers can sell more things like in TWEWY.  This will probably be handled inside the triggers in IntimateNPC
+ */
+
+USTRUCT(Blueprintable, NoExport)
+struct FItemPrice 
+{
+	FItemPrice() : money(0), items(TArray<int>()) {}
+
+	/**How much money this item costs*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int											money;
+
+	/**How many items to trade in for this item*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FMyItem>								items;
+};
+
+UCLASS()
+class MYPROJECT_API AShopNPC : public AIntimateNPC
+{
+	GENERATED_BODY()
+	
+	/**Lists sellable items, and maps them to price*/
+	UPROPERTY(EditAnywhere, Category =  "Shop Items")
+	TMap<int, FItemPrice>						itemPrices;
+
+public:
+	
+	/**Backpack containing the items that the shopkeeper will sell and how many the shopkeeper can sell*/
+	UPROPERTY(EditAnywhere, Category =  "Shop Items")
+	UBackpack*									itemsToSellBackpack;
+
+	/**/
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE FItemPrice						GetItemPrice(int itemID);
+
+};

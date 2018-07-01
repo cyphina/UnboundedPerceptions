@@ -145,7 +145,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Choices")
 	void								ShowChoices(const TArray<FDialogData>& choiceLines);
 
-	/**Picks a response option and returns next dialog node corresponding to response
+	/**Picks a response option and returns next dialog node to display after a choice is picked and triggers/conditions associated with that choice are activated
 	 * @param choice - Index of the node that the picked node leads to
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Choices")

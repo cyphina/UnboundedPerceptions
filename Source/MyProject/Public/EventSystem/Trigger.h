@@ -17,11 +17,11 @@ class AUserInput;
 class ARTSGameMode;
 
 UENUM(BlueprintType)
-enum class TriggerType : uint8
+enum class ETriggerType : uint8
 {
 	/** Doesn't do anything */
 	None, 
-	/** Given an NPC (object 1), changes dialog of topic (value 2 (is a fully qualified gameplaytag name)) to dialog (value 3).  If (value3) empty, then changes default dialog to (value2)*/
+	/** Given an NPC name (object 1), changes dialog of topic (value 1 (is a fully qualified gameplaytag name)) to dialog name (value 2).  If (value2) empty, then changes default dialog to dialogName (value1)*/
 	ChangeDialog, 
 	/** For each object, assumes object is a unit.  Changes Stat (data N) (ordered numerically by stats, skills, vitals, mechanics) by adding (data N+1) to it*/
 	ModifyStats, 
@@ -31,19 +31,25 @@ enum class TriggerType : uint8
 	ChangePartyTrigger, 
 	/** Activate another trigger (object 1) */
 	ActivateOtherTrigger, 
-	/* Deactivate another trigger (object 1) */
+	/** Deactivate another trigger (object 1) */
 	DeactivateOtherTrigger, 
-	/* Changes trigger (object 1) to type (data 1)*/
+	/** Changes trigger (object 1) to type (data 1)*/
 	ChangeTriggerType, 
-	/*Add quest from questlistmap with key (value1), and if (value2) is not 0, it will start automatically*/
+	/** Add quest from questlistmap with key (value1), and if (value2) is not 0, it will start automatically*/
 	AddQuestTrigger, 
+	/** Complete's a quest goal from currentQuests with gameplay child tag id (value1) and goalIndex (value2).  (value3) denotes pass (!= 0) or fail (== 0) */
+	CompleteQuestGoalTrigger,
+	/** Displays the lines in TriggerValues as dialog.  Messages aren't localized, nor do they have a corresponding actor name, so better use DisplayConversationTrigger*/
+	DisplayDialogTrigger,
+	/** Gets the conversation from the conversation table named (value1) and display its contents*/
+	DisplayConversationTrigger
 };
 
 USTRUCT(BlueprintType, NoExport)
 struct FTriggerData 
 {
 	FTriggerData();
-	FTriggerData(bool isEnabled, TriggerType trigType, int numberOfCalls, TArray<FString> triggerObj, TArray<FString> triggerVals) : 
+	FTriggerData(bool isEnabled, ETriggerType trigType, int numberOfCalls, TArray<FString> triggerObj, TArray<FString> triggerVals) : 
 		enabled(isEnabled), triggerType(trigType), numCalls(numberOfCalls), triggerObjects(triggerObj), triggerValues(triggerVals) {} 
 
 	static FTriggerData defaultTrigger; //not const so can be passed through trigger functionality but should never be modified
@@ -51,9 +57,11 @@ struct FTriggerData
 	/**Can this trigger be activated?  Can be toggled on and off by other triggers*/
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Properties")
 	bool										enabled = true;
+
 	/**Type of the trigger*/
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Properties")
-	TriggerType									triggerType = TriggerType::None;	
+	ETriggerType								triggerType = ETriggerType::None;	
+
 	/**Number of times this trigger can activate.  Set to -1 to be able to call this infinately*/
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Properties")
 	int											numCalls = 1;
@@ -75,8 +83,11 @@ class MYPROJECT_API UTriggerManager : public UObject
 	UTriggerManager() {}
 	~UTriggerManager() {}
 
-	/** record for triggers so they can be stored across levels */
-	TMap<FName, FTriggerData>		triggerRecords;
+	/** Record for triggers on WorldObjects so they can be stored across levels 
+	 * To store triggers on a WorldObject, just add the trigger to the map with the key being the WorldObject's name.
+	 * When the WorldObject is created again and calls BeginPlay(), load up the appropriate trigger records.  
+	 */
+	TMultiMap<FName, FTriggerData>	triggerRecords;
 
 public:
 
@@ -85,8 +96,10 @@ public:
 	AUserInput*						cpcRef;
 	ARTSGameMode*					gameModeRef;
 
-	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
-	TMap<FName, FTriggerData>		GetTriggerRecords() const { return triggerRecords; }
+	TMultiMap<FName, FTriggerData>		GetTriggerRecords() const { return triggerRecords; }
+
+	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Records")
+	void												AddTriggerToRecords(FName worldObjectName, const FTriggerData& trigger);
 
 	/**Activates a trigger given a trigger data.  If the objects referred to are not loaded, then we must store the trigger somewhere
 	and the object will check for any triggers performed on it when it is loaded 
@@ -97,6 +110,7 @@ public:
 
 private:
 
+	///---Trigger helper functions---
 	void									ChangeDialog(const FTriggerData& tdata);
 	void									ModifyStats(const FTriggerData& tdata);
 	void									OpenHUDTrigger(const FTriggerData& tdata);
@@ -104,7 +118,10 @@ private:
 	void									ActivateOtherTrigger(const FTriggerData& tdata);
 	void									DeactivateOtherTrigger(const FTriggerData& tdata);
 	void									ChangeTriggerType(const FTriggerData& tdata);
-	void									AddQuest(const FTriggerData& tdata);
+	bool									AddQuest(const FTriggerData& tdata);
+	bool									CompleteQuestGoal(const FTriggerData& tdata);
+	void									DisplayDialog(const FTriggerData& tdata);
+	void									DisplayConversation(const FTriggerData& tdata);
 
 	/**Function that triggers an effect when the trigger is activated*/
 	void									TriggerEffect(FTriggerData& tdata);

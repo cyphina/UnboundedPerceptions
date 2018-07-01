@@ -33,13 +33,16 @@ enum class WeaponTypes : uint8 //rarity enum for all types of items
 };
 
 UCLASS(BlueprintType)
-class UWeapon : public UEquip
+class UWeapon : public UObject
 {
 public:
 	GENERATED_BODY()
 
 	UWeapon();
-	UWeapon(int weaponP, int weaponE, int BAT, bool isDW) : weaponPower(weaponP), weaponEfficiency(weaponE), baseAttackTime(BAT), isDualWield(isDW) { SetupBaseValues();  }
+	UWeapon(int weaponP, int weaponE, int BAT, bool isDW) : weaponPower(weaponP), weaponEfficiency(weaponE), baseAttackTime(BAT), isDualWield(isDW)
+	{
+		//SetupBaseValues();
+	}
 	~UWeapon();
 
 	UPROPERTY(BlueprintReadWrite, Category = "Weapon", Meta = (ExposeOnSpawn = true))
@@ -51,5 +54,5 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Weapon", Meta = (ExposeOnSpawn = true))
 	bool isDualWield = false; //can we have an offhand?
 
-	void SetupBaseValues(); //adds attack mod on weapon based on weapon type
+	//void SetupBaseValues(); adds attack mod on weapon based on weapon type
 };

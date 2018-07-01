@@ -109,10 +109,10 @@ struct FSpellbookLookupRow : public FTableRowBase
 	FText							Desc = FText();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
-	FName							Elem = FName();
+	FGameplayTag					Elem = FGameplayTag();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
-	FName							Targetting = FName();
+	FGameplayTag					Targetting = FGameplayTag();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
 	TArray<int>						Range = TArray<int>();
@@ -133,7 +133,7 @@ struct FSpellbookLookupRow : public FTableRowBase
 	TArray<int>						AOE = TArray<int>();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
-	FString							FilePath = FString();
+	TSubclassOf<UMySpell>			spellClass;
 };
 
 //Singleton class for a spellmanager that lets us get our spelldata table whenever we need information about a spell (aka our SpellInfo)

@@ -7,6 +7,7 @@
 #include "UserInput.h"
 #include "EventSystem/RTSConditional.h"
 #include "UI/HUDManager.h"
+#include "DialogSystem/DialogUI.h"
 
 void UDialogBox::InitDialogPortraitMaps()
 {
@@ -58,13 +59,7 @@ const FDialogData& UDialogBox::GetNextLine()
 	//If the current node is connected to two dialog nodes
 	if (dialogLines[currentNodeNum].nextDialogs.Num() > 1)
 	{
-		//if this node is a condition node
-		if (dialogLines[currentNodeNum].actorName == "Conditional")
-		{
-			HandleConditions();
-		}
-		else
-			HandleChoices();
+		HandleChoices();
 	}
 	//If the current node is only connected to one dialogNode
 	else if (dialogLines[currentNodeNum].nextDialogs.Num() == 1)
@@ -75,6 +70,11 @@ const FDialogData& UDialogBox::GetNextLine()
 		if (dialogLines[currentNodeNum].actorName == "Trigger")
 		{
 			HandleTriggers();
+		}
+		//else if this dialogNode is a condition node
+		else if(dialogLines[currentNodeNum].actorName == "Condition")
+		{
+			HandleConditions();
 		}
 	}
 	//if this node is not connected to any other dialog nodes
@@ -100,17 +100,16 @@ const FDialogData& UDialogBox::PickChoice(int choice)
 	//Not the end of the dialog, so we'll get a valid choice from clicking on a choice button
 	currentNodeNum = choice;
 
-	//if the choice we picked leads to a dialogNode with more than connection
+	//if the choice we picked leads to a dialogNode with more than one connection
 	if (dialogLines[currentNodeNum].nextDialogs.Num() > 1)
 	{
-		//If the dialogNode is a conditionalNode
-		if(dialogLines[currentNodeNum].actorName == "Conditional")
+		if (dialogLines[currentNodeNum].actorName == "Condition")
 		{
-			HandleConditions();	
+			HandleConditions();
+			return dialogLines[currentNodeNum];
 		}
-		//Else it's a choice node
-		else
-			HandleChoices();
+
+		HandleChoices();
 		return dialogLines[currentNodeNum];
 	}
 	else
@@ -119,12 +118,14 @@ const FDialogData& UDialogBox::PickChoice(int choice)
 		if (dialogLines[currentNodeNum].actorName == "Trigger")
 		{
 			HandleTriggers();
+
 			//If after activating this trigger, we reach the end of dialog (it will have already reset the dialog)
 			if (currentNodeNum == 0)
 			{
 				//ResetDialog();
 				return defaultDialog;
 			}
+			return dialogLines[currentNodeNum];
 		}
 
 		//return the node the choice leads to
@@ -152,11 +153,16 @@ void UDialogBox::HandleTriggers()
 	//Ensure there's three lines (TriggerType, TriggerObjects, TriggerValues)
 	if (dialogLines[currentNodeNum].dialog.ToString().ParseIntoArray(parsingInfo, TEXT("\\n"), false) == 3) {
 		FTriggerData triggerData;
-		triggerData.triggerType = static_cast<TriggerType>(FCString::Atoi(*parsingInfo[0]));
+		triggerData.triggerType = static_cast<ETriggerType>(FCString::Atoi(*parsingInfo[0]));
 		if (!parsingInfo[1].IsEmpty())
+		{
 			parsingInfo[1].ParseIntoArray(triggerData.triggerObjects, TEXT(","));
+		}
 		if (!parsingInfo[2].IsEmpty())
+		{
 			parsingInfo[2].ParseIntoArray(triggerData.triggerValues, TEXT(","));
+		}
+
 		gameModeRef->GetTriggerManager()->ActivateTrigger(triggerData);
 	}
 	GetNextLine();
@@ -172,7 +178,7 @@ void UDialogBox::HandleConditions()
 		if (!parsingInfo[1].IsEmpty())
 		{
 			//If this field is a 1 or T, then represent that as true.  Anything else will be false
-			if(parsingInfo[1] == "1" || parsingInfo[1] == "T")
+			if (parsingInfo[1] == "1" || parsingInfo[1] == "T")
 			{
 				conditionData.reverseResult = true;
 			}
@@ -181,20 +187,16 @@ void UDialogBox::HandleConditions()
 		}
 		if (!parsingInfo[2].IsEmpty())
 			parsingInfo[2].ParseIntoArray(conditionData.conditionalValues, TEXT(","));
-		
+
 		//If this conditition is true, we move onto the first node
-		if(gameModeRef->GetConditionalManager()->GetCondition(conditionData))
-			currentNodeNum = dialogLines[currentNodeNum].nextDialogs[0];
-		else
-		//Else we move onto the second
-			currentNodeNum = dialogLines[currentNodeNum].nextDialogs[1];
+		 
+		gameModeRef->GetConditionalManager()->GetCondition(conditionData) ? PickChoice(dialogLines[currentNodeNum].nextDialogs[0]) : PickChoice(dialogLines[currentNodeNum].nextDialogs[1]); 
 	}
-	GetNextLine();
 }
 
 void UDialogBox::ResetDialog()
 {
-	if (onDialogEndTrigger && onDialogEndTrigger->triggerType != TriggerType::None)
+	if (onDialogEndTrigger && onDialogEndTrigger->triggerType != ETriggerType::None)
 		gameModeRef->GetTriggerManager()->ActivateTrigger(*onDialogEndTrigger);
 
 	hasValidDialog = false;

@@ -17,7 +17,7 @@ EBTNodeResult::Type UBTTask_AttTarget::ExecuteTask(UBehaviorTreeComponent& owner
 		{
 			//AICon->GetUnitOwner()->SetTarget(target);
 			//if we aren't already attacking this target
-			if(AICon->GetUnitOwner()->GetState() == EUnitState::STATE_ATTACKING && AICon->GetUnitOwner()->GetTargetUnit() != target)
+			if(AICon->GetUnitOwner()->GetState() != EUnitState::STATE_ATTACKING && AICon->GetUnitOwner()->GetTargetUnit() != target)
 			{
 				AICon->GetUnitOwner()->BeginAttack(target);
 				return EBTNodeResult::Succeeded;

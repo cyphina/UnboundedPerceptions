@@ -2,6 +2,8 @@
 
 #include "MyProject.h"
 #include "RTSGameState.h"
+#include "UserInput.h"
+#include "MainWidget.h"
 #include "Kismet/KismetMathLibrary.h"
 
 ARTSGameState::ARTSGameState() {
@@ -20,15 +22,17 @@ void ARTSGameState::BeginPlay()
 	Super::BeginPlay();
 	//if there's some default settings for time, set it now
 	clockwork += seconds + minutes * 60 + hours * 3600;
+
 	//set game date
 	gameDate.Init(0,arraySize);
 	gameTime.Init(0,arraySize);
 	gameDate[0] = days;
 	gameDate[1] = months;
 	gameDate[2] = years;
-	timeUnit = 0; //match initial speed
-	UpdateGameSpeedDelegate.AddDynamic(this, &ARTSGameState::UpdateGameSpeed);
 
+	//match initial speed
+	timeUnit = 0; 
+	UpdateGameSpeedDelegate.AddDynamic(this, &ARTSGameState::UpdateGameSpeed);
 }
 
 
@@ -36,13 +40,14 @@ void ARTSGameState::Tick(float deltaSeconds)
 {
 	Super::Tick(deltaSeconds);
 	clockwork += deltaSeconds * timeUnit;
-	//hopefully optimized by CPU so it doesn't have to do a division again
 	Clock();
+
 	//if(floor(fmod(clockwork,SECONDS_IN_DAY) < SMALL_NUMBER))
 	//{
 	//	++days;
 	//	Calendar();
 	//}
+
 }
 
 
@@ -64,6 +69,8 @@ void ARTSGameState::Clock()
 	gameTime[0] = seconds;
 	gameTime[1] = minutes;
 	gameTime[2] = hours;
+
+	mainWidgetRef->SetClock(gameTime);
 }
 
 void ARTSGameState::Calendar()
@@ -84,6 +91,8 @@ void ARTSGameState::Calendar()
 	gameDate[0] = days;
 	gameDate[1] = months;
 	gameDate[2] = years;
+
+	mainWidgetRef->SetDate(gameDate);
 }
 
 void ARTSGameState::UpdateGameSpeed(float speedMultiplier)

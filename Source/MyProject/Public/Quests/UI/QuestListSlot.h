@@ -9,7 +9,7 @@
 /* Slots that go inside the quest list showing quest name and the subgoals */
 
 class AQuest;
-class UQuestManager;
+class ARTSGameMode;
 class USubGoalWidget;
 
 UCLASS()
@@ -18,61 +18,62 @@ class MYPROJECT_API UQuestListSlot : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	//Creates a subwidget for each subgoal of a quest
+	/**Creates a subwidget for each subgoal of a quest*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "QuestList UI")
-		void GenerateSubWidgets(); 
+		void								GenerateSubWidgets(); 
 
-	//Updates quest entry in our list; updates quest name and color based on its category
+	/**Updates quest entry in our list; updates quest name and color based on its category*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "QuestList UI")
-		void UpdateQuestEntry();
+		void								UpdateQuestEntry();
 
-	//When a subgoal is selected we'll select it's corresponding quest and change the UI to indicate that
+	/**When a subgoal is selected we'll select it's corresponding quest and change the UI to indicate that*/
 	UFUNCTION(BlueprintCallable, Category = "QuestList UI")
-		void SelectSubGoal(int subGoalIndex); 
+		void								SelectSubGoal(int subGoalIndex); 
 
-	//When we select a different quest
+	/**When we select a different quest*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "QuestList UI")
-		void OnQuestSelected(); 
+		void								OnQuestSelected(); 
 
-	//Add a subgoal widget to this questlist
+	/**Add a subgoal widget to this questlist*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "QuestList UI")
-		void AddSubGoalWidget(AQuest* questRef, int goalIndex); 
+		void								AddSubGoalWidget(AQuest* questRef, int goalIndex); 
 
-	//Remove a subgoal widget from this questlist
+	/**Remove a subgoal widget from this questlist*/
 	UFUNCTION(BlueprintCallable, Category = "QuestList UI")
-		void RemoveSubGoalWidget(int goalIndex); 
+		void								RemoveSubGoalWidget(int goalIndex); 
 
-	//is this quest selected
+	/**is this quest selected*/
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helper")
-		bool IsCurrentQuest();
+		bool								IsCurrentQuest();
 
 ///---ACCESSORS---
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-		AQuest* GetAssignedQuest() const { return assignedQuest; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-		UQuestManager* GetQuestManagerRef () const { return questManagerRef; }
+	FORCEINLINE	AQuest*								GetAssignedQuest() const { return assignedQuest; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-		int GetSelectedGoalIndex() const { return selectedGoalIndex; }
+	FORCEINLINE	UQuestManager*						GetQuestManagerRef() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
+	FORCEINLINE	int									GetSelectedGoalIndex() const { return selectedGoalIndex; }
 
 private:
-	//Corresponding quest to this slot
+	/**Corresponding quest to this slot*/
 	UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (ExposeOnSpawn = true, AllowPrivateAccess = true))
-		AQuest* assignedQuest;
+		AQuest*								assignedQuest;
 
-	//Quest Manager Ref
+	/**Quest Manager Ref*/
 	UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (ExposeOnSpawn = true, AllowPrivateAccess = true))
-		UQuestManager* questManagerRef;
+		ARTSGameMode*						gameModeRef;
 
-	//List of subgoals for our quest
+	/**List of subgoals for our quest*/
 	UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (AllowPrivateAccess = true))
-		TArray<USubGoalWidget*> subGoalWidgets;
+		TArray<USubGoalWidget*>				subGoalWidgets;
 
-	//The selected subgoal for this quest slot. Only one can be selected for the entire questList
+	/**The selected subgoal for this quest slot. Only one can be selected for the entire questList*/
 	UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (AllowPrivateAccess = true))
-		USubGoalWidget* selectedSubGoal;
+		USubGoalWidget*						selectedSubGoal;
 
-	//Index of goal selected within this widget
-	int selectedGoalIndex;
+	/**Index of goal selected within this widget*/
+	int										selectedGoalIndex;
 };

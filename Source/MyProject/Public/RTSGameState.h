@@ -7,8 +7,10 @@
 #include "RTSGameState.generated.h"
 
 /**
- * Game State, gamewide variables
+ * Game State has information that is replicated to all clients.  Put here things that all players need to know
  */
+
+class UMainWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUpdateGameSpeed, float, speedMultiplier);
 
@@ -46,6 +48,10 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Speed")
 	float							speedModifier = 1;
 	
+	/**Set by CPC*/
+	UPROPERTY(BlueprintReadWrite, Category = "References")
+	UMainWidget*					mainWidgetRef;
+
 	/**Collection of callbacks when game speed updated*/
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Pickup")
 	FUpdateGameSpeed				UpdateGameSpeedDelegate;

@@ -1,18 +1,18 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Interactables/Interactable.h"
+#include "Interactables/InteractableBase.h"
 #include "EventSystem/RTSConditional.h"
 #include "RTSDoor.generated.h"
 
 class ARTSGameMode;
 class AUserInput;
 
+/**Door that can be opened or closed.  Can act as a gate if it's surrounded by walls.*/
+
 UCLASS()
-class MYPROJECT_API ARTSDoor : public AActor, public IInteractable
+class MYPROJECT_API ARTSDoor : public AInteractableBase
 {
 	GENERATED_BODY()
 	
@@ -22,12 +22,10 @@ class MYPROJECT_API ARTSDoor : public AActor, public IInteractable
 	bool					isOpen = false;
 
 	/**Store initial rotation for when door should go to closed state*/
-	FRotator				initialRotation;
+	FRotator		
+	initialRotation;
 	/**Store this value so we don't have to keep calculating a temporary*/
 	FRotator				finalRotation;
-
-	ARTSGameMode*			gameModeRef;
-	AUserInput*				cpcRef;
 
 	UFUNCTION()
 	void					HandleProgress(float Value);
@@ -37,7 +35,8 @@ public:
 	/**Curve representing door rotation rate*/
 	UPROPERTY(EditAnywhere, Category = "Timeline")
 	UCurveFloat*					progressCurve;
-
+	
+	/**Root component*/
 	UPROPERTY(EditAnywhere)
 	USceneComponent*				scene;
 
@@ -48,10 +47,6 @@ public:
 	UPROPERTY(EditAnywhere)
 	UBoxComponent*					doorCollision;
 
-	/**List of conditional requirements to open*/
-	UPROPERTY(EditAnywhere)
-	TArray<FConditionData>			useConditions;
-
 	ARTSDoor();
 
 	void					BeginPlay() override;
@@ -60,6 +55,4 @@ public:
 	void					Interact_Implementation(ABaseHero* hero) override;
 
 	FVector					GetInteractableLocation_Implementation() override;
-
-	bool 					CanInteract_Implementation() override;
 };

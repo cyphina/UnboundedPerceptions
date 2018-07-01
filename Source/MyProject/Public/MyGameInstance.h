@@ -32,8 +32,6 @@ public:
 	
 	static const FString			saveFilePath;
 
-	
-
 	/*UPROPERTY(EditDefaultsOnly, Category = "Loading Screen Class")
 	TSubclassOf<ULoadingWidget>		loadingWidgetClass;*/
 

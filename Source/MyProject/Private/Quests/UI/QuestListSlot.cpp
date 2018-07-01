@@ -3,6 +3,7 @@
 #include "MyProject.h"
 #include "QuestListSlot.h"
 #include "QuestList.h"
+#include "RTSGameMode.h"
 #include "../QuestManager.h"
 #include "SubGoalWidget.h"
 #include "../Quest.h"
@@ -15,14 +16,14 @@ void UQuestListSlot::SelectSubGoal(int subGoalIndex)
 		selectedSubGoal = subGoalWidgets[subGoalIndex];
 		selectedSubGoal->ToggleEnabled(true);
 		selectedGoalIndex = selectedSubGoal->GetGoalIndex();
-		questManagerRef->OnSwitchSubGoal();
+		gameModeRef->GetQuestManager()->OnSwitchSubGoal();
 	}
-	else
+	else //if this index is not an index of a current subgoal of our quest (like if you forget to setup starting subgoals)
 	{
 		selectedSubGoal->ToggleEnabled(false);
 		selectedSubGoal = nullptr;	
 		selectedGoalIndex = -1;
-		questManagerRef->OnSwitchSubGoal();
+		gameModeRef->GetQuestManager()->OnSwitchSubGoal();
 	}
 }
 
@@ -40,9 +41,14 @@ void UQuestListSlot::RemoveSubGoalWidget(int goalIndex)
 
 bool UQuestListSlot::IsCurrentQuest()
 {
-	if (assignedQuest == questManagerRef->questListRef->currentlySelectedQuest)
+	if (assignedQuest == gameModeRef->GetQuestManager()->questListRef->currentlySelectedQuest)
 		return true;
 	return false;
+}
+
+UQuestManager* UQuestListSlot::GetQuestManagerRef() const
+{
+	return gameModeRef->GetQuestManager();
 }
 
 

@@ -8,9 +8,9 @@
 
 /* A widget to display different quests in a list on the side of the UI Menu.  Includes Animations*/
 
-class UQuestManager;
 class AQuest;
 class UQuestListSlot;
+class ARTSGameMode;
 
 UCLASS()
 class MYPROJECT_API UQuestList : public UAnimHudWidget
@@ -50,7 +50,7 @@ public:
 
 private:
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), category = "References")
-	UQuestManager*					questManager;
+	ARTSGameMode*					gameModeRef;
 
 
 };

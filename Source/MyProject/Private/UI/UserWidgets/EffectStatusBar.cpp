@@ -18,6 +18,7 @@ void UEffectStatusBar::NativeConstruct()
 
 void UEffectStatusBar::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
+	Super::NativeTick(MyGeometry, InDeltaTime);
 	UpdateStatusBar();
 }
 

@@ -10,8 +10,8 @@
  */
 
 class AUserInput;
-class UMyItem;
 class ARTSGameMode;
+struct FMyItem;
 
 USTRUCT(BlueprintType, NoExport)
 struct FSpellCombination

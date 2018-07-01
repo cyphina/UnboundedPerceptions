@@ -10,7 +10,7 @@
 /* Class for a journal widget that displays more detailed information on quests */
 
 class ABaseHero;
-class UQuestManager;
+class ARTSGameMode;
 class UQuestJournalEntry;
 
 UCLASS()
@@ -57,7 +57,7 @@ public:
 private:
 
 	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "References")
-	UQuestManager*				questManagerRef;
+	ARTSGameMode*				gameModeRef;
 
 	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true ), Category = "References")
 	AQuest*						selectedQuest;

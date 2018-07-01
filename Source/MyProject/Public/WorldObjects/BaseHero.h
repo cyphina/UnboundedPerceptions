@@ -11,7 +11,7 @@ class Inventory;
 class IInteractable;
 class UGameplayAbility;
 class USpellBook;
-class UConsumable;
+class UEquipment;
 
 UCLASS()
 class MYPROJECT_API ABaseHero : public AAlly
@@ -57,7 +57,7 @@ public:
 	 * Use an item on something
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Items")
-	void						BeginUseItem(UConsumable* itemToUse);
+	void						BeginUseItem(int itemToUseID);
 	
 	/*
 	 * Interacts with an object, provided there is one
@@ -77,31 +77,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void 						ChangeAttribute(Attributes att, bool isIncrementing);
 
-#pragma region Equipment
-	/**
-	 *When we click on an item to use it and it's a piece of equipment
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Equipment") 
-	void 						EquipItem(UEquip* e);
-
-	/*
-	 *When we click on an item and it's a piece of equipment and we already have a piece of equipment on that slot, swap them
-	 */
-	void 						UnequipItem(int slot);	
-
-	/**
-	 * Allows us to swap weapons and accessory equips
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	void 						SwapEquips(int equipSlot1, int equipSlot2);	
-
-	/**
-	 * Equip some new equipment and return any equipment in that slot back to inventory
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	void 						SwapEquipsFromInventory(UEquip* e1, int equipSlot);	
-#pragma endregion
-
 	///---Actions---
 	void 						Stop() override;
 #pragma endregion
@@ -120,20 +95,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Stats")
 	void 						SetCurrentExp(int amount);
 
-	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Equips")
-	FORCEINLINE TArray<UEquip*>				GetEquips() const { return equips; }
-
 	/**
 	 *Get the item set to be used currently by this hero
 	 */
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Items")
-	UConsumable*							GetCurrentItem() const { return currentItem; }
+	int										GetCurrentItem() const { return currentItem; }
 
 	/**
 	 *Set the item set to be used currently by this hero
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Items")
-	void									SetCurrentItem(UConsumable* item) { currentItem = item; }
+	void									SetCurrentItem(int itemID) { currentItem = itemID; }
 
 	/**
 	 *Get the interactable this hero is targetted to interact with
@@ -152,6 +124,9 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
 	USpellBook*								GetSpellBook() const { return spellbook; }
+
+	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
+	UEquipment*								GetEquipment() const { return equipment; }
 
 #pragma endregion
 
@@ -202,6 +177,7 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	USpellBook*					spellbook;
 
+	
 private:
 	/**
 	 *see if some object is in front of us so we know its casting a shadow upon us
@@ -216,14 +192,17 @@ private:
 	 */
 	void						PrepareInteract();	
 	/**
-	 *functions for adding and removing bonuses when equipping and unequipping.  Set isEquip to true when equipping, and to false when unequipping
-	 */
-	void						SetupBonuses(UEquip* e, bool isEquip);
+	 *Functions for adding and removing bonuses when equipping and unequipping.  Set isEquip to true when equipping, and to false when unequipping
+	 *@param equipID - ID of the equipment being added/removed
+	 *@param isEquip - Are we equipping or removing equipment? 
+	*/
+	UFUNCTION()
+	void						SetupBonuses(int equipID, bool isEquip);
 
 	///--References--
 	ABasePlayer*				player; //reference to our player class, which has information on our team
 	IInteractable*				currentInteractable; //reference to the interactable which we are trying to interact with						
-	UConsumable*				currentItem = nullptr; //the item that is going to be used by this character
+	int							currentItem =	-1; //id of the item that is going to be used by this character
 	
 	///--Lighting effect--
 	UMaterialParameterCollection*				lightSource = nullptr; //We need this parameter to figure out light direction based on our directional light we made
@@ -238,7 +217,9 @@ private:
 	///--Equipment information--
 	///0 - Head, 1 - Body, 2 - Legs, 3 - Acc1, 4 - Codex, 5-9 - Codex Weapons
 	///</summary>
-	TArray<UEquip*>								equips; //a container of what we have equipped
+
+	UEquipment*									equipment; //a container of what we have equipped
+
 	friend void									USaveLoadClass::SetupAlliedUnits();
 
 	friend void									InteractState::Update(AUnit& unit, float deltaSeconds);

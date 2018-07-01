@@ -64,6 +64,12 @@ public:
 	FText							GetDisplaySpeedText() const;
 	UFUNCTION(BlueprintCallable)
 	void							SetGameSpeed();
+
+	UFUNCTION(BlueprintCallable, Category = "Accessors")
+	void				SetClock(TArray<int> time) { gameTime = time;};
+
+	UFUNCTION(BlueprintCallable, Category = "Accessors")
+	void				SetDate(TArray<int> date) {gameDate = date; }
 #pragma endregion
 
 #pragma endregion
