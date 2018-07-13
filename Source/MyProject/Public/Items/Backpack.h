@@ -74,10 +74,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void				TransferItems(UBackpack* otherPack, int transferSlot); 
 
-	/**Swap two items location in seperate backpacks
-	 * @param otherPack - The other backpack which we are going to swap an item to
-	 * @param slot1 - Index of the slot in the other backpack
-	 * @param slot2 - Index of the slot of our own backpack from which the item we're swapping is in
+	/**Swap two items location in seperate backpacks.  Swaps item from the other pack to this one
+	 * @param otherPack - The other backpack which swaps an item to us
+	 * @param slot1 - Index of the slot in this backpack which is going to be swapped
+	 * @param slot2 - Index of the slot in the other backpack which we're swapping to
 	 */
 	UFUNCTION(BlueprintCallable)
 	void				SwapItems(UBackpack* otherPack, int slot1, int slot2);
@@ -133,6 +133,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Information")
 	FORCEINLINE int		Count() const; 
 
+	FMyItem&			operator[](int backpackIndex) { return items[backpackIndex]; }
 private:
 	
 };

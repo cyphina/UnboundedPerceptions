@@ -24,7 +24,7 @@ union FunctorParams
 	AUnit* target;
 };*/
 
-UCLASS()
+UCLASS(HideCategories = (Physics, Tags, Cooking, Clothing))
 class MYPROJECT_API AAlly : public AUnit
 {
 	GENERATED_BODY()
@@ -106,17 +106,18 @@ public:
 /*---Actions---*/
 #pragma region actions
 
-	///Stop everything we're doing...  Doesn't have any extra effects in allies
+	/**Stop everything we're doing...  Doesn't have any extra effects in allies*/
 	UFUNCTION(BlueprintCallable, Category = "Misc") 
 	virtual void								Stop() override;
 
-	///Like CastSpell but triggers cd on actionbar
+	/**Like CastSpell in Unit but triggers actionbar redraw*/
 	bool										CastSpell(TSubclassOf<UMySpell> spellToCast) override;
 
-	//When spell hotkey is presssed down.  Returns true when spell sucessfully set up or casted
+	/**When spell hotkey is presssed down.  Returns true when spell sucessfully set up or casted*/
 	UFUNCTION(BlueprintCallable, Category = "Spells") 
 	bool										PressedCastSpell(TSubclassOf<UMySpell> spellToCast); 
 
+	/**Used for AI spellcasting instead of pressing the button explicitly when AI is neutral*/
 	UFUNCTION(BlueprintCallable, Category = "Spells")
 	virtual bool								BeginCastSpell(int spellToCastIndex, FGameplayAbilityTargetDataHandle targetData) override;
 #pragma endregion 

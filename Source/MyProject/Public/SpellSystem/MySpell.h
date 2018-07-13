@@ -93,6 +93,17 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Spell")
 	TArray<int>							GetPreReqs() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->preReqs; }
+
+	UFUNCTION(BlueprintCallable, Category = "Spell")
+	TArray<FText>							GetPreReqNames() const
+	{
+		TArray<FText> preReqNames;
+		for(int i : USpellManager::Get().GetSpellInfo(spellDefaults.id)->preReqs)
+		{
+			preReqNames.Add(USpellManager::Get().GetSpellInfo(i)->name);
+		}
+		return preReqNames;
+	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Spell")
 	float								GetSpellDuration(UAbilitySystemComponent* abilityComponent) const;

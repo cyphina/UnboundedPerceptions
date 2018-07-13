@@ -28,13 +28,12 @@ class MYPROJECT_API UInteractableActorDecoratorBase : public UObject
 {
 	GENERATED_BODY()
 
-protected:
+public:
 
 	/**The next decorator to add to this interactable (if there is one).  Kind of like a node in a linked list, but each decorator adds some functionality*/
 	UPROPERTY(EditAnywhere)
-	UInteractableActorDecoratorBase*		decoratedInteractable; 
+	UInteractableActorDecoratorBase*		decoratedInteractable;
 
-public:
 	/**Initialize some values for the decorator that need to be initialized usually at BeginPlay.  Called by the InteractableBase to setup the decorator during 
 	 *InteractableBase::BeginPlay()
 	 */
@@ -49,4 +48,6 @@ public:
 	/**Performs extra work during Interact() call in the InteractableBase as well as has some usage as a boolean to make sure any conditionalDecorators are sucessfully
 	 *activated (if there are any in the decorator chain*/
 	virtual bool							Interact() PURE_VIRTUAL(UInteractableActor::Interact, return true; );
+
+	virtual FText							GetName() { return decoratedInteractable->GetName(); }
 };

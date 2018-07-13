@@ -81,6 +81,11 @@ FVector ARTSDoor::GetInteractableLocation_Implementation()
 	return GetActorLocation();
 }
 
+bool ARTSDoor::CanInteract_Implementation()
+{
+	return Super::CanInteract_Implementation() && !isLocked;
+}
+
 void ARTSDoor::HandleProgress(float value)
 {
 	FRotator newRotation = FMath::Lerp(initialRotation, finalRotation, value);

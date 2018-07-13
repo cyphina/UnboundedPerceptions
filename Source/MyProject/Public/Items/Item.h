@@ -111,10 +111,10 @@ struct FMyItem
 
 	/**Number of items in the slot*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Information")
-		int count = 0;
+		int count = 1;
 
 	FMyItem() {}
-	FMyItem(int id, int count = 1) : id(id), count(count) {}
+	explicit FMyItem(int id, int count = 1) : id(id), count(count) {}
 	~FMyItem() {}
 
 	bool operator()() const { return id > 0; }

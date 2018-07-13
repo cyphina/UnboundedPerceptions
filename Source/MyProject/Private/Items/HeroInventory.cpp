@@ -30,9 +30,7 @@ void UHeroInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)
 			GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Magenta, TEXT("USED AN EQUIP"));
 			if (hero)
 			{
-				hero->backpack->RemoveItemAtSlot(iSlot); //remove item since it's going to be used
-				hero->GetEquipment()->Equip(itemUsed.id);
-				CPC->GetHUDManager()->GetEquipHUD()->Update();
+				hero->Equip(iSlot);
 			}
 		}
 
@@ -44,8 +42,6 @@ void UHeroInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)
 #endif	
 			//set it as the item the hero is going to be using, so we can now target the target which the consumeable is to be used upon
 			hero->BeginUseItem(itemUsed.id);
-			if(itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Consumeable.Restore"))) //one-time use
-				hero->backpack->RemoveItemAtSlot(iSlot);
 		}
 		else //some item type that isnt specified
 		{

@@ -16,6 +16,7 @@
 #include "UserInput.h"
 #include "GoalActor.h"
 #include "Interactables/NamedInteractableDecorator.h"
+#include "Items/ItemManager.h"
 
 void UQuestManager::Init()
 {
@@ -171,33 +172,35 @@ void UQuestManager::OnPartyLeaderMove()
 	}
 }
 
-void UQuestManager::OnEnemyDie(TSubclassOf<AEnemy> enemyClass)
+void UQuestManager::OnEnemyDie(AEnemy* enemy)
 {
-	int index = 0;
+	int goalIndex = 0;
 	for (AQuest* quest : quests)
 	{
-		index = 0;
 		for (FGoalInfo goal : quest->currentGoals)
 		{
 			if (goal.goalType == EGoalType::Hunt)
 			{
-				if (enemyClass.GetDefaultObject()->GetGameName().EqualTo(goal.additionalName))
+				if (enemy->GetGameName().EqualTo(goal.additionalNames[0]))
 				{
-					if (quest->currentHuntedAmounts[quest->GetCurrentGoalIndices()[index]] + 1 >= goal.amountToHunt)
+					if (quest->currentAmounts[quest->GetCurrentGoalIndices()[goalIndex]] + 1 >= goal.amount)
 					{
-						++quest->currentHuntedAmounts[quest->GetCurrentGoalIndices()[index]];
-						quest->CompleteSubGoal(quest->GetCurrentGoalIndices()[index], false);
+						++quest->currentAmounts[quest->GetCurrentGoalIndices()[goalIndex]];
+						quest->CompleteSubGoal(quest->GetCurrentGoalIndices()[goalIndex], false);
+						break;
 					}
 					else
 					{
-						++quest->currentHuntedAmounts[quest->GetCurrentGoalIndices()[index]];
+						++quest->currentAmounts[quest->GetCurrentGoalIndices()[goalIndex]];
 						questListRef->GetQuestListSlot(quest)->UpdateQuestEntry();
 					}
 
 				}
 			}
-			++index;
+			++goalIndex;	
 		}
+
+		goalIndex = 0;
 
 		//Regardless if whether this goal finishes the quest or not, update the quest journal
 		if (quest == questJournalRef->GetSelectedQuest())
@@ -207,19 +210,19 @@ void UQuestManager::OnEnemyDie(TSubclassOf<AEnemy> enemyClass)
 	}
 }
 
-void UQuestManager::OnTalkNPC(TSubclassOf<ANPC> NPCClass)
+void UQuestManager::OnTalkNPC(ANPC* talkedToNPC, FGameplayTag conversationTopic)
 {
 	int goalIndex = 0;
 	for (AQuest* quest : quests)
 	{
 		for (FGoalInfo goal : quest->currentGoals)
 		{
-			if (goal.goalType == EGoalType::Talk && NPCClass.GetDefaultObject()->GetGameName().EqualTo(goal.additionalName))
+			if (goal.goalType == EGoalType::Talk && talkedToNPC->GetGameName().EqualTo(goal.additionalNames[0]))
 			{
-				quest->CompleteSubGoal(quest->GetCurrentGoalIndices()[goalIndex], false);
-				if (goal.canCompleteQuest)
+				if(goal.additionalNames.Num() == 1 || conversationTopic.GetTagName() == *goal.additionalNames[1].ToString())
 				{
-					quest->CompleteQuest(false);
+					quest->CompleteSubGoal(quest->GetCurrentGoalIndices()[goalIndex], false);
+					break;
 				}
 			}
 
@@ -229,6 +232,7 @@ void UQuestManager::OnTalkNPC(TSubclassOf<ANPC> NPCClass)
 			}
 			++goalIndex;
 		}
+		goalIndex = 0;
 	}
 }
 
@@ -239,19 +243,20 @@ void UQuestManager::OnItemPickup(FMyItem newItem)
 	int itemCount = 0;
 	TDoubleLinkedList<TPair<int, int>> affectedGoals;
 
-	//Loop through quests and find goals which require picking up this type of item
+	//Loop through quests and find goals which require picking/adding this type of item
 
 	for (AQuest* quest : quests)
 	{
 		for (FGoalInfo goal : quest->currentGoals)
 		{
-			if (goal.goalType == EGoalType::Find && newItem.id == FCString::Atoi(*goal.additionalName.ToString()))
+			if (goal.goalType == EGoalType::Find && UItemManager::Get().GetItemInfo(newItem.id)->name.EqualTo(goal.additionalNames[0]))
 			{
 				//Store the quest and goal index for now of the relevant quest goal
-				affectedGoals.AddTail(TPair<int, int>(goalIndex, questIndex));
+				affectedGoals.AddTail(TPair<int, int>(questIndex, goalIndex));
 			}
 			++goalIndex;
 		}
+		goalIndex = 0;
 		++questIndex;
 	}
 
@@ -273,9 +278,13 @@ void UQuestManager::OnItemPickup(FMyItem newItem)
 			AQuest* quest = quests[questIndex];
 			FGoalInfo goal = quest->currentGoals[goalIndex];
 
-			if (goal.amountToHunt < itemCount)
+			if (goal.amount >= itemCount)
 			{
-				quest->CompleteSubGoal(goalIndex, false);
+				quest->CompleteSubGoal(quest->GetCurrentGoalIndices()[goalIndex], false);
+			}
+			else
+			{
+				questListRef->GetQuestListSlot(quest)->UpdateQuestEntry();
 			}
 
 			if (quest == questJournalRef->GetSelectedQuest())
@@ -286,7 +295,7 @@ void UQuestManager::OnItemPickup(FMyItem newItem)
 	}
 }
 
-void UQuestManager::OnInteracted(UNamedInteractableSpawner* interactable)
+void UQuestManager::OnInteracted(UNamedInteractableDecorator* interactable)
 {
 	int goalIndex = 0;
 	for (AQuest* quest : quests)
@@ -294,18 +303,19 @@ void UQuestManager::OnInteracted(UNamedInteractableSpawner* interactable)
 		for (FGoalInfo goal : quest->currentGoals)
 		{
 			//If this goal is to interact with something, and the interactable's name matches the name in this goal
-			if (goal.goalType == EGoalType::Interact && interactable->GetName() == *goal.additionalName.ToString())
+			if (goal.goalType == EGoalType::Interact && interactable->GetName().EqualTo(goal.additionalNames[0]))
 			{
 				//If we have interacted with enough of these objects, complete the goal
-				if (quest->currentHuntedAmounts[quest->GetCurrentGoalIndices()[goalIndex]] + 1 >= goal.amountToHunt)
+				if (quest->currentAmounts[quest->GetCurrentGoalIndices()[goalIndex]] + 1 >= goal.amount)
 				{
-					++quest->currentHuntedAmounts[quest->GetCurrentGoalIndices()[goalIndex]];
-					quest->CompleteSubGoal(goalIndex, false);		
+					++quest->currentAmounts[quest->GetCurrentGoalIndices()[goalIndex]];
+					quest->CompleteSubGoal(quest->GetCurrentGoalIndices()[goalIndex], false);
+					break;
 				}
 				//If we haven't just update the count
 				else
 				{
-					++quest->currentHuntedAmounts[quest->GetCurrentGoalIndices()[goalIndex]];
+					++quest->currentAmounts[quest->GetCurrentGoalIndices()[goalIndex]];
 					questListRef->GetQuestListSlot(quest)->UpdateQuestEntry();	
 				}
 
@@ -314,8 +324,9 @@ void UQuestManager::OnInteracted(UNamedInteractableSpawner* interactable)
 					questJournalRef->UpdateDetailWindow();
 				}
 			}
+			++goalIndex;
 		}
-		++goalIndex;
+		goalIndex = 0;
 	}
 
 }

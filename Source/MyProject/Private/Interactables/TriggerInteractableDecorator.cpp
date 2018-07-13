@@ -19,7 +19,10 @@ bool UTriggerInteractableDecorator::Interact()
 {
 	if(!decoratedInteractable || decoratedInteractable->Interact())
 	{
-		gameModeRef->GetTriggerManager()->ActivateTrigger(triggerActivatedOnInteract);
+		for(FTriggerData& trigger : triggersActivatedOnInteract)
+		{
+			gameModeRef->GetTriggerManager()->ActivateTrigger(trigger);
+		}
 		return true;
 	}
 	return false;

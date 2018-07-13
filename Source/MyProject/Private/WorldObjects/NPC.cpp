@@ -10,6 +10,7 @@
 #include "UI/HUDManager.h"
 #include "DialogSystem/DialogBox.h"
 #include "DialogSystem/DialogUI.h"
+#include "Quests/QuestManager.h"
 
 // Sets default values
 ANPC::ANPC()
@@ -19,11 +20,12 @@ ANPC::ANPC()
 	onDialogEndTriggerData.enabled = true;
 
 	TArray<FString> triggerValues;
-	triggerValues.Add(FString("11"));
+	triggerValues.Add(FString::FromInt(static_cast<uint8>(HUDs::HS_Social)));
 	onDialogEndTriggerData.triggerValues = triggerValues;
 	onDialogEndTriggerData.numCalls = -1;
 
-	GetMesh()->SetCollisionProfileName("NPC");
+	GetCapsuleComponent()->SetCollisionProfileName("NPC");
+	GetMesh()->SetCollisionProfileName("NoCollision");
 }
 
 void ANPC::BeginPlay()
@@ -92,19 +94,21 @@ void ANPC::Interact_Implementation(ABaseHero* hero)
 	SetActorRotation(FRotationMatrix::MakeFromX(FVector(projectedDirection)).Rotator());
 
 	//If this npc wants to converse, we go to another screen after the initial conversation where we can interact more
-	controllerRef->GetHUDManager()->GetDialogBox()->SetDialogPortraits(*hero->GetGameName().ToString(), *GetGameName().ToString());
-	if (bWantsToConverse)
+	if (!controllerRef->GetBasePlayer()->interactedHero)
 	{
-		controllerRef->GetHUDManager()->GetSocialWindow()->SetNPC(this);
-		SetupAppropriateView();
-		controllerRef->GetHUDManager()->AddHUD(conversationStarterName, onDialogEndTriggerData, currentlyTalkingHero);
-		controllerRef->GetHUDManager()->GetDialogBox()->SetDialogPortraits(*hero->GetGameName().ToString(), *GetGameName().ToString());
-	}
-	else
-		//Just close dialog screen after we're finished talking
-		controllerRef->GetHUDManager()->AddHUD(conversationStarterName, FTriggerData::defaultTrigger, currentlyTalkingHero);
+		if (bWantsToConverse)
+		{
+			controllerRef->GetHUDManager()->GetSocialWindow()->SetNPC(this);
+			SetupAppropriateView();
+			controllerRef->GetHUDManager()->AddHUD(conversationStarterName, TArray<FTriggerData>{onDialogEndTriggerData}, currentlyTalkingHero);
+		}
+		else
+			//Just close dialog screen after we're finished talking
+			controllerRef->GetHUDManager()->AddHUD(conversationStarterName, TArray<FTriggerData>{FTriggerData::defaultTrigger}, currentlyTalkingHero);
 
-	AddConversedDialog(conversationStarterName);
+		controllerRef->GetGameMode()->GetQuestManager()->OnTalkNPC(this, FGameplayTag());
+		AddConversedDialog(conversationStarterName);
+	}
 }
 
 void ANPC::SetupAppropriateView()

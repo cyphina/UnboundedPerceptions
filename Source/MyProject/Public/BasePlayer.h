@@ -43,9 +43,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
 	TArray<ABaseHero*>			selectedHeroes;
 
-	/**If there's any hero that is interacting currently with something blocking (preventing other actions)*/
+	/**If there's any hero that is interacting currently with something blocking (preventing other actions).  Also needed in the case of storage because we need to know
+	 * who opened it
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
 	ABaseHero*					interactedHero;
+
+	/**What is the current blocking interactable if there is any that is open?*/
+
 
 	/**Returns list of alive heroes and friendly units.  Heroes should be first in the list*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")

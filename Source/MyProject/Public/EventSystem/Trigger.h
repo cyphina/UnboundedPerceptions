@@ -26,7 +26,9 @@ enum class ETriggerType : uint8
 	/** For each object, assumes object is a unit.  Changes Stat (data N) (ordered numerically by stats, skills, vitals, mechanics) by adding (data N+1) to it*/
 	ModifyStats, 
 	/** Takes one TriggerValue denoting the hud to be opened enum value corresponding int value.  Look at HUDManager for HUDs enum and corresponding int values */
-	OpenHUDTrigger, 
+	OpenHUDTrigger,
+	/** Takes one TriggerValue denoting the hud to be opened enum value corresponding int value.  Look at HUDManager for HUDs enum and corresponding int values */
+	OpenStorageHUDTrigger, 
 	/** Takes up to four trigger objects denoting the new party members in their new order*/
 	ChangePartyTrigger, 
 	/** Activate another trigger (object 1) */
@@ -59,19 +61,19 @@ struct FTriggerData
 	bool										enabled = true;
 
 	/**Type of the trigger*/
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Properties")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Properties")
 	ETriggerType								triggerType = ETriggerType::None;	
 
 	/**Number of times this trigger can activate.  Set to -1 to be able to call this infinately*/
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Properties")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Properties")
 	int											numCalls = 1;
 
 	/**What objects this trigger will act on*/
-	UPROPERTY(EditAnywhere, Category = "Parameters")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters")
 	TArray<FString>								triggerObjects = TArray<FString>();
 	
 	/**The new value that impacts the operated objects*/
-	UPROPERTY(EditAnywhere, Category = "Parameters")
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters")
 	TArray<FString>								triggerValues = TArray<FString>();
 };
 
@@ -96,10 +98,10 @@ public:
 	AUserInput*						cpcRef;
 	ARTSGameMode*					gameModeRef;
 
-	TMultiMap<FName, FTriggerData>		GetTriggerRecords() const { return triggerRecords; }
+	TMultiMap<FName, FTriggerData>			GetTriggerRecords() const { return triggerRecords; }
 
 	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Records")
-	void												AddTriggerToRecords(FName worldObjectName, const FTriggerData& trigger);
+	void									AddTriggerToRecords(FName worldObjectName, const FTriggerData& trigger);
 
 	/**Activates a trigger given a trigger data.  If the objects referred to are not loaded, then we must store the trigger somewhere
 	and the object will check for any triggers performed on it when it is loaded 
@@ -114,6 +116,7 @@ private:
 	void									ChangeDialog(const FTriggerData& tdata);
 	void									ModifyStats(const FTriggerData& tdata);
 	void									OpenHUDTrigger(const FTriggerData& tdata);
+	void									OpenHUDTriggerStorage(const FTriggerData& tdata);
 	void									ChangeParty(const FTriggerData& tdata);
 	void									ActivateOtherTrigger(const FTriggerData& tdata);
 	void									DeactivateOtherTrigger(const FTriggerData& tdata);

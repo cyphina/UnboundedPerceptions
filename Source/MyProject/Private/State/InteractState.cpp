@@ -29,6 +29,6 @@ void InteractState::Update(AUnit& unit, float deltaSeconds)
 	//Only times what is in scope.  Remove after fixing hotspots, since stat tracking is expensive
 	SCOPE_CYCLE_COUNTER(STAT_HeroInteraction);
 	{
-	heroRef->PrepareInteract();
+		heroRef->PrepareInteract();
 	}
 }

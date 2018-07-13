@@ -75,21 +75,25 @@ void AHUDManager::AddHUD(uint8 newState)
 	}
 }
 
-void AHUDManager::AddHUD(FName conversationName, FTriggerData& onDialogEndTrigger, ABaseHero* interactingHero)
+void AHUDManager::AddHUD(FName conversationName, TArray<FTriggerData> onDialogEndTriggers, ABaseHero* interactingHero)
 {
-	if (!playerControllerRef->GetBasePlayer()->interactedHero)
+	if (!playerControllerRef->GetBasePlayer()->interactedHero) //Only one hero can do a "waiting" interaction at a time
 	{
-		if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) //if not on screen
+		if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)] && conversationName != "") //If not on screen
 		{
 			playerControllerRef->GetBasePlayer()->interactedHero = interactingHero;
 			GetDialogBox()->SetConversation(conversationName);
-			GetDialogBox()->SetOnDialogFinishedTrigger(&onDialogEndTrigger);
+			GetDialogBox()->SetOnDialogFinishedTrigger(onDialogEndTriggers);
+			ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
+		}
+		else //if on screen (from being added by a trigger w/o a hero)
+		{
 			ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
 		}
 	}
 	else
-	{
-		if (currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) //if on screen
+	{		
+		if (currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) //If on screen
 		{
 			playerControllerRef->GetBasePlayer()->interactedHero = nullptr;
 			ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
@@ -97,21 +101,21 @@ void AHUDManager::AddHUD(FName conversationName, FTriggerData& onDialogEndTrigge
 	}
 }
 
-void AHUDManager::AddHUD(TArray<FDialogData> linesToDisplay, FTriggerData& onDialogEndTrigger, ABaseHero* interactingHero)
+void AHUDManager::AddHUD(TArray<FDialogData> linesToDisplay, TArray<FTriggerData> onDialogEndTriggers, ABaseHero* interactingHero)
 {
 	if (!playerControllerRef->GetBasePlayer()->interactedHero)
 	{
-		if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) //if not on screen
+		if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)] && linesToDisplay.Num() > 0) //If not on screen
 		{
 			playerControllerRef->GetBasePlayer()->interactedHero = interactingHero;
 			GetDialogBox()->SetDialogLines(linesToDisplay);
-			GetDialogBox()->SetOnDialogFinishedTrigger(&onDialogEndTrigger);
+			GetDialogBox()->SetOnDialogFinishedTrigger(onDialogEndTriggers);
 			ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
 		}
 	}
 	else
 	{
-		if (currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) //if on screen
+		if (currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) //If on screen
 		{
 			playerControllerRef->GetBasePlayer()->interactedHero = nullptr;
 			ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
@@ -123,7 +127,7 @@ void AHUDManager::AddHUD(UBackpack* backpack, ABaseHero* interactingHero)
 {
 	if (!playerControllerRef->GetBasePlayer()->interactedHero)
 	{
-		if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Storage)]) //if not on screen (impossible state reached if on screen and there's no interactedHero)
+		if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Storage)] && backpack) //If not on screen (impossible state reached if on screen and there's no interactedHero)
 		{
 			playerControllerRef->GetBasePlayer()->interactedHero = interactingHero;
 			GetStorageHUD()->SetBackPack(backpack);
@@ -144,7 +148,7 @@ void AHUDManager::AddHUD(AShopNPC* shopNPC, ABaseHero* interactingHero)
 {
 	if (!playerControllerRef->GetBasePlayer()->interactedHero)
 	{
-		if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Storage)]) //if not on screen
+		if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Shop_General)] && shopNPC) //if not on screen
 		{
 			playerControllerRef->GetBasePlayer()->interactedHero = interactingHero;
 			GetShopHUD()->SetBackPack(shopNPC->itemsToSellBackpack);
@@ -155,7 +159,7 @@ void AHUDManager::AddHUD(AShopNPC* shopNPC, ABaseHero* interactingHero)
 	}
 	else
 	{
-		if (currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Storage)]) //if on screen
+		if (currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Shop_General)]) //if on screen
 		{
 			playerControllerRef->GetBasePlayer()->interactedHero = nullptr;
 			ApplyHUD(static_cast<int>(HUDs::HS_Shop_General), true, true, true, false);

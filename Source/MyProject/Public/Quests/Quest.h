@@ -6,9 +6,9 @@
 #include "GameFramework/Info.h"
 #include "GameplayTagContainer.h"
 #include "EventSystem/Trigger.h"
+#include "Items/Item.h"
 #include "Quest.generated.h"
 
-struct FMyItem;
 class UQuestManager;
 class UQuestListSlot;
 
@@ -21,8 +21,13 @@ class UQuestListSlot;
 UENUM(BlueprintType)
 enum class EGoalState : uint8
 {
+	/**Currently being partaken*/
 	currentGoal,
+	/**Need to finish other goals first*/
+	lockedGoal,
+	/**Finished the goal*/
 	completedGoal,
+	/**Goal unsucessful*/
 	failedGoal
 };
 
@@ -72,22 +77,22 @@ struct FGoalInfo
 {
 	static const FVector invalidGoalLocation;
 
-	FGoalInfo() : goalType(EGoalType::Custom), goalState(EGoalState::currentGoal), isCustomGoal(false), goalText(FText()), additionalName(FText()), amountToHunt(0), shouldUpdateQuestDescription(false), updatedDescription(FText()), 
-	followingSubGoalIndices(TArray<int>()), shouldUseRadius(false), radius(0), circleColor(FLinearColor::Black), canFailQuest(false), canCompleteQuest(false), goalLocation(FVector()) {} 
+	FGoalInfo() : goalType(EGoalType::Custom), goalState(EGoalState::lockedGoal), isCustomGoal(false), goalText(FText()), additionalNames(TArray<FText>()), amount(0), shouldUpdateQuestDescription(false), updatedDescription(FText()), 
+	requiredSubGoalIndices(TArray<int>()), shouldUseRadius(false), radius(0), circleColor(FLinearColor::Black), canFailQuest(false), canCompleteQuest(false), goalLocation(FVector()) {} 
 
-	FGoalInfo(EGoalType gT, EGoalState gS, bool isC, FText gText, FText aN, int aTH, bool sUQD, FText uD, TArray<int> fSGI, bool sUR, float r, FLinearColor cC, bool cFQ, bool cCQ, FVector gL) :
-		goalType(gT), goalState(gS), isCustomGoal(isC), goalText(gText), additionalName(aN), amountToHunt(aTH), shouldUpdateQuestDescription(sUQD), updatedDescription(uD),
-		followingSubGoalIndices(fSGI), shouldUseRadius(sUR), radius(r), circleColor(cC), canFailQuest(cFQ), canCompleteQuest(cCQ), goalLocation(gL) {}
+	FGoalInfo(EGoalType gT, EGoalState gS, bool isC, FText gText, TArray<FText> aN, int aTH, bool sUQD, FText uD, TArray<int> fSGI, bool sUR, float r, FLinearColor cC, bool cFQ, bool cCQ, FVector gL) :
+		goalType(gT), goalState(gS), isCustomGoal(isC), goalText(gText), additionalNames(aN), amount(aTH), shouldUpdateQuestDescription(sUQD), updatedDescription(uD),
+		requiredSubGoalIndices(fSGI), shouldUseRadius(sUR), radius(r), circleColor(cC), canFailQuest(cFQ), canCompleteQuest(cCQ), goalLocation(gL) {}
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Metadata")
 	EGoalType						goalType;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Metadata")
 	EGoalState						goalState;
-	/**Custom goal will have a specific trigger to succeed*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	/**Custom goal will have a specific trigger to succeed.  It can also be used to give the goal a custom description*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Metadata")
 	bool							isCustomGoal;
 	/**Goal's description*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
 	FText							goalText;
 	/**Name used for various things
 	 *If the goalType is hunting, this is the name of one monster to hunt (at least for this goal)
@@ -95,42 +100,45 @@ struct FGoalInfo
 	 *If the goalType is talking, this is the NPC you need to talk to
 	 *If the goalType is custom, we can use this for something else (identifier for this goal so that trigger can complete it)
 	 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FText							additionalName;
-	/**If this is a hunt quest, how many things do we have to hunt*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int								amountToHunt;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
+	TArray<FText>					additionalNames;
+	/**If this quest requires some numerical value representing how many (how many to hunt/gather/interact)*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
+	int								amount;
 	/**Do we update the quest description after this goal is completed?*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
 	bool							shouldUpdateQuestDescription;
 	/**If we update the quest description after this goal is completed, do so here*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
 	FText							updatedDescription;
-	/**Does this subgoal unlock another?  Stores index of the next goal that should be stored in questinfo*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<int>						followingSubGoalIndices; 
-	/**Do we have a location tracker on the minimap?*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool							shouldUseRadius;
-	/**What's the size of this location tracker?*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float							radius;
-	/**What's the color of the location tracker*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FLinearColor					circleColor;
+	/**What goals need to be completed to unlock this one?*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
+	TArray<int>						requiredSubGoalIndices;
 	/**If we fail this goal the quest will fail*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
 	bool							canFailQuest; 
 	/**If we finish this goal the quest will be done*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool							canCompleteQuest; 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
+	bool							canCompleteQuest;
+	/**Should any triggers be run when this goal is over?*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
+	TArray<FTriggerData>			goalTriggers;
+	/**Do we have a location tracker on the minimap?*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Minimap")
+	bool							shouldUseRadius;
+	/**What's the size of this location tracker?*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Minimap")
+	float							radius;
+	/**What's the color of the location tracker*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Minimap")
+	FLinearColor					circleColor;
 	/**Location to spawn the tracker*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Minimap")
 	FVector							goalLocation = invalidGoalLocation;
 
 	bool operator==(const FGoalInfo& otherGoal) const
 	{
-		return (goalText.EqualTo(otherGoal.goalText) && additionalName.EqualTo(otherGoal.additionalName));
+		return goalText.EqualTo(otherGoal.goalText);
 	}
 };
 //struct for possible quest rewards
@@ -142,18 +150,21 @@ struct FQuestReward
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int								exp;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FMyItem>				items;
+	TArray<FMyItem>					items;
 };
 
 //Struct for quest properties (that may be replicated?)
 USTRUCT(BlueprintType, NoExport)
 struct FQuestInfo
 {
-	/**Unique quest id*/
+	/**
+	 *Unique quest id
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FGameplayTag					id;
 	/**Displayed name of the quest.  We can have quests with the same 
-	 *display name which we can troll around with or something*/
+	 *display name which we can troll around with or something
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText							name;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -162,13 +173,17 @@ struct FQuestInfo
 	int								suggestedLvl;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FQuestReward					questReward;
-	/**Difficulty from 1 (easy) to 10 (extremely hard)*/
+	/**
+	 *Difficulty from 1 (easy) to 10 (extremely hard)
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float							difficulty;
 	/**What kind of quest is this?*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EQuestCategory					questCategory;
-	/**A list of all the goals in this quest information*/
+	/**
+	 *A list of all the goals in this quest information
+	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FGoalInfo>				subgoals; 
 };
@@ -178,64 +193,92 @@ class MYPROJECT_API AQuest : public AInfo
 {
 	GENERATED_BODY()
 
-	/**index of what goals are currently in progress*/
+	/**
+	 *Index of what goals are currently in progress
+	 */
 	UPROPERTY(BlueprintReadOnly, Category = "Bookkeeping", meta = (AllowPrivateAccess = true))
 	TArray<int>						currentGoalIndices; 
 
-	/**indices that we start off at when starting the quest*/
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Bookkeeping", meta = (AllowPrivateAccess = true))
-	TArray<int>						startingGoalIndices; 
-
-	/**completed quest goals*/
+	/**
+	 *Completed quest goals
+	 */
 	UPROPERTY(BlueprintReadOnly, Category = "Bookkeeping", meta = (AllowPrivateAccess = true))
 	TArray<FGoalInfo>				completedGoals;
 
-	/**current state of the quest e.g. "Completed"*/
+	/**
+	 *Current state of the quest e.g. "Completed"
+	 */
 	UPROPERTY(BlueprintReadOnly, Category = "Bookkeeping", meta = (AllowPrivateAccess = true))
 	EQuestState						currentState;
 
-	/**current description as seen in quest journal*/
+	/**
+	 *Current description as seen in quest journal
+	 */
 	UPROPERTY(BlueprintReadOnly, Category = "Bookkeeping", meta = (AllowPrivateAccess = true))
 	FText							currentDescription;
 
-	/**reference to quest manager*/
+	/**
+	 *Reference to quest manager
+	 */
 	UPROPERTY(BlueprintReadOnly, Category = "Bookkeeping", meta = (AllowPrivateAccess = true, ExposeOnSpawn = true))
 	UQuestManager*					questManagerRef;
 	
-	/**Updates currentGoals to match that of the currentGoalIndices*/
+	/**
+	 *Updates currentGoals to match that of the currentGoalIndices
+	 */
 	void							UpdateSubGoals();
 
 public:
-	/**goals currently in progress*/
+	/**
+	 *Goals currently in progress
+	 */
 	UPROPERTY(BlueprintReadOnly, Category = "Bookkeeping")
 	TArray<FGoalInfo>				currentGoals;
 
-	/**map of index of hunt goal and amount needed to hunt*/
+	/**
+	 *Map that links a goal (via its index) to the number representing the thing that needs to be kept track (amount to be killed, amount to interact with)
+	 */
 	UPROPERTY(BlueprintReadOnly, Category = "Bookkeeping", meta = (AllowPrivateAccess = true))
-	TMap<int,int>					currentHuntedAmounts;
+	TMap<int,int>					currentAmounts;
 
-	/**information about quest*/
+	/**
+	 *Struct with nformation about quest
+	 */
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Information")
 	FQuestInfo						questInfo; 
+
+	/**
+	 *Triger that runs when the quest starts
+	 */
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Information")
+	TArray<FTriggerData> 			questBeginTrigger;
 
 	UFUNCTION()
 	void							BeginPlay() override;
 
-	/**Accessor to current goal indices, that is the index of the goal within the quest (default value)*/
+	/**
+	 *Accessor to the indices of the goals that are currently being handled in the quest)
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessor")
 	TArray<int>						GetCurrentGoalIndices() const { return currentGoalIndices; }
 
-	/**Accesor to goals*/
+	/**
+	 *Accesor to goals
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessor")
 	FGoalInfo						GetGoalAtIndex(int goalIndex);
 
-	/**Quest state accessor for BP*/
+	/**
+	 *Quest state accessor for BP
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessor")
 	EQuestState						GetQuestState() const { return currentState; }
 
-	/**Initiates completing a subgoal*/
+	/**
+	 *Initiates completion of a subgoal
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Updating")
-	void							CompleteSubGoal(int goalIndex, bool fail); //transition between next goal
+	void							CompleteSubGoal(int goalIndex, bool fail); 
 
 	/**Trigger to activate on quest finished.
 	UPROPERTY(EditDefaultsOnly, Category = "Updating")
@@ -256,5 +299,9 @@ public:
 	FVector							getInvalidVector() const { return FGoalInfo::invalidGoalLocation; } 
 
 	/**we need this for our deferred spawn in QuestManager::AddNewQuest()*/
-	void							SetQuestManagerRef(UQuestManager* managerRef) { if (!questManagerRef) questManagerRef = managerRef; } 
+	void							SetQuestManagerRef(UQuestManager* managerRef) { if (!questManagerRef) questManagerRef = managerRef; }
+
+	/**Returns the text of what the goal should be based on the goal's type and information from the quest*/
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helper")
+	static FText					MakeGoalText(AQuest* assignedQuest, FGoalInfo goalInfo, int goalIndex);
 };

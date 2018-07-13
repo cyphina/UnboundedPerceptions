@@ -4,6 +4,9 @@
 #include "StoreInventory.h"
 #include "UserInput.h"
 
+#include "RTSGameMode.h"
+#include "QuestManager.h"
+
 #include "UI/HUDManager.h"
 #include "UI/UserWidgets/MainWidget.h"
 
@@ -33,5 +36,6 @@ void UStoreInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)
 
 		CPC->GetBasePlayer()->money -= itemPrice.money;
 		CPC->GetBasePlayer()->interactedHero->backpack->AddItem(GetBackpack()->GetItem(iSlot));
+		CPC->GetGameMode()->GetQuestManager()->OnItemPickup(itemToBuy);
 	}
 }

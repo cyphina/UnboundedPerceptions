@@ -2,7 +2,26 @@
 
 #include "MyProject.h"
 #include "ShopNPC.h"
+#include "UserInput.h"
+#include "Items/Backpack.h"
+#include "UI/HUDManager.h"
+#include "DialogSystem/DialogUI.h"
 
+
+void AShopNPC::SetupAppropriateView()
+{
+	controllerRef->GetHUDManager()->GetSocialWindow()->SetShopView();
+}
+
+void AShopNPC::BeginPlay()
+{
+	Super::BeginPlay();
+	itemsToSellBackpack = NewObject<UBackpack>(this);
+	for(FMyItem& item : itemsToSell)
+	{
+		itemsToSellBackpack->AddItem(item);
+	}
+}
 
 FItemPrice AShopNPC::GetItemPrice(int itemID)
 {

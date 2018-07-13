@@ -9,11 +9,9 @@
 #include "DialogBox.generated.h"
 
 /*A dialog box that can be used anywhere for conversation... or just displaying thoughts
- * When loading up the DialogHUD, the dialog should start with regular text else there will be trouble displaying wrong things like
+ * When loading up the DialogHUD, the dialog should start with regular text else there will be trouble displaying things like
  * triggers/conditionals/choices.  
  */
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDialogEnded);
 
 class ANPC;
 class ARTSGameMode;
@@ -59,7 +57,7 @@ class MYPROJECT_API UDialogBox : public UMyUserWidget
 	/**
 	 *A trigger that can be set to activate when the dialog ends
 	 */
-	FTriggerData*						onDialogEndTrigger;
+	TArray<FTriggerData> 				onDialogEndTriggers;
 
 	/**If this node leads to a choice node, then we must do some work to setup the data which goes to our choice buttons.  Keeps nodeNum
 	 * at the same location since it only changes when a choice button is pressed
@@ -81,12 +79,6 @@ class MYPROJECT_API UDialogBox : public UMyUserWidget
 	 */
 	void								ResetDialog();
 
-	/** 
-	 *Map of <names,image> to dialog display character potrait for speakers
-	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Information Maps", Meta = (AllowPrivateAccess=true))
-	TMap<FName, UTexture2D*>			dialogPortraitMap;
-
 	/**
 	 *Only call this in the constructor.
 	 *Default values for our maps keep resetting so we can set them in these functions.  Only call these in the constructor 
@@ -95,9 +87,6 @@ class MYPROJECT_API UDialogBox : public UMyUserWidget
 	
 public:
 	UDialogBox(const FObjectInitializer& ObjectInitializer);
-
-	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-	FOnDialogEnded						OnDialogEnded;
 
 	void								Construct_Implementation() override;
 	bool								OnWidgetAddToViewport_Implementation() override;
@@ -127,16 +116,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "DialogInformation")
 	void								SetDialogLines(TArray<FDialogData> newDialogLines);
 
-	/** Accessor function to get dialog portrait from map of Actor -> Portrait*/
-	UFUNCTION(BlueprintCallable, Category = "DialogInformation")
-	UTexture2D*							GetDialogPortrait(FName actorName) const { return dialogPortraitMap.Contains(actorName) ? dialogPortraitMap[actorName] : dialogPortraitMap["default"]; }
-	
-	/** Accessor function to set dialog portraits*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "DialogInformation")
-	void								SetDialogPortraits(FName actor1Name, FName actor2Name); 
-
 	/** Call this function to set a trigger when the dialog finishes*/
-	void								SetOnDialogFinishedTrigger(FTriggerData* endTrigger) { onDialogEndTrigger = endTrigger; }
+	void								SetOnDialogFinishedTrigger(TArray<FTriggerData> endTriggers) { onDialogEndTriggers = endTriggers; }
 	
 	UFUNCTION(BlueprintCallable, Category = "DialogInformation")
 	FName								GetDialogTopic() const { return dialogTopic; }

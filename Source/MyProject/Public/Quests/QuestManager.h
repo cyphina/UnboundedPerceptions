@@ -16,7 +16,7 @@ class UQuestJournal;
 class AEnemy;
 class ANPC;
 class AGoalActor;
-class UNamedInteractableSpawner;
+class UNamedInteractableDecorator;
 
 UCLASS()
 class MYPROJECT_API UQuestMap : public UDataAsset
@@ -53,7 +53,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "References")
 	UQuestJournal*							questJournalRef;
 
-	/**Map of quest GameplayTagName to quest class*/
+	/**
+	 *Map of quest GameplayTagName to quest class so we can add new quests via triggers
+	 */
 	UPROPERTY(EditAnywhere, Category = "Quest Data")
 	UQuestMap*								questMap;
 
@@ -85,6 +87,7 @@ public:
 	FOnQuestCompleted						OnQuestCompletedDelegate;
 
 	void									Init();
+
 
 	/**Select a new quest in the quest list*/
 	UFUNCTION(BlueprintCallable, Category = "Quest Managing")
@@ -118,11 +121,14 @@ public:
 	 * Need callbacks here since we specifically need that parameter
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Callbacks")
-	void									OnEnemyDie(TSubclassOf<AEnemy> enemyClass);
+	void									OnEnemyDie(AEnemy* enemyClass);
 
-	/**Callback when NPC is talked to to check to see if this quest condition is fufilled*/
+	/**Callback when NPC is talked to to check to see if this quest condition is fufilled
+	 * @param nPCClass - Class of the NPC that we're talking to
+	 * @param conversationTopic - Gameplay tag representing conversationTopic.  If conversationTopic is default tag, then it means no conversation topic was used (default conversation)
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Callbacks")
-	void									OnTalkNPC(TSubclassOf<ANPC> nPCClass);
+	void									OnTalkNPC(ANPC* talkedToNPC, FGameplayTag conversationTopic);
 
 	/**Callback when Item is picked up to see if this quest condition is fulfilled*/
 	UFUNCTION(BlueprintCallable, Category = "Callbacks")
@@ -130,5 +136,5 @@ public:
 
 	/**Callback when Interactable is sucessfully interacted with*/
 	UFUNCTION(BlueprintCallable, Category = "Callbacks")
-	void									OnInteracted(UNamedInteractableSpawner* interactable);
+	void									OnInteracted(UNamedInteractableDecorator* interactable);
 };

@@ -5,6 +5,8 @@
 #include "Pickup.h"
 #include "UserInput.h"
 #include "UI/HUDManager.h"
+#include "RTSGameMode.h"
+#include "Quests/QuestManager.h"
 #include "Items/HeroInventory.h"
 
 APickup::APickup()
@@ -42,7 +44,7 @@ void APickup::Interact_Implementation(ABaseHero* hero)
 	{
 		if (hero->backpack)
 		{
-			item.count -= hero->backpack->AddItem(item);
+			item.count = hero->backpack->AddItem(item);
 			OnPickupDelegate.Broadcast();
 		}
 	}
@@ -60,6 +62,7 @@ void APickup::OnPickedUp()
 		interactableMesh->SetVisibility(false); //don't want to destroy since our inventory has this as the reference but we may later on make data and vision seperate
 		interactableMesh->SetSimulatePhysics(false);
 		interactableMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		CPCRef->GetGameMode()->GetQuestManager()->OnItemPickup(item);
 	}
 	CPCRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
 }

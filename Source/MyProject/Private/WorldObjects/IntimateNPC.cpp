@@ -14,6 +14,7 @@ AIntimateNPC::AIntimateNPC() : ANPC()
 
 void AIntimateNPC::BeginPlay()
 {
+	Super::BeginPlay();
 	gameModeRef = Cast<ARTSGameMode>(GetGameInstance());
 }
 

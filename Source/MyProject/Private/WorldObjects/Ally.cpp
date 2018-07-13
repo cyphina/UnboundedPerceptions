@@ -11,6 +11,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AIStuff/AIControllers/AllyAIController.h"
+#include "InteractableBase.h"
 
 FText const AAlly::notEnoughManaText = NSLOCTEXT("HelpMessages", "Mana", "Not Enough Mana!");
 FText const AAlly::invalidTargetText = NSLOCTEXT("HelpMessages", "Target", "Invalid Target!");
@@ -131,8 +132,9 @@ bool AAlly::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
 					controllerRef->SetSecondaryCursor(ECursorStateEnum::Magic);
 				}
 
-				if (spell->GetTargetting().GetTagName() == "Skill.Targetting.Area")
+				if (spell->GetTargetting().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area")))
 				{
+					//TODO: depending on the spell area targetting, use different indicators
 					//if it's an AOE spell show the targetting indicator
 					controllerRef->ShowSpellCircle(spell->GetAOE(GetAbilitySystemComponent()));
 				}
@@ -218,49 +220,70 @@ bool AAlly::GetOverlappingObjects(TArray<FHitResult>& hits)
 bool AAlly::SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellClass)
 {
 	UMySpell* spell = spellClass.GetDefaultObject();
+	FName spellTargetting = spell->GetTargetting().GetTagName();
+
 	if (IsValid(spell))
 	{
-		if (spell->GetTargetting().GetTagName() == "Skill.Targetting.Area") // we can target anything and the area around it will be affected
-		{	
+		if (spellTargetting == "Skill.Targetting.Area") // we can target anything and the area around it will be affected
+		{
 			targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(result);
-			targetLocation = UAbilitySystemBlueprintLibrary::GetTargetDataEndPoint(targetData,0);
+			targetLocation = UAbilitySystemBlueprintLibrary::GetTargetDataEndPoint(targetData, 0);
 		}
 		else //we need to check to see if we targetted the right kind of actor
 		{
-			if (result.Actor->GetClass()->IsChildOf(AUnit::StaticClass()))
+			if (IsValid(result.Actor.Get()))
 			{
-				AUnit* unit = Cast<AUnit>(result.Actor.Get());
-				if (unit->GetIsEnemy())
+				if (result.Actor->GetClass()->IsChildOf(AUnit::StaticClass()))
 				{
-					if (spell->GetTargetting().GetTagName() == "Skill.Targetting.Friendly")
+					if (spellTargetting != "Skill.Targetting.Single.Interactable")
+					{
+						AUnit* unit = Cast<AUnit>(result.Actor.Get());
+						if (unit->GetIsEnemy())
+						{
+							if (spellTargetting == "Skill.Targetting.Single.Friendly")
+							{
+								controllerRef->GetHUDManager()->GetMainHUD()->DisplayHelpText(invalidTargetText);
+								return false;
+							}
+						}
+						else //if not enemy
+						{
+							if (spellTargetting == "Skill.Targetting.Single.Enemy")
+							{
+								controllerRef->GetHUDManager()->GetMainHUD()->DisplayHelpText(invalidTargetText);
+								return false;
+							}
+						}
+
+						targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(result);
+						targetActor = unit;
+						targetUnit = unit;
+
+						//If casting on ourselves, then we can just instantly cast
+						if (targetUnit == this || FVector::Dist2D(targetLocation, GetActorLocation()) < 5.f)
+						{
+							PreCastChannelingCheck(spellClass);
+							controllerRef->ChangeCursor(ECursorStateEnum::Select);
+							return true;
+						}
+					}
+				}
+				else if (result.Actor->GetClass()->IsChildOf(AInteractableBase::StaticClass()))
+				{
+					if (spellTargetting != "Skill.Targetting.Single.Interactable" && spellTargetting != "Skill.Targetting.Single.AllUnitsAndInteractables")
 					{
 						controllerRef->GetHUDManager()->GetMainHUD()->DisplayHelpText(invalidTargetText);
 						return false;
 					}
+
+					targetActor = Cast<AInteractableBase>(result.Actor);
+					targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(result);
 				}
-				else //if not enemy
+				else
 				{
-					if (spell->GetTargetting().GetTagName() == "Skill.Targetting.Enemy")
-					{
-						controllerRef->GetHUDManager()->GetMainHUD()->DisplayHelpText(invalidTargetText);
-						return false;
-					}
+					controllerRef->GetHUDManager()->GetMainHUD()->DisplayHelpText(invalidTargetText);
+					return false;
 				}
-
-				targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(result);
-				targetUnit = unit;
-
-				//Stop any queued commands since we're interrupting them to cast a spell
-				ClearCommandQueue();
-				
-				//If casting on ourselves, then we can just instantly cast
-				if (targetUnit == this || FVector::Dist2D(targetLocation, GetActorLocation()) < 5.f)
-				{
-					PreCastChannelingCheck(spellClass);
-					controllerRef->ChangeCursor(ECursorStateEnum::Select);
-					return true;
-				}
-
 			}
 			else
 			{
@@ -268,6 +291,10 @@ bool AAlly::SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellC
 				return false;
 			}
 		}
+
+		//Stop any queued commands since we're interrupting them to cast a spell
+		ClearCommandQueue();
+
 		controllerRef->ChangeCursor(ECursorStateEnum::Select); //just turn it back to select so the loop will quickly change the cursor back to normal after spell casted
 		state->ChangeState(EUnitState::STATE_CASTING);
 		return true;

@@ -3,9 +3,6 @@
 #include "MyProject.h"
 #include "Inventory.h"
 
-
-
-
 void UInventory::Construct_Implementation()
 {
 	Super::Construct_Implementation();
@@ -18,7 +15,9 @@ bool UInventory::OnWidgetAddToViewport_Implementation()
 
 	if (!backpack)
 		return false;
+	LoadItems();
 	return true;
+
 }
 
 

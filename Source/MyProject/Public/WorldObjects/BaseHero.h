@@ -65,6 +65,27 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Misc")
 	void						BeginInteract(AActor* interactor);
 
+	/**Equip an item
+	 * @param equipItem - ID of the item to equip
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Interfacing Equipment")
+	void						Equip(int equipSlot);
+
+	/**
+	 * Unequip an item
+	 * @unequipSlot - Equipment slot index of the item to unequip
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Interfacing Equipment")
+	void						Unequip(int unequipSlot);
+
+	/**
+	 * Swap an item from one slot to another
+	 * @param equipSlot1 - First slot to be swapped
+	 * @param equipSlot2 - Second slot to be swapped
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Interfacing Equipment")
+	void						SwapEquip(int equipSlot1, int equipSlot2);
+
 	/**
 	 * Levelup functionality mostly in blueprints so we can add some effects
 	 */
@@ -79,6 +100,9 @@ public:
 
 	///---Actions---
 	void 						Stop() override;
+
+	/**Like CastSpell in Ally, but checks to see if the spell was casted via an item*/
+	bool						CastSpell(TSubclassOf<UMySpell> spellToCast) override;
 #pragma endregion
 
 #pragma region Accessors
@@ -87,10 +111,10 @@ public:
 	void 						SetSelected(bool value) override;
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Stats")
-	int 						GetCurrentExp() const;
+	FORCEINLINE int 			GetCurrentExp() const;
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Stats")
-	int 						GetExpToLevel() const;
+	FORCEINLINE int 			GetExpToLevel() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Stats")
 	void 						SetCurrentExp(int amount);
@@ -111,7 +135,7 @@ public:
 	 *Get the interactable this hero is targetted to interact with
 	 */
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Interactable")
-	UObject*								GetCurrentInteractable() const;
+	FORCEINLINE UObject*					GetCurrentInteractable() const;
 
 	/**
 	 *Set the interactable this hero is targetted to interact with
@@ -123,10 +147,11 @@ public:
 	 *Get a copy of our spellbook
 	 */
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-	USpellBook*								GetSpellBook() const { return spellbook; }
+	FORCEINLINE USpellBook*					GetSpellBook() const { return spellbook; }
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-	UEquipment*								GetEquipment() const { return equipment; }
+	FORCEINLINE TArray<int>					GetEquipment() const;
+
 
 #pragma endregion
 
@@ -184,25 +209,27 @@ private:
 	 */
 	void						CheckShadows();
 	/**
-	 *Using some kind of item, consumeable, utility, etc.  We need to target some target for this item
+	 *Using some kind of item, consumeable, utility, etc when the item ability is finally activated (spell is cast).  Needs parameter since currentItem is reset on spellcast.
 	 */
-	void						UseItem();
+	void						UseItem(int itemID);
 	/**
 	 *Here's where we do all the checks and repositioning for interacting.  Continuously called as long as we have an interaction target
 	 */
-	void						PrepareInteract();	
+	void						PrepareInteract();
+	
 	/**
 	 *Functions for adding and removing bonuses when equipping and unequipping.  Set isEquip to true when equipping, and to false when unequipping
 	 *@param equipID - ID of the equipment being added/removed
 	 *@param isEquip - Are we equipping or removing equipment? 
 	*/
+
 	UFUNCTION()
-	void						SetupBonuses(int equipID, bool isEquip);
+	void						OnEquipped(int equipID, bool isEquip);
 
 	///--References--
 	ABasePlayer*				player; //reference to our player class, which has information on our team
 	IInteractable*				currentInteractable; //reference to the interactable which we are trying to interact with						
-	int							currentItem =	-1; //id of the item that is going to be used by this character
+	int							currentItem = 0; //id of the item that is going to be used by this character
 	
 	///--Lighting effect--
 	UMaterialParameterCollection*				lightSource = nullptr; //We need this parameter to figure out light direction based on our directional light we made

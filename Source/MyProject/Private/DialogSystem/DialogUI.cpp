@@ -12,16 +12,18 @@ void UDialogUI::Construct_Implementation()
 
 void UDialogUI::SetMainView()
 {
-	if (bConvView)
-		SetConversationView();
-	else
-		SetIntimateView();
+	switch(socialHUDState)
+	{
+		case ESocialHUDState::Conversation: SetConversationView(); break;
+		case ESocialHUDState::Intimate: SetIntimateView(); break;
+		case ESocialHUDState::Shop: SetShopView(); break;
+	}
 }
 
 bool UDialogUI::OnWidgetAddToViewport_Implementation()
 {
 	//change view to whatever it is set to prior
-	SetMainView(); 
+	//SetMainView(); 
 	return true;
 }
 

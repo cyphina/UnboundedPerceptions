@@ -5,9 +5,9 @@
 #include "UI/UserWidgetExtensions/MyUserWidget.h"
 #include "ActionbarInterface.generated.h"
 
-
 class AUnit;
 class UESkillContainer;
+class UChannelingBar;
 class AAlly;
 
 /*
@@ -25,6 +25,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "References")
 	UESkillContainer*			skillContainerRef;
 
+	UPROPERTY(BlueprintReadWrite, Category = "References")
+	UChannelingBar*				channelingBarRef;
+
 	/** Can we drag this actionbar around or (*EVENTUALLY*) lock it from changing units?*/
 	UPROPERTY(BlueprintReadWrite, Category = "Properties")
 	bool						isLocked;
@@ -40,7 +43,7 @@ public:
 #pragma region views
 
 public:
-	/**Actionbar view when one unit is selected*/
+	/**View when tabbing through multiple selected allies.  (Index free since we don't tab based off the index in the party, but rather their selection index)*/
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "View")
 	void						SingleAllyViewIndexFree(AAlly* allyToFocus);
 

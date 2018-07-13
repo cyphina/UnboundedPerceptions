@@ -37,10 +37,10 @@ void AEnemy::Tick(float deltaSeconds)
 
 void AEnemy::Die()
 {
-	Super::Die();
-	gameModeRef->GetQuestManager()->OnEnemyDie(GetClass());
+	gameModeRef->GetQuestManager()->OnEnemyDie(this);
 	controllerRef->GetBasePlayer()->UpdateEXP(expGiven);
 	controllerRef->GetBasePlayer()->UpdateGold(moneyGiven);
+	Super::Die();
 }
 
 void AEnemy::SetSelected(bool value)

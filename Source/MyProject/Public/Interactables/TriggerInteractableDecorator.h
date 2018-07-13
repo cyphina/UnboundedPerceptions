@@ -30,5 +30,5 @@ public:
 
 	/**Set this trigger to something when you want to interact*/
 	UPROPERTY(EditAnywhere, Category = "Trigger")
-	FTriggerData				triggerActivatedOnInteract;
+	TArray<FTriggerData> 		triggersActivatedOnInteract;
 };

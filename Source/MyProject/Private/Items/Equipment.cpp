@@ -9,10 +9,10 @@
 // Sets default values for this component's properties
 UEquipment::UEquipment()
 {
-	equips.SetNum(10);
+
 }
 
-void UEquipment::Equip(int equipItem)
+int UEquipment::Equip(int equipItem)
 {
 	FEquipLookupRow* e = UItemManager::Get().GetEquipInfo(equipItem);
 	FGameplayTag itemType = UItemManager::Get().GetItemInfo(equipItem)->itemType;
@@ -20,22 +20,22 @@ void UEquipment::Equip(int equipItem)
 	//Depending on what kind of equip we have, swap item into different slots allocated for that equip
 	if (itemType.GetTagName() == "Item.Equippable.Armor.Helmet")
 	{
-		SwapEquipsFromInventory(equipItem, 0);
+		return SwapEquipsFromInventory(equipItem, 0);
 	}
 	else if (itemType.GetTagName() == "Item.Equippable.Armor.Body")
 	{
-		SwapEquipsFromInventory(equipItem, 1);
+		return SwapEquipsFromInventory(equipItem, 1);
 	}
 	else if (itemType.GetTagName() == "Item.Equippable.Armor.Legs")
 	{
-		SwapEquipsFromInventory(equipItem, 2);
+		return SwapEquipsFromInventory(equipItem, 2);
 	}
 	else if (itemType.GetTagName() == "Item.Equippable.Armor.Accessory")
 	{
 		if (equips[3] < 0)
-			SwapEquipsFromInventory(equipItem, 3);
+			return SwapEquipsFromInventory(equipItem, 3);
 		else
-			SwapEquipsFromInventory(equipItem, 4);
+			return SwapEquipsFromInventory(equipItem, 4);
 	}
 	else if (itemType.MatchesTag(FGameplayTag::RequestGameplayTag("Item.Equippable.Weapon")))
 	{
@@ -43,38 +43,37 @@ void UEquipment::Equip(int equipItem)
 		{
 			if(equips[i] <= 0)
 			{
-				SwapEquipsFromInventory(equipItem, i);
-				return;
+				return SwapEquipsFromInventory(equipItem, i);
 			}
 		} //if our equip slots are full, just swap with the last equip
-		SwapEquipsFromInventory(equipItem, 9);
+		return SwapEquipsFromInventory(equipItem, 9);
 	}
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, "Error, equipping unknown type of item");
+		return 0;
 	}
 }
 
-void UEquipment::SwapEquipsFromInventory(int equipID, int equipSlot)
+int UEquipment::SwapEquipsFromInventory(int equipID, int equipSlot)
 {
-	if (equips[equipSlot] > 0) //already equipped item in slot
+	int prevEquipId = equips[equipSlot];
+	if (prevEquipId > 0) //already equipped item in slot
 	{
-		FMyItem item = FMyItem(equipID);
-		//if we sucessfully add our item that is equipped to the inventory
-		if (heroRef->backpack->AddItem(item))
-		{
-			//remove bonuses and replace equipment
-			OnEquipped.Execute(equips[equipSlot], false);
-			equips[equipSlot] = equipID;
-			OnEquipped.Execute(equipID, true);
-		}
+		//remove bonuses and replace equipment
+		OnEquipped.Execute(equips[equipSlot], false);
+		equips[equipSlot] = equipID;
+		OnEquipped.Execute(equipID, true);
+		return prevEquipId;
 	}
 	else //no item in slot currently
 	{
 		//just remove item and set bonuses
 		equips[equipSlot] = equipID;
 		OnEquipped.Execute(equipID, true);
+		return 0;
 	}
+	 
 }
 
 void UEquipment::SwapEquips(int equipSlot1, int equipSlot2)
@@ -93,12 +92,11 @@ void UEquipment::SwapEquips(int equipSlot1, int equipSlot2)
 	}
 }
 
-void UEquipment::UnequipItem(int slot)
+void UEquipment::Unequip(int slot)
 {
-	if (equips[slot] > 0 && heroRef->backpack->Count() < heroRef->backpack->GetItemMax())
+	if (equips[slot] > 0)
 	{
 		FMyItem item = FMyItem(equips[slot]);
-		heroRef->backpack->AddItem(item);
 		OnEquipped.Execute(equips[slot], false);
 		equips[slot] = 0;
 	}

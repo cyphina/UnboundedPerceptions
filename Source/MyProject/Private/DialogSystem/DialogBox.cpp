@@ -11,9 +11,7 @@
 
 void UDialogBox::InitDialogPortraitMaps()
 {
-	static ConstructorHelpers::FObjectFinder<UTexture2D> defaultPortrait{ TEXT("/Game/RTS_Tutorial/Textures/girldoge") };
-	if (defaultPortrait.Succeeded())
-		dialogPortraitMap.Add("default", defaultPortrait.Object);
+
 }
 
 UDialogBox::UDialogBox(const FObjectInitializer& ObjectInitializer)
@@ -196,11 +194,15 @@ void UDialogBox::HandleConditions()
 
 void UDialogBox::ResetDialog()
 {
-	if (onDialogEndTrigger && onDialogEndTrigger->triggerType != ETriggerType::None)
-		gameModeRef->GetTriggerManager()->ActivateTrigger(*onDialogEndTrigger);
+	for (FTriggerData& triggerData : onDialogEndTriggers)
+	{
+		if (triggerData.triggerType != ETriggerType::None)
+			gameModeRef->GetTriggerManager()->ActivateTrigger(triggerData);
+	}
 
 	hasValidDialog = false;
 	currentNodeNum = 0;
+
 	//TODO: Figure out if resetting topic is good here
 }
 

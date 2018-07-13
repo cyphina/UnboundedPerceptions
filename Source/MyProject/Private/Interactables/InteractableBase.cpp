@@ -3,6 +3,7 @@
 #include "MyProject.h"
 #include "InteractableBase.h"
 #include "Interactables/InteractableActorDecoratorBase.h"
+#include "Interactables/NamedInteractableDecorator.h"
 
 
 // Sets default values
@@ -29,6 +30,23 @@ void AInteractableBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+FText AInteractableBase::GetGameName() const
+{
+	if(decorator)
+		return decorator->GetName();
+	return FText::GetEmpty();
+}
+
+void AInteractableBase::SetGameName(FText value)
+{
+	UInteractableActorDecoratorBase* nextDecorator = decorator;
+	while(nextDecorator);
+	{
+		nextDecorator = nextDecorator->decoratedInteractable;
+	}
+	nextDecorator->decoratedInteractable = NewObject<UNamedInteractableDecorator>(nextDecorator);
 }
 
 void AInteractableBase::Interact_Implementation(ABaseHero* hero)

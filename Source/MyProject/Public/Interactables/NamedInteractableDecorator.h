@@ -12,13 +12,13 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnNamedInteractableInteracted);
  */
 
 UCLASS()
-class MYPROJECT_API UNamedInteractableSpawner : public UInteractableActorDecoratorBase
+class MYPROJECT_API UNamedInteractableDecorator : public UInteractableActorDecoratorBase
 {
 	GENERATED_BODY()
 
 	/**Used to identify interactables in quests*/
 	UPROPERTY(EditAnywhere, Category = "Interactable Settings")
-	FName									id;
+	FText									name;
 
 	/**Wrapper function that calls quest manager update when we interact with this object*/
 	UFUNCTION()
@@ -29,7 +29,7 @@ public:
 	bool									Interact() override;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	FORCEINLINE FName									GetName() { return id; }
+	FORCEINLINE FText						GetName() override { return name; }
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
 	FOnNamedInteractableInteracted			OnInteracted;

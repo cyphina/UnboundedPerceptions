@@ -11,7 +11,7 @@ class AUserInput;
 
 /**Door that can be opened or closed.  Can act as a gate if it's surrounded by walls.*/
 
-UCLASS()
+UCLASS(HideCategories = (Input, Actor, LOD))
 class MYPROJECT_API ARTSDoor : public AInteractableBase
 {
 	GENERATED_BODY()
@@ -22,8 +22,8 @@ class MYPROJECT_API ARTSDoor : public AInteractableBase
 	bool					isOpen = false;
 
 	/**Store initial rotation for when door should go to closed state*/
-	FRotator		
-	initialRotation;
+	FRotator				initialRotation;
+
 	/**Store this value so we don't have to keep calculating a temporary*/
 	FRotator				finalRotation;
 
@@ -33,7 +33,7 @@ class MYPROJECT_API ARTSDoor : public AInteractableBase
 public:	
 
 	/**Curve representing door rotation rate*/
-	UPROPERTY(EditAnywhere, Category = "Timeline")
+	UPROPERTY(EditAnywhere, Category = "Door Info")
 	UCurveFloat*					progressCurve;
 	
 	/**Root component*/
@@ -47,12 +47,20 @@ public:
 	UPROPERTY(EditAnywhere)
 	UBoxComponent*					doorCollision;
 
+	/**Is this door locked? (needs a key to open)*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Info")
+	bool					isLocked = false;
+
+	/**Id of the key to open this door if it is locked*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Info")
+	int					keyID = 0;
+
 	ARTSDoor();
 
 	void					BeginPlay() override;
 	void					Tick(float DeltaTime) override;
 
 	void					Interact_Implementation(ABaseHero* hero) override;
-
 	FVector					GetInteractableLocation_Implementation() override;
+	bool					CanInteract_Implementation() override;
 };

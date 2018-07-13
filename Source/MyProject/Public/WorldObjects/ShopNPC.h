@@ -35,14 +35,20 @@ class MYPROJECT_API AShopNPC : public AIntimateNPC
 	UPROPERTY(EditAnywhere, Category =  "Shop Items")
 	TMap<int, FItemPrice>						itemPrices;
 
+	void										SetupAppropriateView() override;
+
 public:
-	
+
+	void										BeginPlay() override;
+
 	/**Backpack containing the items that the shopkeeper will sell and how many the shopkeeper can sell*/
-	UPROPERTY(EditAnywhere, Category =  "Shop Items")
 	UBackpack*									itemsToSellBackpack;
 
-	/**/
-	UFUNCTION(BlueprintCallable)
+	UPROPERTY(EditAnywhere, Category =  "Shop Items")
+	TArray<FMyItem>								itemsToSell;
+
+	/**Accessor to gets an item's price*/
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	FORCEINLINE FItemPrice						GetItemPrice(int itemID);
 
 };

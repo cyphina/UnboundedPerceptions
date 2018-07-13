@@ -8,7 +8,7 @@
 #include "SubGoalWidget.generated.h"
 
 /**
- * Class for goal widgets inside the quest slot widgets
+ * Class for goal widgets inside the quest slot widgets (questJournal)
  */
 
 class UQuestListSlot;
@@ -38,17 +38,13 @@ public:
 
 	void NativeConstruct() override;
 
-	//Update display text on this goal whenever things change like we hunt something, or a goal is completed
+	/**Update display text on this goal whenever things change like we hunt something, or a goal is completed*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "UI")
 		void UpdateText();
 
-	//Changes if button is enabled and how goal looks when selected or deselected
+	/**Changes if button is enabled and how goal looks when selected or deselected*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "UI")
 		void ToggleEnabled(bool shouldEnable);
-
-	//Returns the text of what the goal should be based on the goal's type and information from the quest
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helper")
-		FText MakeGoalText();
 
 	///---Accessors---
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accesors")

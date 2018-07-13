@@ -17,13 +17,12 @@
 class	UMyGameInstance;
 class	ARTSGameState;
 class	AAIController;
-class	StateMachine;
 class	UDamageEffect;
 class	UMyAbilitySystemComponent;
 class	UMySpell;
 class	UHealthbarComp;
 
-UCLASS(abstract)
+UCLASS(Abstract)
 class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
@@ -42,8 +41,8 @@ private:
 	bool							canTarget = true; 
 	float							height;
 	TArray<FGameplayAttribute>		atts; //holds all the attributes in AbilityComponent.  We need this because we use the names because the effects use them, however getting them requires them being copied
-	UMyGameInstance*				gameInstance;
-
+	UMyGameInstance*				gameInstance = nullptr;
+	bool							isSelected = false;
 protected:
 
 	bool							isEnemy = false; //protected so we can set this in enemy class
@@ -106,31 +105,25 @@ public:
 	FText							 GetGameName() const final override { return name; } 
 
 	UFUNCTION(BlueprintCallable, Category = "Accessors")
-	void							 SetImage(UTexture2D* value) final override { image = value; }
+	void							 SetImage(UTexture2D* value) { image = value; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-	UTexture2D*						 GetImage() const final override { return image; }
+	UTexture2D*						 GetImage() const { return image; }
 
 	UFUNCTION(BlueprintCallable, Category = "Accessors")
-	void							 SetSelected(bool value) override { isSelected = value; }
+	virtual void					 SetSelected(bool value) { isSelected = value; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-	bool							 GetSelected() const override { return isSelected; }
-
-	UFUNCTION(BlueprintCallable, Category = "Accessors")
-	void							 SetObjectID(int value) final override { objectID = value; }
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-	int								 GetObjectID() const final override { return objectID; }
+	virtual bool					 GetSelected() const { return isSelected; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
 	bool							 GetIsEnemy() const { return isEnemy; }
 
 	UFUNCTION(BlueprintCallable, Category = "CombatAccessors")
-	void							 SetCanTarget(bool value) override { canTarget = value; }
+	void							 SetCanTarget(bool value) { canTarget = value; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-	bool							 GetCanTarget() const override { return canTarget;  }
+	bool							 GetCanTarget() const { return canTarget;  }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
 	bool							 GetIsDead() const  { return isDead; }
@@ -171,7 +164,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "StatAccessors")
 	void							SetVitalCurValue(int vit, int vitValue) const { baseC->GetVital(vit)->SetCurrValue(vitValue); }
 
-	/**Get Level of unit from baseCharacter*/
+	/**
+	 *Get Level of unit from baseCharacter
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
 	FORCEINLINE int					 GetLevel() const { return baseC->GetLevel(); }
 
@@ -280,6 +275,7 @@ public:
 	void								PrepareAttack(); // PURE_VIRTUAL(AUnit::PrepareAttack, );
 
 protected:
+	AActor*								targetActor; //Reference to a target actor (targetUnit, targetInteractable).
 	AUnit*								targetUnit; //used to target individual units (via spell cast or right click attack) because targetData has too much info
 	FVector								targetLocation; //used to target area (no restrictions on what can be clicked)
 	FGameplayAbilityTargetDataHandle	targetData = FGameplayAbilityTargetDataHandle(); //detailed spell targetting information

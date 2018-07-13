@@ -6,18 +6,18 @@
 #include "Quests/QuestManager.h"
 #include "RTSGameMode.h"
 
-void UNamedInteractableSpawner::OnInteractedQuestManagerWrapper()
+void UNamedInteractableDecorator::OnInteractedQuestManagerWrapper()
 {
 	Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode())->GetQuestManager()->OnInteracted(this);
 }
 
-void UNamedInteractableSpawner::Init()
+void UNamedInteractableDecorator::Init()
 {
 	UInteractableActorDecoratorBase::Init();
-	OnInteracted.AddDynamic(this, &UNamedInteractableSpawner::OnInteractedQuestManagerWrapper);
+	OnInteracted.AddDynamic(this, &UNamedInteractableDecorator::OnInteractedQuestManagerWrapper);
 }
 
-bool UNamedInteractableSpawner::Interact()
+bool UNamedInteractableDecorator::Interact()
 {
 	if(!decoratedInteractable || decoratedInteractable->Interact())
 	{

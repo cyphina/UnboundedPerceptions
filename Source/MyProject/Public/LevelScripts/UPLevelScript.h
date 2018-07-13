@@ -39,12 +39,12 @@ class MYPROJECT_API AUPLevelScript : public ALevelScriptActor
 protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "References")
-	AUserInput*			controllerRef = nullptr;
+	AUserInput*				controllerRef = nullptr;
 
 public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "OnLevelLoaded")
-	FTriggerData		OnLevelLoadedTrigger;
+	TArray<FTriggerData> 	OnLevelLoadedTriggers;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "References")
 	AUserInput*			GetControllerRef() const { return controllerRef; } 

@@ -237,6 +237,8 @@ void AUnit::Die()
 	{
 		//GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Emerald, FString("Wee") + FString::FromInt(currentSpellIndex));
 	}
+
+	//Destroy?
 }
 
 void AUnit::CommitCast(UMySpell* spell)
@@ -374,15 +376,17 @@ bool AUnit::BeginCastSpell(int spellToCastIndex, FGameplayAbilityTargetDataHandl
 				{
 					targetData = tData;
 					//here error
-					if (spell->GetTargetting().GetTagName() == "Skill.Targetting.Area")
+					if (spell->GetTargetting().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area")))
 					{
 						targetLocation = UAbilitySystemBlueprintLibrary::GetTargetDataEndPoint(targetData, 0);
 					}
 					else
-						targetUnit = Cast<AUnit>(UAbilitySystemBlueprintLibrary::GetActorsFromTargetData(targetData, 0)[0]);
+					{
+						targetActor = UAbilitySystemBlueprintLibrary::GetActorsFromTargetData(targetData, 0)[0];
+					}
 
 					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("%f"), FVector::Dist2D(targetLocation, GetActorLocation())));
-					if (targetUnit == this || FVector::Dist2D(targetLocation, GetActorLocation()) < 5.f)
+					if (targetActor == this || FVector::Dist2D(targetLocation, GetActorLocation()) < 5.f)
 					{
 						PreCastChannelingCheck(currentSpell);
 						return true;
@@ -407,11 +411,11 @@ void AUnit::PrepareCastSpell()
 		UMySpell* spell = currentSpell.GetDefaultObject();
 
 		FVector targetLoc;
-		if (spell->GetTargetting().GetTagName() == "Skill.Targetting.Area")
+		if (spell->GetTargetting().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area")))
 			targetLoc = targetLocation;
 		else
 		{
-			targetLoc = targetUnit->GetActorLocation();
+			targetLoc = targetActor->GetActorLocation();
 		}
 		if (AdjustPosition(spell->GetRange(GetAbilitySystemComponent()), targetLoc))
 		{
@@ -426,7 +430,8 @@ bool AUnit::CastSpell(TSubclassOf<UMySpell> spellToCast)
 	{
 		if (spellToCast.GetDefaultObject()->GetTargetting().GetTagName() != "Skill.Targetting.None")
 		{
-			//When spell is actually casted, trigger castclick to let the ability know it should be ready to move on... May be obsolete?
+			//When spell is actually casted, trigger castclick to let the ability know it should be ready to move on...
+			//May be obsolete since we don't actully activate the spell until we click anyways.  However, it does pass in target data
 			FGameplayEventData eD = FGameplayEventData();
 			eD.EventTag = UGameplayTagsManager::Get().RequestGameplayTag("Event.CastClick");
 			eD.TargetData = targetData;
@@ -460,6 +465,7 @@ void AUnit::Stop()
 	targetData.Clear();
 	currentSpell = nullptr;
 	targetUnit = nullptr;
+	targetActor = nullptr;
 	targetLocation = FVector();
 	readyToAttack = false;
 	controller->StopMovement();

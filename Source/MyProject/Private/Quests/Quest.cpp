@@ -2,9 +2,14 @@
 
 #include "MyProject.h"
 #include "Quest.h"
+
+#include "RTSGameMode.h"
 #include "UserInput.h"
+
 #include "UI/HUDManager.h"
 #include "QuestManager.h"
+#include "EventSystem/Trigger.h"
+
 #include "UI/QuestJournal.h"
 #include "UI/QuestList.h"
 #include "UI/QuestListSlot.h"
@@ -16,9 +21,9 @@ void AQuest::BeginPlay()
 	int num = 0;
 	for(FGoalInfo goal : questInfo.subgoals)
 	{
-		if ((goal.goalType == EGoalType::Hunt || goal.goalType == EGoalType::Interact) && goal.amountToHunt > 0)
+		if (goal.amount > 0)
 		{
-			currentHuntedAmounts.Add(num,0); 	
+			currentAmounts.Add(num,0); 	
 		}
 		++num;
 	}
@@ -51,9 +56,11 @@ void AQuest::CompleteSubGoal(int goalIndex, bool fail)
 		FGoalInfo completedGoal = questInfo.subgoals[goalIndex];
 		UQuestListSlot* questListSlot = questManagerRef->questListRef->GetQuestListSlot(this);
 
-		if(completedGoals[completedGoals.Add(completedGoal)].shouldUpdateQuestDescription && fail)
+		//If this goal should update the description, and we didn't fail it...
+		if(completedGoals[completedGoals.Add(completedGoal)].shouldUpdateQuestDescription && !fail)
 		{
-			currentDescription = FText::Format(NSLOCTEXT("Quest", "Description", "{0}{1}"), currentDescription, completedGoal.updatedDescription);
+			//Add on the extra description at the end.  
+			currentDescription = FText::Format(NSLOCTEXT("Quest", "Description", "{0}\n\n{1}"), currentDescription, completedGoal.updatedDescription);
 			if (questManagerRef->questJournalRef->GetSelectedQuest() == this)
 				questManagerRef->questJournalRef->UpdateDetailWindow();
 		}
@@ -62,6 +69,11 @@ void AQuest::CompleteSubGoal(int goalIndex, bool fail)
 		questListSlot->RemoveSubGoalWidget(goalIndex);
 		currentGoalIndices.Remove(goalIndex);
 
+		for(FTriggerData& trigger : completedGoal.goalTriggers)
+		{
+			questManagerRef->controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(trigger);	
+		}
+
 		//handle failure or completion
 		if (completedGoal.canFailQuest || completedGoal.canCompleteQuest)
 		{
@@ -69,13 +81,26 @@ void AQuest::CompleteSubGoal(int goalIndex, bool fail)
 			return;
 		}
 
-		//else handle adding new subgoals
-		for(int followingSubGoalIndex : completedGoal.followingSubGoalIndices)
+		//Add any subgoals which don't have any requiredSubGoals
+		int index = 0;
+		for(FGoalInfo goal : questInfo.subgoals)
 		{
-			currentGoalIndices.Add(followingSubGoalIndex);
-			currentGoals.Add(questInfo.subgoals[followingSubGoalIndex]);
-			questManagerRef->questListRef->GetQuestListSlot(this)->AddSubGoalWidget(this, followingSubGoalIndex);
-		}
+			if (goal.goalState == EGoalState::lockedGoal)
+			{
+				int foundGoalReqIndex = goal.requiredSubGoalIndices.Find(goalIndex);
+				if (foundGoalReqIndex != INDEX_NONE)
+				{
+					goal.requiredSubGoalIndices.RemoveAt(foundGoalReqIndex);
+					if (!goal.requiredSubGoalIndices.Num())
+					{
+						currentGoals.Add(goal);
+						currentGoalIndices.Add(index);
+						questManagerRef->questListRef->GetQuestListSlot(this)->AddSubGoalWidget(this, index);
+					}
+				}
+			}
+			++index;
+		}	
 
 		if(questManagerRef->controllerRef->GetHUDManager()->GetQuestJournal()->GetSelectedQuest() == this) //if our quest selected in quest journal
 		{
@@ -91,13 +116,72 @@ void AQuest::CompleteSubGoal(int goalIndex, bool fail)
 void AQuest::SetupStartingGoals()
 {
 	currentGoalIndices.Empty();
-	currentGoalIndices = startingGoalIndices;
+	for(int i = 0; i < questInfo.subgoals.Num(); ++i)
+	{
+		if(questInfo.subgoals[i].requiredSubGoalIndices.Num() == 0)
+		{
+			currentGoalIndices.Add(i);
+			questInfo.subgoals[i].goalState = EGoalState::currentGoal;
+		}
+	}
+
 	UpdateSubGoals();
 	currentDescription = questInfo.desc;
 }
 
-
 FGoalInfo AQuest::GetGoalAtIndex(int goalIndex)
 {
 	return currentGoals[goalIndex];
+}
+
+
+FText AQuest::MakeGoalText(AQuest* assignedQuest, FGoalInfo goalInfo, int goalIndex)
+{
+	FFormatOrderedArguments args;
+	args.Add(goalInfo.additionalNames[0]);
+	checkf(goalInfo.additionalNames.Num() > 0, TEXT("%s"), *goalInfo.goalText.ToString())
+	if (!goalInfo.isCustomGoal)
+	{
+		switch (goalInfo.goalType)
+		{
+		case EGoalType::Hunt:
+			if (goalInfo.amount > 1)
+				args.Add(NSLOCTEXT("Quests", "Suffix", "s"));
+			else
+				args.Add(FText());
+			args.Add(assignedQuest->currentAmounts[goalIndex]);
+			args.Add(goalInfo.amount);
+			return FText::Format(NSLOCTEXT("Quests", "SubGoalWidget", "Hunt {0}{1}: {2}/{3}"), args);
+		case EGoalType::Find:
+			args.Add(assignedQuest->currentAmounts[goalIndex]);
+			args.Add(goalInfo.amount);
+			if (goalInfo.amount > 1)
+				args.Add(NSLOCTEXT("Quests", "Suffix", "s"));
+			else
+				args.Add(FText());
+			return FText::Format(NSLOCTEXT("Quests", "SubGoalWidget", "Find {1}/{2} {0}{3}!"), args);
+		case EGoalType::Talk:
+			if (goalInfo.additionalNames.Num() > 1)
+			{
+				args.Add(goalInfo.additionalNames[1]);
+				return FText::Format(NSLOCTEXT("Quests", "SubGoalWidget", "Talk to {0} about {1}"), args);
+			}
+
+			return FText::Format(NSLOCTEXT("Quests", "SubGoalWidget", "Talk to {0}"), args);
+		case EGoalType::Interact:
+			if (goalInfo.amount > 1)
+				args.Add(NSLOCTEXT("Quests", "Suffix", "s"));
+			else
+				args.Add(FText());
+			args.Add(assignedQuest->currentAmounts[goalIndex]);
+			args.Add(goalInfo.amount);
+			return FText::Format(NSLOCTEXT("Quests", "SubGoalWidget", "Interact with {0}{1}: {2}/{3}"), args);
+		case EGoalType::Custom:
+			return goalInfo.goalText;
+		default:
+			return FText();
+		}
+	}
+	else
+		return goalInfo.goalText;
 }

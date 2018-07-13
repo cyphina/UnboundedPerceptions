@@ -21,12 +21,6 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
 	FText 					name;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
-	UTexture2D* 			image = nullptr;
-
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
-	bool 					canTarget = true; 
-
 	/**
 	 * Does this NPC allow us to have a conversation (open up social menu) or does he/she just say something then walk away
 	 */
@@ -54,7 +48,8 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
 	FTriggerData				onDialogEndTriggerData;
 	 
 	/**
-	 * List of dialogs (not topics) that we've already talked to this NPC about. 
+	 *TODO: Move this to CPC and have a single map <NPCNAME,DialogAlreadyConversedSet> for global access
+	 * List of dialogs (not topics) that we've already talked to this NPC about.  Sometimes used in conditionals
 	 */
 	TSet<FName>					dialogAlreadyConversed;
 
@@ -78,7 +73,9 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
 	UFUNCTION()
 	void						OnTopicLearned(FGameplayTag topicLearned);
 
-	//We need this if we're trying to debug a level in the editor.  We don't need this for the real game since they start at the starting level where things are initialized
+	/**We need this if we're trying to debug a level in the editor.  
+	 *We don't need this for the real game since they start at the starting level where things are initialized
+	 *If we don't have this we have a problem with the system that determines if an NPC has a quest to give*/
 #if UE_EDITOR
 	FTimerHandle				BeginPlayDelayTimer;
 #endif
@@ -108,7 +105,7 @@ public:
 	 *Is this NPC already talking to a hero?
 	 */
 	UPROPERTY(BlueprintReadWrite, Category = "NPCConversationSettings")
-	ABaseHero*				currentlyTalkingHero = false; 
+	ABaseHero*					currentlyTalkingHero = false; 
 
 #pragma region informationAccess
 
@@ -116,23 +113,6 @@ public:
 	virtual void 				SetGameName(FText value) override { name = value; };
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
 	virtual FText 				GetGameName() const override { return name; };
-	UFUNCTION(BlueprintCallable, Category = "Accessors")
-	virtual void 				SetImage(UTexture2D* value) override { image = value; };
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-	virtual UTexture2D* 		GetImage() const override { return image; };
-
-	UFUNCTION(BlueprintCallable, Category = "Accessors")
-	virtual void 				SetSelected(bool value) override { isSelected = value; };
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-	virtual bool 				GetSelected() const override { return isSelected; };
-	UFUNCTION(BlueprintCallable, Category = "Accessors")
-	virtual void 				SetObjectID(int value) override { objectID = value; };
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-	virtual int 				GetObjectID() const override { return objectID; };
-	UFUNCTION(BlueprintCallable, Category = "CombatAccessors")
-	virtual void 				SetCanTarget(bool value) override { canTarget = value; }
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-	virtual bool 				GetCanTarget() const override { return canTarget; }
 
 	/**Get the dialog key to lookup in dialog table for what the NPC will say when we begin to talk to it*/
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
@@ -170,6 +150,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Accessors")
 	int							GetCurrentPatrolIndex() const { return currentPatrolIndex; }
+
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "NPCMovement")
 	void						MoveToCurrentPatrolPoint();
 #pragma endregion

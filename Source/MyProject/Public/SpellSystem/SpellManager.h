@@ -47,11 +47,11 @@ struct FSpellInfo
 	FText							desc = FText(); 
 
 	//element
-	UPROPERTY(BlueprintReadOnly, Category = "Spell")
+	UPROPERTY(BlueprintReadOnly, Category = "Spell", meta = (Categories ="Combat.Element"))
 	FGameplayTag					elem;
 
 	//targetting rules
-	UPROPERTY(BlueprintReadOnly, Category = "Spell")
+	UPROPERTY(BlueprintReadOnly, Category = "Spell", meta = (Categories ="Skill.Targetting"))
 	FGameplayTag					targetting = UGameplayTagsManager::Get().RequestGameplayTag("Skill.Targetting.Enemy"); 
 
 	//spell range

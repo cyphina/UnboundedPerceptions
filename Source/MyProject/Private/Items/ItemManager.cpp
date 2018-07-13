@@ -22,17 +22,46 @@ UItemManager::UItemManager()
 
 FItemLookupRow* UItemManager::GetItemInfo(int itemID)
 {
+	#if UE_EDITOR
+		check(itemID > 0);
+	#endif
 	return reinterpret_cast<FItemLookupRow*>(itemLookupTable->FindRowUnchecked(*FString::FromInt(itemID)));
 }
 
 FEquipLookupRow* UItemManager::GetEquipInfo(int equipID)
 {
+	#if UE_EDITOR
+		check(equipID > 0);
+	#endif
 	return reinterpret_cast<FEquipLookupRow*>(equipLookupTable->FindRowUnchecked(*FString::FromInt(equipID)));
 }
 
 FConsumableLookupRow* UItemManager::GetConsumableInfo(int consumableID)
 {
+	#if UE_EDITOR
+		check(consumableID > 0);
+	#endif
 	return reinterpret_cast<FConsumableLookupRow*>(consumableLookupTable->FindRowUnchecked(*FString::FromInt(consumableID)));
+}
+
+FItemLookupRow* UItemManager::GetItemInfo(FName itemID)
+{
+	return reinterpret_cast<FItemLookupRow*>(itemLookupTable->FindRowUnchecked(itemID));
+}
+
+FEquipLookupRow* UItemManager::GetEquipInfo(FName equipID)
+{
+	return reinterpret_cast<FEquipLookupRow*>(equipLookupTable->FindRowUnchecked(equipID));
+}
+
+FConsumableLookupRow* UItemManager::GetConsumableInfo(FName consumableID)
+{
+	return reinterpret_cast<FConsumableLookupRow*>(consumableLookupTable->FindRowUnchecked(consumableID));
+}
+
+TArray<FName> UItemManager::GetAllConsumableIDs()
+{
+	return consumableLookupTable->GetRowNames();
 }
 
 void UItemManager::InitializeManager()

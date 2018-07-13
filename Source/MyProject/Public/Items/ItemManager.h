@@ -68,10 +68,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Item Data Accessor", meta = (DisplayName = "Get Consumable Info"))
 	FORCEINLINE FConsumableLookupRow* GetConsumableInfo(int consumableID);*/
 
-	FItemLookupRow* GetItemInfo(int itemID);
-	FEquipLookupRow* GetEquipInfo(int equipID);
-	FConsumableLookupRow* GetConsumableInfo(int consumableID);
+	inline FItemLookupRow* GetItemInfo(int itemID);
+	inline FEquipLookupRow* GetEquipInfo(int equipID);
+	inline FConsumableLookupRow* GetConsumableInfo(int consumableID);
 
+	inline FItemLookupRow* GetItemInfo(FName itemID);
+	inline FEquipLookupRow* GetEquipInfo(FName equipID);
+	inline FConsumableLookupRow* GetConsumableInfo(FName consumableID);
+	TArray<FName> GetAllConsumableIDs();
 private:
 	static UItemManager*					SingletonManager; //Our single spellmanager
 

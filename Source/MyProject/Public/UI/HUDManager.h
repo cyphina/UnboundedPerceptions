@@ -120,14 +120,14 @@ public:
 	 * @param interactingHero - If there's any hero that prompted this dialog, set the reference in basePlayer.  If it was played automatically, no need to set
 	 * @param onDialogEndTrigger - Trigger which will activate on dialog end.  Could be something game changing, or just open up another menu.
 	 */
-	void											AddHUD(FName conversationName, FTriggerData& onDialogEndTrigger = FTriggerData::defaultTrigger, ABaseHero* interactingHero = nullptr);
+	void											AddHUD(FName conversationName, TArray<FTriggerData> onDialogEndTrigger = TArray<FTriggerData>{FTriggerData::defaultTrigger}, ABaseHero* interactingHero = nullptr);
 
 	/**Variant of AddHUDDialog for text that not in the convesrsation table.
 	 * @param linesToDisplay - DialogInformation to pass in
 	 * @param interactingHero - If there's any hero that prompted this dialog, set the reference in basePlayer.  If it was played automatically, no need to set
 	 * @param onDialogEndTrigger - Trigger which will activate on dialog end.  Could be something game changing, or just open up another menu.  By default just does nothing
 	 */
-	void											AddHUD(TArray<FDialogData> linesToDisplay, FTriggerData& onDialogEndTrigger = FTriggerData::defaultTrigger,  ABaseHero* interactingHero = nullptr);
+	void											AddHUD(TArray<FDialogData> linesToDisplay, TArray<FTriggerData> onDialogEndTriggers = TArray<FTriggerData>{FTriggerData::defaultTrigger},  ABaseHero* interactingHero = nullptr);
 
 	/**Allows us to add a HUD that requires a backpack parameter (storageHUD).  
 	 * @param backpack - The backpack of the storage interactable or NPC
@@ -147,20 +147,26 @@ public:
 	virtual void									BP_AddHUD_Implementation(uint8 newState) { AddHUD(newState); }
 
 	/**Add dialog HUD by passing in a conversation name*/
-	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Hud Dialog with Topic", AutoCreateRefTerm = "onDialogEndTrigger"))
-	void											BP_AddHUDDialog(FName conversationName, FTriggerData& onDialogEndTrigger, ABaseHero* interacter) { AddHUD(conversationName, onDialogEndTrigger, interacter); }
+	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Hud Dialog with Topic", AutoCreateRefTerm = "onDialogEndTriggers"))
+	void											BP_AddHUDDialog(FName conversationName, UPARAM(ref) TArray<FTriggerData> onDialogEndTriggers, ABaseHero* interacter)
+	{
+		AddHUD(conversationName, onDialogEndTriggers, interacter);
+	}
 
 	/**Add dialog HUD by passing in dialogLines rather than reading off dialogTable*/
-	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Hud Dialog with Dialog Lines", AutoCreateRefTerm = "onDialogEndTrigger"))
-	void											BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, FTriggerData& onDialogEndTrigger, ABaseHero* interacter) { AddHUD(linesToDisplay, onDialogEndTrigger, interacter); }
+	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Hud Dialog with Dialog Lines", AutoCreateRefTerm = "onDialogEndTriggerS"))
+	void											BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, UPARAM(ref) TArray<FTriggerData> onDialogEndTriggers, ABaseHero* interacter)
+	{
+		AddHUD(linesToDisplay, onDialogEndTriggers, interacter);
+	}
 
 	/**Add the storage HUD by passing in a backpack with storage items*/
 	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Storage HUD"))
-	void											BP_AddHUDStorage(UBackpack* backpack, ABaseHero* interacter) { AddHUD(backpack); }
+	void											BP_AddHUDStorage(UBackpack* backpack, ABaseHero* interacter) { AddHUD(backpack, interacter); }
 
 	/**Add the shop HUD by passing in a shopkeeper NPC*/
 	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Shop HUD"))
-	void											BP_AddHUDShop(AShopNPC* shopNPC, ABaseHero* interacter) { AddHUD(shopNPC); }
+	void											BP_AddHUDShop(AShopNPC* shopNPC, ABaseHero* interacter) { AddHUD(shopNPC, interacter); }
 
 	UFUNCTION(BlueprintCallable, Category = "HUDManager")
 	bool											IsWidgetOnScreen(HUDs hudToCheck) const { return currentlyDisplayedWidgetsBitSet[static_cast<int>(hudToCheck)]; }

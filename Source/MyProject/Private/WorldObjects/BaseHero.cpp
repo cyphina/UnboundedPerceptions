@@ -6,6 +6,10 @@
 #include "UserInput.h"
 #include "BasePlayer.h"
 
+#include "UI/HUDManager.h"
+#include "Items/HeroInventory.h"
+#include "Items/EquipmentMenu.h"
+
 #include "BaseHero.h"
 #include "State/HeroStateMachine.h"
 
@@ -17,7 +21,6 @@
 #include "Items/Equip.h"
 #include "Items/Equipment.h"
 #include "Items/Consumable.h"
-
 
 #include "AbilitySystemComponent.h"
 #include "SpellSystem/MySpell.h"
@@ -31,7 +34,6 @@ const float ABaseHero::nextExpMultiplier = 1.5f;
 ABaseHero::ABaseHero(const FObjectInitializer& oI) : AAlly(oI)
 {	
 	isEnemy = false;
-	backpack = CreateDefaultSubobject<UBackpack>(FName("Backpack"));
 	state = TUniquePtr<HeroStateMachine>(new HeroStateMachine(this));
 
 	ConstructorHelpers::FObjectFinder<UMaterialParameterCollection> materialPC(TEXT("/Game/RTS_Tutorial/Materials/CelShade/LightSource"));
@@ -75,10 +77,11 @@ void ABaseHero::BeginPlay()
 	//Set light direction parameters
 	lightDirectionPV = GetWorld()->GetParameterCollectionInstance(lightSource);
 	//Default backpack size is 40 items
+	backpack = NewObject<UBackpack>(this, "Backpack");
 	backpack->SetItemMax(40);
 	//This is the size of the hero equipment array.  Could make this a class later 
 	equipment = NewObject<UEquipment>(this);
-	equipment->OnEquipped.BindUObject(this, &ABaseHero::SetupBonuses);
+	equipment->OnEquipped.BindUObject(this, &ABaseHero::OnEquipped);
 	
 #if UE_EDITOR
 	for(int i = 0; i < 70; i++)
@@ -93,6 +96,14 @@ void ABaseHero::BeginPlay()
 	for(FTriggerData& trigger : savedTriggers)
 	{
 		controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(trigger);
+	}
+
+	//TODO: Add all the item abilities to the abilitycomponent
+	for(FName id : UItemManager::Get().GetAllConsumableIDs())
+	{
+		TSubclassOf<UMySpell> itemAbilityClass = UItemManager::Get().GetConsumableInfo(id)->abilityClass;
+		if(IsValid(itemAbilityClass))
+			GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(itemAbilityClass.GetDefaultObject(),1));
 	}
 }
 
@@ -157,6 +168,11 @@ void ABaseHero::SetCurrentInteractable(AActor* interactable)
 		currentInteractable = nullptr;
 }
 
+TArray<int> ABaseHero::GetEquipment() const
+{
+	return equipment->GetEquips();
+}
+
 #pragma endregion
 
 #pragma region BaseCStuff
@@ -196,6 +212,42 @@ void ABaseHero::BeginInteract(AActor* interactor)
 	}
 }
 
+void ABaseHero::Equip(int equipSlot)
+{
+	int prevEquipInSlot = equipment->Equip(backpack->GetItem(equipSlot).id);
+	backpack->RemoveItemAtSlot(equipSlot);
+
+	if (prevEquipInSlot)
+		backpack->AddItem(FMyItem(prevEquipInSlot));
+
+	if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Equipment))
+		controllerRef->GetHUDManager()->GetEquipHUD()->Update();
+	if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Inventory))
+		controllerRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
+}
+
+void ABaseHero::Unequip(int unequipSlot)
+{
+	if(backpack->Count() < backpack->GetItemMax())
+	{
+		int itemID = equipment->GetEquips()[unequipSlot];
+		backpack->AddItem(FMyItem(itemID));
+		equipment->Unequip(unequipSlot);
+	}
+
+	if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Equipment))
+		controllerRef->GetHUDManager()->GetEquipHUD()->Update();
+	if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Inventory))
+		controllerRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
+}
+
+void ABaseHero::SwapEquip(int equipSlot1, int equipSlot2)
+{
+	equipment->SwapEquips(equipSlot1, equipSlot2);
+	if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Equipment))
+		controllerRef->GetHUDManager()->GetEquipHUD()->Update();
+}
+
 void ABaseHero::BeginUseItem(int itemToUseID)
 {
 	SetCurrentItem(itemToUseID);
@@ -203,7 +255,9 @@ void ABaseHero::BeginUseItem(int itemToUseID)
 	TSubclassOf<UMySpell> itemAbility = UItemManager::Get().GetConsumableInfo(itemToUseID)->abilityClass;
 	PressedCastSpell(itemAbility);
 	if (itemAbility.GetDefaultObject()->GetTargetting() != FGameplayTag::RequestGameplayTag("Skill.Targetting.None"))
+	{
 		controllerRef->SetSecondaryCursor(ECursorStateEnum::Item);
+	}
 }
 
 void ABaseHero::PrepareInteract()
@@ -221,18 +275,20 @@ void ABaseHero::PrepareInteract()
 	}
 }
 
-void ABaseHero::UseItem()
+void ABaseHero::UseItem(int itemID)
 {
-	if (currentItem)
-	{
-		PreCastChannelingCheck(UItemManager::Get().GetConsumableInfo(currentItem)->abilityClass);
-	}
+	//TODO: removes first instance for now
+	if(UItemManager::Get().GetItemInfo(itemID)->itemType.GetTagName() != "Item.Consumeable.Utility.Reusable")
+		backpack->RemoveItem(FMyItem(itemID));
+
+	if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Inventory))
+		controllerRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
 }
 #pragma endregion
 
 #pragma region equipment
 
-void ABaseHero::SetupBonuses(int equipID, bool isEquip)
+void ABaseHero::OnEquipped(int equipID, bool isEquip)
 {
 	FEquipLookupRow* e = UItemManager::Get().GetEquipInfo(equipID);
 
@@ -241,22 +297,22 @@ void ABaseHero::SetupBonuses(int equipID, bool isEquip)
 		int bonusValue = static_cast<uint8>(e->bonuses[i]); 
 		if (bonusValue < CombatInfo::AttCount)
 		{
-			baseC->GetAttribute(bonusValue)->SetCurrentValue(GetAttributeBaseValue(bonusValue) + (2 * isEquip - 1)*e->bonusValues[i]);
+			baseC->GetAttribute(bonusValue)->SetCurrentValue(GetAttributeAdjValue(bonusValue) + (2 * isEquip - 1)*e->bonusValues[i]);
 		}
 		else if (bonusValue >= CombatInfo::AttCount && bonusValue < CombatInfo::AttCount + CombatInfo::StatCount)
 		{
 			int index = bonusValue - CombatInfo::AttCount;
-			baseC->GetSkill(index)->SetBuffValue(GetSkillBaseValue(index) + (2 * isEquip - 1)*e->bonusValues[i]);
+			baseC->GetSkill(index)->SetBuffValue(GetSkillAdjValue(index) + (2 * isEquip - 1)*e->bonusValues[i]);
 		}
 		else if (bonusValue >= CombatInfo::AttCount + CombatInfo::StatCount && bonusValue < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount)
 		{
 			int index = bonusValue - CombatInfo::AttCount - CombatInfo::StatCount;
-			baseC->GetVital(index)->SetBuffValue(GetVitalBaseValue(index) + (2 * isEquip - 1)*e->bonusValues[i]);
+			baseC->GetVital(index)->SetBuffValue(GetVitalAdjValue(index) + (2 * isEquip - 1)*e->bonusValues[i]);
 		}
 		else
 		{
 			int index = bonusValue - CombatInfo::AttCount - CombatInfo::StatCount - CombatInfo::VitalCount;
-			baseC->GetMechanic(index)->SetCurrentValue(GetMechanicBaseValue(index) + (2 * isEquip - 1) * e->bonusValues[i]);
+			baseC->GetMechanic(index)->SetCurrentValue(GetMechanicAdjValue(index) + (2 * isEquip - 1) * e->bonusValues[i]);
 		}
 	}
 }
@@ -266,6 +322,15 @@ void ABaseHero::Stop()
 	Super::Stop();
 	currentInteractable = nullptr;
 	currentItem = 0;
+}
+
+bool ABaseHero::CastSpell(TSubclassOf<UMySpell> spellToCast)
+{
+	int itemID = currentItem;
+	bool sucessfulCast = Super::CastSpell(spellToCast);
+	if(itemID && sucessfulCast)
+		UseItem(itemID);
+	return sucessfulCast;
 }
 
 void ABaseHero::SetSelected(bool value)

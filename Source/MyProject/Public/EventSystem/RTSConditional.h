@@ -5,7 +5,7 @@
 #include "RTSConditional.generated.h"
 
 /**
- *The conditional is like a function object that returns a bool
+ *The conditional is like a function object that returns a bool.  Used with bools whose state is stored in global managers
  */
 
 class UConditionalManager;

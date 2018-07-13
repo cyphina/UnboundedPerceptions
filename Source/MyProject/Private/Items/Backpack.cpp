@@ -193,18 +193,18 @@ void UBackpack::TransferItems(UBackpack* otherPack, int transferSlot)
 
 void UBackpack::SwapItems(UBackpack* otherPack, int slot1, int slot2)
 {
-	if (otherPack->items.IsAllocated(slot1))
+	if (otherPack->items.IsAllocated(slot2))
 	{
-		if (items.IsAllocated(slot2)) //if there's an item in the slot we want to swap
+		if (items.IsAllocated(slot1)) //if there's an item in the slot we want to swap
 		{
-			FMyItem item1 = otherPack->items[slot1];
-			items[slot1] = items[slot2];
-			items[slot2] = item1;
+			FMyItem itemFromOtherPack = otherPack->items[slot2];
+			otherPack->items[slot2] = items[slot1];
+			items[slot1] = itemFromOtherPack;
 		}
 		else //if not, just insert an item there
 		{
-			items.Insert(slot2, otherPack->items[slot1]);
-			otherPack->items.RemoveAt(slot1);	
+			items.Insert(slot1, otherPack->items[slot2]);
+			otherPack->EmptySlot(slot2);
 		}
 	}
 }

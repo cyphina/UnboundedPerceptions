@@ -65,7 +65,8 @@ void AUserInput::BeginPlay()
 			heroesInWorld.Add(*heroItr);
 		}
 
-		basePlayer->UpdateParty(heroesInWorld);
+		if(heroesInWorld.Num() > 0)
+			basePlayer->UpdateParty(heroesInWorld);
 	}
 	//Super Beginplay calls the blueprint BeginPlay 
 	hudManager = GetWorld()->SpawnActor<AHUDManager>(AHUDManager::StaticClass(), FTransform(), FActorSpawnParameters());
@@ -203,10 +204,9 @@ void AUserInput::TabNextAlly()
 
 void AUserInput::ClearSelectedAllies()
 {
-	for(AAlly* ally : basePlayer->selectedAllies)
-	{
-		ally->SetSelected(false);
-	}
+	while(basePlayer->selectedAllies.Num() > 0)
+		basePlayer->selectedAllies[0]->SetSelected(false);
+	
 	basePlayer->focusedUnit = nullptr;
 	OnAllyDeselectedDelegate.Broadcast();
 }

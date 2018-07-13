@@ -13,6 +13,7 @@
 #include "WorldObjects/NPC.h"
 #include "WorldObjects/Unit.h"
 #include "WorldObjects/BaseHero.h"
+#include "Interactables/InteractableBase.h"
 
 FTriggerData FTriggerData::defaultTrigger = FTriggerData();
 
@@ -35,6 +36,7 @@ void UTriggerManager::AddTriggerToRecords(FName worldObjectName, const FTriggerD
 void UTriggerManager::ActivateTrigger(UPARAM(ref) FTriggerData& triggerData)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("TRIGGER ACTIVATED!"));
+	
 	if (triggerData.enabled)
 	{
 		if (triggerData.numCalls != 0)
@@ -74,6 +76,15 @@ void UTriggerManager::OpenHUDTrigger(const FTriggerData& tdata)
 	checkf(tdata.triggerValues[0].IsNumeric(), TEXT("OPENHUDTRIGGER triggerValue should be numeric"))
 	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, tdata.triggerValues[0]);
 	cpcRef->GetHUDManager()->AddHUD(FCString::Atoi(*tdata.triggerValues[0]));
+}
+
+void UTriggerManager::OpenHUDTriggerStorage(const FTriggerData& tdata)
+{
+	checkf(tdata.triggerObjects.Num() == 1 && tdata.triggerValues.Num() == 2, TEXT("Incorrect parameters for OPENHUDTRIGGER"))
+	checkf(tdata.triggerValues[0].IsNumeric(), TEXT("OPENHUDTRIGGER triggerValue should be numeric"))
+	//if(AInteractableBase* interactable = ResourceManager::FindTriggerObjectInWorld<AInteractableBase>(tdata.triggerObjects[0], cpcRef->GetWorld()))
+		//if(ABaseHero* heroRef = ResourceManager::FindTriggerObjectInWorld<ABaseHero>(tdata.triggerObjects[1], cpcRef->GetWorld()))
+			//cpcRef->GetHUDManager()->AddHUD(int);
 }
 
 void UTriggerManager::ChangeParty(const FTriggerData& tdata)
@@ -144,12 +155,14 @@ bool UTriggerManager::CompleteQuestGoal(const FTriggerData& tdata)
 void UTriggerManager::DisplayDialog(const FTriggerData& tdata)
 {
 	TArray<FDialogData> dialog;
-	int index = 1;
-	for(int i = 0; i < tdata.triggerValues.Num() - 1; ++i)
+
+	if (tdata.triggerValues.Num() > 1)
 	{
-		TArray<int> nextIndices = {i};
-		dialog.Emplace(nextIndices, FText::FromString(tdata.triggerValues[i]), "");
-		++index;
+		for (int i = 0; i < tdata.triggerValues.Num() - 1; ++i)
+		{
+			TArray<int> nextIndices = { i+1 };
+			dialog.Emplace(nextIndices, FText::FromString(tdata.triggerValues[i]), "");
+		}
 	}
 	dialog.Emplace(TArray<int>(), FText::FromString(tdata.triggerValues[tdata.triggerValues.Num() - 1]), "");
 	cpcRef->GetHUDManager()->AddHUD(dialog);

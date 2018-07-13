@@ -19,9 +19,9 @@ class MYPROJECT_API AIntimateNPC : public ANPC
 {
 	GENERATED_BODY()
 
-	int							relationshipPoints;
+	int							relationshipPoints = 0;
 	int							currentRelationshipEventIndex = 0;
-	ARTSGameMode*				gameModeRef;
+	ARTSGameMode*				gameModeRef = nullptr;
 
 	/** Point values at which events occur*/
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))

@@ -25,7 +25,7 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
 
 	///<summary> Level Names </summary>
 	const FString				startingLevelName = "StartMap";
-	const FString				theIntroduction = "TheIntroduction";
+	const FString				theIntroduction = "SylphiaApartment";
 	
 	/**Stores the currently loaded level name*/
 	UPROPERTY(BlueprintReadWrite, Category = "Levels", Meta = (AllowPrivateAccess = "true"))
