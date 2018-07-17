@@ -135,13 +135,7 @@ public:
 	 *Get the interactable this hero is targetted to interact with
 	 */
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Interactable")
-	FORCEINLINE UObject*					GetCurrentInteractable() const;
-
-	/**
-	 *Set the interactable this hero is targetted to interact with
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Interactable")
-	void									SetCurrentInteractable(AActor* interactable);
+	FORCEINLINE AActor*						GetCurrentInteractable() const;
 
 	/**
 	 *Get a copy of our spellbook
@@ -228,7 +222,7 @@ private:
 
 	///--References--
 	ABasePlayer*				player; //reference to our player class, which has information on our team
-	IInteractable*				currentInteractable; //reference to the interactable which we are trying to interact with						
+	AActor*				currentInteractable; //reference to the interactable which we are trying to interact with						
 	int							currentItem = 0; //id of the item that is going to be used by this character
 	
 	///--Lighting effect--

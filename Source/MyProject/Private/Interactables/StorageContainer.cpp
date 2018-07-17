@@ -10,6 +10,9 @@
 
 AStorageContainer::AStorageContainer() : AInteractableBase()
 {
+	scene = CreateDefaultSubobject<USceneComponent>(FName("Scene"));
+	SetRootComponent(scene);
+
 	interactableMesh = CreateDefaultSubobject<UStaticMeshComponent>(FName("Mesh"));
 	interactableMesh->SetupAttachment(RootComponent);
 	interactableMesh->SetCollisionProfileName("Interactable");
@@ -33,8 +36,20 @@ void AStorageContainer::BeginPlay()
 
 void AStorageContainer::Interact_Implementation(ABaseHero* hero)
 {
-	controllerRef->GetHUDManager()->AddHUD(backpack, hero);
+	if(CanInteract_Implementation())
+		controllerRef->GetHUDManager()->AddHUD(backpack, hero);
 }
+
+bool AStorageContainer::CanInteract_Implementation()
+{
+	return Super::CanInteract_Implementation();
+}
+
+FVector AStorageContainer::GetInteractableLocation_Implementation()
+{
+	return Super::GetInteractableLocation_Implementation();
+}
+
 
 void AStorageContainer::OnLeaveRange(UPrimitiveComponent* overlappedComp, AActor* otherActor,
 	UPrimitiveComponent* otherComp, int otherBodyIndex)

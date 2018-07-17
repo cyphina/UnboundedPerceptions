@@ -20,6 +20,8 @@ class MYPROJECT_API AStorageContainer : public AInteractableBase
 	GENERATED_BODY()
 
 	AUserInput*						controllerRef = nullptr;
+
+	UPROPERTY()
 	UBackpack*						backpack = nullptr;
 
 public:
@@ -28,6 +30,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FMyItem>					initialItems;
+
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* 				scene;
 
 	/*Mesh of the container*/
 	UPROPERTY(VisibleAnywhere)
@@ -39,6 +44,11 @@ public:
 
 
 	void							BeginPlay() override;
+
 	void							Interact_Implementation(ABaseHero* hero) override;
+	bool							CanInteract_Implementation() override;
+	FVector							GetInteractableLocation_Implementation() override;
+
+	UFUNCTION()
 	void							OnLeaveRange(UPrimitiveComponent* overlappedComp, AActor* otherActor, UPrimitiveComponent* otherComp, int otherBodyIndex);
 };

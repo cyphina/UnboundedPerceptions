@@ -115,7 +115,5 @@ struct FMyItem
 
 	FMyItem() {}
 	explicit FMyItem(int id, int count = 1) : id(id), count(count) {}
-	~FMyItem() {}
-
 	bool operator()() const { return id > 0; }
 };

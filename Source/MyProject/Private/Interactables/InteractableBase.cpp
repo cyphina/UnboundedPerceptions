@@ -51,7 +51,7 @@ void AInteractableBase::SetGameName(FText value)
 
 void AInteractableBase::Interact_Implementation(ABaseHero* hero)
 {
-	if(CanInteract_Implementation())
+	if(IInteractable::Execute_CanInteract(this)) //calls Interact on decorator in the process
 		return;
 }
 

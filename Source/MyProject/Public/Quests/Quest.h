@@ -86,25 +86,25 @@ struct FGoalInfo
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Metadata")
 	EGoalType						goalType;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Metadata")
-	EGoalState						goalState;
+	UPROPERTY(BlueprintReadOnly, Category = "Goal Metadata")
+	EGoalState						goalState = EGoalState::lockedGoal;
 	/**Custom goal will have a specific trigger to succeed.  It can also be used to give the goal a custom description*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Metadata")
 	bool							isCustomGoal;
 	/**Goal's description*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
 	FText							goalText;
-	/**Name used for various things
-	 *If the goalType is hunting, this is the name of one monster to hunt (at least for this goal)
-	 *If the goalType is finding, this is the item you should have in your inventory
-	 *If the goalType is talking, this is the NPC you need to talk to
-	 *If the goalType is custom, we can use this for something else (identifier for this goal so that trigger can complete it)
+	/**Names used for various things
+	 *If the goalType is hunting, this is the type name of the monster to hunt 
+	 *If the goalType is finding, this is the item you should find (index 0) and then the NPC to turn it into (index 1)
+	 *If the goalType is talking, this is the NPC you need to talk to (index 0), and the dialog topic to talk about (index 1)
+	 *If the goalType is custom, we can use this for something else (identifier for this goal so that a trigger can complete it)
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
 	TArray<FText>					additionalNames;
 	/**If this quest requires some numerical value representing how many (how many to hunt/gather/interact)*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
-	int								amount;
+	int								amount = 0;
 	/**Do we update the quest description after this goal is completed?*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
 	bool							shouldUpdateQuestDescription;
@@ -120,9 +120,12 @@ struct FGoalInfo
 	/**If we finish this goal the quest will be done*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
 	bool							canCompleteQuest;
-	/**Should any triggers be run when this goal is over?*/
+	/**Should any triggers be run when this goal begins?*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
-	TArray<FTriggerData>			goalTriggers;
+	TArray<FTriggerData>			prevGoalTriggers;
+		/**Should any triggers be run when this goal is over?*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
+	TArray<FTriggerData>			afterGoalTriggers;
 	/**Do we have a location tracker on the minimap?*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Minimap")
 	bool							shouldUseRadius;
@@ -138,7 +141,7 @@ struct FGoalInfo
 
 	bool operator==(const FGoalInfo& otherGoal) const
 	{
-		return goalText.EqualTo(otherGoal.goalText);
+		return goalText.EqualTo(otherGoal.goalText) && goalState == otherGoal.goalState;
 	}
 };
 //struct for possible quest rewards
@@ -228,6 +231,11 @@ class MYPROJECT_API AQuest : public AInfo
 	 */
 	void							UpdateSubGoals();
 
+	/**
+	 *Called at spawn time to find out how many items already obtained for find type goal
+	 */
+	void							FindInitialItemAmount(int goalIndex);
+
 public:
 	/**
 	 *Goals currently in progress
@@ -246,12 +254,6 @@ public:
 	 */
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Information")
 	FQuestInfo						questInfo; 
-
-	/**
-	 *Triger that runs when the quest starts
-	 */
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Information")
-	TArray<FTriggerData> 			questBeginTrigger;
 
 	UFUNCTION()
 	void							BeginPlay() override;
@@ -276,6 +278,8 @@ public:
 
 	/**
 	 *Initiates completion of a subgoal
+	 *@param goalIndex - Index of the goal in quest subgoal array
+	 *@param fail - Whether this goal failed or not
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Updating")
 	void							CompleteSubGoal(int goalIndex, bool fail); 

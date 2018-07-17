@@ -37,16 +37,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Accessors")
 	void					SetGameName(FText value) final override;
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interactable")
-	void 					Interact(ABaseHero* hero);
-	void					Interact_Implementation(ABaseHero* hero) override;
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interactable")
-	FVector 				GetInteractableLocation();
-	FVector					GetInteractableLocation_Implementation() override;
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Interactable")
-	bool 					CanInteract();
+	void 					Interact_Implementation(ABaseHero* hero) override;
+	FVector 				GetInteractableLocation_Implementation() override;
 	bool 					CanInteract_Implementation() override;
 
 };

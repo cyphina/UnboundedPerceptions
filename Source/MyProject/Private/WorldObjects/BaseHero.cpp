@@ -154,18 +154,9 @@ void ABaseHero::SetCurrentExp(int amount)
 	}
 }
 
-UObject* ABaseHero::GetCurrentInteractable() const
+AActor* ABaseHero::GetCurrentInteractable() const
 {
-	return Cast<UObject>(currentInteractable);
-}
-
-void ABaseHero::SetCurrentInteractable(AActor* interactable)
-{
-	IInteractable* interactor = Cast<IInteractable>(interactable);
-	if (interactor)
-		currentInteractable = interactor;
-	else
-		currentInteractable = nullptr;
+	return Cast<AActor>(currentInteractable);
 }
 
 TArray<int> ABaseHero::GetEquipment() const
@@ -205,10 +196,10 @@ void ABaseHero::ChangeAttribute(Attributes att, bool isIncrementing)
 
 void ABaseHero::BeginInteract(AActor* interactor)
 {
-	if (IInteractable* intractable = Cast<IInteractable>(interactor))
+	if(interactor->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
 	{
 		state->ChangeState(EUnitState::STATE_INTERACTING);
-		currentInteractable = intractable;
+		currentInteractable = interactor;
 	}
 }
 
@@ -265,11 +256,10 @@ void ABaseHero::PrepareInteract()
 	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Black, FString("Interacting ") + GetGameName().ToString());
 	if (!IsStunned() && currentInteractable)
 	{
-		FVector targetLoc = currentInteractable->GetInteractableLocation_Implementation();
+		FVector targetLoc = IInteractable::Execute_GetInteractableLocation(currentInteractable);
 		if (AdjustPosition(interactRange, targetLoc))
 		{
-			AActor* interactor = Cast<AActor>(currentInteractable);
-			currentInteractable->Execute_Interact(interactor, this);
+			IInteractable::Execute_Interact(currentInteractable, this);
 			Stop();
 		}
 	}

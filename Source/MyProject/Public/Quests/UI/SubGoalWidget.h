@@ -18,20 +18,20 @@ class MYPROJECT_API USubGoalWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-	//information about the goal the widget is displaying
+	/**Information about the goal the widget is displaying*/
 	UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "Info")
 		FGoalInfo goalInfo;
 	
-	//quest this goal belongs to
+	/**Quest this goal belongs to*/
 	UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "Info")
 		AQuest* assignedQuest;
 
-	//corresponding questSlotWidget this goal widget is a part of
+	/**Corresponding questSlotWidget this goal widget is a part of*/
 	UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "Info")
 		UQuestListSlot* questSlotWidget;
 
-	//index of what subgoal this is in the quest
-	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "Info")
+	/**Index of what subgoal this is in the quest*/
+	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "Info")
 		int goalIndex;
 
 public:
