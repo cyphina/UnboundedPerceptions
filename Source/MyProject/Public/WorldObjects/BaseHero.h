@@ -196,7 +196,6 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	USpellBook*					spellbook;
 
-	
 private:
 	/**
 	 *see if some object is in front of us so we know its casting a shadow upon us

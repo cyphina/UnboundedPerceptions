@@ -173,6 +173,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Stats")
 	void							 UpdateStats(); //call whenever stats get changed
 
+	/**
+	 * Allows us to apply some bonuses to this hero's stat
+	 * @param hero - Hero to apply bonus to
+	 * @param category - int representing what stat to modify
+	 * @param value - value to modify the stat by
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Helper")
+	void					ApplyBonuses(int category, int value);
 #pragma endregion
 
 #pragma endregion

@@ -636,3 +636,26 @@ bool AUnit::IsSilenced() const
 {
 	return GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff.Silenced")) ?  true : false;
 }
+
+void AUnit::ApplyBonuses(int category, int value)
+{
+	if (category < CombatInfo::AttCount)
+	{
+		baseC->GetAttribute(category)->SetCurrentValue(GetAttributeAdjValue(category) + value);
+	}
+	else if (category >= CombatInfo::AttCount && category < CombatInfo::AttCount + CombatInfo::StatCount)
+	{
+		int index = category - CombatInfo::AttCount;
+		baseC->GetSkill(index)->SetBuffValue(GetSkillAdjValue(index) + value);
+	}
+	else if (category >= CombatInfo::AttCount + CombatInfo::StatCount && category < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount)
+	{
+		int index = category - CombatInfo::AttCount - CombatInfo::StatCount;
+		baseC->GetVital(index)->SetBuffValue(GetVitalAdjValue(index) + value);
+	}
+	else
+	{
+		int index = category - CombatInfo::AttCount - CombatInfo::StatCount - CombatInfo::VitalCount;
+		baseC->GetMechanic(index)->SetCurrentValue(GetMechanicAdjValue(index) + value);
+	}
+}

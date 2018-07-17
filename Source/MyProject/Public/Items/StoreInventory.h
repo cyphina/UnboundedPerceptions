@@ -17,10 +17,14 @@ class MYPROJECT_API UStoreInventory : public UInventory
 {
 	GENERATED_BODY()
 
-public:
-	UPROPERTY(BlueprintReadOnly)
-	AShopNPC* shopkeeper;
+	static FText			NotEnoughItemsText;
+	static FText			NotEnoughMoneyText;
 
-	void	UseItemAtInventorySlot_Implementation(int32 iSlot) override;
+public:
+
+	UPROPERTY(BlueprintReadOnly)
+	AShopNPC*				shopkeeper;
+
+	void					UseItemAtInventorySlot_Implementation(int32 iSlot) override;
 	
 };

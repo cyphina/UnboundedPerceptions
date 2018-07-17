@@ -42,6 +42,7 @@ public:
 	void										BeginPlay() override;
 
 	/**Backpack containing the items that the shopkeeper will sell and how many the shopkeeper can sell*/
+	UPROPERTY()
 	UBackpack*									itemsToSellBackpack;
 
 	UPROPERTY(EditAnywhere, Category =  "Shop Items")

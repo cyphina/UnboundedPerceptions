@@ -100,12 +100,25 @@ void ANPC::Interact_Implementation(ABaseHero* hero)
 		{
 			controllerRef->GetHUDManager()->GetSocialWindow()->SetNPC(this);
 			SetupAppropriateView();
-			controllerRef->GetHUDManager()->AddHUD(conversationStarterName, TArray<FTriggerData>{onDialogEndTriggerData}, currentlyTalkingHero);
+			if(conversationStarterName != "")
+				controllerRef->GetHUDManager()->AddHUD(conversationStarterName, TArray<FTriggerData>{onDialogEndTriggerData}, currentlyTalkingHero);
+			else
+				//they shouldnt have time to talk but not start with some kind of conversation starter
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("FORGOT TO SET A CONVERSATION STARTER!!!"));
 		}
 		else
+		{
 			//Just close dialog screen after we're finished talking
-			controllerRef->GetHUDManager()->AddHUD(conversationStarterName, TArray<FTriggerData>{FTriggerData::defaultTrigger}, currentlyTalkingHero);
-
+			if(conversationStarterName != "")
+				controllerRef->GetHUDManager()->AddHUD(conversationStarterName, TArray<FTriggerData>{FTriggerData::defaultTrigger}, currentlyTalkingHero);
+			else
+			{
+				//if there was no entry for conversationStarterName, just display a default one
+				controllerRef->GetHUDManager()->AddHUD(TArray<FDialogData>{
+					FDialogData({ 0 }, NSLOCTEXT("NPCDialog", "Default", "This person is silent..."), FName())
+				}, TArray<FTriggerData>{onDialogEndTriggerData}, currentlyTalkingHero);
+			}
+		}
 		controllerRef->GetGameMode()->GetQuestManager()->OnTalkNPC(this, FGameplayTag());
 		AddConversedDialog(conversationStarterName);
 	}

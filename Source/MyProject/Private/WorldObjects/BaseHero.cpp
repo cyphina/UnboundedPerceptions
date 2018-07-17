@@ -281,29 +281,9 @@ void ABaseHero::UseItem(int itemID)
 void ABaseHero::OnEquipped(int equipID, bool isEquip)
 {
 	FEquipLookupRow* e = UItemManager::Get().GetEquipInfo(equipID);
-
-	for (int i = 0; i < e->bonuses.Num(); ++i)
+	for(int i = 0; i < e->bonuses.Num(); ++i)
 	{
-		int bonusValue = static_cast<uint8>(e->bonuses[i]); 
-		if (bonusValue < CombatInfo::AttCount)
-		{
-			baseC->GetAttribute(bonusValue)->SetCurrentValue(GetAttributeAdjValue(bonusValue) + (2 * isEquip - 1)*e->bonusValues[i]);
-		}
-		else if (bonusValue >= CombatInfo::AttCount && bonusValue < CombatInfo::AttCount + CombatInfo::StatCount)
-		{
-			int index = bonusValue - CombatInfo::AttCount;
-			baseC->GetSkill(index)->SetBuffValue(GetSkillAdjValue(index) + (2 * isEquip - 1)*e->bonusValues[i]);
-		}
-		else if (bonusValue >= CombatInfo::AttCount + CombatInfo::StatCount && bonusValue < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount)
-		{
-			int index = bonusValue - CombatInfo::AttCount - CombatInfo::StatCount;
-			baseC->GetVital(index)->SetBuffValue(GetVitalAdjValue(index) + (2 * isEquip - 1)*e->bonusValues[i]);
-		}
-		else
-		{
-			int index = bonusValue - CombatInfo::AttCount - CombatInfo::StatCount - CombatInfo::VitalCount;
-			baseC->GetMechanic(index)->SetCurrentValue(GetMechanicAdjValue(index) + (2 * isEquip - 1) * e->bonusValues[i]);
-		}
+		ApplyBonuses(static_cast<uint8>(e->bonuses[i]), e->bonusValues[i] * (2 * isEquip - 1));
 	}
 }
 

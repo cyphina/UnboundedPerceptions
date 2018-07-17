@@ -23,7 +23,7 @@ enum class ETriggerType : uint8
 	None, 
 	/** Given an NPC name (object 1), changes dialog of topic (value 1 (is a fully qualified gameplaytag name)) to dialog name (value 2).  If (value2) empty, then changes default dialog to dialogName (value1)*/
 	ChangeDialog, 
-	/** For each object, assumes object is a unit.  Changes Stat (data N) (ordered numerically by stats, skills, vitals, mechanics) by adding (data N+1) to it*/
+	/** For each object, assumes object is a unit.  Changes Stat (value N) (ordered numerically by stats, skills, vitals, mechanics) by adding (value N+1) to it*/
 	ModifyStats, 
 	/** Takes one TriggerValue denoting the hud to be opened enum value corresponding int value.  Look at HUDManager for HUDs enum and corresponding int values */
 	OpenHUDTrigger,

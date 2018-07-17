@@ -67,7 +67,8 @@ void UTriggerManager::ModifyStats(const FTriggerData& tdata)
 {
 	check(tdata.triggerObjects.Num() == 1 && tdata.triggerValues.Num() <= 2)
 	if (AUnit* unit = ResourceManager::FindTriggerObjectInWorld<AUnit>(tdata.triggerObjects[0], cpcRef->GetWorld()))
-		return;
+	for(int i = 0; i < tdata.triggerValues.Num(); i+=2)
+		unit->ApplyBonuses(FCString::Atoi(*tdata.triggerValues[i]), FCString::Atoi(*tdata.triggerValues[i+1]));
 }
 
 void UTriggerManager::OpenHUDTrigger(const FTriggerData& tdata)
