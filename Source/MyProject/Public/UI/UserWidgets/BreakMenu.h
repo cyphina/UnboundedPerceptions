@@ -19,7 +19,7 @@ class MYPROJECT_API UBreakMenu : public UMyDraggableWidget
 	
 public: 
 
-	void						Construct_Implementation() override;
+	void						NativeConstruct() override;
 
 private:
 

@@ -23,7 +23,7 @@
  *chain decorators together.  Don't add more of the same type since it's not necessary.
  */
 
-UCLASS(DefaultToInstanced, EditInlineNew)
+UCLASS(BlueprintType, Blueprintable, DefaultToInstanced, EditInlineNew)
 class MYPROJECT_API UInteractableActorDecoratorBase : public UObject
 {
 	GENERATED_BODY()

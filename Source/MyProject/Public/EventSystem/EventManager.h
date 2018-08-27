@@ -11,8 +11,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChapterCompleted, FGameplayTag, c
 
 class ARTSGameMode;
 
-UCLASS()
-class MYPROJECT_API UEventManager : public UActorComponent
+UCLASS(BlueprintType, Blueprintable)
+class MYPROJECT_API UEventManager : public UObject
 {
 	GENERATED_BODY()
 
@@ -27,12 +27,15 @@ class MYPROJECT_API UEventManager : public UActorComponent
 
 	int						currentChapter = 1;
 	int						currentSection = 1;
-	 
-	ARTSGameMode*			gameModeRef = nullptr;
+
+
 
 public:
 
 	void					Init();
+
+	UPROPERTY(BlueprintReadOnly)
+	ARTSGameMode*			gameModeRef = nullptr;
 
 	/**List of all the chapters, sections, and triggers when moving to a new section*/
 	UPROPERTY(EditAnywhere, Category = "Effect Data")
@@ -52,5 +55,4 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessor")
 	FGameplayTag			GetCurrentSection() const { return storybook->chapters[currentChapter-1].sections[currentSection-1].sectionTitle; }
-
 };

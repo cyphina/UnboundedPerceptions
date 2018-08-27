@@ -57,7 +57,6 @@ public:
 	void									Die() override;
 #pragma endregion
 
-	UFUNCTION(BlueprintCallable, Category = "Accessors")
 	void									SetSelected(bool value) override;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Vision")

@@ -17,6 +17,7 @@
 
 #include "Items/ItemManager.h"
 #include "WorldObjects/BaseHero.h"
+#include "Interactables/NamedInteractableDecorator.h"
 
 FVector const FGoalInfo::invalidGoalLocation = FVector(-66666, -66666, -66666);
 
@@ -25,9 +26,11 @@ void AQuest::BeginPlay()
 	int num = 0;
 	for(FGoalInfo goal : questInfo.subgoals)
 	{
-		if (goal.amount > 1)
+		if (goal.amount > 1) 
 		{
-			currentAmounts.Add(num,0); 	
+			currentAmounts.Add(num,0);
+			if(goal.goalType == EGoalType::Interact)
+				interactedActors.Add(num, TArray<UNamedInteractableDecorator*>());
 		}
 		++num;
 	}
@@ -179,10 +182,10 @@ FGoalInfo AQuest::GetGoalAtIndex(int goalIndex)
 
 FText AQuest::MakeGoalText(AQuest* assignedQuest, FGoalInfo goalInfo, int goalIndex)
 {
-	FFormatOrderedArguments args;
-	checkf(goalInfo.additionalNames.Num() > 0, TEXT("%s"), *goalInfo.goalText.ToString())
 	if (!goalInfo.isCustomGoal)
 	{
+		FFormatOrderedArguments args;
+		checkf(goalInfo.additionalNames.Num() > 0, TEXT("%s"), *goalInfo.goalText.ToString())
 		switch (goalInfo.goalType)
 		{
 		case EGoalType::Hunt:

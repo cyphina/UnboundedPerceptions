@@ -43,7 +43,7 @@ bool UQuestManager::AddNewQuest(TSubclassOf<AQuest> questClassToSpawn, bool forc
 		AQuest* quest = questListRef->GetWorld()->SpawnActorDeferred<AQuest>(questClassToSpawn.Get(), FTransform(), nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
 		quest->SetQuestManagerRef(this);
-		UGameplayStatics::FinishSpawningActor(quest, FTransform());
+		quest->FinishSpawning(FTransform());
 		quests.Add(quest);
 		quest->SetupStartingGoals();
 		questListRef->AddToQuestList(quest);
@@ -288,7 +288,7 @@ void UQuestManager::OnInteracted(UNamedInteractableDecorator* interactable)
 			if (goal.goalType == EGoalType::Interact && interactable->GetName().EqualTo(goal.additionalNames[0]))
 			{
 				//If we have interacted with enough of these objects, complete the goal
-				if (goal.amount < 2 || quest->currentAmounts[quest->GetCurrentGoalIndices()[currentGoalIndex]] + 1 >= goal.amount)
+				if (goal.amount < 2)
 				{
 					quest->CompleteSubGoal(quest->GetCurrentGoalIndices()[currentGoalIndex], false);
 					return;
@@ -296,8 +296,19 @@ void UQuestManager::OnInteracted(UNamedInteractableDecorator* interactable)
 				//If we haven't just update the count
 				else
 				{
-					++quest->currentAmounts[quest->GetCurrentGoalIndices()[currentGoalIndex]];
-					questListRef->GetQuestListSlot(quest)->UpdateQuestEntry();	
+					//If we haven't interacted with this interactable yet
+					if(quest->interactedActors[quest->GetCurrentGoalIndices()[currentGoalIndex]].Find(interactable) == INDEX_NONE)
+					{
+						if(quest->currentAmounts[quest->GetCurrentGoalIndices()[currentGoalIndex]] + 1 >= goal.amount)
+						{
+							quest->CompleteSubGoal(quest->GetCurrentGoalIndices()[currentGoalIndex], false);
+							return;
+						}
+
+						++quest->currentAmounts[quest->GetCurrentGoalIndices()[currentGoalIndex]];
+						questListRef->GetQuestListSlot(quest)->UpdateQuestEntry();
+						quest->interactedActors[quest->GetCurrentGoalIndices()[currentGoalIndex]].Add(interactable);
+					}
 				}
 
 				if (quest == questJournalRef->GetSelectedQuest())

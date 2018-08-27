@@ -7,6 +7,9 @@
  * Container class for items
  * Every hero has a backpack. Implemented using a sparse array 
  */
+
+struct FBackpackSaveInfo;
+
 UCLASS(Blueprintable, BlueprintType)
 class MYPROJECT_API UBackpack : public UObject
 {
@@ -134,6 +137,6 @@ public:
 	FORCEINLINE int		Count() const; 
 
 	FMyItem&			operator[](int backpackIndex) { return items[backpackIndex]; }
-private:
-	
+
+	void				SaveBackpack(FBackpackSaveInfo& backpackInfo);
 };

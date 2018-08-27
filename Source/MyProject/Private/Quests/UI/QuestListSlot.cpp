@@ -23,7 +23,6 @@ void UQuestListSlot::SelectSubGoal(int subGoalIndex)
 		selectedSubGoal->ToggleEnabled(false);
 		selectedSubGoal = nullptr;	
 		selectedGoalIndex = -1;
-		gameModeRef->GetQuestManager()->OnSwitchSubGoal();
 	}
 }
 

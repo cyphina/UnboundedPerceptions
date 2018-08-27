@@ -4,7 +4,12 @@
 #include "EventSystem/RTSConditional.h"
 #include "UserInput.h"
 #include "HUDManager.h"
+
+#include "Interactables/ConditionalInteractableDecorator.h"
+#include "Interactables/TriggerInteractableDecorator.h"
+
 #include "WorldObjects/BaseHero.h"
+#include "LevelSaveStructs.h"
 
 
 // Sets default values
@@ -20,12 +25,25 @@ ARTSDoor::ARTSDoor()
 	doorCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("DoorCollision"));
 	doorCollision->SetupAttachment(RootComponent);
 	doorCollision->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel3); //Interactable
+
+	ConstructorHelpers::FObjectFinder<UCurveFloat> curve(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/StandardLinear"));
+	if(curve.Succeeded())
+		progressCurve = curve.Object;
 }
 
 // Called when the game starts or when spawned
 void ARTSDoor::BeginPlay()
 {
+	UConditionalInteractableDecorator* dec = NewObject<UConditionalInteractableDecorator>(this,"DoorLockedCndition");
+	FConditionData condition = FConditionData();
+	condition.conditionalType = EConditionalType::CustomCond;
+	condition.conditionalValues = TArray<FString>({FString::FromInt(!isLocked)});
+	dec->conditions.Add(condition);
+	dec->customDialogConversation = "ConditionalDoorLocked";
+	decorator = dec;
+
 	Super::BeginPlay();
+
 	//checking if the curvefloat that was entered in the blueprints was valid
 	if (progressCurve)
 	{
@@ -90,4 +108,19 @@ void ARTSDoor::HandleProgress(float value)
 {
 	FRotator newRotation = FMath::Lerp(initialRotation, finalRotation, value);
 	doorMesh->SetRelativeRotation(newRotation);
+}
+
+void ARTSDoor::SaveInteractable(FMapSaveInfo& mapData)
+{
+	FDoorInteractableSaveInfo doorSaveInfo;
+	UInteractableActorDecoratorBase* decor = decorator;
+
+	doorSaveInfo.isLocked = isLocked;
+	doorSaveInfo.interactableInfo = SaveInteractableData();
+}
+
+void ARTSDoor::LoadInteractable(FDoorInteractableSaveInfo& doorData)
+{
+	AInteractableBase::LoadInteractableData(doorData.interactableInfo);
+	isLocked = doorData.isLocked;
 }

@@ -7,21 +7,22 @@
 #include "MyAbilitySystemComponent.generated.h"
 
 /**
- * 
+ * Custom ability component with extra functionality 
  */
+
 UCLASS()
 class MYPROJECT_API UMyAbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
 	
 	UMyAbilitySystemComponent();
-
+	
 public:
-	FActiveGameplayEffectHandle			ApplyGameplayEffectSpecToSelf(OUT FGameplayEffectSpec &Spec, FPredictionKey PredictionKey);
+	/**Overriden to allow us to add things like purging buffs*/
+	FActiveGameplayEffectHandle			ApplyGameplayEffectSpecToSelf(const FGameplayEffectSpec &Spec, FPredictionKey PredictionKey) override;
 
 	/** Get an outgoing GameplayEffectSpec that is ready to be applied to other things. */
-	UFUNCTION(BlueprintCallable, Category = GameplayEffects)
-	FGameplayEffectSpecHandle MakeOutgoingSpec(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level, FGameplayEffectContextHandle Context) const;
+	FGameplayEffectSpecHandle			MakeOutgoingSpec(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level, FGameplayEffectContextHandle Context) const override;
 
 private:
 

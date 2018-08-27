@@ -6,6 +6,7 @@
 #include "Items/Backpack.h"
 #include "UI/HUDManager.h"
 #include "DialogSystem/DialogUI.h"
+#include "LevelSaveStructs.h"
 
 
 void AShopNPC::SetupAppropriateView()

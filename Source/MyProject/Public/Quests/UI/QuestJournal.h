@@ -20,7 +20,7 @@ class MYPROJECT_API UQuestJournal : public UMyDraggableWidget
 
 public:
 
-	void						Construct_Implementation() override;
+	void						NativeConstruct() override;
 	bool						OnWidgetAddToViewport_Implementation() override;
 
 	/** update all details of quest information window*/

@@ -107,7 +107,6 @@ public:
 
 #pragma region Accessors
 
-	UFUNCTION(BlueprintCallable, Category = "Accessors")
 	void 						SetSelected(bool value) override;
 
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Stats")
@@ -193,9 +192,12 @@ public:
 	/**
 	 * Reference to our character's spellbook
 	 */
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadOnly)
 	USpellBook*					spellbook;
 
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<USpellBook>		spellbookClass;
 private:
 	/**
 	 *see if some object is in front of us so we know its casting a shadow upon us

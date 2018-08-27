@@ -20,8 +20,6 @@ public:
 	int					hIndex;
 
 	/**Runs when an itemSlot in the inventoryView is clicked on.  Depending on the inventory type, different things may occur.*/
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inventory Functions")
-	void				UseItemAtInventorySlot(int32 iSlot);
 	void				UseItemAtInventorySlot_Implementation(int32 iSlot) override;
 
 	/**Changes color of item if its currently going to be used*/

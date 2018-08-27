@@ -6,26 +6,26 @@
 #include "UserInput.h"
 #include "WidgetDrag.h"
 
-FEventReply UMyDraggableWidget::OnMouseButtonDown_Implementation(FGeometry MyGeometry, const FPointerEvent& MouseEvent)
+FReply UMyDraggableWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	if (CPC)
 	{
 #if UE_EDITOR
 		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Purple, TEXT("On Mouse Button Down!"));
 #endif
-		CPC->offset = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition()); //set the offset so we can add it to the screen properly
-		return UWidgetBlueprintLibrary::DetectDragIfPressed(MouseEvent, this, EKeys::LeftMouseButton);
+		CPC->offset = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition()); //set the offset so we can add it to the screen properly
+		return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply;
 	}
-	return FEventReply();
+	return FReply::Unhandled();
 }
 
-void UMyDraggableWidget::OnDragDetected_Implementation(FGeometry MyGeometry, const FPointerEvent& PointerEvent, UDragDropOperation*& Operation)
+void UMyDraggableWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent,
+	UDragDropOperation*& OutOperation)
 {
 	UWidgetDrag* dragOp = Cast<UWidgetDrag>(UWidgetBlueprintLibrary::CreateDragDropOperation(UWidgetDrag::StaticClass()));
 	dragOp->DefaultDragVisual = this;
 	dragOp->widgetToDrag = this; //set what widget we're dragging so we can figure out it later to add back to the screen
 	dragOp->Pivot = EDragPivot::MouseDown;
-	Operation = dragOp;
+	OutOperation = dragOp;
 	RemoveFromParent();
 }
-

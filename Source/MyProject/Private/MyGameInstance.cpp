@@ -2,18 +2,18 @@
 
 #include "MyProject.h"
 #include "ResourceManager.h"
-#include "EventSystem/EventManager.h"
-#include "EventSystem/Trigger.h"
-#include "Quests/QuestManager.h"
-#include "UserInput.h"
-#include "UI/UserWidgets/LoadingWidget.h"
 #include "MyGameInstance.h"
+#include "WorldObjects/NPC.h"
+#include "WorldObjects/IntimateNPC.h"
+#include "Interactables/InteractableBase.h"
+#include "Interactables/RTSDoor.h"
+#include "Interactables/StorageContainer.h"
+#include "Interactables/Pickup.h"
 
-const FString UMyGameInstance::saveFilePath = FPaths::ProjectDir().Append("\\SavedGames\\");
 
 UMyGameInstance::UMyGameInstance()
 {
-	
+
 }
 
 void UMyGameInstance::Init()
@@ -21,10 +21,6 @@ void UMyGameInstance::Init()
 	Super::Init();
 	//Set up resourcemanager globals
 	ResourceManager::InitResourceManager();
-
-	//Setup Post Async Level Load Callback
-	//FWorldDelegates::OnPostWorldInitialization.AddUObject(this, &UMyGameInstance::OnWorldAdded);
-	//!!!---Make sure this is set in the blueprints.  Can get removed after hotreload---!!!
 }
 
 void UMyGameInstance::Shutdown()
@@ -32,35 +28,99 @@ void UMyGameInstance::Shutdown()
 	Super::Shutdown();
 }
 
-void UMyGameInstance::OnFinishedStreamingLevel(const FName& packageName, UPackage* levelPackage, EAsyncLoadingResult::Type Result)
+void UMyGameInstance::SaveLevelData(FName levelName)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("Level Streaming Finished!"));
-	packageToBeLoaded = levelPackage;
-	UWorld* world = UWorld::FindWorldInPackage(levelPackage);
-	checkf(world != nullptr, TEXT("Error with loading level %s"), *packageName.ToString())
-	worldBeingLoaded = world;
-	//loadingWidget->OnLoadingFinished(levelPathToLoad.RightChop(numCharsInFilePathLocation));
+	if (GetWorld())
+	{
+		if (mapInfo.Contains(levelName)) //if we've already been here
+		{
+			FMapSaveInfo& mapData = mapInfo[levelName];
+			mapData.pickupList.Empty();
+
+			for (TActorIterator<ANPC> actItr(GetWorld()); actItr; ++actItr)
+			{
+				(*actItr)->SaveNPCData(mapData);
+			}
+
+			for (TActorIterator<AInteractableBase> actItr(GetWorld()); actItr; ++actItr)
+			{
+				(*actItr)->SaveInteractable(mapData);
+			}
+		}
+	}
 }
 
-void UMyGameInstance::OnWorldAdded(UWorld* world, const UWorld::InitializationValues values)
+void UMyGameInstance::LoadLevelData(FName levelName)
 {
-	if(worldBeingLoaded == nullptr)
-		return;
-	//check(worldBeingLoaded == world)
+	if (GetWorld())
+	{
+		if (mapInfo.Contains(levelName))
+		{
+			FMapSaveInfo& mapData = mapInfo[levelName];
 
-	worldBeingLoaded = nullptr;
-	packageToBeLoaded = nullptr;
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("World Loading Finished!"));
+			for (FDoorInteractableSaveInfo doorInfo : mapData.doorInteractables)
+			{
+				for (TActorIterator<ARTSDoor> actItr(GetWorld()); actItr; ++actItr)
+				{
+					if ((*actItr)->GetTransform().Equals(doorInfo.interactableInfo.transform))
+					{
+						(*actItr)->LoadInteractable(doorInfo);
+						break;
+					}
+				}
+			}
+
+			for (FNPCIntimateSaveInfo intimateNPCInfo : mapData.intimateNPCInfo)
+			{
+				for (TActorIterator<AIntimateNPC> actItr(GetWorld()); actItr; ++actItr)
+				{
+					if ((*actItr)->GetGameName().EqualTo(intimateNPCInfo.npcInfo.name))
+					{
+						(*actItr)->LoadNPCData(intimateNPCInfo);
+						break;
+					}
+				}
+			}
+
+			for (FNPCSaveInfo npcInfo : mapData.npcsInfo)
+			{
+				for (TActorIterator<ANPC> actItr(GetWorld()); actItr; ++actItr)
+				{
+					if ((*actItr)->GetGameName().EqualTo(npcInfo.name))
+					{
+						(*actItr)->LoadNPCData(npcInfo);
+						break;
+					}
+				}
+			}
+
+			for (FInteractableSaveInfo interactableInfo : mapData.interactablesInfo)
+			{
+				for (TActorIterator<AInteractableBase> actItr(GetWorld(), interactableInfo.interactableClass); actItr; ++actItr)
+				{
+					if ((*actItr)->GetTransform().Equals(interactableInfo.transform))
+					{
+						(*actItr)->LoadInteractable(interactableInfo);
+						break;
+					}
+				}
+			}
+
+			for (TActorIterator<APickup> actItr(GetWorld()); actItr; ++actItr)
+			{
+				if (!mapData.pickupList.Contains((*actItr)->GetName()))
+				{
+					(*actItr)->Destroy();
+				}
+			}
+		}
+		else
+		{
+			mapInfo.Add(levelName,FMapSaveInfo());
+			return;
+		}
+	}
 }
 
-//void UMyGameInstance::LoadLevelAsync(FString levelName) 
-//{
-//	loadingWidget->AddToViewport();
-//	levelPathToLoad = "/Game/RTS_Tutorial/Maps/" + levelName;
-//
-//	Load via streaming
-//	UGameplayStatics::LoadStreamLevel(this, *levelName, true, false, FLatentActionInfo());
-//	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, levelPathToLoad);
-//	Load level w/o streaming
-//	LoadPackageAsync(levelPathToLoad, FLoadPackageAsyncDelegate::CreateUObject(this, &UMyGameInstance::OnFinishedStreamingLevel));
-//}
+
+

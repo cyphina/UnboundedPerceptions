@@ -1,5 +1,5 @@
 #pragma once
-#include "Archive.h"
+#include "SaveGameStructs.h"
 #include "SaveLoadClass.generated.h"
 
 /**
@@ -18,151 +18,7 @@ class AAlly;
 class ASummon;
 class ABaseHero;
 
-/*Definitions of all the structs which we first copy the data we want to save to 
- The structs are declared here since we want them to be class members since we need to setup a callback without any parameters
-to FWorldDelegate::OnPostWorldInitialization to properly call the loading setup at the right time since OpenLevel is Async.*/
-
-#pragma region savestructs
-//Data about the save itself
-struct FSaveGameDataInfo
-{
-	FName id; //Player can name a save
-	FDateTime timestamp; //time when game is saved
-
-	friend FArchive&	operator<<(FArchive& ar, FSaveGameDataInfo& saveDataInfo)
-	{
-		ar << saveDataInfo.id;
-		ar << saveDataInfo.timestamp;
-		return ar;
-	}
-};
-
-//LevelData - Will contain information about level state 
-struct FSceneSaveInfo 
-{
-	FName					levelName;
-	TArray<FName>			pickedUpInteractables; //what items have been picked up already? - This may be saved in a struct with all the level data  
-
-	friend FArchive&							operator<<(FArchive& ar, FSceneSaveInfo& saveData)
-	{
-		ar << saveData.levelName;
-		ar << saveData.pickedUpInteractables;
-		return ar;
-	}
-};
-
-struct FCameraSaveInfo 
-{
-	FTransform				cameraTransform;
-	int						cameraSpeed;
-	bool					isCamNavDisabled;
-
-	friend FArchive&							operator<<(FArchive& ar, FCameraSaveInfo& saveData)
-	{
-		ar << saveData.cameraTransform;
-		ar << saveData.cameraSpeed;
-		ar << saveData.isCamNavDisabled;
-		return ar;
-	}
-
-	friend void									operator<<(FMemoryReader& ar, FCameraSaveInfo& saveData)
-	{
-		ar << saveData.cameraTransform;
-		ar << saveData.cameraSpeed;
-		ar << saveData.isCamNavDisabled;
-		
-	}
-};
-
-struct FBasePlayerSaveInfo
-{
-	int					money;
-	TArray<FName>		dialogTopics;
-	int					heroNum;
-	int					summonNum;
-	int					npcNum;
-
-	friend FArchive&							operator<<(FArchive& ar, FBasePlayerSaveInfo& saveData)
-	{
-		ar << saveData.money;
-		ar << saveData.dialogTopics;
-		ar << saveData.heroNum << saveData.summonNum << saveData.npcNum;
-		return ar;
-	}
-};
-
-struct FBaseCharacterSaveInfo
-{
-	TArray<int>				attributes;
-	TArray<int>				skills;
-	TArray<int>				vitals;
-	TArray<int>				currentVitals;
-	TArray<int>				mechanics;
-	int						level;
-
-	friend FArchive&		operator<<(FArchive& ar, FBaseCharacterSaveInfo& saveData)
-	{
-		ar << saveData.attributes;
-		ar << saveData.skills;
-		ar << saveData.vitals;
-		ar << saveData.mechanics;
-		ar << saveData.level;
-		return ar;
-	}
-};
-
-struct FAllySaveInfo 
-{
-	FText name;
-	FTransform actorTransform;
-	FBaseCharacterSaveInfo baseCSaveInfo;
-	//TODO: Save buffs and debuffs
-
-	friend FArchive&							operator<<(FArchive& ar, FAllySaveInfo& saveData)
-	{
-		ar << saveData.name;
-		ar << saveData.actorTransform;
-		ar << saveData.baseCSaveInfo;
-		return ar;
-	}
-};
-
-struct FSummonSaveInfo
-{
-	FAllySaveInfo		allyInfo;
-	int					duration;
-
-	friend FArchive&							operator<<(FArchive& ar, FSummonSaveInfo& saveData)
-	{
-		ar << saveData.allyInfo;
-		ar << saveData.duration;
-		return ar;
-	}
-};
-
-struct FHeroSaveInfo
-{
-	FAllySaveInfo			allyInfo;
-	int						currentExp;
-	int						expToNextLevel; //we could technically recalculate this...
-	int						attPoints;
-	int						skillPoints;
-	TArray<int>				spellIDs;
-
-	friend FArchive&		operator<<(FArchive& ar, FHeroSaveInfo& saveData)
-	{
-		ar << saveData.allyInfo;
-		ar << saveData.currentExp;
-		ar << saveData.expToNextLevel;
-		ar << saveData.attPoints;
-		ar << saveData.skillPoints;
-		ar << saveData.spellIDs;
-		return ar; 
-	}
-};
-#pragma endregion
-
-UCLASS()
+UCLASS(Blueprintable)
 class MYPROJECT_API USaveLoadClass : public UObject
 {
 	GENERATED_BODY()
@@ -190,10 +46,8 @@ private:
 	TArray<FSummonSaveInfo>			summonsSaveData;
 	TArray<FHeroSaveInfo>			heroesSaveData;
 
-	bool							loadSuccess; //Did we sucessfully load data from binary array?  Used to make sure callback triggers only when level is loaded
-
 	//Remember: Passing Information by reference doesn't require storage and doesn't require indirection 
-	/**Function used to save and load data from binary array by using the << operator which saves/loads depending on FArchive derived type
+	/**Function used to save and load data from binary array by using the overloaded << operator which saves/loads depending on FArchive derived type
 	 *@param ar: Archive used to save/load data from the disk to binary array and vice versa*/
 	void							SaveLoadFunction(FArchive& ar, bool isSaving);
 
@@ -223,13 +77,12 @@ private:
 
 #pragma region LoadedDataSetup
 public:
-	void								SetupLoadedData();
 	inline void							SetupController();
 	inline void							SetupPlayer();
 	inline void							SetupAlliedUnits();
 	inline void							SetupBaseCharacter(AAlly* spawnedAlly, FBaseCharacterSaveInfo& baseCSaveInfo);
 	
-	/**This function can be called when a level loads, but it will only trigger after a player-initiated load*/
+	/**Called after player attempts to load a save*/
 	void								SetupLoad();
 #pragma endregion
 };

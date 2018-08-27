@@ -3,6 +3,7 @@
 #include "MyProject.h"
 #include "Backpack.h"
 #include "ItemManager.h"
+#include "LevelSaveStructs.h"
 
 UBackpack::UBackpack()
 {	
@@ -293,5 +294,22 @@ int UBackpack::FindItemCount(int itemID)
 			itemCount += (*it).count; 
 	}
 	return itemCount;
+}
+
+void UBackpack::SaveBackpack(FBackpackSaveInfo& backpackInfo)
+{
+	TArray<FMyItem> itemsToSave = GetItems();
+	TArray<int> itemIndices = GetItemIndices();
+
+	for(FMyItem item : itemsToSave)
+	{
+		backpackInfo.itemIDs.Add(item.id);
+		backpackInfo.itemCounts.Add(item.count);
+	}
+
+	for(int itemSlot : itemIndices)
+	{
+		backpackInfo.itemSlots.Add(itemSlot);
+	}
 }
 

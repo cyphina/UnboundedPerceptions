@@ -19,7 +19,7 @@ class MYPROJECT_API UQuestList : public UAnimHudWidget
 	
 public:
 
-	void							Construct_Implementation() override;
+	void							NativeConstruct() override;
 	bool							OnWidgetAddToViewport_Implementation() override;
 
 	/**Add a new widget to quest list when a new quest is added*/

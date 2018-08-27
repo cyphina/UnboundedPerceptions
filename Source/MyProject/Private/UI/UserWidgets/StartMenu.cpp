@@ -8,6 +8,8 @@
 #include "MyGameInstance.h"
 #include "SettingsMenu.h"
 #include "MainWidget.h"
+#include "EventSystem/EventManager.h"
+#include "EventSystem/Trigger.h"
 
 void UStartMenu::NativeConstruct()
 {	
@@ -33,9 +35,9 @@ bool UStartMenu::CheckIfSaveFileExists(FString saveFileName)
 	return false;
 }
 
-void UStartMenu::LevelTransition()
+void UStartMenu::StartGameLevelTransition()
 {
-	gameModeRef->StreamLevelAsync(*gameModeRef->GetIntroductionLevelName());
+	gameModeRef->StreamLevelAsync(*gameModeRef->GetSylphiaAptLvlName());
 	
 	//Renable ticks that are stopped in the level script
 	controllerRef->SetActorTickEnabled(true);
@@ -45,5 +47,20 @@ void UStartMenu::LevelTransition()
 	controllerRef->EnableInput(controllerRef);
 	controllerRef->GetHUDManager()->GetMainHUD()->speedIndex = 2;
 	controllerRef->GetHUDManager()->GetMainHUD()->SetGameSpeed();
+
+	GameEventStartSetup();
+
 	RemoveFromParent();
+}
+
+void UStartMenu::GameEventStartSetup()
+{
+	controllerRef->GetHUDManager()->AddHUD("SylphiaApartmentIntro");
+	gameModeRef->GetEventManager()->MoveToNextSection();
+	FTriggerData addFirstQuestTrigger;
+	addFirstQuestTrigger.enabled = true;
+	addFirstQuestTrigger.numCalls = 1;
+	addFirstQuestTrigger.triggerType = ETriggerType::AddQuestTrigger;
+	addFirstQuestTrigger.triggerValues = {"TutorialQuest", "1"};
+	gameModeRef->GetTriggerManager()->ActivateTrigger(addFirstQuestTrigger);
 }

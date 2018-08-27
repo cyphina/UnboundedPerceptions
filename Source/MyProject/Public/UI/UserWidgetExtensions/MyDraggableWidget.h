@@ -15,11 +15,7 @@ class MYPROJECT_API UMyDraggableWidget : public UMyUserWidget
 	GENERATED_BODY()
 	
 public:
-	UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic, Category = "Mouse")
-		FEventReply OnMouseButtonDown(FGeometry MyGeometry, const FPointerEvent& MouseEvent);
-	virtual FEventReply OnMouseButtonDown_Implementation(FGeometry MyGeometry, const FPointerEvent& MouseEvent); //Setup offset and detect drag
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic, Category = "Drag and Drop")
-		void OnDragDetected(FGeometry MyGeometry, const FPointerEvent& PointerEvent, UDragDropOperation*& Operation);
-	virtual void OnDragDetected_Implementation(FGeometry MyGeometry, const FPointerEvent& PointerEvent, UDragDropOperation*& Operation);
+	FReply				NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	void				NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
 };

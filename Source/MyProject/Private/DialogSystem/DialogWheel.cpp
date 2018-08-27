@@ -72,9 +72,9 @@ void UDialogWheel::SelectPreviousConversationTopics()
 	UpdateDialogWheelText();
 }
 
-void UDialogWheel::Construct_Implementation()
+void UDialogWheel::NativeConstruct()
 {
-	Super::Construct_Implementation();
+	Super::NativeConstruct();
 }
 
 bool UDialogWheel::OnWidgetAddToViewport_Implementation()

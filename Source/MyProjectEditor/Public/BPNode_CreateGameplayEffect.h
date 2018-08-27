@@ -45,5 +45,5 @@ protected:
 	virtual FText			GetNodeTitleFormat() const override;
 	/**Gets base class to use for the 'class' pin.  UObject by default. */
 	virtual UClass*			GetClassPinBaseClass() const override;
-	bool			IsSpawnVarPin(UEdGraphPin* pin) const override;
+	bool					IsSpawnVarPin(UEdGraphPin* pin) const override;
 };

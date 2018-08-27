@@ -3,10 +3,15 @@
 #include "MyProject.h"
 #include "StorageContainer.h"
 #include "UserInput.h"
+
 #include "Items/Backpack.h"
 #include "UI/HUDManager.h"
+
 #include "BasePlayer.h"
 #include "WorldObjects/BaseHero.h"
+
+#include "LevelSaveStructs.h"
+
 
 AStorageContainer::AStorageContainer() : AInteractableBase()
 {
@@ -27,6 +32,8 @@ AStorageContainer::AStorageContainer() : AInteractableBase()
 
 void AStorageContainer::BeginPlay()
 {
+	Super::BeginPlay();
+
 	controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 	backpack = NewObject<UBackpack>(this);
 
@@ -58,4 +65,11 @@ void AStorageContainer::OnLeaveRange(UPrimitiveComponent* overlappedComp, AActor
 	{
 		controllerRef->GetHUDManager()->AddHUD(backpack, nullptr);
 	}
+}
+
+void AStorageContainer::SaveInteractable(FMapSaveInfo& mapData)
+{
+	FStorageContainerSaveInfo storageInfo;
+	storageInfo.interactableInfo = SaveInteractableData();
+	backpack->SaveBackpack(storageInfo.backpackInfo);
 }

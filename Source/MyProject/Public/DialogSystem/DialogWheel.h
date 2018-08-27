@@ -50,7 +50,7 @@ public:
 
 	UDialogWheel();
 
-	void										Construct_Implementation() override;
+	void										NativeConstruct() override;
 		
 	UFUNCTION(BlueprintImplementableEvent, Category = "Dialog Wheel Functionality")
 	void										UpdateDialogWheelText();

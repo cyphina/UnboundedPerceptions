@@ -20,7 +20,7 @@ class MYPROJECT_API ULoadingWidget : public UMyUserWidget
 	TArray<FText>	tipList;
 	
 public:
-	void			Construct_Implementation() override;
+	void			NativeConstruct() override;
 
 	/**Has the level finished loading?*/
 	UPROPERTY(BlueprintReadWrite, Category = "Data")

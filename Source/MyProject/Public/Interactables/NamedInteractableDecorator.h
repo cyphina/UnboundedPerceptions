@@ -26,7 +26,7 @@ class MYPROJECT_API UNamedInteractableDecorator : public UInteractableActorDecor
 
 public:	
 	void									Init() override;
-	bool									Interact() override;
+	bool									Interact() override;				
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	FORCEINLINE FText						GetName() override { return name; }

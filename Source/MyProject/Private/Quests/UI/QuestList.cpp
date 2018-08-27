@@ -6,11 +6,11 @@
 #include "RTSGameMode.h"
 #include "../QuestManager.h"
 
-void UQuestList::Construct_Implementation()
+void UQuestList::NativeConstruct()
 {
-	Super::Construct_Implementation();
 	if(gameModeRef->GetQuestManager())
 		gameModeRef->GetQuestManager()->questListRef = this;
+	Super::NativeConstruct();
 }
 
 bool UQuestList::OnWidgetAddToViewport_Implementation()

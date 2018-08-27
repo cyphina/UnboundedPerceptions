@@ -42,7 +42,7 @@ void USaveLoadClass::SetupSaveData()
 void USaveLoadClass::SetupSaveControllerData() 
 {
 	//Save Scene
-	sceneSaveData.levelName = *UGameplayStatics::GetCurrentLevelName(controllerRef->GetWorld());
+	sceneSaveData.levelName = *controllerRef->GetGameMode()->GetCurLevelName();
 	//TODO: Save scene interactables
 	//Save Camera
 	cameraSaveData.cameraTransform = controllerRef->GetPawn()->GetTransform();
@@ -129,6 +129,8 @@ void USaveLoadClass::SetupSaveHeroData()
 				if(spell.GetDefaultObject())
 					heroesSaveData[i].spellIDs.Add(spell.GetDefaultObject()->spellDefaults.id);
 			}
+
+			heroRef->backpack->SaveBackpack(heroesSaveData[i].backpackInfo);
 		}
 	}
 
@@ -150,43 +152,6 @@ void USaveLoadClass::SetupNPCEscortData()
 }
 
 void USaveLoadClass::SetupLoad()
-{
-	if(loadSuccess)
-	{
-		SetupLoadedData();
-		loadSuccess = false;
-	}
-}
-
-void USaveLoadClass::SaveLoadFunction(FArchive& ar, bool isSaving)
-{
-	/*Slow since we have to construct and assign an empty copy, but this way is safer than the alternatives which could involve looping with manually inputted indices
-	*and having to redelete information 
-	*TODO: Possible Optimizations
-	*Save defaults and just copy the default values so we don't have to reconstruct 
-	*Use arrays of preset sizes that will never overflow and keep overwriting and reading to a section of the data to prevent reconstruction*/
-
-	gameSaveSaveData = FSaveGameDataInfo();
-	sceneSaveData = FSceneSaveInfo();
-	cameraSaveData = FCameraSaveInfo();
-	playerSaveData = FBasePlayerSaveInfo();
-	heroesSaveData = TArray<FHeroSaveInfo>();
-	summonsSaveData = TArray<FSummonSaveInfo>();
-	npcsSaveData = TArray<FAllySaveInfo>();
-
-	if(isSaving)
-	SetupSaveData();
-
-	ar << gameSaveSaveData;
-	ar << sceneSaveData;
-	ar << cameraSaveData;
-	ar << playerSaveData;
-	ar << heroesSaveData;
-	ar << summonsSaveData;
-	ar << npcsSaveData;
-}
-
-void USaveLoadClass::SetupLoadedData()
 {
 	SetupController();
 	SetupPlayer();
@@ -221,7 +186,8 @@ void USaveLoadClass::SetupAlliedUnits()
 		if(AAlly* spawnedNPCAlly = ResourceManager::FindTriggerObjectInWorld<AAlly>(*npc.name.ToString(), controllerRef->GetWorld()))
 		{
 			spawnedNPCAlly->SetActorTransform(npc.actorTransform);
-			SetupBaseCharacter(spawnedNPCAlly, npc.baseCSaveInfo);	
+			SetupBaseCharacter(spawnedNPCAlly, npc.baseCSaveInfo);
+			spawnedNPCAlly->Stop();
 		}
 		else
 		{
@@ -255,6 +221,12 @@ void USaveLoadClass::SetupAlliedUnits()
 			spawnedHero->attPoints = hero.attPoints;
 			spawnedHero->SetCurrentExp(hero.currentExp);
 			spawnedHero->expForLevel = hero.expToNextLevel;
+			spawnedHero->Stop();
+
+			for(int i = 0; i < hero.backpackInfo.itemIDs.Num(); ++i)
+			{
+				spawnedHero->backpack->AddItemToSlot(FMyItem(hero.backpackInfo.itemIDs[i], hero.backpackInfo.itemCounts[i]), hero.backpackInfo.itemSlots[i]);
+			}
 		}
 		else
 		{
@@ -269,7 +241,13 @@ void USaveLoadClass::SetupAlliedUnits()
 			spawnedHero->attPoints = hero.attPoints;
 			spawnedHero->SetCurrentExp(hero.currentExp);
 			spawnedHero->expForLevel = hero.expToNextLevel;
-			spawnedHero->FinishSpawning(hero.allyInfo.actorTransform);}
+			spawnedHero->FinishSpawning(hero.allyInfo.actorTransform);
+
+			for(int i = 0; i < hero.backpackInfo.itemIDs.Num(); ++i)
+			{
+				spawnedHero->backpack->AddItemToSlot(FMyItem(hero.backpackInfo.itemIDs[i], hero.backpackInfo.itemCounts[i]), hero.backpackInfo.itemSlots[i]);
+			}
+		}
 	}
 	
 	for(FSummonSaveInfo summon : summonsSaveData)
@@ -279,6 +257,7 @@ void USaveLoadClass::SetupAlliedUnits()
 			spawnedSummon->SetActorTransform(summon.allyInfo.actorTransform);
 			SetupBaseCharacter(spawnedSummon, summon.allyInfo.baseCSaveInfo);	
 			spawnedSummon->timeLeft = summon.duration;
+			spawnedSummon->Stop();
 		}
 		else
 		{
@@ -313,6 +292,36 @@ void USaveLoadClass::SetupBaseCharacter(AAlly* spawnedAlly, FBaseCharacterSaveIn
 	}
 }
 
+void USaveLoadClass::SaveLoadFunction(FArchive& ar, bool isSaving)
+{
+	/*Slow since we have to construct and assign an empty copy, but this way is safer than the alternatives which could involve looping with manually inputted indices
+	*and having to redelete information 
+	*TODO: Possible Optimizations
+	*Save defaults and just copy the default values so we don't have to reconstruct 
+	*Use arrays of preset sizes that will never overflow and keep overwriting and reading to a section of the data to prevent reconstruction*/
+
+	gameSaveSaveData = FSaveGameDataInfo();
+	sceneSaveData = FSceneSaveInfo();
+	cameraSaveData = FCameraSaveInfo();
+	playerSaveData = FBasePlayerSaveInfo();
+	heroesSaveData = TArray<FHeroSaveInfo>();
+	summonsSaveData = TArray<FSummonSaveInfo>();
+	npcsSaveData = TArray<FAllySaveInfo>();
+
+	if(isSaving)
+		SetupSaveData();
+	else
+		SetupLoad();
+
+	ar << gameSaveSaveData;
+	ar << sceneSaveData;
+	ar << cameraSaveData;
+	ar << playerSaveData;
+	ar << heroesSaveData;
+	ar << summonsSaveData;
+	ar << npcsSaveData;
+}
+
 bool USaveLoadClass::SaveToFilePath(const FString& filePath)
 {
 	FBufferArchive binaryArray;
@@ -326,14 +335,14 @@ bool USaveLoadClass::SaveToFilePath(const FString& filePath)
 		binaryArray.FlushCache(); 
 		binaryArray.Empty();
 		//Client message from Controller
-		controllerRef->ClientMessage("Save Success!");
+		controllerRef->ClientMessage("Save Success!", NAME_None, 2.f);
 		return true;
 	}
 
 	//Free Binary ARray
 	binaryArray.FlushCache();
 	binaryArray.Empty();
-	controllerRef->ClientMessage("File Could Not Be Saved!");
+	controllerRef->ClientMessage("File Could Not Be Saved!", NAME_None, 2.f);
 	return false;
 }
 
@@ -342,12 +351,13 @@ bool USaveLoadClass::LoadFromFilePath(const FString& filePath)
 	TArray<uint8> binaryArray;
 	if(!FFileHelper::LoadFileToArray(binaryArray, *filePath))
 	{
-		//controllerRef->ClientMessage("FFILEHELPER:>> Invalid File");
+		controllerRef->ClientMessage("FFILEHELPER:>> Invalid File");
 		return false;
 	}
+
 	//Testing
-	controllerRef->ClientMessage("Loaded file size");
-	controllerRef->ClientMessage(FString::FromInt(binaryArray.Num()));
+	controllerRef->ClientMessage("Loaded file size", NAME_None, 2.f);
+	controllerRef->ClientMessage(FString::FromInt(binaryArray.Num()), NAME_None, 2.f);
 
 	if(binaryArray.Num() <= 0) return false;
 	FMemoryReader fromBinary = FMemoryReader(binaryArray, true); //free data after done
@@ -360,7 +370,5 @@ bool USaveLoadClass::LoadFromFilePath(const FString& filePath)
 	fromBinary.Close();
 
 	controllerRef->GetGameMode()->StreamLevelAsync(sceneSaveData.levelName);
-	loadSuccess = true;
-
 	return true;
 }

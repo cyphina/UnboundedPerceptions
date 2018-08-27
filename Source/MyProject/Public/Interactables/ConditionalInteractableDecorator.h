@@ -22,7 +22,7 @@ class MYPROJECT_API UConditionalInteractableDecorator : public UInteractableActo
 
 public:
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FConditionData>					conditions;
 
 	/**Name of the custom conversation if conditions not met.  If empty, uses default notification (generated from conditions)*/

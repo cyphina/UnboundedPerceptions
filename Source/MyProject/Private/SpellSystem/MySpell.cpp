@@ -133,7 +133,7 @@ float UMySpell::GetCDDuration(UAbilitySystemComponent* abilityComponent) const
 	//checkf(abilitySpec != nullptr, TEXT("Ability hasn't been registered to unit"));
 	if (!abilitySpec)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *(FString::FromInt(abilityComponent->GetActivatableAbilities().Num()) + GetName().ToString()));
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *(FString("No ability systme component found") + FString::FromInt(abilityComponent->GetActivatableAbilities().Num()) + GetName().ToString()));
 		return -1;
 	}
 

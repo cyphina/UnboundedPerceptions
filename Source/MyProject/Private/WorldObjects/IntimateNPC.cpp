@@ -6,6 +6,7 @@
 #include "UserInput.h"
 #include "UI/HUDManager.h"
 #include "DialogSystem/DialogUI.h"
+#include "LevelSaveStructs.h"
 
 AIntimateNPC::AIntimateNPC() : ANPC()
 {
@@ -35,5 +36,23 @@ void AIntimateNPC::Interact_Implementation(ABaseHero* hero)
 void AIntimateNPC::SetupAppropriateView()
 {
 	controllerRef->GetHUDManager()->GetSocialWindow()->SetIntimateView();
+}
+
+void AIntimateNPC::SaveNPCData(FMapSaveInfo& mapInfo)
+{
+	FNPCIntimateSaveInfo intimateNPCSaveInfo;
+	MakeNPCData(intimateNPCSaveInfo.npcInfo);
+	intimateNPCSaveInfo.currentRelationshipEventIndex = currentRelationshipEventIndex;
+	intimateNPCSaveInfo.relationshipPoints = relationshipPoints;
+
+	mapInfo.intimateNPCInfo.Add(intimateNPCSaveInfo);
+}
+
+void AIntimateNPC::LoadNPCData(FNPCIntimateSaveInfo& npcSaveInfo)
+{
+	ANPC::LoadNPCData(npcSaveInfo.npcInfo);
+	relationshipPoints = npcSaveInfo.relationshipPoints;
+	currentRelationshipEventIndex = npcSaveInfo.currentRelationshipEventIndex;
+	
 }
 

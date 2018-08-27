@@ -11,6 +11,7 @@
 #include "DialogSystem/DialogBox.h"
 #include "DialogSystem/DialogUI.h"
 #include "Quests/QuestManager.h"
+#include "LevelSaveStructs.h"
 
 // Sets default values
 ANPC::ANPC()
@@ -83,6 +84,13 @@ FName ANPC::GetConversationName(FGameplayTag conversationTopic) const
 	}
 }
 
+TArray<FGameplayTag> ANPC::GetConversationTopics() const
+{
+	TArray<FGameplayTag> keys;
+	conversationTopics.GetKeys(keys);
+	return keys;
+}
+
 void ANPC::Interact_Implementation(ABaseHero* hero)
 {
 	GetController()->StopMovement();
@@ -137,6 +145,45 @@ FVector ANPC::GetInteractableLocation_Implementation()
 bool ANPC::CanInteract_Implementation()
 {
 	return true;
+}
+
+void ANPC::MakeNPCData(FNPCSaveInfo& npcSaveInfo)
+{
+	npcSaveInfo.name = GetGameName();
+	npcSaveInfo.transform = GetTransform();
+	npcSaveInfo.bWantsToConverse = GetWantsToConverse();
+	npcSaveInfo.conversationStarterName = GetStartingConversationName();
+	npcSaveInfo.defaultResponseName = GetDefaultResponseName();
+
+	npcSaveInfo.conversationTopicKeys = GetConversationTopics();
+	for(FGameplayTag key : npcSaveInfo.conversationTopicKeys)
+	{
+		npcSaveInfo.conversationTopicValues.Add(GetConversationName(key));
+	}
+
+	npcSaveInfo.previousConversations = dialogAlreadyConversed;
+}
+
+void ANPC::SaveNPCData(FMapSaveInfo& mapInfo)
+{
+	FNPCSaveInfo npcSaveInfo;
+	MakeNPCData(npcSaveInfo);
+	mapInfo.npcsInfo.Add(npcSaveInfo);
+}
+
+void ANPC::LoadNPCData(FNPCSaveInfo& npcSaveInfo)
+{
+	SetActorTransform(npcSaveInfo.transform);
+	bWantsToConverse = npcSaveInfo.bWantsToConverse;
+	conversationStarterName = npcSaveInfo.conversationStarterName;
+	defaultResponseName = npcSaveInfo.defaultResponseName;
+
+	for(int i = 0; i < npcSaveInfo.conversationTopicKeys.Num(); ++i)
+	{
+		conversationTopics[npcSaveInfo.conversationTopicKeys[i]] = npcSaveInfo.conversationTopicValues[i]; 
+	}
+
+	dialogAlreadyConversed = npcSaveInfo.previousConversations;
 }
 
 void ANPC::CountQuestDialogs()

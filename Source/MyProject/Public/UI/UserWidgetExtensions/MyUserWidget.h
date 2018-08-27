@@ -28,8 +28,7 @@ public:
 	bool					OnWidgetAddToViewport();
 	virtual bool			OnWidgetAddToViewport_Implementation(); //Callback whenever toggled on and off screen
 
-	/*We overwrite construct instead of overriding NativeConstruct because it runs first... Construct actually calls NativeConstruct, or at least it goes before...*/
-	UFUNCTION(BlueprintNativeEvent, BlueprintCosmetic, Category = "User Interface", meta = (Keywords = "Begin Play")) //blueprintcosmetic = not run on any servers
-	void Construct();
-	virtual void Construct_Implementation(); //Override CPCRef to the CameraPawnController Class
+	/**I used to think Construct ran before NativeConstruct(), but I didn't realize that calling the Super function of NativeConstruct called Construct() and I usually
+	 *called the parent class NativeConstruct first so I thought it went before >_<*/
+	virtual void NativeConstruct(); 
 };

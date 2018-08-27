@@ -1,6 +1,7 @@
                       // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyProject.h"
+#include "UserInput.h"
 #include "RTSGameState.h"
 #include "Unit.h"
 #include "MyGameInstance.h"
@@ -21,7 +22,6 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) : Super(objectInitiali
 {
 	//Setup variables
 	PrimaryActorTick.bCanEverTick = true;
-	name = FText::FromString(GetName()); //use this for now.
 	combatStyle = FGameplayTag::RequestGameplayTag("Combat.Style.Melee");                      
 
 	//--Destroy arrow component so there isn't some random arrow sticking out of our units--  
@@ -59,14 +59,14 @@ void AUnit::BeginPlay()
 	Super::BeginPlay();
 
 	///---Setup initial parameters---
-	controller = Cast<AAIController>(GetController());	
+	controller = Cast<AAIController>(GetController());
+	controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 	gameState = Cast<ARTSGameState>(GetWorld()->GetGameState());
 	gameInstance = Cast<UMyGameInstance>(GetGameInstance());
 
 	FVector origin, extent;
 	GetActorBounds(true, origin, extent);
-	height = origin.Z + extent.Z; //manually setup height informatoin for other things to read it
-
+	height = FMath::Abs(origin.Z) + extent.Z - FMath::Abs(GetActorLocation().Z); //manually setup height informatoin for other things to read it
 
 	//Runtime component configuration
 	if(healthBar)
@@ -74,8 +74,7 @@ void AUnit::BeginPlay()
 		if (!healthBar->IsRegistered()) //Before calling any functions register the component.  Widget for widgetcomponent is created during register
 			healthBar->RegisterComponent();
 
-		healthBar->SetWorldLocation(FVector::ZeroVector);
-		healthBar->SetRelativeLocation(healthBar->GetComponentLocation() + FVector(0, 0, height/3));	
+		healthBar->SetRelativeLocation(FVector(0, 0, height/3));	
 	}
 
 	if(selectionCircleDecal)
@@ -223,22 +222,42 @@ void AUnit::Die()
 	//Spawn a corpse
 
 	//Disable alive features 
-	GetRootComponent()->SetVisibility(false, true);
-	SetActorEnableCollision(false);
-	SetActorTickEnabled(false);
+	SetEnabled(false);
+
 	SetCanTarget(false);
 	isDead = true;
 
 	//Trigger "Death Events"
 	FGameplayEventData eD = FGameplayEventData();
-	eD.EventTag = UGameplayTagsManager::Get().RequestGameplayTag("Event.Death");
+	eD.EventTag = FGameplayTag::RequestGameplayTag("Event.Death");
 	eD.TargetData = targetData;
-	if (abilitySystem->HandleGameplayEvent(UGameplayTagsManager::Get().RequestGameplayTag("Event.Death"), &eD))
+	if (abilitySystem->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("Event.Death"), &eD))
 	{
 		//GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Emerald, FString("Wee") + FString::FromInt(currentSpellIndex));
 	}
-
 	//Destroy?
+}
+
+void AUnit::SetEnabled(bool bEnabled)
+{
+	if(bEnabled)
+	{
+		SetCanTarget(true);
+		GetCapsuleComponent()->SetVisibility(true, true);
+		SetActorEnableCollision(true);
+		SetActorTickEnabled(true);
+		GetCapsuleComponent()->SetEnableGravity(true);
+		GetCapsuleComponent()->SetSimulatePhysics(false); //can't move w/o physics
+	}
+	else
+	{
+		SetCanTarget(false);
+		GetCapsuleComponent()->SetVisibility(false, true);
+		SetActorEnableCollision(false);
+		SetActorTickEnabled(false);
+		GetCapsuleComponent()->SetEnableGravity(false);
+		GetCapsuleComponent()->SetSimulatePhysics(true); //but will drop if physics isn't set to true
+	}
 }
 
 void AUnit::CommitCast(UMySpell* spell)
@@ -293,6 +312,7 @@ void AUnit::Attack()
 		//Create a gameplay effect for this
 		FGameplayEffectContextHandle context = GetAbilitySystemComponent()->MakeEffectContext();
 		context.AddInstigator(this, this);
+		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("NEW SPEC MADE DAMAGE"));
 		FGameplayEffectSpecHandle damageEffectHandle = GetAbilitySystemComponent()->MakeOutgoingSpec(UDamageEffect::StaticClass(), 1, context);
 		//set all the effect's custom magnitude values else it complains
 		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Strength"), 0);
@@ -610,6 +630,8 @@ void AUnit::deleteDI()
 
 FBox2D AUnit::FindBoundary()
 {
+	//This function can have errors due to being called during level transition before old level is completely unloaded
+
 	FBox2D boundary = FBox2D(ForceInit);
 	FVector origin, extent;
 	GetActorBounds(true, origin, extent);
@@ -618,7 +640,7 @@ FBox2D AUnit::FindBoundary()
 
 	for(int i = 0; i < 8; ++i)
 	{
-		GetWorld()->GetFirstPlayerController()->ProjectWorldLocationToScreen(origin + extent * BoundsPointMapping[i], screenLocation, true);
+		controllerRef->ProjectWorldLocationToScreen(origin + extent * BoundsPointMapping[i], screenLocation, true);
 		corners.Add(screenLocation);
 		//GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White, corners[i].ToString() + " " + boundary.GetExtent().ToString());
 		boundary += corners[i];

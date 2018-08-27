@@ -6,10 +6,10 @@
 #include "UI/HUDManager.h"
 #include "RTSGameMode.h"
 
-void UBreakMenu::Construct_Implementation()
+void UBreakMenu::NativeConstruct()
 {
-	Super::Construct_Implementation();
 	gameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
+	UMyDraggableWidget::NativeConstruct();
 }
 
 void UBreakMenu::Resume()
@@ -31,5 +31,5 @@ void UBreakMenu::Options()
 
 void UBreakMenu::Exit()
 {
-	gameModeRef->StreamLevelAsync(*gameModeRef->GetStartingLevelName());
+	gameModeRef->StreamLevelAsync(*gameModeRef->GetStartingLvlName());
 }

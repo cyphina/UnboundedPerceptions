@@ -55,20 +55,21 @@ void AUserInput::BeginPlay()
 	//There should only be one player
 	basePlayer = Cast<ABasePlayer>(PlayerState);
 
-	if (basePlayer)
-	{
-		//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Black, TEXT("Input component here"));
-		TArray<ABaseHero*> heroesInWorld;
+	//if (basePlayer)
+	//{
+	//	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Black, TEXT("Input component here"));
+	//	TArray<ABaseHero*> heroesInWorld;
 
-		for (TActorIterator<ABaseHero> heroItr(GetWorld()); heroItr; ++heroItr)
-		{
-			heroesInWorld.Add(*heroItr);
-		}
+	//	for (TActorIterator<ABaseHero> heroItr(GetWorld()); heroItr; ++heroItr)
+	//	{
+	//		heroesInWorld.Add(*heroItr);
+	//	}
 
-		if(heroesInWorld.Num() > 0)
-			basePlayer->UpdateParty(heroesInWorld);
-	}
+	//	if (heroesInWorld.Num() > 0)
+	//		basePlayer->UpdateParty(heroesInWorld);
+	//}
 	//Super Beginplay calls the blueprint BeginPlay 
+
 	hudManager = GetWorld()->SpawnActor<AHUDManager>(AHUDManager::StaticClass(), FTransform(), FActorSpawnParameters());
 	Super::BeginPlay();
 }
@@ -182,7 +183,7 @@ void AUserInput::ToggleBreakMenu()
 void AUserInput::TabNextAlly()
 {
 	int selectedHeroIndex = -1;
-	if(basePlayer->selectedAllies.Num() > 1)
+	if (basePlayer->selectedAllies.Num() > 1)
 	{
 		basePlayer->unitIndex = (basePlayer->unitIndex + 1) % basePlayer->selectedAllies.Num();
 		//Make sure any other selected heroes are actually in hero array.  If a hero is on the map, it better be in our party else spawn the NPC version of it
@@ -191,22 +192,22 @@ void AUserInput::TabNextAlly()
 	else
 	{
 		//tab through heroes if one/zero allies are selected
-		if(basePlayer->selectedAllies.Num() > 0)
+		if (basePlayer->selectedAllies.Num() > 0)
 		{
 			selectedHeroIndex = basePlayer->selectedHeroes[0]->heroIndex;
 			basePlayer->heroes[selectedHeroIndex]->SetSelected(false);
 		}
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Purple, FString::FromInt(basePlayer->heroes.Num()));
-		basePlayer->heroes[(selectedHeroIndex+1)%basePlayer->heroes.Num()]->SetSelected(true);
+		basePlayer->heroes[(selectedHeroIndex + 1) % basePlayer->heroes.Num()]->SetSelected(true);
 		OnAllySelectedDelegate.Broadcast();
 	}
 }
 
 void AUserInput::ClearSelectedAllies()
 {
-	while(basePlayer->selectedAllies.Num() > 0)
+	while (basePlayer->selectedAllies.Num() > 0)
 		basePlayer->selectedAllies[0]->SetSelected(false);
-	
+
 	basePlayer->focusedUnit = nullptr;
 	OnAllyDeselectedDelegate.Broadcast();
 }
@@ -215,20 +216,20 @@ bool AUserInput::IsUnitOnScreen(AUnit* unitToCheck)
 {
 	FBox2D unitBoundaryScreenCoords = unitToCheck->FindBoundary();
 	int sizeX, sizeY;
-	GetViewportSize(sizeX,sizeY);
+	GetViewportSize(sizeX, sizeY);
 	return unitBoundaryScreenCoords.Max.X < sizeX || unitBoundaryScreenCoords.Max.Y < sizeY;
 }
 
 FORCEINLINE void AUserInput::MoveX(float axisValue)
 {
-	if(!isCamNavDisabled)
-	cameraPawn->SetActorLocation(cameraPawn->GetActorTransform().TransformPosition(FVector(axisValue*baseCameraMoveSpeed*camMoveSpeedMultiplier,0,0)));
+	if (!isCamNavDisabled)
+		cameraPawn->SetActorLocation(cameraPawn->GetActorTransform().TransformPosition(FVector(axisValue*baseCameraMoveSpeed*camMoveSpeedMultiplier, 0, 0)));
 }
 
 FORCEINLINE void AUserInput::MoveY(float axisValue)
 {
-	if(!isCamNavDisabled)
-	cameraPawn->SetActorLocation(cameraPawn->GetActorTransform().TransformPosition(FVector(0,axisValue*baseCameraMoveSpeed*camMoveSpeedMultiplier,0)));
+	if (!isCamNavDisabled)
+		cameraPawn->SetActorLocation(cameraPawn->GetActorTransform().TransformPosition(FVector(0, axisValue*baseCameraMoveSpeed*camMoveSpeedMultiplier, 0)));
 }
 
 void AUserInput::EdgeMovementX()
@@ -358,6 +359,7 @@ void AUserInput::SetSecondaryCursor(ECursorStateEnum cursorType)
 	if (cursorType == ECursorStateEnum::Magic || cursorType == ECursorStateEnum::Item)
 	{
 		hasSecondaryCursor = true;
+		hitActor = nullptr;
 		ChangeCursor(cursorType);
 	}
 	else
@@ -381,6 +383,7 @@ void AUserInput::CursorHover()
 	if (GetHUDManager() && GetHUDManager()->numWidgetsBlocking > 0)
 	{
 		ChangeCursor(ECursorStateEnum::UI);
+		hitActor = nullptr;
 		return;
 	}
 
@@ -389,6 +392,7 @@ void AUserInput::CursorHover()
 		if (cursorDirections.Num() > 0 && !isCamNavDisabled)
 		{
 			ChangeCursor(cursorDirections.Last());
+			hitActor = nullptr;
 			return;
 		}
 
@@ -397,14 +401,17 @@ void AUserInput::CursorHover()
 			GetHitResultUnderCursorForObjects(queryableTargetObjects, true, hitResult);
 			if (hitResult.GetActor())
 			{
-				hitActor = hitResult.GetActor();
-				switch (hitResult.GetComponent()->GetCollisionObjectType())
+				if (hitResult.GetActor() != hitActor)
 				{
-				case ECollisionChannel::ECC_WorldStatic: ChangeCursor(ECursorStateEnum::Moving); break;
-				case ECollisionChannel::ECC_GameTraceChannel3: ChangeCursor(ECursorStateEnum::Interact); break;
-				case ECollisionChannel::ECC_GameTraceChannel4: ChangeCursor(ECursorStateEnum::Talking); break;
-				case ECollisionChannel::ECC_GameTraceChannel2: ChangeCursor(ECursorStateEnum::Attack); break;
-				default: ChangeCursor(ECursorStateEnum::Select); break;
+					hitActor = hitResult.GetActor();
+					switch (hitResult.GetComponent()->GetCollisionObjectType())
+					{
+						case ECollisionChannel::ECC_WorldStatic: ChangeCursor(ECursorStateEnum::Moving); break;
+						case ECollisionChannel::ECC_GameTraceChannel3: ChangeCursor(ECursorStateEnum::Interact); break;
+						case ECollisionChannel::ECC_GameTraceChannel4: ChangeCursor(ECursorStateEnum::Talking); break;
+						case ECollisionChannel::ECC_GameTraceChannel2: ChangeCursor(ECursorStateEnum::Attack); break;
+						default: ChangeCursor(ECursorStateEnum::Select); break;
+					}
 				}
 			}
 		}

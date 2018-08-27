@@ -33,6 +33,10 @@ public:
 	bool							CheckIfSaveFileExists(FString saveFileName);
 	
 private:
+
 	UFUNCTION(BlueprintCallable, Category = "Saving")
-	void							LevelTransition();
+	void							StartGameLevelTransition();
+
+	/**Helper function to setup all the preconditions for the game intro*/
+	void							GameEventStartSetup();
 };

@@ -16,9 +16,5 @@ void AUPLevelScript::BeginPlay()
 		Cast<ARTSGameState>(GetWorld()->GetGameState())->AddGameTime(timeToPass);
 
 	ARTSGameMode* gameMode = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
-
-	//When a new UPLevel is loaded, if this load was due to loading a save game, then setup what was saved.  May need some kind of delay?
-	gameMode->GetSaveManager()->SetupLoad();
-
 	Super::BeginPlay(); //remember this calls blueprint BeginPlay()
 }

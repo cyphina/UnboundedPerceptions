@@ -4,8 +4,11 @@
 #include "GameFramework/Actor.h"
 #include "Interactables/InteractableBase.h"
 #include "EventSystem/RTSConditional.h"
+#include "Components/BoxComponent.h"
+#include "Curves/CurveFloat.h"
 #include "RTSDoor.generated.h"
 
+struct FDoorInteractableSaveInfo;
 class ARTSGameMode;
 class AUserInput;
 
@@ -63,4 +66,7 @@ public:
 	void					Interact_Implementation(ABaseHero* hero) override;
 	FVector					GetInteractableLocation_Implementation() override;
 	bool					CanInteract_Implementation() override;
+
+	void					SaveInteractable(FMapSaveInfo& mapData) override;
+	void					LoadInteractable(FDoorInteractableSaveInfo& doorData);
 };

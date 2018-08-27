@@ -16,12 +16,12 @@ UMainWidget::UMainWidget()
 	gamespeeds.Append(arr, ARRAY_COUNT(arr));
 }
 
-void UMainWidget::Construct_Implementation()
+void UMainWidget::NativeConstruct()
 {
-	Super::Construct_Implementation();
 	gameTime.Init(1,3);
 	gameDate.Init(1,3);
 	gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
+	Super::NativeConstruct();
 }
 
 FText UMainWidget::GetHour() const

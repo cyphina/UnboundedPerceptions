@@ -20,7 +20,7 @@ class MYPROJECT_API UMainWidget : public UMyUserWidget
 #pragma region CallbacksAndReferences
 public:
 	UMainWidget();
-	void							Construct_Implementation() override;
+	void							NativeConstruct() override;
 
 private:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true))//, category = "UIInitialParams", Meta = (ExposeOnSpawn = true))

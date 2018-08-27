@@ -208,9 +208,11 @@ public:
 	void									StopSelectedAllyCommands();
 
 private:
+
 	//Spline Flight Path Controls
 	void									PrevFlight(); 
 	void									NextFlight();
+
 	void									Inventory(); 
 	void									QuestJournal();
 	void									QuestList();

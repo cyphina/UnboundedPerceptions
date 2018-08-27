@@ -8,7 +8,7 @@ UEventManager::UEventManager()
 {
 	static ConstructorHelpers::FObjectFinder<UStorybook> SpellLookupTableFinder(TEXT("/Game/RTS_Tutorial/Blueprints/Events/StorybookData"));
 	if (SpellLookupTableFinder.Object)
-		storybook = SpellLookupTableFinder.Object;	
+		storybook = SpellLookupTableFinder.Object;
 }
 
 void UEventManager::Init()
@@ -22,12 +22,14 @@ void UEventManager::MoveToNextSection()
 	{
 		++currentChapter;
 		currentSection = 1;
+		OnChapterCompletedDelegate.Broadcast(GetCurrentChapter());
 		checkf(currentChapter <= 10, TEXT("Why are you past the last chapter hacker!"));
 	}
 	else
 	{
 		++currentSection;
 	}
+	OnSectionCompletedDelegate.Broadcast(GetCurrentSection());
 
 	for (FTriggerData trigger : storybook->chapters[currentChapter - 1].sections[currentSection - 1].triggers)
 	{

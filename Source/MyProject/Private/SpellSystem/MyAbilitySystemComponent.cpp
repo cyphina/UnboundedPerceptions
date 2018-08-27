@@ -6,7 +6,7 @@
 #include "GameplayEffectCustomApplicationRequirement.h"
 #include "GameplayCueManager.h"
 
-UMyAbilitySystemComponent::UMyAbilitySystemComponent() : Super()
+UMyAbilitySystemComponent::UMyAbilitySystemComponent() : UAbilitySystemComponent()
 {
 	purgeTagMap.Add(FGameplayTag::RequestGameplayTag("Combat.Effect.Purge.One"), 1);
 	purgeTagMap.Add(FGameplayTag::RequestGameplayTag("Combat.Effect.Purge.Two"), 2);
@@ -18,7 +18,7 @@ UMyAbilitySystemComponent::UMyAbilitySystemComponent() : Super()
 
 }
 
-FActiveGameplayEffectHandle UMyAbilitySystemComponent::ApplyGameplayEffectSpecToSelf(FGameplayEffectSpec& Spec,
+FActiveGameplayEffectHandle UMyAbilitySystemComponent::ApplyGameplayEffectSpecToSelf(const FGameplayEffectSpec& Spec,
 	FPredictionKey PredictionKey)
 {
 	// Scope lock the container after the addition has taken place to prevent the new effect from potentially getting mangled during the remainder
@@ -285,7 +285,7 @@ int UMyAbilitySystemComponent::GetPurgeAmount(FGameplayTag purgeDescription)
 FGameplayEffectSpecHandle UMyAbilitySystemComponent::MakeOutgoingSpec(TSubclassOf<UGameplayEffect> GameplayEffectClass,
 	float Level, FGameplayEffectContextHandle Context) const
 {
-	return FGameplayEffectSpecHandle();
+	return Super::MakeOutgoingSpec(GameplayEffectClass, Level, Context);
 }
 
 

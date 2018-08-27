@@ -5,9 +5,9 @@
 #include "UserInput.h"
 #include "UI/HUDManager.h"
 
-void UDialogUI::Construct_Implementation()
+void UDialogUI::NativeConstruct()
 {
-	Super::Construct_Implementation();
+	Super::NativeConstruct();
 }
 
 void UDialogUI::SetMainView()

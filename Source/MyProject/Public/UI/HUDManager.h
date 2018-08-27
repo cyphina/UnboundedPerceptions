@@ -24,6 +24,7 @@ class UDialogUI;
 class UDialogBox;
 class UBreakMenu;
 class USettingsMenu;
+class UItemExamineWidget;
 class UBackpack;
 class AShopNPC;
 struct FDialogData;
@@ -64,7 +65,9 @@ enum class HUDs : uint8
 	/**Allows graphical and gameplay settings changes*/
 	HS_Settings, 
 	/**Save/Load Menu*/
-	HS_SaveLoad
+	HS_SaveLoad,
+	/**Image that shows an item's image in closer details*/
+	HS_ExamineMenu
 };
 
 //The purpose of the HUDManager is for easy swapping in and out widgets.  Not too useful for getting references though
@@ -78,7 +81,7 @@ class MYPROJECT_API AHUDManager : public AInfo
 {
 	GENERATED_BODY()
 
-	static const int								HUDCount = 16; //Number of huds we have total.  Change if adding more. Assertion fails if we dont have enough space to remind us to update this size
+	static const int								HUDCount = 17; //Number of huds we have total.  Change if adding more. Assertion fails if we dont have enough space to remind us to update this size
 	
 	ARTSGameMode*									gameMode;
 	AUserInput*										playerControllerRef;
@@ -141,34 +144,42 @@ public:
 	 */
 	void											AddHUD(AShopNPC* shopNPC, ABaseHero* interactingHero = nullptr);
 
+	/**Allows us to add the HUD which shows a detailed view of an item.  Didn't overlaod AddHUD because parameter prevents implcit uint8 conversion
+	 * @param itemID - ID of the item to show a detailed view of
+	 */
+	void											AddItemExamineHUD(int itemID);
+
 	/**Toggle a hud on the screen on/off.  BP_Version.  Do not call with huds that require open parameters, instead call their respective AddHUD function.*/
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "HUDManager", meta = (DisplayName = "Add Hud"))
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "HUD Toggle", meta = (DisplayName = "Add HUD"))
 	void											BP_AddHUD(uint8 newState);
 	virtual void									BP_AddHUD_Implementation(uint8 newState) { AddHUD(newState); }
 
 	/**Add dialog HUD by passing in a conversation name*/
-	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Hud Dialog with Topic", AutoCreateRefTerm = "onDialogEndTriggers"))
+	UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Hud Dialog with Topic", AutoCreateRefTerm = "onDialogEndTriggers"))
 	void											BP_AddHUDDialog(FName conversationName, UPARAM(ref) TArray<FTriggerData> onDialogEndTriggers, ABaseHero* interacter)
 	{
 		AddHUD(conversationName, onDialogEndTriggers, interacter);
 	}
 
 	/**Add dialog HUD by passing in dialogLines rather than reading off dialogTable*/
-	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Hud Dialog with Dialog Lines", AutoCreateRefTerm = "onDialogEndTriggerS"))
+	UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Hud Dialog with Dialog Lines", AutoCreateRefTerm = "onDialogEndTriggerS"))
 	void											BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, UPARAM(ref) TArray<FTriggerData> onDialogEndTriggers, ABaseHero* interacter)
 	{
 		AddHUD(linesToDisplay, onDialogEndTriggers, interacter);
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Item Examine HUD"))
+	void											BP_AddHUDItemExamine(int itemID) { AddItemExamineHUD(itemID); }
+
 	/**Add the storage HUD by passing in a backpack with storage items*/
-	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Storage HUD"))
+	UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Storage HUD"))
 	void											BP_AddHUDStorage(UBackpack* backpack, ABaseHero* interacter) { AddHUD(backpack, interacter); }
 
 	/**Add the shop HUD by passing in a shopkeeper NPC*/
-	UFUNCTION(BlueprintCallable, Category = "Dialog Initiation", meta = (DisplayName = "Add Shop HUD"))
+	UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Shop HUD"))
 	void											BP_AddHUDShop(AShopNPC* shopNPC, ABaseHero* interacter) { AddHUD(shopNPC, interacter); }
 
-	UFUNCTION(BlueprintCallable, Category = "HUDManager")
+	UFUNCTION(BlueprintCallable, Category = "HUD Toggle")
 	bool											IsWidgetOnScreen(HUDs hudToCheck) const { return currentlyDisplayedWidgetsBitSet[static_cast<int>(hudToCheck)]; }
 
 		
@@ -216,6 +227,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
 	FORCEINLINE USettingsMenu*									GetSettingsMenu() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+	FORCEINLINE UItemExamineWidget*								GetExamineMenu() const;
 
 #pragma endregion
 };

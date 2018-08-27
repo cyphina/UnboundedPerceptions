@@ -88,7 +88,7 @@ class MYPROJECT_API UDialogBox : public UMyUserWidget
 public:
 	UDialogBox(const FObjectInitializer& ObjectInitializer);
 
-	void								Construct_Implementation() override;
+	void								NativeConstruct() override;
 	bool								OnWidgetAddToViewport_Implementation() override;
 
 	/** Used primarily to get current dialog line when first dialog is loaded up */

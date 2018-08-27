@@ -31,7 +31,9 @@ class MYPROJECT_API AShopNPC : public AIntimateNPC
 {
 	GENERATED_BODY()
 	
-	/**Lists sellable items, and maps them to price*/
+	/**
+	 *Lists sellable items, and maps them to price
+	 */
 	UPROPERTY(EditAnywhere, Category =  "Shop Items")
 	TMap<int, FItemPrice>						itemPrices;
 
@@ -41,15 +43,18 @@ public:
 
 	void										BeginPlay() override;
 
-	/**Backpack containing the items that the shopkeeper will sell and how many the shopkeeper can sell*/
+	/**Backpack containing the items that the shopkeeper will sell and how many the shopkeeper can sell before running out of stock
+	 * TODO: Setup some kind of list of what the shopkeeper sells based on what part of the story has occured
+	 */
 	UPROPERTY()
 	UBackpack*									itemsToSellBackpack;
 
 	UPROPERTY(EditAnywhere, Category =  "Shop Items")
 	TArray<FMyItem>								itemsToSell;
 
-	/**Accessor to gets an item's price*/
+	/**
+	 *Accessor to gets an item's price
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	FORCEINLINE FItemPrice						GetItemPrice(int itemID);
-
 };

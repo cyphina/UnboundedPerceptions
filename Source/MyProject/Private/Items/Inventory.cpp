@@ -3,9 +3,9 @@
 #include "MyProject.h"
 #include "Inventory.h"
 
-void UInventory::Construct_Implementation()
+void UInventory::NativeConstruct()
 {
-	Super::Construct_Implementation();
+	Super::NativeConstruct();
 }
 
 bool UInventory::OnWidgetAddToViewport_Implementation()

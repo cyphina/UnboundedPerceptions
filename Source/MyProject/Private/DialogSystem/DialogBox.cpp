@@ -19,10 +19,10 @@ UDialogBox::UDialogBox(const FObjectInitializer& ObjectInitializer)
 	InitDialogPortraitMaps();
 }
 
-void UDialogBox::Construct_Implementation()
+void UDialogBox::NativeConstruct()
 {
-	Super::Construct_Implementation();
 	gameModeRef = Cast<ARTSGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	Super::NativeConstruct();
 }
 
 bool UDialogBox::OnWidgetAddToViewport_Implementation()

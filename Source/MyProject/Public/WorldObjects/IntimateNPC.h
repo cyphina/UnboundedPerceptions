@@ -13,6 +13,7 @@
  */
 
 class ARTSGameMode;
+struct FNPCIntimateSaveInfo;
 
 UCLASS()
 class MYPROJECT_API AIntimateNPC : public ANPC
@@ -48,9 +49,13 @@ public:
 	void 						Interact(ABaseHero* hero);
 
 	virtual void 				Interact_Implementation(ABaseHero* hero) override;
+
 	/**
 	 *Sets up the dialogue UI to the proper state (conversation/intimate view) after interacting with this NPC
 	 */
 	void						SetupAppropriateView() override;
 	virtual FVector				GetInteractableLocation_Implementation() override { return Super::GetInteractableLocation_Implementation(); }
+
+	void						SaveNPCData(FMapSaveInfo& mapInfo) override;
+	void						LoadNPCData(FNPCIntimateSaveInfo& npcSaveInfo);
 };

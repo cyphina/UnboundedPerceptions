@@ -15,6 +15,7 @@
 #include "Unit.generated.h"
 
 class	UMyGameInstance;
+class	AUserInput;
 class	ARTSGameState;
 class	AAIController;
 class	UDamageEffect;
@@ -33,6 +34,7 @@ public:
 /*Information about this unit and important references/components*/
 #pragma region UnitInfoAndReferences
 private:
+
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
 	FText							name;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
@@ -50,6 +52,8 @@ protected:
 	TUniquePtr<FBaseCharacter>		baseC = nullptr; //Reference to statmanager.  Is a pointer so we can make it and give it a reference to the attribute set
 	AAIController*					controller = nullptr; //reference to AIController
 	ARTSGameState*					gameState = nullptr; //gamestate ref to keep track of game speed modifiers 
+	UPROPERTY(BlueprintReadOnly, Meta=(AllowPrivateAccess="true"))
+	AUserInput*						controllerRef = nullptr;
 
 #pragma endregion
 
@@ -80,9 +84,13 @@ public:
 	UFUNCTION(Category = "Callback") 
 	void							OnUpdateGameSpeed(float speedMultiplier); 
 
-	//Function called when unit dies :(
+	/**Function called when unit dies :(*/
 	UFUNCTION(BlueprintCallable, Category = "Functionality") 
 	virtual	void					Die(); 
+
+	/**Function to disable to not destroy this actor*/
+	UFUNCTION(BlueprintCallable, Category = "Functionality")
+	void							SetEnabled(bool bEnabled);
 
 private:
 	//callback must be a UFUNCTION
@@ -133,6 +141,7 @@ public:
 
 ///--expose stats to blueprints and other units but only change the stats from C++ which is why we don't see any setters--
 #pragma region Stats
+
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
 	FORCEINLINE int					 GetAttributeBaseValue(int att) const { return baseC->GetAttribute(att)->GetBaseValue(); };
 
@@ -227,6 +236,7 @@ public:
 
 ///---Actions that trigger a change in unit state---///
 #pragma region actions 
+
 	//Function for moving units around, based upon the ACharacter move.  Changing our state is pretty much the only reason we have a custom move
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	virtual void					Move(FVector newLocation);

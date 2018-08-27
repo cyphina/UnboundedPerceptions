@@ -15,8 +15,8 @@ ULoadingWidget::ULoadingWidget()
 #undef LOCTEXT_NAMESPACE
 }
 
-void ULoadingWidget::Construct_Implementation()
+void ULoadingWidget::NativeConstruct()
 {
-	Super::Construct_Implementation();
 	SetTip(tipList[FMath::RandRange(0,tipList.Num() - 1)]);
+	Super::NativeConstruct();
 }

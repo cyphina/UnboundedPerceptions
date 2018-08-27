@@ -59,5 +59,6 @@ public:
 		UPROPERTY(BlueprintAssignable, Category = "Pickup")
 		FPickupDelegate 			OnPickupDelegate;
 
-		void OnComponentBeginOverlap(UPrimitiveComponent* hitComp, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex, bool bFromSweep, const FHitResult& sweepResult);
+		void						OnComponentBeginOverlap(UPrimitiveComponent* hitComp, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex, bool bFromSweep, const FHitResult& sweepResult);
+		void						SaveInteractable(FMapSaveInfo& mapData) override;
 };

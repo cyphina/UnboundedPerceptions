@@ -51,4 +51,6 @@ public:
 
 	UFUNCTION()
 	void							OnLeaveRange(UPrimitiveComponent* overlappedComp, AActor* otherActor, UPrimitiveComponent* otherComp, int otherBodyIndex);
+
+	void							SaveInteractable(FMapSaveInfo& mapData) override;
 };

@@ -11,6 +11,7 @@
 
 class UQuestManager;
 class UQuestListSlot;
+class UNamedInteractableDecorator;
 
 /**
  * All about quests!
@@ -250,7 +251,12 @@ public:
 	TMap<int,int>					currentAmounts;
 
 	/**
-	 *Struct with nformation about quest
+	 *Map that links a goal to the actors that have been interacted with so we don't interact with the same actors twice... granted the quest asks to interact with multiple actors
+	 */
+	TMap<int, TArray<UNamedInteractableDecorator*>>			interactedActors;
+
+	/**
+	 *Struct with information about quest
 	 */
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Information")
 	FQuestInfo						questInfo; 

@@ -7,6 +7,8 @@
 #include "BasePlayer.h"
 #include "RTSGameMode.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLevelLoaded);
+
 /**
  * Game mode only exists on server.  Put things that only the server needs to know and use.  
  */
@@ -24,8 +26,11 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 	///<summary> Level Names </summary>
+
 	const FString				startingLevelName = "StartMap";
-	const FString				theIntroduction = "SylphiaApartment";
+	const FString				sylphiaApartment = "SylphiaApartment";
+	const FString				roadToWubville = "RoadToWubville";
+	const FString				blockadeCity = "BlockadeCity";
 	
 	/**Stores the currently loaded level name*/
 	UPROPERTY(BlueprintReadWrite, Category = "Levels", Meta = (AllowPrivateAccess = "true"))
@@ -33,6 +38,9 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
 
 	/**Stores a list of all the worldobjects for quick access.  For now enemies won't be here since enemies don't have unique names*/
 	TMap<FName, IWorldObject*>	worldObjectReferences;
+
+	/**Did we just load a new level because we loaded a game load?*/
+	bool						bLoading;
 
 	void BeginPlay() override;
 
@@ -69,10 +77,14 @@ public:
 	UPROPERTY(BlueprintGetter = GetQuestManager)
 	UQuestManager*					questManager;
 
+	UPROPERTY(BlueprintGetter = GetSaveManager)
 	USaveLoadClass*					saveLoadManager;
 
 	UPROPERTY(BlueprintGetter = GetConditionalManager)
 	UConditionalManager*			conditionalManager;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+	FOnLevelLoaded					OnLevelLoaded;
 
 	///---Manager class accessors---
 	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
@@ -94,38 +106,49 @@ public:
 	/**
 	 * Gets the name of the current level that has been last streamed in
 	 */
-	UFUNCTION(BlueprintCallable, Category = Levels)
-	FString					GetCurrentLevelName() const { return currentLevelName; }
+	UFUNCTION(BlueprintCallable, Category = "RTSLevels")
+	FORCEINLINE FString					GetCurLevelName() const { return currentLevelName; }
 
 	/**
 	 * Gets the name of the start level (main screen when game is loaded)
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Levels")
-	FString					GetStartingLevelName() const { return startingLevelName; }
+	FORCEINLINE FString					GetStartingLvlName() const { return startingLevelName; }
 
 	/**
 	 * Gets the name of the introduction level (first level in demo with Zone waking up in Chapter 2)
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Levels")
-	FString					GetIntroductionLevelName() const { return theIntroduction; }
+	FORCEINLINE FString					GetSylphiaAptLvlName() const { return sylphiaApartment; }
+
+	/**
+	 * Gets the name of the level of the area between the inner city and Zone's apartment zone
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Levels")
+	FORCEINLINE FString					GetZoneNeighborhoodLvlName() const { return roadToWubville; }
+
+	/**
+	 * Gets the name of the blockaded inner city
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Levels")
+	FORCEINLINE FString					GetBlockadedCityLevelName() const { return blockadeCity; }
 
 	/**Stream in a level and put in the loading screen*/
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "LevelLoading")
-	void					StreamLevelAsync(FName levelName);
+	void								StreamLevelAsync(FName levelName);
 
 	///---Saving---
 	/**
 	 * Saves the game in the SavedGames folder (in main project folder)
 	 * @param fileName - Filename of the new save file to be created
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Managers")
+	UFUNCTION(BlueprintCallable, Category = "Saving and Loading")
 	bool							SaveGame(FString saveName);
 	
 	/**
 	 * Loads a game in the SavedGames folder (in main project folder)
 	 * @param fileName - Filename of save file to load
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Managers")
+	UFUNCTION(BlueprintCallable, Category = "Saving and Loading")
 	bool							LoadGame(FString fileName);
-
 };

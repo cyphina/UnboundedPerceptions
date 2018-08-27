@@ -13,6 +13,7 @@
 #include "Items/Inventory.h"
 #include "Items/HeroInventory.h"
 #include "Items/StoreInventory.h"
+#include "Items/ItemExamineWidget.h"
 #include "WorldObjects/ShopNPC.h"
 
 #include "Quests/UI/QuestList.h"
@@ -164,6 +165,22 @@ void AHUDManager::AddHUD(AShopNPC* shopNPC, ABaseHero* interactingHero)
 			playerControllerRef->GetBasePlayer()->interactedHero = nullptr;
 			ApplyHUD(static_cast<int>(HUDs::HS_Shop_General), true, true, true, false);
 		}
+	}
+}
+
+void AHUDManager::AddItemExamineHUD(int itemID)
+{
+	if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_ExamineMenu)]) //if not on screen
+	{
+		if (itemID > 0)
+		{
+			GetExamineMenu()->itemToDisplayID = itemID;
+			ApplyHUD(static_cast<int>(HUDs::HS_ExamineMenu), true, true, true, false);
+		}
+	}
+	else
+	{
+		ApplyHUD(static_cast<int>(HUDs::HS_ExamineMenu), true, true, true, false);
 	}
 }
 
@@ -319,5 +336,10 @@ UBreakMenu* AHUDManager::GetBreakMenu() const
 USettingsMenu* AHUDManager::GetSettingsMenu() const
 {
 	return Cast<USettingsMenu>(widgetReferences[static_cast<int>(HUDs::HS_Settings)]);
+}
+
+UItemExamineWidget* AHUDManager::GetExamineMenu() const
+{
+	return Cast<UItemExamineWidget>(widgetReferences[static_cast<int>(HUDs::HS_ExamineMenu)]);
 }
   

@@ -24,6 +24,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "SpellSystem/MySpell.h"
+#include "SpellSystem/Spellbook.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
 
@@ -105,6 +106,12 @@ void ABaseHero::BeginPlay()
 		if(IsValid(itemAbilityClass))
 			GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(itemAbilityClass.GetDefaultObject(),1));
 	}
+
+	spellbook = NewObject<USpellBook>(this, spellbookClass.Get());
+	spellbook->heroRef = this;
+	spellbook->Init();
+
+	SetEnabled(false);
 }
 
 // Called every frame

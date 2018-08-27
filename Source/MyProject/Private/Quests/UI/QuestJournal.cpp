@@ -7,13 +7,13 @@
 #include "../QuestManager.h"
 
 
-void UQuestJournal::Construct_Implementation()
+void UQuestJournal::NativeConstruct()
 {
-	Super::Construct_Implementation();
 	if(gameModeRef->GetQuestManager())
 	{
 		gameModeRef->GetQuestManager()->questJournalRef = this;
 	}
+	Super::NativeConstruct();
 }
 
 bool UQuestJournal::OnWidgetAddToViewport_Implementation()

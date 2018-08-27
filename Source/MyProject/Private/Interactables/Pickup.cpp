@@ -8,6 +8,7 @@
 #include "RTSGameMode.h"
 #include "Quests/QuestManager.h"
 #include "Items/HeroInventory.h"
+#include "LevelSaveStructs.h"
 
 APickup::APickup()
 {
@@ -59,9 +60,7 @@ void APickup::OnPickedUp()
 {
 	if (item.count == 0)
 	{
-		interactableMesh->SetVisibility(false); //don't want to destroy since our inventory has this as the reference but we may later on make data and vision seperate
-		interactableMesh->SetSimulatePhysics(false);
-		interactableMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		Destroy();
 		CPCRef->GetGameMode()->GetQuestManager()->OnItemPickup(item);
 	}
 	CPCRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
@@ -70,4 +69,10 @@ void APickup::OnPickedUp()
 void APickup::OnComponentBeginOverlap(UPrimitiveComponent* hitComp, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex, bool bFromSweep, const FHitResult& sweepResult)
 {
 
+}
+
+void APickup::SaveInteractable(FMapSaveInfo& mapData)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("SAVED PICKUP!"));
+	mapData.pickupList.Add(GetName());
 }

@@ -7,7 +7,9 @@
 #include "Items/Item.h"
 #include "QuestManager.generated.h"
 
+
 class ABasePlayer;
+class AQuest;
 class AUserInput;
 class ABaseHero;
 class UMyUserWidget;
@@ -88,12 +90,14 @@ public:
 
 	void									Init();
 
-
 	/**Select a new quest in the quest list*/
 	UFUNCTION(BlueprintCallable, Category = "Quest Managing")
 	void									SelectNewQuest(AQuest* quest);
 
-	/**Add a new current quest.  Returns true on success, false on failure*/
+	/**Add a new current quest.  Returns true on success, false on failure
+	 * @param questClassToSpawn - Class of quest actor to spawn
+	 * @param forcedStart - Forces this quest to be selected in the quest journal
+	 */
 	UFUNCTION(BlueprintCallable, Category = "Quest Managing")
 	bool									AddNewQuest(TSubclassOf<AQuest> questClassToSpawn, bool forcedStart);
 

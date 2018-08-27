@@ -7,6 +7,8 @@
 #include "Quests/QuestManager.h"
 #include "EventSystem/RTSConditional.h"
 #include "UserInput.h"
+#include "BasePlayer.h"
+#include "WorldObjects/BaseHero.h"
 
 ARTSGameMode::ARTSGameMode() : Super()
 {
@@ -16,9 +18,6 @@ ARTSGameMode::ARTSGameMode() : Super()
 
 void ARTSGameMode::BeginPlay()
 {
-	Super::BeginPlay(); 
-	AUserInput* CPC = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
-
 	///Setup Manager Singletons
 	eventManager = NewObject<UEventManager>(this, eventManagerClass, TEXT("EventManager"), RF_NoFlags);
 	triggerManager = NewObject<UTriggerManager>(this, triggerManagerClass, TEXT("TriggerManager"), RF_NoFlags);
@@ -32,6 +31,9 @@ void ARTSGameMode::BeginPlay()
 	questManager->Init();
 	saveLoadManager->Init();
 	conditionalManager->Init();
+
+	//Call blueprint BeginPlay() afterwards
+	Super::BeginPlay();
 }
 
 bool ARTSGameMode::SaveGame(FString saveName)
@@ -41,5 +43,12 @@ bool ARTSGameMode::SaveGame(FString saveName)
 
 bool ARTSGameMode::LoadGame(FString fileName)
 {
-	return saveLoadManager->LoadFromFilePath(FPaths::ProjectDir().Append("\\SavedGames\\" + fileName));
+	bLoading = true;
+	bool sucessfulLoad = saveLoadManager->LoadFromFilePath(FPaths::ProjectDir().Append("\\SavedGames\\" + fileName));
+
+	if (sucessfulLoad)
+		saveLoadManager->SetupLoad();
+
+	bLoading = false;
+	return sucessfulLoad;
 }

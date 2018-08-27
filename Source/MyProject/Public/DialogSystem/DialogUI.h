@@ -37,7 +37,7 @@ class MYPROJECT_API UDialogUI : public UMyUserWidget
 
 public:
 
-	void								Construct_Implementation() override;
+	void								NativeConstruct() override;
 
 	/** Called after greeting the IntimateNPC */
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Callbacks")

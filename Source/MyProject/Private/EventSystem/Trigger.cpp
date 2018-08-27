@@ -19,7 +19,7 @@ FTriggerData FTriggerData::defaultTrigger = FTriggerData();
 
 FTriggerData::FTriggerData()
 {
-	
+
 }
 
 void UTriggerManager::Init()
@@ -34,9 +34,7 @@ void UTriggerManager::AddTriggerToRecords(FName worldObjectName, const FTriggerD
 }
 
 void UTriggerManager::ActivateTrigger(UPARAM(ref) FTriggerData& triggerData)
-{
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("TRIGGER ACTIVATED!"));
-	
+{	
 	if (triggerData.enabled)
 	{
 		if (triggerData.numCalls != 0)
@@ -76,7 +74,7 @@ void UTriggerManager::OpenHUDTrigger(const FTriggerData& tdata)
 	checkf(tdata.triggerObjects.Num() == 0 && tdata.triggerValues.Num() == 1, TEXT("Incorrect parameters for OPENHUDTRIGGER"))
 	checkf(tdata.triggerValues[0].IsNumeric(), TEXT("OPENHUDTRIGGER triggerValue should be numeric"))
 	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, tdata.triggerValues[0]);
-	cpcRef->GetHUDManager()->AddHUD(FCString::Atoi(*tdata.triggerValues[0]));
+	cpcRef->GetHUDManager()->AddHUD((uint8)FCString::Atoi(*tdata.triggerValues[0]));
 }
 
 void UTriggerManager::OpenHUDTriggerStorage(const FTriggerData& tdata)
@@ -109,7 +107,7 @@ void UTriggerManager::ChangeParty(const FTriggerData& tdata)
 	}
 	//GetBasePlayer will return null if we don't go through persistent level setup first
 	cpcRef->GetBasePlayer()->UpdateParty(newHeroes);
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::FromInt(newHeroes.Num()));
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString("This is the number of new members in your party!: ") + FString::FromInt(newHeroes.Num()));
 }
 
 void UTriggerManager::ActivateOtherTrigger(const FTriggerData& tdata)
@@ -131,9 +129,10 @@ bool UTriggerManager::AddQuest(const FTriggerData& tdata)
 	checkf(tdata.triggerValues[1].IsNumeric(), TEXT("ADDQUESTTRIGGER triggerValue 2 should be numeric"))
 	if(gameModeRef->GetQuestManager()->AddNewQuest(gameModeRef->GetQuestManager()->questMap->questClassList[
 		FGameplayTag::RequestGameplayTag(*(FString("QuestName.")+tdata.triggerValues[0]))], 
-		FCString::Atoi(*tdata.triggerValues[0]) != 0))
-	return true;
-
+		FCString::Atoi(*tdata.triggerValues[1])))
+	{
+		return true;
+	}
 	return false;
 }
 

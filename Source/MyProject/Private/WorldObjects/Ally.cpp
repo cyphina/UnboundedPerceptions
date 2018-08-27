@@ -39,7 +39,6 @@ void AAlly::BeginPlay()
 		}
 	}
 
-	controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 	Cast<ABasePlayer>(controllerRef->PlayerState)->allies.Add(this);
 	queryParamVision.AddObjectTypesToQuery(ECC_GameTraceChannel6); //VisionBlockers
 }

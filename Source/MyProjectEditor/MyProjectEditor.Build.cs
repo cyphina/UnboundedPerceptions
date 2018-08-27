@@ -12,6 +12,7 @@ public class MyProjectEditor : ModuleRules
 		PrivateDependencyModuleNames.AddRange(new string[]{
 			"MyProject",
 			"Core",
+			"InputCore",
             "Engine",
             "CoreUObject",
             "UnrealEd",

@@ -10,8 +10,23 @@ public class MyProject : ModuleRules
        // bFasterWithoutUnity = true;
         bUseRTTI = true;                
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "GameplayTasks", "GameplayTags", "GameplayAbilities", "AIModule", "MyProjectEditor"});
-		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "GameplayAbilities", "AIModule"});
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", 
+			"CoreUObject", 
+			"Engine",
+			"InputCore",
+			"UMG", 
+			"GameplayTasks",
+			"GameplayTags", 
+			"GameplayAbilities", 
+			"AIModule",
+			"MyProjectEditor"});
+
+		PrivateDependencyModuleNames.AddRange(new string[] { 
+			"Slate", 
+			"SlateCore",
+			"GameplayAbilities", 
+			"AIModule"
+		});
 
 		// Uncomment if you are using online features
 		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
