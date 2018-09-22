@@ -3,6 +3,7 @@
 #include "MyProject.h"
 #include "Ally.h"
 #include "SpellSystem/MySpell.h"
+#include "RTSGameState.h"
 #include "UserInput.h"
 #include "BasePlayer.h"
 #include "UI/HUDManager.h"
@@ -11,6 +12,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AIStuff/AIControllers/AllyAIController.h"
+#include "Enemy.h"
 #include "InteractableBase.h"
 
 FText const AAlly::notEnoughManaText = NSLOCTEXT("HelpMessages", "Mana", "Not Enough Mana!");
@@ -21,25 +23,24 @@ FText const AAlly::filledQueueText = NSLOCTEXT("HelpMessages", "Queue", "Command
 
 AAlly::AAlly(const FObjectInitializer& oI) : AUnit(oI)
 {
-	/* ABILITY SETUP!!! */
 	state = TUniquePtr<StateMachine>(new StateMachine(this));
 	abilities.SetNum(MAX_NUM_SPELLS); //size of abilities that can be used on actionbar
-	GetCapsuleComponent()->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel9); 
+	GetCapsuleComponent()->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel9);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel10, ECollisionResponse::ECR_Block); //traceAllyOnly
+	visionSphere->OnComponentBeginOverlap.AddDynamic(this, &AAlly::OnVisionSphereOverlap);
+	visionSphere->OnComponentEndOverlap.AddDynamic(this, &AAlly::OnVisionSphereEndOverlap);
+	visionSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap); //Enemy
+#if UE_EDITOR
+	visionSphere->SetHiddenInGame(false);
+#endif
 }
 
 void AAlly::BeginPlay()
 {
 	Super::BeginPlay();
 
-	for (TSubclassOf<UMySpell> ability : abilities)
-	{
-		if (ability.GetDefaultObject()) //if client tries to give himself ability assert fails
-		{
-			GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(ability.GetDefaultObject(), 1));
-		}
-	}
-
 	Cast<ABasePlayer>(controllerRef->PlayerState)->allies.Add(this);
+	Cast<ARTSGameState>(GetWorld()->GetGameState())->allyList.Add(this);
 	queryParamVision.AddObjectTypesToQuery(ECC_GameTraceChannel6); //VisionBlockers
 }
 
@@ -47,7 +48,7 @@ void AAlly::Tick(float deltaSeconds)
 {
 	Super::Tick(deltaSeconds);
 
-	if(!controllerRef->IsInputKeyDown(EKeys::LeftShift) && GetState() == EUnitState::STATE_IDLE && !commandQueue.IsEmpty())
+	if (!controllerRef->IsInputKeyDown(EKeys::LeftShift) && GetState() == EUnitState::STATE_IDLE && !commandQueue.IsEmpty())
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, FString(TEXT("Command Dequeued")));
 		TFunction<void()> command;
@@ -72,7 +73,7 @@ void AAlly::PossessedBy(AController* newAllyControllerRef)
 void AAlly::SetSelected(bool value)
 {
 	Super::SetSelected(value);
-	if(value)
+	if (value)
 	{
 		controllerRef->GetBasePlayer()->selectedAllies.AddUnique(this);
 	}
@@ -83,11 +84,11 @@ void AAlly::SetSelected(bool value)
 }
 
 void AAlly::SetSpellIndex(int index)
-{		
+{
 #if UE_EDITOR
 	check(index >= 0 && index < MAX_NUM_SPELLS)
 #endif
-	spellIndex = index;	
+		spellIndex = index;
 }
 
 UGameplayAbility* AAlly::GetSpellInstance(TSubclassOf<UMySpell> spellClass) const
@@ -109,21 +110,21 @@ bool AAlly::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
 		{
 			if (spell->GetCost(GetAbilitySystemComponent()) <= GetVitalCurValue(static_cast<int>(Vitals::Mana)))
 			{
-				if (currentSpell == spellToCast) //if already selected
+				if (GetCurrentSpell() == spellToCast) //if already selected
 				{
-					currentSpell = nullptr; //deselect
+					SetCurrentSpell(nullptr); //deselect
 					controllerRef->HideSpellCircle();
 					controllerRef->SetSecondaryCursor(ECursorStateEnum::Select);
 					return true;
 				}
 
 				//set our current spell to spellToCast for recording purposes
-				currentSpell = spellToCast;
+				SetCurrentSpell(spellToCast);
 
 				if (spell->GetTargetting().GetTagName() == "Skill.Targetting.None") //non targetted?  Then just cast it
 				{
 					state->ChangeState(EUnitState::STATE_CASTING);
-					PreCastChannelingCheck(currentSpell);
+					PreCastChannelingCheck(GetCurrentSpell());
 				}
 				else
 				{
@@ -163,7 +164,7 @@ bool AAlly::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
 bool AAlly::BeginCastSpell(int spellToCastIndex, FGameplayAbilityTargetDataHandle tData)
 {
 	SetSpellIndex(spellToCastIndex);
-	if(Super::BeginCastSpell(spellToCastIndex,tData))
+	if (Super::BeginCastSpell(spellToCastIndex, tData))
 	{
 		return true;
 	}
@@ -189,9 +190,9 @@ void AAlly::QueueAction(TFunction<void()> actionToQueue)
 
 bool AAlly::CastSpell(TSubclassOf<UMySpell> spellToCast)
 {
-	if(Super::CastSpell(spellToCast))
+	if (Super::CastSpell(spellToCast))
 	{
-		if(controllerRef->GetBasePlayer()->focusedUnit == this)
+		if (controllerRef->GetBasePlayer()->focusedUnit == this)
 			controllerRef->GetHUDManager()->GetActionHUD()->ShowSkillVisualCD(spellIndex);
 		return true;
 	}
@@ -225,8 +226,8 @@ bool AAlly::SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellC
 	{
 		if (spellTargetting == "Skill.Targetting.Area") // we can target anything and the area around it will be affected
 		{
-			targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(result);
-			targetLocation = UAbilitySystemBlueprintLibrary::GetTargetDataEndPoint(targetData, 0);
+			targetData.spellTargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(result);
+			targetData.targetLocation = UAbilitySystemBlueprintLibrary::GetTargetDataEndPoint(targetData.spellTargetData, 0);
 		}
 		else //we need to check to see if we targetted the right kind of actor
 		{
@@ -254,12 +255,12 @@ bool AAlly::SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellC
 							}
 						}
 
-						targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(result);
-						targetActor = unit;
-						targetUnit = unit;
+						targetData.spellTargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(result);
+						targetData.targetActor = unit;
+						targetData.targetUnit = unit;
 
 						//If casting on ourselves, then we can just instantly cast
-						if (targetUnit == this || FVector::Dist2D(targetLocation, GetActorLocation()) < 5.f)
+						if (targetData.targetUnit == this || FVector::Dist2D(targetData.targetLocation, GetActorLocation()) < 5.f)
 						{
 							PreCastChannelingCheck(spellClass);
 							controllerRef->ChangeCursor(ECursorStateEnum::Select);
@@ -275,8 +276,8 @@ bool AAlly::SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellC
 						return false;
 					}
 
-					targetActor = Cast<AInteractableBase>(result.Actor);
-					targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(result);
+					targetData.targetActor = Cast<AInteractableBase>(result.Actor);
+					targetData.spellTargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(result);
 				}
 				else
 				{
@@ -299,4 +300,31 @@ bool AAlly::SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellC
 		return true;
 	}
 	return false;
+}
+
+void AAlly::OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep, const FHitResult& sweepRes)
+{
+	if (otherActor->IsA(AEnemy::StaticClass()))
+	{
+		AEnemy* enemy = Cast<AEnemy>(otherActor);
+		//TODO: Check for invisibility
+		possibleEnemiesInRadius.Add(enemy);
+		enemy->IncVisionCount();
+	}
+}
+
+void AAlly::OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor,
+	UPrimitiveComponent* otherComp, int32 otherBodyIndex)
+{
+	AEnemy* enemy = Cast<AEnemy>(otherActor);
+	if (IsValid(enemy))
+	{
+		possibleEnemiesInRadius.Remove(enemy);
+		enemy->DecVisionCount();
+		if (!enemy->GetVisionCount())
+		{
+			enemy->GetCapsuleComponent()->SetVisibility(false, true);
+			gameState->visibleEnemies.Remove(enemy);
+		}
+	}
 }

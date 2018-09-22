@@ -26,6 +26,8 @@ class UBreakMenu;
 class USettingsMenu;
 class UItemExamineWidget;
 class UBackpack;
+class UConfirmationBox;
+class URTSInputBox;
 class AShopNPC;
 struct FDialogData;
 
@@ -67,7 +69,11 @@ enum class HUDs : uint8
 	/**Save/Load Menu*/
 	HS_SaveLoad,
 	/**Image that shows an item's image in closer details*/
-	HS_ExamineMenu
+	HS_ExamineMenu,
+	/**Shows a confirmation box*/
+	HS_Confirmation,
+	/**Shows a box that lets you input a number*/
+	HS_InputBox
 };
 
 //The purpose of the HUDManager is for easy swapping in and out widgets.  Not too useful for getting references though
@@ -81,7 +87,7 @@ class MYPROJECT_API AHUDManager : public AInfo
 {
 	GENERATED_BODY()
 
-	static const int								HUDCount = 17; //Number of huds we have total.  Change if adding more. Assertion fails if we dont have enough space to remind us to update this size
+	static const int								HUDCount = 19; //Number of huds we have total.  Change if adding more. Assertion fails if we dont have enough space to remind us to update this size
 	
 	ARTSGameMode*									gameMode;
 	AUserInput*										playerControllerRef;
@@ -149,6 +155,13 @@ public:
 	 */
 	void											AddItemExamineHUD(int itemID);
 
+	/**Adds a comfirmation box that can do something with the input once the confirmation button is pressed
+	 * @param functionPointer - Pointer to UObject member function that will be called after the confirmation 
+	 */
+	void											AddHUDConfirm(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty());
+
+	void											AddHUDInput(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty());
+	
 	/**Toggle a hud on the screen on/off.  BP_Version.  Do not call with huds that require open parameters, instead call their respective AddHUD function.*/
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "HUD Toggle", meta = (DisplayName = "Add HUD"))
 	void											BP_AddHUD(uint8 newState);
@@ -162,7 +175,7 @@ public:
 	}
 
 	/**Add dialog HUD by passing in dialogLines rather than reading off dialogTable*/
-	UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Hud Dialog with Dialog Lines", AutoCreateRefTerm = "onDialogEndTriggerS"))
+	UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Hud Dialog with Dialog Lines", AutoCreateRefTerm = "onDialogEndTriggers"))
 	void											BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, UPARAM(ref) TArray<FTriggerData> onDialogEndTriggers, ABaseHero* interacter)
 	{
 		AddHUD(linesToDisplay, onDialogEndTriggers, interacter);
@@ -178,6 +191,14 @@ public:
 	/**Add the shop HUD by passing in a shopkeeper NPC*/
 	UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Shop HUD"))
 	void											BP_AddHUDShop(AShopNPC* shopNPC, ABaseHero* interacter) { AddHUD(shopNPC, interacter); }
+
+	/**Add the confirmationbox HUD by passing in the callback*/
+	UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add ConfirmationBox HUD", AutoCreateRefTerm = "newTitle,newDesc"))
+	void											BP_AddConfirmationBox(const FText& newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) { AddHUDConfirm(funcName, funcObject, newTitle, newDesc); }
+
+	/**Add the inputbox HUD by passing in the callback*/
+	UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add InputBox HUD", AutoCreateRefTerm = "newTitle,newDesc"))
+	void											BP_AddInputBox(FText newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) { AddHUDInput(funcName, funcObject, newTitle, newDesc); }
 
 	UFUNCTION(BlueprintCallable, Category = "HUD Toggle")
 	bool											IsWidgetOnScreen(HUDs hudToCheck) const { return currentlyDisplayedWidgetsBitSet[static_cast<int>(hudToCheck)]; }
@@ -230,6 +251,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
 	FORCEINLINE UItemExamineWidget*								GetExamineMenu() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+	FORCEINLINE UConfirmationBox*								GetConfirmationBox() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+	FORCEINLINE URTSInputBox*									GetInputBox() const;
 
 #pragma endregion
 };

@@ -8,19 +8,18 @@
 #include "GameplayEffect.h"
 #include "SpellSystem/Calcs/DamageCalculation.h"
 #include "AIController.h" //Need this to add to delegate OnMoveCompleted
-#include "GameplayAbilityTargetTypes.h"
-#include "GameplayTags.h"
+#include "UnitTargetData.h"
 #include "Stats/BaseCharacter.h"
+#include "GameplayTags.h"
 #include "SaveLoadClass.h"
+#include "CombatParameters.h"
+#include "SpellSystem/UnitSpellData.h"
 #include "Unit.generated.h"
 
-class	UMyGameInstance;
 class	AUserInput;
 class	ARTSGameState;
 class	AAIController;
 class	UDamageEffect;
-class	UMyAbilitySystemComponent;
-class	UMySpell;
 class	UHealthbarComp;
 
 UCLASS(Abstract)
@@ -40,11 +39,14 @@ private:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
 	UTexture2D*						image = nullptr;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
-	bool							canTarget = true; 
+	bool							canTarget = true;
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
+	int								visionRadius = 1000;
 	float							height;
-	TArray<FGameplayAttribute>		atts; //holds all the attributes in AbilityComponent.  We need this because we use the names because the effects use them, however getting them requires them being copied
-	UMyGameInstance*				gameInstance = nullptr;
 	bool							isSelected = false;
+
+	UPAICombatParameters			combatParams; //records combat stats to determine some AI parameters
+
 protected:
 
 	bool							isEnemy = false; //protected so we can set this in enemy class
@@ -75,9 +77,12 @@ public:
 	UPROPERTY(EditAnywhere)
 	UDecalComponent*				selectionCircleDecal;
 
+	/**sphere representing vision radius*/
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	USphereComponent*				visionSphere;
+
 #pragma region Callbacks
 	void							BeginPlay() override;
-
 	void							Tick(float deltaSeconds) override;
 
 	//Change speed based parameters when time multiplier changes
@@ -134,10 +139,9 @@ public:
 	bool							 GetCanTarget() const { return canTarget;  }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-	bool							 GetIsDead() const  { return isDead; }
+	bool							 GetIsDead() const  { return combatParams.isDead; }
 
-	const FBaseCharacter&			 GetBaseCharacter() const { return *baseC; }
-
+	const FBaseCharacter&			GetBaseCharacter() const { return *baseC; }
 
 ///--expose stats to blueprints and other units but only change the stats from C++ which is why we don't see any setters--
 #pragma region Stats
@@ -171,7 +175,7 @@ public:
 
 	/**Only used to force hp to change to another value by triggers or cheatmenu*/
 	UFUNCTION(BlueprintCallable, Category = "StatAccessors")
-	void							SetVitalCurValue(int vit, int vitValue) const { baseC->GetVital(vit)->SetCurrValue(vitValue); }
+	void							 SetVitalCurValue(int vit, int vitValue) const { baseC->GetVital(vit)->SetCurrValue(vitValue); }
 
 	/**
 	 *Get Level of unit from baseCharacter
@@ -208,9 +212,6 @@ public:
 		FVector(-1.f, -1.f, 1.f),
 		FVector(-1.f, -1.f, -1.f)
 	};
-
-	//Delete damage indicator after it falls 
-	void							deleteDI();
 
 public:
 	//Function for checking if a unit is in range of some action
@@ -256,36 +257,24 @@ public:
 #pragma endregion		
 
 #pragma region combat
-	UPROPERTY(BlueprintReadOnly, Category = "Combat")
-	bool							isDead; 
-
 	/**
 	 *Get data on our spell target.  Is reset after the spell is sucessfully casted 
 	 */
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-	FGameplayAbilityTargetDataHandle	GetTargetData() const { return targetData; } 
+	FGameplayAbilityTargetDataHandle	GetTargetData() const { return targetData.spellTargetData; } 
 
 	/**
 	 *Get data on targetted unit.  Used in single target spellcasting and attacking.  Reset after spell casted and if we attack a new target or stop. 
 	 *Faster to use this then cast GetTargetData() to some unit type
 	 */
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-	AUnit*								GetTargetUnit() const { return targetUnit; } 
-
-	/**
-	 *Get data on our spell target
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Spells")
-	void								SetTarget(AUnit* target) { targetUnit = target; }
+	AUnit*								GetTargetUnit() const { return targetData.targetUnit; } 
 
 	//Process to create damage effect
 	virtual void						Attack(); 
 
 	//Damage Calculations on Receiving End.  If using some magic armor, attacker may get some debuffs
-	friend void							UDamageCalculation::ReceiveDamage(AUnit* unit, Damage& damage, FGameplayTagContainer& container) const;
-
-	//Remove the modifiers of some gameplayeffect to the unit when they expire
-	//void								RemoveGameplayEffects(const FActiveGameplayEffect& effect);
+	friend void							UDamageCalculation::DamageTarget(AUnit* sourceUnit, AUnit* targetUnit, Damage& d, FGameplayTagContainer effects) const;
 
 	/**
 	 *Preparations before we can actually execute an attack with our weapon like getting in range and turning the right way
@@ -293,16 +282,11 @@ public:
 	void								PrepareAttack(); // PURE_VIRTUAL(AUnit::PrepareAttack, );
 
 protected:
-	AActor*								targetActor; //Reference to a target actor (targetUnit, targetInteractable).
-	AUnit*								targetUnit; //used to target individual units (via spell cast or right click attack) because targetData has too much info
-	FVector								targetLocation; //used to target area (no restrictions on what can be clicked)
-	FGameplayAbilityTargetDataHandle	targetData = FGameplayAbilityTargetDataHandle(); //detailed spell targetting information
 
-	float								currentAttTime = 0; //keeps track of how long we wait between autoattacks
-	bool								readyToAttack = false; //bool to check if we can autoattack again
+	UnitTargetData						targetData;
+
 	inline bool							IsStunned() const; //are we currently stunned?
 	inline bool							IsSilenced() const;
-	FGameplayTag						combatStyle; //type of attack we autoattack with
 
 public:
 	/**
@@ -315,18 +299,31 @@ public:
 	 */
 	void								ShowDamageDealt(FText occurance);
 
-	//Apply the modifiers of some gameplayeffect to the unit
-	//void								ApplyGameplayEffects(const FGameplayEffectSpec& effect);		
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
+	float								GetDPS(float timespan);
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
+	float								GetDamageRecievedPerSecond(float timespan);
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
+	float								GetHealingPerSecond(float timespan);
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
+	float								GetHealingRecievedPerSecond(float timespan);
+	//float								GetStunPerSecond(float timespan);
+
+	void								CalculateRisk();
+	void								CalculateThreat();	
 	
-	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-	TSubclassOf<UMySpell>				GetCurrentSpell() const { return currentSpell; }
+	inline UAbilitySystemComponent*		GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-	float								GetChannelTime() const { return channelTime; } 
+	FORCEINLINE TSubclassOf<UMySpell>	GetCurrentSpell() const { return unitSpellData.currentSpell; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-	float								GetCurrentChannelTime() const { return currentChannelTime; } 
+	float								GetChannelTime() const { return unitSpellData.channelTime; } 
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
+	float								GetCurrentChannelTime() const { return unitSpellData.currentChannelTime; } 
+
+///---Skills---
 #pragma region Skills
 public:
 	//List of abilities that are in unit's skill slots
@@ -338,18 +335,18 @@ public:
 	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells") 
 	UMySpell*							GetSpellCDO(TSubclassOf<UMySpell> spellClass) const;
 
-	//Function called when ability is activated to allow spell to drain resources.  Public because MySpell needs to reference it
+	//Function called when ability is activated to allow spell to drain resources.  Public because MySpell needs to reference it.  
 	void								CommitCast(UMySpell* spell);
 
 	//Do we have the resources necessary to cast this spell
 	bool								CanCast(TSubclassOf<UMySpell> spellToCheck); 
 
 protected:
-	//CURRENT spell ATTEMPTED to be casted.  Used every tick during casting, and can be a spell not in abilities (when using an item)
-	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "Abilities")
-	TSubclassOf<UMySpell>				currentSpell = nullptr; 
 
-	/**Actually activates the ability and triggers abilities that wait for click events to continue
+	inline void							SetCurrentSpell(TSubclassOf<UMySpell> newCurrentSpell) { unitSpellData.currentSpell = newCurrentSpell; }
+
+	/**
+	 * Actually activates the ability and triggers abilities that wait for click events to continue
 	 * @param spellToCast - Spell we want to cast.  Left as a parameter because we can cast spells that aren't our current spells in some scenarios like item usage
 	 */
 	virtual bool						CastSpell(TSubclassOf<UMySpell> spellToCast);
@@ -359,20 +356,30 @@ protected:
 
 private:
 
-	float								currentChannelTime = 0; //Time spent channeling by unit
-	float								channelTime = 0; //How long unit has to channel
-
-	UMyAbilitySystemComponent*			abilitySystem; //Skill component
+	UnitSpellData						unitSpellData;
 
 	//Adjust position for spell casting and check if stunned
 	void								PrepareCastSpell();
 
+#pragma endregion
+
+///---Vision---
+public:
+
+	int									GetVisionCount() const { return enemyVisionCount; }
+	void								IncVisionCount() { ++enemyVisionCount; }
+	void								DecVisionCount() { --enemyVisionCount;}
+
+private:
+	/**
+	 *Counter for number of enemies (units with opposite value of isEnemy) that can see this unit
+	 */
+	int									enemyVisionCount;
 
 	friend void							USaveLoadClass::SetupBaseCharacter(AAlly* spawnedAlly, FBaseCharacterSaveInfo& baseCSaveInfo);
 	friend 								ChannelingState;
 	friend void							CastingState::Update(AUnit& unit, float deltaSeconds);
 	friend void							AttackState::Update(AUnit& unit, float deltaSeconds);
 
-#pragma endregion
 #pragma endregion
 };

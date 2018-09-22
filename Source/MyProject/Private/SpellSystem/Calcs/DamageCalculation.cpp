@@ -56,19 +56,34 @@ void UDamageCalculation::Execute_Implementation(const FGameplayEffectCustomExecu
 void UDamageCalculation::DamageTarget(AUnit* sourceUnit, AUnit* targetUnit, Damage& d, FGameplayTagContainer effects) const
 {
 	CalculateDamage(sourceUnit, d, effects);
-	ReceiveDamage(targetUnit, d, effects);
-	if (targetUnit->GetVitalCurValue(static_cast<int>(Vitals::Health)) <= 0)
+	CalculateDamageReduction(targetUnit, d, effects);
+
+	if (d.accuracy > 100)
 	{
-#if UE_EDITOR
-		if(targetUnit->godMode)
-		{
-			Damage damage = Damage(0, 999999, 1000, FGameplayTag::RequestGameplayTag("Combat.Element.Electric"), FGameplayTag::RequestGameplayTag("Combat.Style.Magic"), true);
-			effects.AddTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Nevermiss"));
-			effects.AddTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Healing"));
-			ReceiveDamage(targetUnit, damage, effects);
-			return;
-		}
-#endif 
+		targetUnit->ShowDamageDealt(NSLOCTEXT("Combat", "Dodge", "Dodged!"));
+		return;
+	}
+
+	if (d.damage <= 0)
+		d.damage = 1;
+
+	float worldTime = sourceUnit->GetWorld()->GetTimeSeconds();
+	if(!effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Healing")))
+	{
+		targetUnit->baseC->GetVital(static_cast<int>(Vitals::Health))->SetCurrValue(targetUnit->GetVitalCurValue(static_cast<int>(Vitals::Health)) - d.damage);
+		sourceUnit->combatParams.damageDealt.Insert(TPair<int,float>(d.damage, worldTime));
+		targetUnit->combatParams.damageRecieved.Insert(TPair<int,float>(d.damage, worldTime));
+	}
+	else
+	{
+		targetUnit->baseC->GetVital(static_cast<int>(Vitals::Health))->SetCurrValue(targetUnit->GetVitalCurValue(static_cast<int>(Vitals::Health)) + d.damage);
+		sourceUnit->combatParams.healingRecieved.Insert(TPair<int,float>(d.damage, worldTime));
+		targetUnit->combatParams.healingDealt.Insert(TPair<int,float>(d.damage, worldTime));
+	}
+	targetUnit->ShowDamageDealt(d);
+
+	if (targetUnit->GetVitalCurValue(static_cast<int>(Vitals::Health)) <= 0)
+	{ 
 		if(!targetUnit->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Immortality")))
 		{
 			targetUnit->Die();
@@ -101,9 +116,11 @@ void UDamageCalculation::ReceiveEffects(AUnit* unit, Damage& d, FGameplayTagCont
 		d.damage = d.damage * (100 - unit->GetMechanicAdjValue(static_cast<int>(Mechanics::GlobalDamageModifier))) / 100;
 	if (effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.NeverMiss")))
 		d.accuracy = 0;
+	if(unit->godMode)
+		d.damage = 0;
 }
 
-void UDamageCalculation::ReceiveDamage(AUnit* unit, Damage& d, FGameplayTagContainer& effects) const
+void UDamageCalculation::CalculateDamageReduction(AUnit* unit, Damage& d, FGameplayTagContainer& effects) const
 {
 	CalculatePiercing(unit, d, false); //Calculate defensive piercing
 #if UE_EDITOR
@@ -141,22 +158,6 @@ void UDamageCalculation::ReceiveDamage(AUnit* unit, Damage& d, FGameplayTagConta
 	d.accuracy = FMath::RandRange(0, 100) + unit->GetSkillAdjValue(static_cast<int>(UnitStats::Dodge)) - d.accuracy; //accuracy now becomes dodge roll
 
 	ReceiveEffects(unit, d, effects);
-
-	if (d.accuracy > 100)
-	{
-		unit->ShowDamageDealt(NSLOCTEXT("Combat", "Dodge", "Dodged!"));
-		return;
-	}
-
-	if (d.damage <= 0)
-		d.damage = 1;
-
-	if(!effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Healing")))
-		unit->baseC->GetVital(static_cast<int>(Vitals::Health))->SetCurrValue(unit->GetVitalCurValue(static_cast<int>(Vitals::Health)) - d.damage);
-	else
-		unit->baseC->GetVital(static_cast<int>(Vitals::Health))->SetCurrValue(unit->GetVitalCurValue(static_cast<int>(Vitals::Health)) + d.damage);
-
-	unit->ShowDamageDealt(d);
 }
 
 void UDamageCalculation::CalculatePiercing(AUnit* unit, Damage& d, bool isAtt) const

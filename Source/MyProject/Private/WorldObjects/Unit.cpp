@@ -1,10 +1,9 @@
-                      // Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyProject.h"
 #include "UserInput.h"
 #include "RTSGameState.h"
 #include "Unit.h"
-#include "MyGameInstance.h"
 #include "ResourceManager.h"
 #include "State/StateMachine.h"
 #include "AIController.h"
@@ -15,14 +14,13 @@
 #include "SpellSystem/MySpell.h"
 #include "Stats/MyAttributeSet.h"
 #include "SpellSystem/GameplayEffects/DamageEffect.h"
-#include "SpellSystem/Calcs/DamageCalculation.h"
 #include "AbilitySystemBlueprintLibrary.h"
 
 AUnit::AUnit(const FObjectInitializer& objectInitializer) : Super(objectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
 	//Setup variables
 	PrimaryActorTick.bCanEverTick = true;
-	combatStyle = FGameplayTag::RequestGameplayTag("Combat.Style.Melee");                      
+	combatParams.combatStyle = ECombatType::Melee;
 
 	//--Destroy arrow component so there isn't some random arrow sticking out of our units--  
 	auto components = GetComponents();
@@ -36,7 +34,7 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) : Super(objectInitiali
 	}
 
 	//Setup components can only happen in the constructor
-	abilitySystem = CreateDefaultSubobject<UMyAbilitySystemComponent>(TEXT("AbilitySystem"));
+	unitSpellData.abilitySystem = CreateDefaultSubobject<UMyAbilitySystemComponent>(TEXT("AbilitySystem"));
 	selectionCircleDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));
 	selectionCircleDecal->SetupAttachment(RootComponent);
 	healthBar = CreateDefaultSubobject<UHealthbarComp>(FName("Healthbar"));
@@ -52,6 +50,13 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) : Super(objectInitiali
 	{
 		healthBar->SetWidgetClass(healthBar->StaticClass());
 	}
+
+	visionSphere = CreateDefaultSubobject<USphereComponent>(FName("VisionRadius"));
+	visionSphere->SetupAttachment(RootComponent);
+	visionSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	visionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	visionSphere->bUseAttachParentBound = true;
+	visionSphere->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel5); //see this in defaultengine.ini
 }
 
 void AUnit::BeginPlay()
@@ -62,28 +67,18 @@ void AUnit::BeginPlay()
 	controller = Cast<AAIController>(GetController());
 	controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 	gameState = Cast<ARTSGameState>(GetWorld()->GetGameState());
-	gameInstance = Cast<UMyGameInstance>(GetGameInstance());
 
 	FVector origin, extent;
 	GetActorBounds(true, origin, extent);
 	height = FMath::Abs(origin.Z) + extent.Z - FMath::Abs(GetActorLocation().Z); //manually setup height informatoin for other things to read it
 
-	//Runtime component configuration
-	if(healthBar)
-	{
-		if (!healthBar->IsRegistered()) //Before calling any functions register the component.  Widget for widgetcomponent is created during register
-			healthBar->RegisterComponent();
-
-		healthBar->SetRelativeLocation(FVector(0, 0, height/3));	
-	}
-
-	if(selectionCircleDecal)
+	if (selectionCircleDecal)
 	{
 		selectionCircleDecal->DecalSize = FVector(GetCapsuleComponent()->GetScaledCapsuleRadius());
 		selectionCircleDecal->SetRelativeRotation(FRotator(90, 0, 0));
 		selectionCircleDecal->SetRelativeLocation(FVector(0, 0, -90));
 	}
-	
+
 	///---Delegate Callback Setup---
 	if (controller)
 	{
@@ -98,14 +93,25 @@ void AUnit::BeginPlay()
 	}
 
 	//Setup abilitysystem attributes
-	if (abilitySystem)
+	if (GetAbilitySystemComponent())
 	{
 		//Make sure owner is player controller else this won't work
-		abilitySystem->InitAbilityActorInfo(GetWorld()->GetFirstPlayerController(), this); //setup owner and avatar
-		baseC = TUniquePtr<FBaseCharacter>(new FBaseCharacter(abilitySystem->AddSet<UMyAttributeSet>()));
+		GetAbilitySystemComponent()->InitAbilityActorInfo(GetWorld()->GetFirstPlayerController(), this); //setup owner and avatar
+		baseC = TUniquePtr<FBaseCharacter>(new FBaseCharacter(GetAbilitySystemComponent()->AddSet<UMyAttributeSet>()));
 		GetCharacterMovement()->MaxWalkSpeed = GetMechanicAdjValue(static_cast<int>(Mechanics::MovementSpeed));
+
+		for (TSubclassOf<UMySpell> ability : abilities)
+		{
+			if (ability.GetDefaultObject()) //if client tries to give himself ability assert fails
+			{
+				GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(ability.GetDefaultObject(), 1));
+			}
+		}
 		//abilitySystem->OnAnyGameplayEffectRemovedDelegate().AddUObject(this, &AUnit::RemoveGameplayEffects);
 	}
+
+	visionSphere->SetSphereRadius(visionRadius);
+	visionSphere->SetRelativeLocation(FVector::ZeroVector);
 }
 
 void AUnit::Tick(float deltaSeconds)
@@ -113,16 +119,16 @@ void AUnit::Tick(float deltaSeconds)
 	Super::Tick(deltaSeconds);
 
 	//Calculate when we can attack again 
-	if (!readyToAttack && currentAttTime < 2 / GetSkillAdjValue(static_cast<int>(UnitStats::Attack_Speed)))
+	if (!combatParams.readyToAttack && combatParams.currentAttTime < 2 / ((GetSkillAdjValue(static_cast<int>(UnitStats::Attack_Speed)) + 100) * 0.01))
 	{
-		currentAttTime += deltaSeconds * gameState->speedModifier;
+		combatParams.currentAttTime += deltaSeconds * gameState->speedModifier;
 	}
 	else
 	{
-		if (readyToAttack == false)
+		if (combatParams.readyToAttack == false)
 		{
-			currentAttTime = 0;
-			readyToAttack = true;
+			combatParams.currentAttTime = 0;
+			combatParams.readyToAttack = true;
 		}
 	}
 
@@ -142,7 +148,7 @@ void AUnit::UpdateStats()
 
 UAbilitySystemComponent* AUnit::GetAbilitySystemComponent() const
 {
-	return abilitySystem;
+	return unitSpellData.abilitySystem;
 }
 
 #pragma endregion
@@ -165,7 +171,7 @@ bool AUnit::IsFacingTarget(FVector targetLoc)
 	float dot = FVector::DotProduct(GetActorForwardVector(), FVector(difference.X, difference.Y, 0).GetSafeNormal());
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("%f"), dot));
 	/*
-	int cross =  FVector::CrossProduct(currentLocation, targetLocation);
+	int cross =  FVector::CrossProduct(currentLocation, targetData.targetLocation);
 	float angle = FMath::Atan2(cross, dot);
 	*/
 	if (dot > .95) //18 degrees lenient (only from right side).  
@@ -183,7 +189,7 @@ void AUnit::TurnTowardsTarget(FVector targetLoc)
 
 bool AUnit::AdjustPosition(float range, FVector targetLoc)
 {
-	if(!IsTargetInRange(range, targetLoc))
+	if (!IsTargetInRange(range, targetLoc))
 	{
 		//GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange, TEXT("MOVING TO TARGET!!!"));	
 		controller->MoveToLocation(targetLoc, UPathFollowingComponent::DefaultAcceptanceRadius);
@@ -197,7 +203,7 @@ bool AUnit::AdjustPosition(float range, FVector targetLoc)
 			//GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange, TEXT("TURNING TOWARDS TARGET!!!"));
 			TurnTowardsTarget(targetLoc);
 			return false;
-		}		
+		}
 	}
 	return true;
 }
@@ -209,9 +215,11 @@ void AUnit::Move(FVector newLocation)
 	{
 		if (GetController())
 		{
+			//cancel any targets we may have since our focus with this command is pure movement
+			Stop();
 			//shift location a little bit if we're moving multiple units so they can group together ok
 			FVector shiftedLocation = newLocation - GetActorLocation().GetSafeNormal() * GetCapsuleComponent()->GetScaledCapsuleRadius() / 2;
-			controller->MoveToLocation(shiftedLocation, 10);
+			controller->MoveToLocation(shiftedLocation, 10, true, true, false, true);
 			state->ChangeState(EUnitState::STATE_MOVING);
 		}
 	}
@@ -225,13 +233,13 @@ void AUnit::Die()
 	SetEnabled(false);
 
 	SetCanTarget(false);
-	isDead = true;
+	combatParams.isDead = true;
 
 	//Trigger "Death Events"
 	FGameplayEventData eD = FGameplayEventData();
 	eD.EventTag = FGameplayTag::RequestGameplayTag("Event.Death");
-	eD.TargetData = targetData;
-	if (abilitySystem->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("Event.Death"), &eD))
+	eD.TargetData = targetData.spellTargetData;
+	if (GetAbilitySystemComponent()->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("Event.Death"), &eD))
 	{
 		//GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Emerald, FString("Wee") + FString::FromInt(currentSpellIndex));
 	}
@@ -240,7 +248,7 @@ void AUnit::Die()
 
 void AUnit::SetEnabled(bool bEnabled)
 {
-	if(bEnabled)
+	if (bEnabled)
 	{
 		SetCanTarget(true);
 		GetCapsuleComponent()->SetVisibility(true, true);
@@ -263,7 +271,7 @@ void AUnit::SetEnabled(bool bEnabled)
 void AUnit::CommitCast(UMySpell* spell)
 {
 	int spellResIndex = static_cast<int>(Vitals::Mana); //index of resource to be used to cast spell
-	if (spell && spell->GetCost(abilitySystem) <= GetVitalCurValue(spellResIndex)) //if we have enough mana (in the future different spells may have their own resources)
+	if (spell && spell->GetCost(GetAbilitySystemComponent()) <= GetVitalCurValue(spellResIndex)) //if we have enough mana (in the future different spells may have their own resources)
 	{
 #if UE_EDITOR
 		//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString("Cost: ") + FString::FromInt(spell->GetCost(abilitySystem)));
@@ -278,17 +286,17 @@ void AUnit::BeginAttack(AUnit * target)
 	Stop(); //Stop any other actions we're doing
 	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString("Attack!"));
 	state->ChangeState(EUnitState::STATE_ATTACKING);
-	targetUnit = target;
-	targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(target);
+	targetData.targetUnit = target;
+	targetData.spellTargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(target);
 }
 
 void AUnit::PrepareAttack()
 {
-	if (!IsStunned() && targetUnit)
+	if (!IsStunned() && targetData.targetUnit)
 	{
-		if (targetUnit->GetCanTarget())
+		if (targetData.targetUnit->GetCanTarget())
 		{
-			FVector targetLoc = FVector(targetUnit->GetActorLocation().X, targetUnit->GetActorLocation().Y, 0);
+			FVector targetLoc = FVector(targetData.targetUnit->GetActorLocation().X, targetData.targetUnit->GetActorLocation().Y, 0);
 			//if (unitTarget->GetIsEnemy()) //may remove this check because we may be able to hit allies
 			//{
 			if (AdjustPosition(GetMechanicAdjValue(static_cast<int>(Mechanics::AttackRange)), targetLoc))
@@ -298,7 +306,7 @@ void AUnit::PrepareAttack()
 		}
 		else
 		{
-			targetUnit = nullptr;
+			targetData.targetUnit = nullptr;
 		}
 	}
 }
@@ -306,7 +314,7 @@ void AUnit::PrepareAttack()
 void AUnit::Attack()
 {
 	//Attack Time = 60 / WeaponAttkSpd / AttkSpeed
-	if (!IsStunned() && readyToAttack) //If we're not stunned and our attack rate is filled
+	if (!IsStunned() && combatParams.readyToAttack) //If we're not stunned and our attack rate is filled
 	{
 		//play attack animation
 		//Create a gameplay effect for this
@@ -320,27 +328,24 @@ void AUnit::Attack()
 		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), 0);
 		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Understanding"), 0);
 
-		if(combatStyle == FGameplayTag::RequestGameplayTag("Combat.Style.Melee"))
+		switch (combatParams.combatStyle)
 		{
-			UAbilitySystemBlueprintLibrary::AssignSetByCallerMagnitude(damageEffectHandle, "Strength", 100);
-		}
-		else if(combatStyle == FGameplayTag::RequestGameplayTag("Combat.Style.Magic"))
-		{
-			UAbilitySystemBlueprintLibrary::AssignSetByCallerMagnitude(damageEffectHandle, "Intelligence", 100);
-		}
-		else if(combatStyle == FGameplayTag::RequestGameplayTag("Combat.Style.Ranged"))
-		{
-			UAbilitySystemBlueprintLibrary::AssignSetByCallerMagnitude(damageEffectHandle, "Agility", 100);
-		}
-		else
-		{
+		case ECombatType::Melee:
+			UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Strength"), 100);
+			break;
+		case ECombatType::Magic:
+			UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Intelligence"), 100);
+		case ECombatType::Ranged:
+			UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), 100);
+			break;
+		default:
 			UE_LOG(LogTemp, Warning, TEXT("Error, combatstyle tag is not what it should be!"));
 			return;
 		}
 		//Should add weapon element here
 		UAbilitySystemBlueprintLibrary::AddAssetTag(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Element.Force"));
-		GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*damageEffectHandle.Data.Get(), targetUnit->abilitySystem);
-		readyToAttack = false;
+		GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*damageEffectHandle.Data.Get(), targetData.targetUnit->GetAbilitySystemComponent());
+		combatParams.readyToAttack = false;
 	}
 }
 
@@ -350,7 +355,7 @@ UMySpell* AUnit::GetSpellCDO(TSubclassOf<UMySpell> spellClass) const
 	//GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Blue, FString::FromInt(abilitySystem->GetActivatableAbilities().Num()));
 #endif
 	if (spellClass)
-	{ 
+	{
 		//If we have the ability
 		if (GetAbilitySystemComponent()->FindAbilitySpecFromClass(spellClass)->Ability)
 			return spellClass->GetDefaultObject<UMySpell>();
@@ -363,9 +368,9 @@ bool AUnit::CanCast(TSubclassOf<UMySpell> spellToCheck)
 	UMySpell* spell = spellToCheck.GetDefaultObject();
 	if (IsValid(spell))
 	{
-		if (spell->GetCost(abilitySystem) <= GetVitalCurValue(static_cast<int>(Vitals::Mana))) //Enough Mana?
+		if (spell->GetCost(GetAbilitySystemComponent()) <= GetVitalCurValue(static_cast<int>(Vitals::Mana))) //Enough Mana?
 		{
-			if(!spell->isOnCD(GetAbilitySystemComponent()) && !IsStunned() && !IsSilenced()) //Spell on CD and we aren't affected by any status that prevents us
+			if (!spell->isOnCD(GetAbilitySystemComponent()) && !IsStunned() && !IsSilenced()) //Spell on CD and we aren't affected by any status that prevents us
 			{
 				return true;
 			}
@@ -382,33 +387,33 @@ bool AUnit::BeginCastSpell(int spellToCastIndex, FGameplayAbilityTargetDataHandl
 	{
 		if (CanCast(abilities[spellToCastIndex]))
 		{
-			currentSpell = abilities[spellToCastIndex];
-
+			SetCurrentSpell(abilities[spellToCastIndex]);
+			
 			if (spell->GetTargetting().GetTagName() == "Skill.Targetting.None") //non targetted?  Then just cast it
 			{
 				state->ChangeState(EUnitState::STATE_CASTING);
-				PreCastChannelingCheck(currentSpell);
+				PreCastChannelingCheck(GetCurrentSpell());
 				return true;
 			}
 			else
 			{
 				if (tData.Num() > 0)
 				{
-					targetData = tData;
-					//here error
+					targetData.spellTargetData = tData;
+
 					if (spell->GetTargetting().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area")))
 					{
-						targetLocation = UAbilitySystemBlueprintLibrary::GetTargetDataEndPoint(targetData, 0);
+						targetData.targetLocation = UAbilitySystemBlueprintLibrary::GetTargetDataEndPoint(targetData.spellTargetData, 0);
 					}
 					else
 					{
-						targetActor = UAbilitySystemBlueprintLibrary::GetActorsFromTargetData(targetData, 0)[0];
+						targetData.targetActor = UAbilitySystemBlueprintLibrary::GetActorsFromTargetData(targetData.spellTargetData, 0)[0];
 					}
 
-					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("%f"), FVector::Dist2D(targetLocation, GetActorLocation())));
-					if (targetActor == this || FVector::Dist2D(targetLocation, GetActorLocation()) < 5.f)
+					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("%f"), FVector::Dist2D(targetData.targetLocation, GetActorLocation())));
+					if (targetData.targetActor == this || FVector::Dist2D(targetData.targetLocation, GetActorLocation()) < 5.f)
 					{
-						PreCastChannelingCheck(currentSpell);
+						PreCastChannelingCheck(GetCurrentSpell());
 						return true;
 					}
 
@@ -426,27 +431,27 @@ bool AUnit::BeginCastSpell(int spellToCastIndex, FGameplayAbilityTargetDataHandl
 
 void AUnit::PrepareCastSpell()
 {
-	if (CanCast(currentSpell))
+	if (CanCast(GetCurrentSpell()))
 	{
-		UMySpell* spell = currentSpell.GetDefaultObject();
+		UMySpell* spell = GetCurrentSpell().GetDefaultObject();
 
 		FVector targetLoc;
 		if (spell->GetTargetting().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area")))
-			targetLoc = targetLocation;
+			targetLoc = targetData.targetLocation;
 		else
 		{
-			targetLoc = targetActor->GetActorLocation();
+			targetLoc = targetData.targetActor->GetActorLocation();
 		}
 		if (AdjustPosition(spell->GetRange(GetAbilitySystemComponent()), targetLoc))
 		{
-			PreCastChannelingCheck(currentSpell);
+			PreCastChannelingCheck(GetCurrentSpell());
 		}
 	}
 }
 
 bool AUnit::CastSpell(TSubclassOf<UMySpell> spellToCast)
 {
-	if (abilitySystem->TryActivateAbilityByClass(spellToCast))
+	if (GetAbilitySystemComponent()->TryActivateAbilityByClass(spellToCast))
 	{
 		if (spellToCast.GetDefaultObject()->GetTargetting().GetTagName() != "Skill.Targetting.None")
 		{
@@ -454,8 +459,8 @@ bool AUnit::CastSpell(TSubclassOf<UMySpell> spellToCast)
 			//May be obsolete since we don't actully activate the spell until we click anyways.  However, it does pass in target data
 			FGameplayEventData eD = FGameplayEventData();
 			eD.EventTag = UGameplayTagsManager::Get().RequestGameplayTag("Event.CastClick");
-			eD.TargetData = targetData;
-			if (abilitySystem->HandleGameplayEvent(UGameplayTagsManager::Get().RequestGameplayTag("Event.CastClick"), &eD))
+			eD.TargetData = targetData.spellTargetData;
+			if (GetAbilitySystemComponent()->HandleGameplayEvent(UGameplayTagsManager::Get().RequestGameplayTag("Event.CastClick"), &eD))
 			{
 				//GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Emerald, FString("Wee") + FString::FromInt(currentSpellIndex));
 			}
@@ -469,9 +474,9 @@ bool AUnit::CastSpell(TSubclassOf<UMySpell> spellToCast)
 void AUnit::PreCastChannelingCheck(TSubclassOf<UMySpell> spellToCast)
 {
 	//if there isn't a cast time
-	if(!currentSpell.GetDefaultObject()->GetCastTime(GetAbilitySystemComponent()))
+	if (!GetCurrentSpell().GetDefaultObject()->GetCastTime(GetAbilitySystemComponent()))
 	{
-		CastSpell(currentSpell);
+		CastSpell(GetCurrentSpell());
 	}
 	else
 	{
@@ -482,114 +487,25 @@ void AUnit::PreCastChannelingCheck(TSubclassOf<UMySpell> spellToCast)
 void AUnit::Stop()
 {
 	//Stop will not only stop unit in its track, but will also make it forget its target, and set its state to idle so it can transition to something else
-	targetData.Clear();
-	currentSpell = nullptr;
-	targetUnit = nullptr;
-	targetActor = nullptr;
-	targetLocation = FVector();
-	readyToAttack = false;
+	targetData.spellTargetData.Clear();
+	SetCurrentSpell(nullptr);
+	targetData.targetUnit = nullptr;
+	targetData.targetActor = nullptr;
+	targetData.targetLocation = FVector();
+	combatParams.readyToAttack = false;
 	controller->StopMovement();
 	state->ChangeState(EUnitState::STATE_IDLE);
 }
 
-//Relic of when I did this manually
-// void AUnit::ApplyGameplayEffects(const FGameplayEffectSpec& effect)
-// {
-// 	for (FGameplayEffectModifiedAttribute modifier : effect.ModifiedAttributes)
-// 	{
-// #if UE_EDITOR
-// 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, FString("Numeric Attribute Value") + FString::FromInt(modifier.TotalMagnitude) + FString(" Attribute Index") + FString::FromInt(GetAbilitySystemComponent()->GetNumericAttributeBase(modifier.Attribute) - modifier.TotalMagnitude));
-// 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, FString ("Numeric Attributes") + FString::FromInt(GetAbilitySystemComponent()->GetNumericAttributeBase(modifier.Attribute)));
-// #endif
-// 		//Crappy fix but we negate the modification on our attributeset since we have our own stats system but need the base value to be the same to continue to index.  
-// 		//GetAbilitySystemComponent()->SetNumericAttributeBase(modifier.Attribute, GetAbilitySystemComponent()->GetNumericAttributeBase(modifier.Attribute) - modifier.TotalMagnitude);
-// 		int index = GetAbilitySystemComponent()->GetNumericAttributeBase(modifier.Attribute);
-// 		if (index < CombatInfo::AttCount)
-// 		{
-// 			//baseC->GetAttribute(GetAbilitySystemComponent()->GetNumericAttributeBase(modifier.Attribute))->SetBuffValue(modifier.TotalMagnitude);
-// 		}
-// 		else if (index < CombatInfo::AttCount + CombatInfo::StatCount)
-// 		{
-// 			index = index - CombatInfo::AttCount;
-// 			baseC->GetSkill(index)->SetBuffValue(modifier.TotalMagnitude);
-// 		}
-// 		else if(index < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount)
-// 		{
-// 			index = index - (CombatInfo::AttCount + CombatInfo::StatCount);
-// 			baseC->GetVital(index)->SetBuffValue(modifier.TotalMagnitude);
-// 		}
-// 		else if(index < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount + CombatInfo::MechanicCount)
-// 		{
-// 			index = index - (CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount);
-// 			baseC->GetMechanic(index)->SetCurrentValue(modifier.TotalMagnitude);
-// 		}
-// 		else
-// 		{
-// 			UE_LOG(LogTemp, Warning, TEXT("ERROR WITH EFFECT INDICES"));
-// 		}
-// 	}
-// }
-
 void AUnit::OnMoveCompleted(FAIRequestID RequestID, const EPathFollowingResult::Type Result)
 {
-	if(GetState() == EUnitState::STATE_MOVING)
+	if (GetState() == EUnitState::STATE_MOVING)
 		state->ChangeState(EUnitState::STATE_IDLE);
 	//Possible move callback unusued so far
 }
 
-// void AUnit::RemoveGameplayEffects(const FActiveGameplayEffect& effect) //two ways of doing this, we can either bind it to an active event when we activate the ability, 
-// //else we can do a cast everytime to check but then we don't have to worry about adding the bindings every time
-// {
-// 	FGameplayTagContainer tagContainer;
-// 	effect.Spec.GetAllAssetTags(tagContainer);
-// #if UE_EDITOR
-// 	for(FGameplayTag tag : tagContainer)
-// 	{
-
-// 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, tag.GetTagName().ToString());
-// 	}
-// #endif
-// 	if(tagContainer.HasTag(UGameplayTagsManager::Get().RequestGameplayTag("Skill.Effect.StatChange")))
-// 	{ 
-// 		for (FGameplayEffectModifiedAttribute modifier : effect.Spec.ModifiedAttributes)
-// 		{
-// 			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, FString::FromInt(GetAbilitySystemComponent()->GetNumericAttributeBase(modifier.Attribute)));
-// 			int index = GetAbilitySystemComponent()->GetNumericAttributeBase(modifier.Attribute);
-// 			if (index < CombatInfo::AttCount)
-// 			{
-// 				//Attribute* att = baseC->GetAttribute(index);
-// 				//att->SetBuffValue(att->GetBuffValue() - modifier.TotalMagnitude);
-// 			}
-// 			else if (index < CombatInfo::AttCount + CombatInfo::StatCount)
-// 			{
-// 				index = index - CombatInfo::AttCount;
-// 				Stat* stat = baseC->GetSkill(index);
-// 				stat->SetBuffValue(stat->GetBuffValue() - modifier.TotalMagnitude);
-// 			}
-// 			else if (index < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount)
-// 			{
-// 				index = index - (CombatInfo::AttCount + CombatInfo::StatCount);
-// 				Vital* vital = baseC->GetVital(index);
-// 				vital->SetBuffValue(vital->GetBuffValue() - modifier.TotalMagnitude);
-// 			}
-// 			else if (index < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount + CombatInfo::MechanicCount)
-// 			{
-// 				index = index - (CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount);
-// 				FGameplayAttributeData* mech = baseC->GetMechanic(index);
-// 				mech->SetCurrentValue(mech->GetCurrentValue() - modifier.TotalMagnitude);
-// 			}
-// 			else
-// 			{
-// 				UE_LOG(LogTemp, Warning, TEXT("ERROR WITH EFFECT INDICES"));
-// 				//error 
-// 			}
-// 		}
-// 	}
-// }
-
 void AUnit::ShowDamageDealt(Damage& d)
 {
-	FTimerHandle unusedHandle;
 	//auto attach makes the new component the root for the sucessive components
 	UDIRender* tRC = NewObject<UDIRender>(this);
 	if (tRC)
@@ -604,28 +520,56 @@ void AUnit::ShowDamageDealt(Damage& d)
 		tRC->SetTextRenderColor(ResourceManager::elementalMap[d.element]);
 		tRC->SetHorizontalAlignment(EHorizTextAligment::EHTA_Center);
 		tRC->SetVerticalAlignment(EVerticalTextAligment::EVRTA_TextBottom);
-		tRC->SetRelativeLocation(FVector(0,0,FindBoundary().Max.Y - FindBoundary().Min.Y + 100));	
-		tRC->ready = true;
-		//GetWorldTimerManager().SetTimer(unusedHandle, this, &AUnit::deleteDI, 2.f, false);
+		tRC->SetRelativeLocation(FVector(0, 0, FindBoundary().Max.Y - FindBoundary().Min.Y + 100));
 	}
 }
 
 void AUnit::ShowDamageDealt(FText occurance)
 {
-	//display dodged 
+	//auto attach makes the new component the root for the sucessive components
+	UDIRender* tRC = NewObject<UDIRender>(this);
+	if (tRC)
+	{
+		tRC->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
+		tRC->RegisterComponent();
+		tRC->Text = occurance;
+		tRC->SetXScale(1.5f);
+		tRC->SetYScale(1.5f);
+		tRC->SetTextRenderColor(FColor::White);
+		tRC->SetHorizontalAlignment(EHorizTextAligment::EHTA_Center);
+		tRC->SetVerticalAlignment(EVerticalTextAligment::EVRTA_TextBottom);
+		tRC->SetRelativeLocation(FVector(0, 0, FindBoundary().Max.Y - FindBoundary().Min.Y + 100));
+	}
+}
+
+float AUnit::GetDPS(float timespan)
+{
+	return combatParams.GetDPS(timespan, GetWorld()->GetTimeSeconds());
+}
+
+float AUnit::GetDamageRecievedPerSecond(float timespan)
+{
+	return combatParams.GetDamageRecievedPerSecond(timespan, GetWorld()->GetTimeSeconds());
+}
+
+float AUnit::GetHealingPerSecond(float timespan)
+{
+	return combatParams.GetHealingPerSecond(timespan, GetWorld()->GetTimeSeconds());
+}
+
+float AUnit::GetHealingRecievedPerSecond(float timespan)
+{
+	return combatParams.GetHealingRecievedPerSecond(timespan, GetWorld()->GetTimeSeconds());
+}
+
+void AUnit::CalculateRisk()
+{
+
 }
 
 void AUnit::OnUpdateGameSpeed(float speedMultiplier)
 {
 	GetCharacterMovement()->MaxWalkSpeed = GetMechanicAdjValue(static_cast<int>(Mechanics::MovementSpeed)) * speedMultiplier;
-}
-
-void AUnit::deleteDI()
-{
-	TSubclassOf<UTextRenderComponent> dIClass;
-	UTextRenderComponent* comp = FindComponentByClass<UTextRenderComponent>();
-	if(comp)
-		comp->DestroyComponent(false);
 }
 
 FBox2D AUnit::FindBoundary()
@@ -638,7 +582,7 @@ FBox2D AUnit::FindBoundary()
 	FVector2D screenLocation;
 	TArray<FVector2D> corners; //get 8 corners of box
 
-	for(int i = 0; i < 8; ++i)
+	for (int i = 0; i < 8; ++i)
 	{
 		controllerRef->ProjectWorldLocationToScreen(origin + extent * BoundsPointMapping[i], screenLocation, true);
 		corners.Add(screenLocation);
@@ -654,9 +598,9 @@ bool AUnit::IsStunned() const
 	return GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff.Stunned")) ? true : false;
 }
 
-bool AUnit::IsSilenced() const 
+bool AUnit::IsSilenced() const
 {
-	return GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff.Silenced")) ?  true : false;
+	return GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff.Silenced")) ? true : false;
 }
 
 void AUnit::ApplyBonuses(int category, int value)

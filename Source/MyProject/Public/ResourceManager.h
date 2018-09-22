@@ -5,19 +5,22 @@
 #include "WorldObject.h"
 
 #if UE_EDITOR
-	#include <type_traits>
+#include <type_traits>
 #endif
 
 /** Singleton class for some important variables */
-namespace ResourceManager 
+namespace ResourceManager
 {
 	extern TMap<FGameplayTag, FColor>			elementalMap;
-
 
 	void										InitResourceManager();
 	void										InitElementalMap();
 	void										InitSupportTags();
 	void										InitOffensiveTags();
+
+	///<summary>
+	///These template can generate alot of code if you use too many different types.  Probably not a problem considering how large codebase already is but just a note
+	///</summary>
 
 	/**Make sure when you pass a world reference to this class, you pass it one from an actor or from a function that has (meta=WorldContextObject)
 	 *@param nameToMatch - Name of an object that implements IWorldObject
@@ -44,7 +47,60 @@ namespace ResourceManager
 		return nullptr;
 	}
 
+	/**Executes a function inside an arbitrary UObject using UObject Reflection (granted T is a subclass of UObject)*/
+	void ExecuteFunctionFromWorldObject(UObject* objectRef, FName functionToExecute, UWorld* worldRef);
+
+	template<typename T>
+	struct GetPropertyFromType;
+
+	template<>
+	struct GetPropertyFromType<float>
+	{
+		using value = UFloatProperty;	
+	};
+
+	template<>
+	struct GetPropertyFromType<int>
+	{
+		using value = UIntProperty;
+	};
+
+	/**Executes a function inside an arbitrary UObject using UObject Reflection (granted T is a subclass of UObject)*/
+	template<typename T>
+	bool GetObjectVariable(UObject* objectRef, FName propertyToRead, T& outValue, UWorld* worldRef)
+	{
+		if (objectRef)
+		{
+			T foundVar;
+			using Property = GetPropertyFromType<T>::value;
+			Property p = FindField<Property>(wo->GetClass(), propertyToRead);
+			if(p)
+			{
+				outValue = p->GetPropertyValue_InContainer(objectRef);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	template<typename T>
+	bool SetObjectVariable(UObject* objectRef, FName propertyToRead, T newValue, UWorld* worldRef)
+	{
+		if (objectRef)
+		{
+			T foundVar;
+			using Property = GetPropertyFromType<T>::value;
+			Property p = FindField<Property>(wo->GetClass(), propertyToRead);
+			if(p)
+			{
+				outValue = p->SetPropertyValue_InContainer(objectRef, newValue);
+				return true;
+			}
+		}
+		return false;
+	}
+
 	//Tags that make an ability considered a support ability
-	extern FGameplayTagContainer				supportTags; 
-	extern FGameplayTagContainer				offensiveTags; 
+	extern FGameplayTagContainer				supportTags;
+	extern FGameplayTagContainer				offensiveTags;
 }

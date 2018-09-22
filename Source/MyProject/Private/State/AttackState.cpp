@@ -26,6 +26,6 @@ void AttackState::Exit(AUnit & unit)
 
 void AttackState::Update(AUnit & unit, float deltaSeconds)
 {
-	if(IsValid(unit.targetUnit))
+	if(IsValid(unit.targetData.targetUnit))
 		unit.PrepareAttack();
 }

@@ -27,6 +27,9 @@
 #include "UI/UserWidgets/BreakMenu.h"
 #include "UI/UserWidgets/SettingsMenu.h"
 
+#include "UI/UserWidgets/ConfirmationBox.h"
+#include "UI/UserWidgets/RTSInputBox.h"
+
 
 // Sets default values
 AHUDManager::AHUDManager()
@@ -181,6 +184,42 @@ void AHUDManager::AddItemExamineHUD(int itemID)
 	else
 	{
 		ApplyHUD(static_cast<int>(HUDs::HS_ExamineMenu), true, true, true, false);
+	}
+}
+
+void AHUDManager::AddHUDConfirm(FName funcName, UObject* funcObject, FText newTitle, FText newDesc)
+{
+	if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Confirmation)])
+	{
+		if (funcObject)
+		{
+			GetConfirmationBox()->onConfirmationMade.BindUFunction(funcObject, funcName);
+			GetConfirmationBox()->SetTitle(newTitle);
+			GetConfirmationBox()->SetDesc(newDesc);
+			ApplyHUD(static_cast<int>(HUDs::HS_Confirmation), true, true, true, false);
+		}
+	}
+	else
+	{
+		ApplyHUD(static_cast<int>(HUDs::HS_Confirmation), true, true, true, false);
+	}
+}
+
+void AHUDManager::AddHUDInput(FName funcName, UObject* funcObject, FText newTitle, FText newDesc)
+{
+	if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_InputBox)])
+	{
+		if (funcObject)
+		{
+			GetInputBox()->onInputConfirmed.BindUFunction(funcObject, funcName);
+			GetInputBox()->SetTitle(newTitle);
+			GetInputBox()->SetDesc(newDesc);
+			ApplyHUD(static_cast<int>(HUDs::HS_InputBox), true, true, true, false);
+		}
+	}
+	else
+	{
+		ApplyHUD(static_cast<int>(HUDs::HS_InputBox), true, true, true, false);
 	}
 }
 
@@ -341,5 +380,15 @@ USettingsMenu* AHUDManager::GetSettingsMenu() const
 UItemExamineWidget* AHUDManager::GetExamineMenu() const
 {
 	return Cast<UItemExamineWidget>(widgetReferences[static_cast<int>(HUDs::HS_ExamineMenu)]);
+}
+
+UConfirmationBox* AHUDManager::GetConfirmationBox() const
+{
+	return Cast<UConfirmationBox>(widgetReferences[static_cast<int>(HUDs::HS_Confirmation)]);
+}
+
+URTSInputBox* AHUDManager::GetInputBox() const
+{
+	return Cast<URTSInputBox>(widgetReferences[static_cast<int>(HUDs::HS_InputBox)]);
 }
   

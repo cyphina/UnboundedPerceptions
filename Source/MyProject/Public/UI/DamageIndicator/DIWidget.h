@@ -8,7 +8,7 @@
 class AUnit;
 
 /**
- * 
+ * C++ class for the widget that the widget component holds when 
  */
 UCLASS()
 class MYPROJECT_API UDIWidget : public UUserWidget

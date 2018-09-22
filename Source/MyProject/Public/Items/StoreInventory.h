@@ -11,6 +11,9 @@
  */
 
 class AShopNPC;
+class UBackpack;
+struct FMyItem;
+struct FItemPrice;
 
 UCLASS()
 class MYPROJECT_API UStoreInventory : public UInventory
@@ -19,12 +22,25 @@ class MYPROJECT_API UStoreInventory : public UInventory
 
 	static FText			NotEnoughItemsText;
 	static FText			NotEnoughMoneyText;
+	static FText			ensurePurchaseText;
+	static FText			confirmTitleText;
 
+	int						itemSlot = -1;
+	FItemPrice*				itemPrice = nullptr;
+	UBackpack*				interactingHeroPack = nullptr;
+	int						itemToBuy = -1;
+
+	UFUNCTION()
+	bool OnItemPurchased();
+
+	UFUNCTION()
+	bool OnItemsPurchased(FString howManyItems);
+
+	bool EnoughFunds(int numPurchasing);
 public:
 
 	UPROPERTY(BlueprintReadOnly)
 	AShopNPC*				shopkeeper;
 
 	void					UseItemAtInventorySlot_Implementation(int32 iSlot) override;
-	
 };

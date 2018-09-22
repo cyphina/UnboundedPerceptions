@@ -48,7 +48,7 @@ void UMyEnvQueryTest_DamageScore::RunTest(FEnvQueryInstance& QueryInstance) cons
 
 FText UMyEnvQueryTest_DamageScore::GetDescriptionTitle() const
 {
-	return NSLOCTEXT("EQTest", "CloseDistanceFilter", "Count number of units that are very close distance to a point");
+	return NSLOCTEXT("EQTest", "DamageFilter", "Get unit with highest damage potential");
 }
 
 FText UMyEnvQueryTest_DamageScore::GetDescriptionDetails() const

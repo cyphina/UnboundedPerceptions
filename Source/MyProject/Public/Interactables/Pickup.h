@@ -44,10 +44,6 @@ public:
 		UPROPERTY(VisibleAnywhere)
 		UStaticMeshComponent* 		interactableMesh;
 
-		/*Sphere collider to check if hero is in range or such*/
-		UPROPERTY(VisibleAnywhere)
-		USphereComponent* 			sphereCollider;
-
 		/*Item that will be picked up*/
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
 		FMyItem 					item;

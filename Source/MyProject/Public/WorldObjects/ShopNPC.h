@@ -38,8 +38,11 @@ class MYPROJECT_API AShopNPC : public AIntimateNPC
 	TMap<int, FItemPrice>						itemPrices;
 
 	void										SetupAppropriateView() override;
+	
 
 public:
+
+	static FItemPrice							defaultItemPrice;
 
 	void										BeginPlay() override;
 
@@ -56,5 +59,5 @@ public:
 	 *Accessor to gets an item's price
 	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	FORCEINLINE FItemPrice						GetItemPrice(int itemID);
+	FORCEINLINE FItemPrice&						GetItemPrice(int itemID);
 };

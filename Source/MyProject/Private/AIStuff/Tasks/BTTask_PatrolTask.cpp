@@ -64,7 +64,7 @@ void UBTTask_Patrol::PatrolToNextLocation(uint8* nodeMemory)
 		myMemory->patrolIndex = 0;		
 
 	myMemory->AICon->GetBlackboardComponent()->SetValueAsVector(locKeyName, myMemory->AICon->patrolLocations[myMemory->patrolIndex]);
-	myMemory->AICon->MoveToLocation(myMemory->AICon->patrolLocations[myMemory->patrolIndex], UPathFollowingComponent::DefaultAcceptanceRadius, true, true, true, true, 0, true);
+	myMemory->AICon->GetUnitOwner()->Move(myMemory->AICon->patrolLocations[myMemory->patrolIndex]);
 }
 
 uint16 UBTTask_Patrol::GetInstanceMemorySize() const

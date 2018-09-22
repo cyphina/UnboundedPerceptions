@@ -11,6 +11,7 @@
 
 class AUserInput;
 class ARTSGameMode;
+class ARTSGameState;
 struct FMyItem;
 
 USTRUCT(BlueprintType, NoExport)
@@ -29,11 +30,11 @@ class MYPROJECT_API AEnemy : public AUnit
 	 *range enemy will attack you
 	 */
 	int										aggroRange;
-	
+
 	/**
-	 *Counter for number of enemies (units with opposite value of isEnemy) that can see this unit
+	 *if this enemy is in a combat ready state
 	 */
-	int										enemyVisionCount;
+	bool									isActive; 
 
 public:
 	AEnemy(const FObjectInitializer& oI);
@@ -46,28 +47,36 @@ public:
 	int										expGiven; //how much money given on death
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	int										moneyGiven; //how much exp given on death
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly) //List of combinations by priority.  Combination 0 will always be an opener
-	TArray<FSpellCombination>				combinations;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly) 
+	TArray<FSpellCombination>				combinations; //List of combinations by priority.  Combination 0 will always be an opener
 
-/*--Callbacks--*/
-#pragma region callbacks
+	/**What enemies are in our radius determined via sphere overlap events*/
+	TSet<AAlly*>							possibleEnemiesInRadius;
+
 	void									BeginPlay() override;
-	//Enemy tick behavior will be controlled by AI
 	void									Tick(float deltaSeconds) override;
 	void									Die() override;
-#pragma endregion
 
 	void									SetSelected(bool value) override;
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Vision")
-	int								 GetVisionCount() const { return enemyVisionCount; }
-	UFUNCTION(BlueprintCallable, Category = "Vision")
-	void							 IncVisionCount() { ++enemyVisionCount; }
-	UFUNCTION(BlueprintCallable, Category = "Vision")
-	void							 DecVisionCount() { --enemyVisionCount;}
+	/**Sets a target as active/inactive, which tells the game that this enemy's ai is active*/
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
+	bool									GetIsActive() const { return isActive; }
+
+	/**/
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void									SetIsActive(bool value) { isActive = value; }
 
 private:
 
 	AUserInput* controllerRef;
 	ARTSGameMode* gameModeRef;
+	ARTSGameState* gameStateRef;
+
+	UFUNCTION()
+	void									OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep, const FHitResult& sweepRes);
+	
+	UFUNCTION()
+	void									OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex);
+
 };

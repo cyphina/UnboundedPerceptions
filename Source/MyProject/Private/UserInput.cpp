@@ -40,7 +40,6 @@ AUserInput::AUserInput()
 	//queryableTargetObjects.Add(EObjectTypeQuery::ObjectTypeQuery11); //VisionBlocker
 	queryableTargetObjects.Add(EObjectTypeQuery::ObjectTypeQuery12); //Friendly
 
-	queryParamVision.AddObjectTypesToQuery(ECC_GameTraceChannel6); //Query vision blockers only
 	//HitResultTraceDistance = 100000.f; set in parent
 	CheatClass = UMyCheatManager::StaticClass();
 }
@@ -418,59 +417,6 @@ void AUserInput::CursorHover()
 		else
 		{
 			ChangeCursor(ECursorStateEnum::Select);
-		}
-	}
-}
-
-void AUserInput::UpdateVisibleEnemies()
-{
-#if UE_EDITOR
-	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Purple, TEXT("Vision Checking!"));
-#endif
-
-	/**OnComponentOverlap handles cases when enemy comes in and out of vision range
-	*every ally has its own list of enemis it can
-	by keeping seperate lists of possiblenemies we don't have to check each hero and see which one line traced through the enemy*/
-
-	checkedEnemies.Empty();
-
-	for (AAlly* ally : basePlayer->allies)
-	{
-		for (AEnemy* enemy : ally->possibleEnemiesInRadius)
-		{
-			//if enemy hasn't been checked yet so we don't do it twice
-			if (!checkedEnemies.Contains(enemy))
-			{
-				//If we've already deemed this enemy visible
-				if (visibleEnemies.Contains(enemy))
-				{
-					//check if it's not visible anymore by seeing if it hits a wall
-					if (GetWorld()->LineTraceSingleByObjectType(visionHitResult, ally->GetActorLocation(), enemy->GetActorLocation(), queryParamVision))
-					{
-						//if so then remove it from visible list
-						if (enemy->GetCapsuleComponent()->bVisible)
-						{
-							enemy->GetCapsuleComponent()->SetVisibility(false, true);
-							visibleEnemies.Remove(enemy);
-						}
-					}
-				}
-				//if we haven't added the enemy to the visible list
-				else
-				{
-					//If we can trace a line and hit the enemy without hitting a walk
-					if (!GetWorld()->LineTraceSingleByObjectType(visionHitResult, ally->GetActorLocation(), enemy->GetActorLocation(), queryParamVision))
-					{
-						//make it visible
-						if (!enemy->GetCapsuleComponent()->bVisible)
-						{
-							enemy->GetCapsuleComponent()->SetVisibility(true, true);
-							visibleEnemies.Add(enemy);
-						}
-					}
-				}
-				checkedEnemies.Add(enemy);
-			}
 		}
 	}
 }

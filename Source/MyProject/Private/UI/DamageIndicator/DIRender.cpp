@@ -13,10 +13,13 @@ UDIRender::UDIRender()
 	if (curveFinder.Succeeded())
 	{
 		FOnTimelineFloat animDI;
-		animDI.BindUFunction(this, FName("Effect"));
+		animDI.BindUFunction(this, FName("TimelineEffect"));
 		tL.AddInterpFloat(curveFinder.Object, animDI, FName(TEXT("TimelineEffect")));
 		tL.SetTimelineLengthMode(ETimelineLengthMode::TL_LastKeyFrame);
 		tL.SetLooping(false);
+		FOnTimelineEvent e;
+		e.BindUFunction(this, "OnTimelineFinished");
+		tL.SetTimelineFinishedFunc(e);
 	}
 	
 	static ConstructorHelpers::FObjectFinder<UMaterialInstance> materialFinder(TEXT("/Game/RTS_Tutorial/Materials/GlowText_Inst"));
@@ -30,40 +33,26 @@ void UDIRender::BeginPlay()
 {
 	Super::BeginPlay();
 	controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+	start = RelativeLocation;
+	end = start + FVector(0, 0, 100);
+	tL.PlayFromStart();
 }
 
 void UDIRender::TickComponent(float deltaSeconds, ELevelTick tickType, FActorComponentTickFunction * thisTickFunction)
 {
 	Super::TickComponent(deltaSeconds, tickType, thisTickFunction);
+	//Ensure damage values always facing camera even when camera is rotated
 	SetWorldRotation(FRotator(0,-180,0) + controllerRef->GetCameraPawn()->GetActorRotation());
-	TickTimeLine(deltaSeconds);
+	tL.TickTimeline(deltaSeconds);
 }
 
-void UDIRender::TickTimeLine(float deltaTime)
+void UDIRender::TimelineEffect(float val)
 {
-	if (ready)
-	{
-		tL.PlayFromStart();
-		start = RelativeLocation;
-		end = start + FVector(0, 0, 100);
-		
-		ready = false;
-	}
-
-	if(tL.IsPlaying())
-	{
-		tL.TickTimeline(deltaTime);
-	}
-	else
-	{
-		DestroyComponent(false);
-	}
-}
-
-void UDIRender::Effect(float val)
-{
-	//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, RelativeLocation.ToString());
 	FVector newLocation = FMath::Lerp(start, end, val);
 	SetRelativeLocation(newLocation);
-	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("EffectProgress: timeline: %f  value:%f"), tL.GetPlaybackPosition(), val));
+}
+
+void UDIRender::OnTimelineFinished()
+{
+	DestroyComponent(false);
 }

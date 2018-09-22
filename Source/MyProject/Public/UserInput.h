@@ -224,33 +224,4 @@ private:
 	void									TabNextAlly();
 
 #pragma endregion
-
-#pragma region Vision
-
-	FHitResult								visionHitResult;
-	FCollisionObjectQueryParams				queryParamVision;
-
-public:
-	/**List of all enemies we've already done hit test*/
-	UPROPERTY(BlueprintReadOnly, Category = "Vision")
-	TArray<AEnemy*>							checkedEnemies;
-	
-	/**Lists what enemies are visible so we don't have to keep doing line traces which is an expensive op*/
-	UPROPERTY(BlueprintReadOnly, Category = "Vision")
-	TArray<AEnemy*>							visibleEnemies; 
-
-	/**
-	 * Visiblity of enemies is like a state machine which has six states
-	 * Enemy enters vision range and we can see it - Add to possible enemies in radius and add to visible units
-	 * Enemy enters vision range but is behind a wall - Add to possible enemies in radius but not to visible units
-	 * Enemy leaves vision range - Remove from possible enemies in radius and from visible units
-	 * Enemy leaves vision range but was behind a wall so we never saw it - Remove from possible enemies in radius but not from visible units
-	 * Enemy peaks a wall and is now in vision - Add to visible enemies but not to possible enemies in radius
-	 * Enemy walks behind a wall and is not in vision - Remove from visible enemies but not from possible enemies in radius
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Vision")
-	void									UpdateVisibleEnemies();
-	
-#pragma endregion
-	
 };

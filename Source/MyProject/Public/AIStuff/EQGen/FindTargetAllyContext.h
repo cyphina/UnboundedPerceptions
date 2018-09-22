@@ -14,6 +14,5 @@ class MYPROJECT_API UFindTargetAllyContext : public UEnvQueryContext
 {
 	GENERATED_BODY()
 	
-	virtual void ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const override;
-	
+	virtual void ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const override;	
 };

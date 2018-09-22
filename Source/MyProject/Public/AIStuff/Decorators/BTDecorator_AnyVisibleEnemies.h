@@ -7,7 +7,7 @@
 #include "BTDecorator_AnyVisibleEnemies.generated.h"
 
 /**
- * 
+ * Figures out of any enemy units are visible (from ally's perspective)
  */
 UCLASS()
 class MYPROJECT_API UBTDecorator_AnyVisibleEnemies : public UBTDecorator
@@ -15,10 +15,6 @@ class MYPROJECT_API UBTDecorator_AnyVisibleEnemies : public UBTDecorator
 	GENERATED_BODY()
 	
 	UBTDecorator_AnyVisibleEnemies();
-
-	/** Is AIController owner an enemy or friendly? */
-	UPROPERTY(Category=Decorator, EditAnywhere)
-	bool					isEnemy;
 	
 	/** cached description */
 	UPROPERTY()

@@ -67,6 +67,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
 	TArray<AAlly*>				npcs;
 
+	/**List of current AI  ally groups*/
+	TArray<TSet<AUnit*>>		allyGroups;
 #pragma endregion
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")

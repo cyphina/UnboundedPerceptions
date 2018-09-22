@@ -35,7 +35,7 @@ void ANPC::BeginPlay()
 	controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 
 #if UE_EDITOR
-	//Figure out how many quests this NPC can give
+	//Figure out how many quests this NPC can give.  Delay so we can test individual levels without this failing
 	GetWorld()->GetTimerManager().SetTimer(BeginPlayDelayTimer, this, &ANPC::CountQuestDialogs, 2.f, false);
 #endif
 

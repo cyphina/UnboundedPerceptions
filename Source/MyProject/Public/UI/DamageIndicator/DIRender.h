@@ -7,8 +7,10 @@
 
 class AUnit;
 class AUserInput;
+
 /**
- * 
+ * Text render component displays text somewhere relative to its parent actor.  This subclass is specifically used to show texts that represent damage amounts and combat
+ * occurences.
  */
 UCLASS()
 class MYPROJECT_API UDIRender : public UTextRenderComponent
@@ -16,10 +18,9 @@ class MYPROJECT_API UDIRender : public UTextRenderComponent
 	GENERATED_BODY()
 
 	FTimeline tL;
-	bool isPlaying; //timeline bool
 
 public:
-	bool ready = false;
+
 	FVector start, end;
 	static AUserInput* controllerRef;
 
@@ -27,13 +28,15 @@ public:
 	void BeginPlay() override;
 	void TickComponent(float deltaSeconds, ELevelTick tickType, FActorComponentTickFunction* thisTickFunction) override;
 
-	//Function that gets called from the timer to call effect
-	void TickTimeLine(float deltaTime);
 
 	//Function called from the timeline on a tick
 	UFUNCTION()
-		void Effect(float val);
+	void TimelineEffect(float val);
+
+	//Function called when timeline ends
+	UFUNCTION()
+	void OnTimelineFinished();
 
 	UPROPERTY(BlueprintReadWrite, Category = "Target")
-		AUnit* target;
+	AUnit* target;
 };

@@ -23,6 +23,7 @@ class MYPROJECT_API AUnitController : public AAIController
 
 	AUnit*								ownerRef = nullptr;
 	AUserInput*							CPCRef = nullptr;
+	TSet<AUnit*>*						groupRef; //part of what current group
 
 protected:
 

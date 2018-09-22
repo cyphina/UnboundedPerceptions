@@ -10,7 +10,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLevelLoaded);
 
 /**
- * Game mode only exists on server.  Put things that only the server needs to know and use.  
+ * Game mode only exists on server.  Put things that only the server needs to know and use.  Can't replicate variables here, but calls here apply to server logic 
  */
 
 class UEventManager;

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/CheatManager.h"
+#include "ResourceManager.h"
 #include "MyCheatManager.generated.h"
 
 /**
@@ -81,4 +82,11 @@ class MYPROJECT_API UMyCheatManager : public UCheatManager
 	 */
 	UFUNCTION(exec, Category = "Cheats")
 	virtual void										SetUnitCurHP(FString unitName, int hpVal);
+
+	/**Gives vision over all the enemy units*/
+	UFUNCTION(exec, Category = "Cheats")
+	virtual void										SeeAll();
+
+
+
 };

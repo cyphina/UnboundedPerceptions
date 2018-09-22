@@ -16,18 +16,18 @@ ChannelingState::~ChannelingState()
 void ChannelingState::Enter(AUnit& unit)
 {
 	//Add channel UI bar to the screen
-	unit.channelTime = unit.GetCurrentSpell().GetDefaultObject()->GetCastTime(unit.GetAbilitySystemComponent());
+	unit.unitSpellData.channelTime = unit.GetCurrentSpell().GetDefaultObject()->GetCastTime(unit.GetAbilitySystemComponent());
 }
 
 void ChannelingState::Exit(AUnit& unit)
 {
-	unit.currentChannelTime = 0;
+	unit.unitSpellData.currentChannelTime = 0;
 }
 
 void ChannelingState::Update(AUnit& unit, float deltaSeconds)
 {
-	if(unit.currentChannelTime < unit.channelTime)
-		unit.currentChannelTime += deltaSeconds;
+	if(unit.unitSpellData.currentChannelTime < unit.unitSpellData.channelTime)
+		unit.unitSpellData.currentChannelTime += deltaSeconds;
 	else
 		unit.CastSpell(unit.GetCurrentSpell());
 }

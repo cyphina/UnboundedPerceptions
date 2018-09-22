@@ -21,6 +21,7 @@
 
 #include "WorldObjects/Unit.h"
 #include "WorldObjects/BaseHero.h"
+#include "WorldObjects/Enemies/Enemy.h"
 
 void UMyCheatManager::InitCheatManager()
 {
@@ -99,5 +100,14 @@ void UMyCheatManager::SetUnitCurHP(FString unitName, int hpVal)
 	if(AUnit* unit = ResourceManager::FindTriggerObjectInWorld<AUnit>(unitName, GetWorld()))
 	{
 		unit->SetVitalCurValue(static_cast<uint8>(Vitals::Health), hpVal);
+	}
+}
+
+void UMyCheatManager::SeeAll()
+{
+	for(AEnemy* e : gameStateRef->enemyList)
+	{
+		e->IncVisionCount();
+		e->GetCapsuleComponent()->SetVisibility(true,true);
 	}
 }

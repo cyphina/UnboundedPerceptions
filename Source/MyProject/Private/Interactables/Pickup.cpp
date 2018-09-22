@@ -17,9 +17,8 @@ APickup::APickup()
 	SetRootComponent(sceneComponent);
 	interactableMesh = CreateDefaultSubobject<UStaticMeshComponent>(FName("Mesh"));
 	interactableMesh->SetupAttachment(sceneComponent);
-	sphereCollider = CreateDefaultSubobject<USphereComponent>(FName("Trigger"));
-	sphereCollider->SetupAttachment(sceneComponent);
-	interactableMesh->SetSimulatePhysics(true);
+	interactableMesh->SetSimulatePhysics(false);
+	PrimaryActorTick.bCanEverTick = false;
 	interactableMesh->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel3);
 	interactableMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore); //Enemy
 	interactableMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel9, ECollisionResponse::ECR_Ignore); //Friendly

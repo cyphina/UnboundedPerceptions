@@ -1,10 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyProject.h"
-
 #include "../ESkillContainer.h"
 #include "ActionbarInterface.h"
-
 #include "../Slots/SkillSlot.h"
 
 

@@ -48,6 +48,7 @@ EBTNodeResult::Type UBTTask_Aggresion::ExecuteTask(UBehaviorTreeComponent& owner
 
 	if (IsValid(myMemory->attackSpell))
 	{
+		//all the eqs targetting calls abort this task if they fail
 		if (myMemory->attackSpell->GetTargetting() == FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))
 		{
 			myMemory->unitControllerRef->FindBestAOELocation(myMemory->attackSpellIndex, false);
@@ -63,6 +64,7 @@ EBTNodeResult::Type UBTTask_Aggresion::ExecuteTask(UBehaviorTreeComponent& owner
 		return EBTNodeResult::InProgress;
 	}
 
+	//if there's no spell to be casted
 	return EBTNodeResult::Failed;
 }
 

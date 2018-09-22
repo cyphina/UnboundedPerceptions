@@ -16,9 +16,6 @@ ABasePlayer::ABasePlayer()
 void ABasePlayer::BeginPlay()
 {
 	Super::BeginPlay();
-	//GetWorld()->SpawnActor<ABaseHero>(FVector::ZeroVector, FRotator::ZeroRotator);
-	//for (TActorIterator<ABaseHero> heroItr(GetWorld()); heroItr; ++heroItr)
-	//	heroes.Add(*heroItr);
 }
 
 void ABasePlayer::OnConstruction(const FTransform& transform)

@@ -8,6 +8,7 @@
 #include "DialogSystem/DialogUI.h"
 #include "LevelSaveStructs.h"
 
+FItemPrice AShopNPC::defaultItemPrice = FItemPrice();
 
 void AShopNPC::SetupAppropriateView()
 {
@@ -24,11 +25,11 @@ void AShopNPC::BeginPlay()
 	}
 }
 
-FItemPrice AShopNPC::GetItemPrice(int itemID)
+FItemPrice& AShopNPC::GetItemPrice(int itemID)
 {
 	if(itemPrices.Contains(itemID))
 	{
 		return itemPrices[itemID];
 	}
-	return FItemPrice();
+	return defaultItemPrice;
 }

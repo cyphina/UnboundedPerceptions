@@ -24,7 +24,7 @@ void CastingState::Exit(AUnit& unit)
 
 void CastingState::Update(AUnit& unit, float deltaSeconds)
 {
-	if (unit.targetData.Num() > 0) //due to polymorphic nature of this data structure, its num will be greater than 0 when it has relevant information
+	if (unit.targetData.spellTargetData.Num() > 0) //due to polymorphic nature of this data structure, its num will be greater than 0 when it has relevant information
 	{
 		unit.PrepareCastSpell();
 	}

@@ -17,7 +17,7 @@
  * 1. Moving to a defensive position
  * 2. Choosing a defensive spell not on cooldown
  * 3. Choose the best target to cast it on (person or area)
- * 4. Cast spell
+ * 4. Cast spell (ends when spell successfully cast)
  */
 
 class AUserInput;

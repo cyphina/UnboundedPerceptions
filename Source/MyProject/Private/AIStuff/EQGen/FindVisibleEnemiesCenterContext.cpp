@@ -4,25 +4,25 @@
 #include "FindVisibleEnemiesCenterContext.h"
 #include "EnvironmentQuery/Items/EnvQueryItemType_Point.h"
 #include "WorldObjects/Enemies/Enemy.h"
-#include "UserInput.h"
+#include "RTSGameState.h"
 
 
 void UFindVisibleEnemiesCenterContext::ProvideContext(FEnvQueryInstance& QueryInstance,
 	FEnvQueryContextData& ContextData) const
 {
 	Super::ProvideContext(QueryInstance, ContextData);
-	AUserInput* CPCRef = Cast<AUserInput>(QueryInstance.Owner.Get()->GetWorld()->GetFirstPlayerController());
-	if(CPCRef)
+	ARTSGameState* gameStateRef = Cast<ARTSGameState>(QueryInstance.Owner.Get()->GetWorld()->GetGameState());
+	if(gameStateRef)
 	{
 		
 		FVector centerPointOfVisibleEnemies = FVector::ZeroVector;
-		for(AActor* enemy : CPCRef->visibleEnemies)
+		for(AActor* enemy : gameStateRef->visibleEnemies)
 		{
 			centerPointOfVisibleEnemies += enemy->GetActorLocation();
 		}
 
-		if(CPCRef->visibleEnemies.Num() != 0)
-			centerPointOfVisibleEnemies /= CPCRef->visibleEnemies.Num();
+		if(gameStateRef->visibleEnemies.Num() != 0)
+			centerPointOfVisibleEnemies /= gameStateRef->visibleEnemies.Num();
 
 		UEnvQueryItemType_Point::SetContextHelper(ContextData, centerPointOfVisibleEnemies);
 	}

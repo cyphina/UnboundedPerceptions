@@ -58,7 +58,7 @@ public:
 	void										Tick(float deltaSeconds) override;
 	void										Destroyed() override;
 	void										PossessedBy(AController* newAllyControllerRef) override;
-#pragma region accessors
+#pragma region Accessors
 	
 	//polymorphic selection override for caching units in basePlayer
 	void										SetSelected(bool value) override; 
@@ -99,8 +99,8 @@ public:
 	void										ClearCommandQueue() { commandQueue.Empty(); }
 
 
-/*---Actions---*/
-#pragma region actions
+///---Actions---///
+#pragma region Actions
 
 	/**Stop everything we're doing...  Doesn't have any extra effects in allies*/
 	virtual void								Stop() override;
@@ -116,39 +116,21 @@ public:
 	virtual bool								BeginCastSpell(int spellToCastIndex, FGameplayAbilityTargetDataHandle targetData) override;
 #pragma endregion 
 
-//Allies use a mechanic of vision to see what they can target.  Enemies may use some kind of trigger/perception component to start doing something
-#pragma region Vision
+///---Vision---///
+	#pragma region Vision
 
 	/**What enemies are in our radius determined via sphere overlap events*/
-	UPROPERTY(BlueprintReadWrite, Category = "Vision")
-	TArray<AEnemy*>								possibleEnemiesInRadius; 
-#pragma endregion
-	/*
-	FHitResult visionTestRes;
+	TSet<AEnemy*>								possibleEnemiesInRadius;
 
-	TArray<AActor*> hitEnemies;
+private:
+
+	UFUNCTION()
+	void										OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep, const FHitResult& sweepRes);
 	
-	TArray<AActor*> hiddenEnemies;
+	UFUNCTION()
+	void										OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex);
 
-	//only check corners of our building that are in range
-	TArray<FVector> inRangeCorners;
-
-	//length multiplier to see if triangle side is 
-	TArray<float> triangleTrueLengthMultiplier;
-
-	void UpdateVisibleEnemies();
-
-	//XY corners of buildings used since we don't worry about vision blocking in Z.
-	const FVector buildingCorners[] = {
-		FVector(1.f, 1.f, 0.f),
-		FVector(1.f, -1.f, 0.f),
-		FVector(-1.f, -1.f, 0.f),
-		FVector(-1.f, 1.f, 0.f)
-	};
-
-	*/
-
-
+#pragma endregion
 	friend void									SetupAlliedUnits();
 };
 

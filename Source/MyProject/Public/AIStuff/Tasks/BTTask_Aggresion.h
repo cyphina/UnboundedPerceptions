@@ -28,6 +28,7 @@ struct FBTAggresssionTaskMemory
 	AUnitController*				unitControllerRef = nullptr;
 };
 
+/**Uses a single offensive spell (chosen by set priority) with targetting chosen by an aggressive ruleset*/
 UCLASS()
 class MYPROJECT_API UBTTask_Aggresion : public UBTTaskNode
 {

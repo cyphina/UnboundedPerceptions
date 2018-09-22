@@ -38,3 +38,21 @@ void ResourceManager::InitOffensiveTags()
 {
 	offensiveTags.AddTag(FGameplayTag::RequestGameplayTag("Skill.Category.Offensive"));
 }
+
+void ResourceManager::ExecuteFunctionFromWorldObject(UObject* objectRef, FName functionToExecute, UWorld* worldRef)
+{
+	if (objectRef)
+	{
+		UFunction* function = objectRef->FindFunction(functionToExecute);
+		if (function)
+		{
+			//pointer to memory of local variables in stack 
+			void* locals = nullptr;
+			//creates the stack frame for the function
+			TUniquePtr<FFrame> frame = TUniquePtr<FFrame>(new FFrame{ objectRef, function, locals });
+			//call the UFunction
+			//processEvent (if it has params)
+			objectRef->CallFunction(*frame, locals, function);
+		}
+	}
+}

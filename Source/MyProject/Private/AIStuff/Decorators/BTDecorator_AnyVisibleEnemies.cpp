@@ -3,7 +3,7 @@
 #include "MyProject.h"
 #include "Decorators/BTDecorator_AnyVisibleEnemies.h"
 #include "Unit.h"
-#include "UserInput.h"
+#include "RTSGameState.h"
 
 
 UBTDecorator_AnyVisibleEnemies::UBTDecorator_AnyVisibleEnemies()
@@ -21,7 +21,7 @@ bool UBTDecorator_AnyVisibleEnemies::CalculateRawConditionValue(UBehaviorTreeCom
 
 	//if we see at least one enemy we've seen something
 	//this also means one enemy sees us (if enemy has some kind of ward we'll treat it as a visible enemy)
-	return Cast<AUserInput>(GetWorld()->GetFirstPlayerController())->visibleEnemies.Num();
+	return Cast<ARTSGameState>(GetWorld()->GetGameState())->visibleEnemies.Num();
 
 }
 
@@ -40,7 +40,7 @@ FString UBTDecorator_AnyVisibleEnemies::GetStaticDescription() const
 
 void UBTDecorator_AnyVisibleEnemies::BuildDescription()
 {
-	CachedDescription = "";
+	CachedDescription = "Checks to see if there are any enemies visibles for the player";
 }
 
 void UBTDecorator_AnyVisibleEnemies::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
@@ -50,7 +50,6 @@ void UBTDecorator_AnyVisibleEnemies::PostEditChangeProperty(FPropertyChangedEven
 	{
 		return;
 	}
-
 	BuildDescription();
 }
 
