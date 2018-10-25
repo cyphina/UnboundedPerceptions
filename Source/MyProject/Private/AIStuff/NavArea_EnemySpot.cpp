@@ -2,7 +2,3 @@
 
 #include "MyProject.h"
 #include "NavArea_EnemySpot.h"
-
-
-
-

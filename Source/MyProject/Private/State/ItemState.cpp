@@ -5,7 +5,7 @@
 
 ItemState::ItemState(ABaseHero* hero)
 {
-	heroRef = hero;
+   heroRef = hero;
 }
 
 ItemState::~ItemState()

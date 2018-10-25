@@ -12,91 +12,90 @@ class ABaseHero;
 UCLASS(Blueprintable)
 class MYPROJECT_API USpellBook : public UObject
 {
-	GENERATED_BODY()
-	
-	class SpellNode
-	{
-	public:
-		int index;
-		TSubclassOf<UMySpell>		spellRef;
-		TArray<SpellNode>			prevSpellNodes; //how many prereqs do we need
-		TArray<SpellNode>			nextSpellNodes; //what skills next
-		SpellNode(int index, TArray<SpellNode> prevSpellNodes, TArray<SpellNode> nextSpellNodes, TSubclassOf<UMySpell> spellRef) : index(index), spellRef(spellRef), prevSpellNodes(prevSpellNodes), nextSpellNodes(nextSpellNodes) {}
-	};
+   GENERATED_BODY()
 
-	TDoubleLinkedList<SpellNode>	learnableSpells; //spells we haven't learned but have the prerequisite skills to learn but may not have the levels
-	TDoubleLinkedList<SpellNode>	learnedSpells; //spells we have learned
-	TDoubleLinkedList<SpellNode>	unknownSpells; //spells we haven't learned
-	TMap<int, SpellNode>			spellNodes; //list of all spellnodes -- maps can have invalidated elements so watch out pointing to them.  Just copy values for now
+   class SpellNode
+   {
+    public:
+      int                   index;
+      TSubclassOf<UMySpell> spellRef;
+      TArray<SpellNode>     prevSpellNodes; // how many prereqs do we need
+      TArray<SpellNode>     nextSpellNodes; // what skills next
+      SpellNode(int index, TArray<SpellNode> prevSpellNodes, TArray<SpellNode> nextSpellNodes, TSubclassOf<UMySpell> spellRef) :
+          index(index), spellRef(spellRef), prevSpellNodes(prevSpellNodes), nextSpellNodes(nextSpellNodes)
+      {
+      }
+   };
 
-	bool							isLearnable(SpellNode sNode);
+   TDoubleLinkedList<SpellNode> learnableSpells; // spells we haven't learned but have the prerequisite skills to learn but may not have the levels
+   TDoubleLinkedList<SpellNode> learnedSpells;   // spells we have learned
+   TDoubleLinkedList<SpellNode> unknownSpells;   // spells we haven't learned
+   TMap<int, SpellNode>         spellNodes;      // list of all spellnodes -- maps can have invalidated elements so watch out pointing to them.  Just copy values for now
 
-public:
-	
-	/**List of all the spells learnable in this spellbook.  Edit this to add/remove skills*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Spellbook")
-	TArray<TSubclassOf<UMySpell>>	availableSpells;
+   bool isLearnable(SpellNode sNode);
 
-	UPROPERTY(BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
-	ABaseHero*						heroRef;
+ public:
+   /**List of all the spells learnable in this spellbook.  Edit this to add/remove skills*/
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Spellbook")
+   TArray<TSubclassOf<UMySpell>> availableSpells;
 
-	USpellBook();
-	~USpellBook();
-	
-	void							PostInitProperties() override;
+   UPROPERTY(BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
+   ABaseHero* heroRef;
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spellbook")
-		TArray<int> GetLearnableSpells() const
-	{
-		TArray<int> spellIndices = TArray<int>();
-		for(SpellNode sNode : learnableSpells)
-		{
-			spellIndices.Add(sNode.index);
-		}
-		return spellIndices;
-	}
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spellbook")
-		TArray<int> GetLearnedSpells() const
-	{
-		TArray<int> spellIndices = TArray<int>();
-		for (SpellNode sNode : learnedSpells)
-		{
-			spellIndices.Add(sNode.index);
-		}
-		return spellIndices;
-	}
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spellbook")
-		TArray<int> GetUnknownSpells() const
-	{
-		TArray<int> spellIndices = TArray<int>();
-		for (SpellNode sNode : unknownSpells)
-		{
-			spellIndices.Add(sNode.index);
-		}
-		return spellIndices;
-	}
+   USpellBook();
+   ~USpellBook();
 
-	UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-	UMySpell*				GetDefaultAbilityCopy(int spellIndex) const;
+   void PostInitProperties() override;
 
-	//Call to initialize skilltree.  Make sure to call this after constructing a spellbook!
-	UFUNCTION(BlueprintCallable, Category = "Spellbook")
-	void					Init();
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spellbook")
+   TArray<int> GetLearnableSpells() const
+   {
+      TArray<int> spellIndices = TArray<int>();
+      for (SpellNode sNode : learnableSpells) {
+         spellIndices.Add(sNode.index);
+      }
+      return spellIndices;
+   }
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spellbook")
+   TArray<int> GetLearnedSpells() const
+   {
+      TArray<int> spellIndices = TArray<int>();
+      for (SpellNode sNode : learnedSpells) {
+         spellIndices.Add(sNode.index);
+      }
+      return spellIndices;
+   }
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spellbook")
+   TArray<int> GetUnknownSpells() const
+   {
+      TArray<int> spellIndices = TArray<int>();
+      for (SpellNode sNode : unknownSpells) {
+         spellIndices.Add(sNode.index);
+      }
+      return spellIndices;
+   }
 
-	UFUNCTION(BlueprintCallable, Category = "Spellbook")
-	bool					LearnSpell(int index);
+   UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
+   UMySpell* GetDefaultAbilityCopy(int spellIndex) const;
 
-	//Update possible learnable spells
-	UFUNCTION(BlueprintCallable, Category = "Spellbook")
-	void					Update(int index);
+   // Call to initialize skilltree.  Make sure to call this after constructing a spellbook!
+   UFUNCTION(BlueprintCallable, Category = "Spellbook")
+   void Init();
 
-	/**Checks if a spell in this spellbook is learned
-	 * @param spellBookIndex - Indice of spell inside the spellbook
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Spellbook")
-	bool					HasLearnedSpell(int spellBookIndex) const { return GetLearnedSpells().Contains(spellBookIndex); }
+   UFUNCTION(BlueprintCallable, Category = "Spellbook")
+   bool LearnSpell(int index);
 
-	void					Respec();
+   // Update possible learnable spells
+   UFUNCTION(BlueprintCallable, Category = "Spellbook")
+   void Update(int index);
 
-	void					UpgradeSpell();
+   /**Checks if a spell in this spellbook is learned
+    * @param spellBookIndex - Indice of spell inside the spellbook
+    */
+   UFUNCTION(BlueprintCallable, Category = "Spellbook")
+   bool HasLearnedSpell(int spellBookIndex) const { return GetLearnedSpells().Contains(spellBookIndex); }
+
+   void Respec();
+
+   void UpgradeSpell();
 };

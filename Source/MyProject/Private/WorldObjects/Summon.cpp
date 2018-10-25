@@ -5,11 +5,8 @@
 #include "BasePlayer.h"
 #include "Summon.h"
 
-
 void ASummon::BeginPlay()
 {
-	Super::BeginPlay();
-	controllerRef->GetBasePlayer()->summons.Add(this);
+   Super::BeginPlay();
+   controllerRef->GetBasePlayer()->summons.Add(this);
 }
-
-

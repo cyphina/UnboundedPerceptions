@@ -12,15 +12,15 @@ class ABaseHero;
 
 class MYPROJECT_API HeroStateMachine : public StateMachine
 {
-public:
-	HeroStateMachine(ABaseHero* hero);
-	virtual ~HeroStateMachine();
+ public:
+   HeroStateMachine(ABaseHero* hero);
+   virtual ~HeroStateMachine();
 
-	InteractState				Interacting;
-	ItemState					UsingItem;
+   InteractState Interacting;
+   ItemState     UsingItem;
 
-	virtual void				ChangeState(EUnitState newState) override;
+   virtual void ChangeState(EUnitState newState) override;
 
-private:
-	virtual IUnitState*			getStateFromEnum(EUnitState enumVal) override;
+ private:
+   virtual IUnitState* getStateFromEnum(EUnitState enumVal) override;
 };

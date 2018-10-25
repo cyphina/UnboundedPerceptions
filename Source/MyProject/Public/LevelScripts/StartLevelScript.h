@@ -7,15 +7,13 @@
 #include "StartLevelScript.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API AStartLevelScript : public AUPLevelScript
 {
-	GENERATED_BODY()
-	
-public:
+   GENERATED_BODY()
 
-	void				BeginPlay() override;
-	
+ public:
+   void BeginPlay() override;
 };

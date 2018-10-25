@@ -8,14 +8,14 @@ class ABaseHero;
 class MYPROJECT_API ItemState : public IUnitState
 {
 
-	ABaseHero* heroRef;
+   ABaseHero* heroRef;
 
-public:
-	ItemState(ABaseHero* hero);
-	~ItemState();
+ public:
+   ItemState(ABaseHero* hero);
+   ~ItemState();
 
-	virtual void Enter(AUnit& unit) override;
-	virtual void Exit(AUnit& unit) override;
-	virtual void Update(AUnit& unit, float deltaSeconds) override;
-	virtual EUnitState GetName() const override { return EUnitState::STATE_ITEM; }
+   virtual void       Enter(AUnit& unit) override;
+   virtual void       Exit(AUnit& unit) override;
+   virtual void       Update(AUnit& unit, float deltaSeconds) override;
+   virtual EUnitState GetName() const override { return EUnitState::STATE_ITEM; }
 };

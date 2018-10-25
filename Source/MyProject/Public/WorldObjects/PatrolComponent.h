@@ -11,43 +11,40 @@ class AAIController;
 
 /**Allows us to easily set patrol points for enemy and npc*/
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class MYPROJECT_API UPatrolComponent : public USceneComponent
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	AAIController*				ownerControllerRef;
+   AAIController* ownerControllerRef;
 
-	UFUNCTION()
-	void						OnMoveCompleted(FAIRequestID requestID, EPathFollowingResult::Type result);
+   UFUNCTION()
+   void OnMoveCompleted(FAIRequestID requestID, EPathFollowingResult::Type result);
 
-public:	
-	UPatrolComponent();
+ public:
+   UPatrolComponent();
 
-protected:
+ protected:
+   virtual void BeginPlay() override;
 
-	virtual void BeginPlay() override;
+ public:
+   virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-public:	
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NPCMovement")
+   bool enabled;
 
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+   /**List of NPC patrol points.  NPC will go to each point in order and loop.*/
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NPCMovement")
+   TArray<FVector> patrolPoints;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NPCMovement")
-	bool						enabled;
+   int currentPatrolIndex = 0;
 
-	/**List of NPC patrol points.  NPC will go to each point in order and loop.*/
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NPCMovement")
-	TArray<FVector>				patrolPoints;	
+   FLinearColor editorUnselectedColor = FLinearColor::Black;
+   FLinearColor editorSelectedColor   = FLinearColor::Blue;
 
-	int							currentPatrolIndex = 0;
+   UFUNCTION()
+   void DeletePatrolPoint(int patrolIndex);
 
-	FLinearColor				editorUnselectedColor = FLinearColor::Black;
-	FLinearColor				editorSelectedColor = FLinearColor::Blue;
-
-	UFUNCTION()
-	void						DeletePatrolPoint(int patrolIndex);
-
-	UFUNCTION(BlueprintCallable)
-	void						MoveToNextPatrolPoint();
-
+   UFUNCTION(BlueprintCallable)
+   void MoveToNextPatrolPoint();
 };

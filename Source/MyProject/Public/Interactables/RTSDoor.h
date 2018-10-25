@@ -1,11 +1,11 @@
 #pragma once
 
+#include "Components/BoxComponent.h"
 #include "CoreMinimal.h"
+#include "Curves/CurveFloat.h"
+#include "EventSystem/RTSConditional.h"
 #include "GameFramework/Actor.h"
 #include "Interactables/InteractableBase.h"
-#include "EventSystem/RTSConditional.h"
-#include "Components/BoxComponent.h"
-#include "Curves/CurveFloat.h"
 #include "RTSDoor.generated.h"
 
 struct FDoorInteractableSaveInfo;
@@ -17,56 +17,52 @@ class AUserInput;
 UCLASS(HideCategories = (Input, Actor, LOD))
 class MYPROJECT_API ARTSDoor : public AInteractableBase
 {
-	GENERATED_BODY()
-	
-	FTimeline				tL;
-	
-	/**Is this door open or closed?*/
-	bool					isOpen = false;
+   GENERATED_BODY()
 
-	/**Store initial rotation for when door should go to closed state*/
-	FRotator				initialRotation;
+   FTimeline tL;
 
-	/**Store this value so we don't have to keep calculating a temporary*/
-	FRotator				finalRotation;
+   /**Is this door open or closed?*/
+   bool isOpen = false;
 
-	UFUNCTION()
-	void					HandleProgress(float Value);
+   /**Store initial rotation for when door should go to closed state*/
+   FRotator initialRotation;
 
-public:	
+   /**Store this value so we don't have to keep calculating a temporary*/
+   FRotator finalRotation;
 
-	/**Curve representing door rotation rate*/
-	UPROPERTY(EditAnywhere, Category = "Door Info")
-	UCurveFloat*					progressCurve;
-	
-	/**Root component*/
-	UPROPERTY(EditAnywhere)
-	USceneComponent*				scene;
+   UFUNCTION()
+   void HandleProgress(float Value);
 
-	/*Mesh of the door itself*/
-	UPROPERTY(EditAnywhere)
-	UStaticMeshComponent*			doorMesh;
+ public:
+   /**Curve representing door rotation rate*/
+   UPROPERTY(EditAnywhere, Category = "Door Info")
+   UCurveFloat* progressCurve;
 
-	UPROPERTY(EditAnywhere)
-	UBoxComponent*					doorCollision;
+   /**Door collision since meshes are for looks only*/
+   UPROPERTY(EditAnywhere)
+   UBoxComponent* doorCollision;
 
-	/**Is this door locked? (needs a key to open)*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Info")
-	bool					isLocked = false;
+   /**Mesh for actual door. The main mesh is a static door hinge*/
+   UPROPERTY(VisibleAnywhere)
+   UStaticMeshComponent* doorMesh;
 
-	/**Id of the key to open this door if it is locked*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Info")
-	int					keyID = 0;
+   /**Is this door locked? (needs a key to open)*/
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Info")
+   bool isLocked = false;
 
-	ARTSDoor();
+   /**Id of the key to open this door if it is locked*/
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Info")
+   int keyID = 0;
 
-	void					BeginPlay() override;
-	void					Tick(float DeltaTime) override;
+   ARTSDoor();
 
-	void					Interact_Implementation(ABaseHero* hero) override;
-	FVector					GetInteractableLocation_Implementation() override;
-	bool					CanInteract_Implementation() override;
+   void BeginPlay() override;
+   void Tick(float DeltaTime) override;
 
-	void					SaveInteractable(FMapSaveInfo& mapData) override;
-	void					LoadInteractable(FDoorInteractableSaveInfo& doorData);
+   void    Interact_Implementation(ABaseHero* hero) override;
+   FVector GetInteractableLocation_Implementation(ABaseHero* hero) override;
+   bool    CanInteract_Implementation() override;
+
+   void SaveInteractable(FMapSaveInfo& mapData) override;
+   void LoadInteractable(FDoorInteractableSaveInfo& doorData);
 };

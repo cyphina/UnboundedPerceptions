@@ -7,6 +7,6 @@
 
 void UActionSlot::NativeConstruct()
 {
-	Super::NativeConstruct();
-	CPCRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+   Super::NativeConstruct();
+   CPCRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 }

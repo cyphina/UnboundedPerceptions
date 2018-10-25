@@ -7,13 +7,12 @@
 #include "MySceneCapture2D.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API AMySceneCapture2D : public ASceneCapture2D
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	AMySceneCapture2D();
-	
+   AMySceneCapture2D();
 };

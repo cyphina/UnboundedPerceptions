@@ -15,65 +15,65 @@ class USubGoalWidget;
 UCLASS()
 class MYPROJECT_API UQuestListSlot : public UUserWidget
 {
-	GENERATED_BODY()
-	
-public:
-	/**Creates a subwidget for each subgoal of a quest*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "QuestList UI")
-		void								GenerateSubWidgets(); 
+   GENERATED_BODY()
 
-	/**Updates quest entry in our list; updates quest name and color based on its category*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "QuestList UI")
-		void								UpdateQuestEntry();
+ public:
+   /**Creates a subwidget for each subgoal of a quest*/
+   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "QuestList UI")
+   void GenerateSubWidgets();
 
-	/**When a subgoal is selected we'll select it's corresponding quest and change the UI to indicate that*/
-	UFUNCTION(BlueprintCallable, Category = "QuestList UI")
-		void								SelectSubGoal(int subGoalIndex); 
+   /**Updates quest entry in our list; updates quest name and color based on its category*/
+   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "QuestList UI")
+   void UpdateQuestEntry();
 
-	/**When we select a different quest*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "QuestList UI")
-		void								OnQuestSelected(); 
+   /**When a subgoal is selected we'll select it's corresponding quest and change the UI to indicate that*/
+   UFUNCTION(BlueprintCallable, Category = "QuestList UI")
+   void SelectSubGoal(int subGoalIndex);
 
-	/**Add a subgoal widget to this questlist*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "QuestList UI")
-		void								AddSubGoalWidget(AQuest* questRef, int goalIndex); 
+   /**When we select a different quest*/
+   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "QuestList UI")
+   void OnQuestSelected();
 
-	/**Remove a subgoal widget from this questlist*/
-	UFUNCTION(BlueprintCallable, Category = "QuestList UI")
-		void								RemoveSubGoalWidget(int goalIndex); 
+   /**Add a subgoal widget to this questlist*/
+   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "QuestList UI")
+   void AddSubGoalWidget(AQuest* questRef, int goalIndex);
 
-	/**is this quest selected*/
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helper")
-		bool								IsCurrentQuest();
+   /**Remove a subgoal widget from this questlist*/
+   UFUNCTION(BlueprintCallable, Category = "QuestList UI")
+   void RemoveSubGoalWidget(int goalIndex);
 
-///---ACCESSORS---
+   /**is this quest selected*/
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helper")
+   bool IsCurrentQuest();
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-	FORCEINLINE	AQuest*								GetAssignedQuest() const { return assignedQuest; }
+   ///---ACCESSORS---
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-	FORCEINLINE	UQuestManager*						GetQuestManagerRef() const;
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
+   FORCEINLINE AQuest* GetAssignedQuest() const { return assignedQuest; }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-	FORCEINLINE	int									GetSelectedGoalIndex() const { return selectedGoalIndex; }
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
+   FORCEINLINE UQuestManager* GetQuestManagerRef() const;
 
-private:
-	/**Corresponding quest to this slot*/
-	UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (ExposeOnSpawn = true, AllowPrivateAccess = true))
-		AQuest*								assignedQuest;
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
+   FORCEINLINE int GetSelectedGoalIndex() const { return selectedGoalIndex; }
 
-	/**Quest Manager Ref*/
-	UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (ExposeOnSpawn = true, AllowPrivateAccess = true))
-		ARTSGameMode*						gameModeRef;
+ private:
+   /**Corresponding quest to this slot*/
+   UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (ExposeOnSpawn = true, AllowPrivateAccess = true))
+   AQuest* assignedQuest;
 
-	/**List of subgoals for our quest*/
-	UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (AllowPrivateAccess = true))
-		TArray<USubGoalWidget*>				subGoalWidgets;
+   /**Quest Manager Ref*/
+   UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (ExposeOnSpawn = true, AllowPrivateAccess = true))
+   ARTSGameMode* gameModeRef;
 
-	/**The selected subgoal for this quest slot. Only one can be selected for the entire questList*/
-	UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (AllowPrivateAccess = true))
-		USubGoalWidget*						selectedSubGoal;
+   /**List of subgoals for our quest*/
+   UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (AllowPrivateAccess = true))
+   TArray<USubGoalWidget*> subGoalWidgets;
 
-	/**Index of goal selected within this widget*/
-	int										selectedGoalIndex;
+   /**The selected subgoal for this quest slot. Only one can be selected for the entire questList*/
+   UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (AllowPrivateAccess = true))
+   USubGoalWidget* selectedSubGoal;
+
+   /**Index of goal selected within this widget*/
+   int selectedGoalIndex;
 };

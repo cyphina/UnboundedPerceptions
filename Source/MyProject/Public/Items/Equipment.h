@@ -9,41 +9,39 @@ class UBackpack;
 
 DECLARE_DELEGATE_TwoParams(FOnEquipped, int, bool);
 
-UCLASS(ClassGroup=(Custom))
+UCLASS(ClassGroup = (Custom))
 class MYPROJECT_API UEquipment : public UObject
 {
-	GENERATED_BODY()
-		
-	//0 - Head, 1 - Body, 2 - Legs, 3 - Acc1, 4 - Codex, 5-9 - Codex Weapons
-	TStaticArray<int,10>								equips;
+   GENERATED_BODY()
 
-	/**Move equip from equipment to some other inventory (storage, hero).  Can only be done through dragging*/
-	int										SwapEquipsFromInventory(int equipID, int equipSlot);
+   // 0 - Head, 1 - Body, 2 - Legs, 3 - Acc1, 4 - Codex, 5-9 - Codex Weapons
+   TStaticArray<int, 10> equips;
 
-public:	
+   /**Move equip from equipment to some other inventory (storage, hero).  Can only be done through dragging*/
+   int SwapEquipsFromInventory(int equipID, int equipSlot);
 
-	UEquipment();
+ public:
+   UEquipment();
 
-	FORCEINLINE TArray<int>					GetEquips() const
-	{
-		TArray<int> equipsCopy;
-		for(int i = 0 ; i < 10; ++i)
-		{
-			equipsCopy.Add(equips[i]);
-		}
-		return MoveTemp(equipsCopy);
-	}
+   FORCEINLINE TArray<int> GetEquips() const
+   {
+      TArray<int> equipsCopy;
+      for (int i = 0; i < 10; ++i) {
+         equipsCopy.Add(equips[i]);
+      }
+      return MoveTemp(equipsCopy);
+   }
 
-	/**Modifies the storage container to hold the new item with id equipItem as well as swaps in and out the appropriate stats
-	 * @param equipItem - ID of the item to equip
-	 */
-	int										Equip(int equipItem);
-	
-	/**Frees the slot from the container as well as removing stat bonuses.*/
-	void									Unequip(int slot);
+   /**Modifies the storage container to hold the new item with id equipItem as well as swaps in and out the appropriate stats
+    * @param equipItem - ID of the item to equip
+    */
+   int Equip(int equipItem);
 
-	/**Swap pieces of equipment that are in interchangeable slots in the equip menu*/
-	void									SwapEquips(int equipSlot1, int equipSlot2);
+   /**Frees the slot from the container as well as removing stat bonuses.*/
+   void Unequip(int slot);
 
-	FOnEquipped								OnEquipped;
+   /**Swap pieces of equipment that are in interchangeable slots in the equip menu*/
+   void SwapEquips(int equipSlot1, int equipSlot2);
+
+   FOnEquipped OnEquipped;
 };

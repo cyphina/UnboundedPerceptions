@@ -3,20 +3,17 @@
 #pragma once
 #include "IUnitState.h"
 
-
 /**
  * Represents when a unit is channeling an ability
  */
 
 class MYPROJECT_API ChannelingState : public IUnitState
 {
-public:
-	ChannelingState();
-	virtual void Enter(AUnit& unit) override;
-	virtual void Exit(AUnit& unit) override;
-	virtual void Update(AUnit& unit, float deltaSeconds) override;
-	virtual EUnitState GetName() const override { return EUnitState::STATE_CHANNELING; }
-	~ChannelingState();
+ public:
+   ChannelingState();
+   virtual void       Enter(AUnit& unit) override;
+   virtual void       Exit(AUnit& unit) override;
+   virtual void       Update(AUnit& unit, float deltaSeconds) override;
+   virtual EUnitState GetName() const override { return EUnitState::STATE_CHANNELING; }
+   ~ChannelingState();
 };
-
-

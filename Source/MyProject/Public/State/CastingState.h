@@ -4,15 +4,15 @@
 #include "IUnitState.h"
 
 /**
- * 
+ *
  */
 class MYPROJECT_API CastingState : public IUnitState
 {
-public:
-	CastingState();
-	~CastingState();
-	virtual void Enter(AUnit& unit) override;
-	virtual void Exit(AUnit& unit) override;
-	virtual void Update(AUnit& unit, float deltaSeconds) override;
-	virtual EUnitState GetName() const override { return EUnitState::STATE_CASTING; }
+ public:
+   CastingState();
+   ~CastingState();
+   virtual void       Enter(AUnit& unit) override;
+   virtual void       Exit(AUnit& unit) override;
+   virtual void       Update(AUnit& unit, float deltaSeconds) override;
+   virtual EUnitState GetName() const override { return EUnitState::STATE_CASTING; }
 };

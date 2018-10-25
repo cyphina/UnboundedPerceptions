@@ -19,44 +19,42 @@ class AUnit;
 UCLASS()
 class MYPROJECT_API AEnemyAIController : public AUnitController
 {
-	GENERATED_BODY()
-	
-private:
+   GENERATED_BODY()
 
-	/**function that fires when the perception of our ai gets updated*/
-	UFUNCTION()
-	void								OnPerceptionUpdated(const TArray<AActor*>& updatedActors);
+ private:
+   /**function that fires when the perception of our ai gets updated*/
+   UFUNCTION()
+   void OnPerceptionUpdated(const TArray<AActor*>& updatedActors);
 
-	/**A sight sense config for our AI*/
-	UAISenseConfig_Sight*				sight;
+   /**A sight sense config for our AI*/
+   UAISenseConfig_Sight* sight;
 
-	/**Currently percieved actors*/
-	FActorPerceptionBlueprintInfo		info;
+   /**Currently percieved actors*/
+   FActorPerceptionBlueprintInfo info;
 
-	/**current closest distance to some actor in range*/
-	int									currentClosest = TNumericLimits<int32>::Max(); 
+   /**current closest distance to some actor in range*/
+   int currentClosest = TNumericLimits<int32>::Max();
 
-	/**Sight perception information*/
-	const FActorPerceptionInfo*			sightPerceptionInfo;
+   /**Sight perception information*/
+   const FActorPerceptionInfo* sightPerceptionInfo;
 
-	TArray<AActor*>						percievedActors;
-	/**Stored closest target to us during perception changes*/
-	AUnit*								percievedTargetUnit;
+   TArray<AActor*> percievedActors;
+   /**Stored closest target to us during perception changes*/
+   AUnit* percievedTargetUnit;
 
-protected:
+ protected:
+   /**Perception Component of our AI*/
+   UPROPERTY(VisibleAnywhere)
+   UAIPerceptionComponent* AIPerceptionComponent;
 
-	/**Perception Component of our AI*/
-	UPROPERTY(VisibleAnywhere)
-	UAIPerceptionComponent*				AIPerceptionComponent;
+ public:
+   /**Behavior tree contains logic of our AI*/
+   UPROPERTY(EditAnywhere)
+   UBehaviorTree* behaviorTree;
 
-public: 
-	/**Behavior tree contains logic of our AI*/
-	UPROPERTY(EditAnywhere)
-	UBehaviorTree*						behaviorTree;
+   AEnemyAIController();
+   void Possess(APawn* InPawn) override;
 
-	AEnemyAIController();
-	void								Possess(APawn* InPawn) override;
-
-	/** Returns the seeing pawn.  Returns null if our AI has no unitTarget. */
-	AActor* GetSeeingPawn();
+   /** Returns the seeing pawn.  Returns null if our AI has no unitTarget. */
+   AActor* GetSeeingPawn();
 };

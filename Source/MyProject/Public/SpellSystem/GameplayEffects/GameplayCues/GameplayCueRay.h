@@ -7,14 +7,10 @@
 #include "GameplayCueRay.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API AGameplayCueRay : public AGameplayCueNotify_Actor
 {
-	GENERATED_BODY()
-	
-	
-	
-	
+   GENERATED_BODY()
 };

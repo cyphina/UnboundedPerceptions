@@ -7,11 +7,10 @@
 #include "CoolDownEffect.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UCoolDownEffect : public UGameplayEffect
 {
-	GENERATED_UCLASS_BODY()
-	
+   GENERATED_UCLASS_BODY()
 };

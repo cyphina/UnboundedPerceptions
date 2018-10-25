@@ -6,12 +6,11 @@
 #include "EventSystem/Trigger.h"
 #include "UPLevelScript.generated.h"
 
-
 /**
  * Base script for all levels in UnboundedPreceptions
  * Includes a check to see if when a level script derived from this one is loaded up, to see if player loaded it or naturally transitioned to it, or if
  * moved to the level through gameplay
- * Includes time information for traveling between levels.  Maybe could use streaming instead.  
+ * Includes time information for traveling between levels.  Maybe could use streaming instead.
  */
 
 class AUserInput;
@@ -20,35 +19,40 @@ class ARTSGameState;
 UCLASS()
 class MYPROJECT_API AUPLevelScript : public ALevelScriptActor
 {
-	GENERATED_BODY()
-	
-	/**If time should pass entering/leaving or just chilling in the level*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "DefaultValues")
-	bool				shouldTimePass = false;
+   GENERATED_BODY()
 
-	/**How much time passes from entering/leaving*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "DefaultValues")
-	FDateTime			timeToPass;
+   /**If time should pass entering/leaving or just chilling in the level*/
+   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "DefaultValues")
+   bool shouldTimePass = false;
 
-	/**What triggers should be run when this level is loaded
-	 * Should be saved
-	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Triggers")
-	TArray<FTriggerData>	triggersToRun;
+   /**How much time passes from entering/leaving*/
+   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "DefaultValues")
+   FDateTime timeToPass;
 
-protected:
+   /**How far the camera can be panned in the X direction on this map*/
+   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "DefaultValues")
+   int cameraExtentX = 0;
 
-	UPROPERTY(BlueprintReadOnly, Category = "References")
-	AUserInput*				controllerRef = nullptr;
+   /**How far the camera can be panned in the Y direction on this map*/
+   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "DefaultValues")
+   int cameraExtentY = 0;
 
-public:
+   /**What triggers should be run when this level is loaded
+    * Should be saved
+    */
+   UPROPERTY(EditDefaultsOnly, Category = "Triggers")
+   TArray<FTriggerData> triggersToRun;
 
-	UPROPERTY(BlueprintReadWrite, Category = "OnLevelLoaded")
-	TArray<FTriggerData> 	OnLevelLoadedTriggers;
+ protected:
+   UPROPERTY(BlueprintReadOnly, Category = "References")
+   AUserInput* controllerRef = nullptr;
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "References")
-	AUserInput*			GetControllerRef() const { return controllerRef; } 
+ public:
+   UPROPERTY(BlueprintReadWrite, Category = "OnLevelLoaded")
+   TArray<FTriggerData> OnLevelLoadedTriggers;
 
-	void				BeginPlay() override;
-	
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "References")
+   AUserInput* GetControllerRef() const { return controllerRef; }
+
+   void BeginPlay() override;
 };

@@ -2,6 +2,3 @@
 
 #include "MyProject.h"
 #include "Consumable.h"
-
-
-

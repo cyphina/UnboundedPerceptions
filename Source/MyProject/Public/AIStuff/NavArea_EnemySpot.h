@@ -7,15 +7,11 @@
 #include "NavArea_EnemySpot.generated.h"
 
 /**
- * Area class used by enemies so that certain move commands will try to avoid them 
+ * Area class used by enemies so that certain move commands will try to avoid them
  */
 
 UCLASS()
 class MYPROJECT_API UNavArea_EnemySpot : public UNavArea
 {
-	GENERATED_BODY()
-	
-	
-	
-	
+   GENERATED_BODY()
 };

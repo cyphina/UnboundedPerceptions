@@ -8,19 +8,19 @@
 class AUnit;
 
 /**
- * C++ class for the widget that the widget component holds when 
+ * C++ class for the widget that the widget component holds when
  */
 UCLASS()
 class MYPROJECT_API UDIWidget : public UUserWidget
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:
-	UPROPERTY(BlueprintReadWrite, Category = "Target")
-		AUnit* target;
+ public:
+   UPROPERTY(BlueprintReadWrite, Category = "Target")
+   AUnit* target;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Damage")
-		int damage;
+   UPROPERTY(BlueprintReadWrite, Category = "Damage")
+   int damage;
 
-	virtual void NativeConstruct() override;
+   virtual void NativeConstruct() override;
 };

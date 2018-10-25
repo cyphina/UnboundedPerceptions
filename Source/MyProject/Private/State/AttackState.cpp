@@ -5,7 +5,6 @@
 #include "RTSGameState.h"
 #include "Unit.h"
 
-
 AttackState::AttackState()
 {
 }
@@ -14,18 +13,16 @@ AttackState::~AttackState()
 {
 }
 
-void AttackState::Enter(AUnit & unit)
+void AttackState::Enter(AUnit& unit)
 {
-
 }
 
-void AttackState::Exit(AUnit & unit)
+void AttackState::Exit(AUnit& unit)
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Purple, TEXT("WEE"));
+   // GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Purple, TEXT("WEE"));
 }
 
-void AttackState::Update(AUnit & unit, float deltaSeconds)
+void AttackState::Update(AUnit& unit, float deltaSeconds)
 {
-	if(IsValid(unit.targetData.targetUnit))
-		unit.PrepareAttack();
+   if (IsValid(unit.targetData.targetUnit)) unit.PrepareAttack();
 }

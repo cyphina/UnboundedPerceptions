@@ -7,19 +7,18 @@
 #include "EnvQueryTest_IsEnemy.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UEnvQueryTest_IsEnemy : public UEnvQueryTest
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	UEnvQueryTest_IsEnemy();
+   UEnvQueryTest_IsEnemy();
 
-	virtual void RunTest(FEnvQueryInstance& QueryInstance) const override;
+   virtual void RunTest(FEnvQueryInstance& QueryInstance) const override;
 
-	virtual FText GetDescriptionTitle() const override;
+   virtual FText GetDescriptionTitle() const override;
 
-	virtual FText GetDescriptionDetails() const override;
-	
+   virtual FText GetDescriptionDetails() const override;
 };

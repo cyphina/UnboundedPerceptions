@@ -12,10 +12,9 @@
 UCLASS()
 class MYPROJECT_API UMyDraggableWidget : public UMyUserWidget
 {
-	GENERATED_BODY()
-	
-public:
+   GENERATED_BODY()
 
-	FReply				NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	void				NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
+ public:
+   FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+   void   NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
 };

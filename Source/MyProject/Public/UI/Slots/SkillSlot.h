@@ -13,67 +13,66 @@ class UActionSlot;
 UCLASS()
 class MYPROJECT_API USkillSlot : public UUserWidget
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	FTimeline						cdTimeline;
-	
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	int								cdTimer;
+   FTimeline cdTimeline;
 
-public:
-	UPROPERTY(BlueprintReadWrite) //Reference to skill container which holds this slot
-	UESkillContainer*				eSkillContainer;
+   UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
+   int cdTimer;
 
-	UPROPERTY(BlueprintReadWrite) //make sure to set this up in bp -- cooldown shadow material
-	UMaterialInstanceDynamic*		cdDMatInst;
+ public:
+   UPROPERTY(BlueprintReadWrite) // Reference to skill container which holds this slot
+   UESkillContainer* eSkillContainer;
 
-	UPROPERTY(BlueprintReadWrite) //make sure to set this up in bp -- image material
-	UMaterialInstanceDynamic*		imageDMatInst;
+   UPROPERTY(BlueprintReadWrite) // make sure to set this up in bp -- cooldown shadow material
+   UMaterialInstanceDynamic* cdDMatInst;
 
-	UPROPERTY(BlueprintReadWrite) // a reference so we can use the widget's properties in our C++ code.  There's two references, one in BP which we use to set this one
-	UActionSlot*					actionSlotRef;
+   UPROPERTY(BlueprintReadWrite) // make sure to set this up in bp -- image material
+   UMaterialInstanceDynamic* imageDMatInst;
 
-	USkillSlot(const FObjectInitializer& o);
+   UPROPERTY(BlueprintReadWrite) // a reference so we can use the widget's properties in our C++ code.  There's two references, one in BP which we use to set this one
+   UActionSlot* actionSlotRef;
 
-	UFUNCTION()
-	void							NativeConstruct() override;
+   USkillSlot(const FObjectInitializer& o);
 
-	UFUNCTION()
-	void							NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+   UFUNCTION()
+   void NativeConstruct() override;
 
-	/**Function that is called when this slot is activated*/
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
-	void							PerformAction();
+   UFUNCTION()
+   void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
-	/**Used to create the effect of the skillslot being filled as it goes off cooldown*/
-	UFUNCTION(BlueprintCallable)
-	void							TickTimeline();
+   /**Function that is called when this slot is activated*/
+   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+   void PerformAction();
 
-	/**Can be used if this slot is replaced with another skill to update the timeline length*/
-	UFUNCTION(BlueprintCallable, Category = "Binding Functions")
-	void							UpdateTimelineCD(float newDuration);
+   /**Used to create the effect of the skillslot being filled as it goes off cooldown*/
+   UFUNCTION(BlueprintCallable)
+   void TickTimeline();
 
-	/**When the cd visuals need to be hided (time and image mostly)*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "Binding Functions")
-	void							HideCDVisuals();
+   /**Can be used if this slot is replaced with another skill to update the timeline length*/
+   UFUNCTION(BlueprintCallable, Category = "Binding Functions")
+   void UpdateTimelineCD(float newDuration);
 
-	/**When the cd visuals need to be shown (time and image mostly)*/
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
-	void							ShowCDVisuals();
+   /**When the cd visuals need to be hided (time and image mostly)*/
+   UFUNCTION(BlueprintImplementableEvent, Category = "Binding Functions")
+   void HideCDVisuals();
 
-	/*Special playtimeline function used to keep playing at the point at which a spell is on cd.  Used if skill on cd swapped to new slot*/
-	UFUNCTION(BlueprintCallable, Category = "Timeline Exposure")
-	void							PlayTimeline(float startingPoint);
+   /**When the cd visuals need to be shown (time and image mostly)*/
+   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+   void ShowCDVisuals();
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
-	void							SetImage(UTexture2D* image);
+   /*Special playtimeline function used to keep playing at the point at which a spell is on cd.  Used if skill on cd swapped to new slot*/
+   UFUNCTION(BlueprintCallable, Category = "Timeline Exposure")
+   void PlayTimeline(float startingPoint);
 
-	/**Used when changing the skill to a new one*/
-	UFUNCTION(BlueprintCallable, Category = "Update skills")
-	void							UpdateSkillSlot(TSubclassOf<UMySpell> spell);
+   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+   void SetImage(UTexture2D* image);
 
-	/**Used to generate tooltip description*/
-	UFUNCTION(BlueprintCallable)
-	void							ShowDescription();
+   /**Used when changing the skill to a new one*/
+   UFUNCTION(BlueprintCallable, Category = "Update skills")
+   void UpdateSkillSlot(TSubclassOf<UMySpell> spell);
 
+   /**Used to generate tooltip description*/
+   UFUNCTION(BlueprintCallable)
+   void ShowDescription();
 };

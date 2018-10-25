@@ -7,13 +7,12 @@
 #include "GAbilityFHeroTrace.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API AGAbilityFHeroTrace : public AGameplayAbilityTargetActor_Trace
 {
-	GENERATED_BODY()
-protected:
-	virtual FHitResult PerformTrace(AActor* InSourceActor) override;
+   GENERATED_BODY()
+ protected:
+   virtual FHitResult PerformTrace(AActor* InSourceActor) override;
 };
-

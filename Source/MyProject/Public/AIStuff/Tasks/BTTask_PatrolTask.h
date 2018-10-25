@@ -13,30 +13,28 @@
 class AUnitController;
 class UBlackboardComponent;
 
-struct FBTPatrolTaskMemory
-{
-	/** time left */
-	int patrolIndex;
-	AUnitController*			AICon = nullptr;
+struct FBTPatrolTaskMemory {
+   int              patrolIndex;
+   AUnitController* AICon = nullptr;
 };
 
 UCLASS()
 class MYPROJECT_API UBTTask_Patrol : public UBTTaskNode
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	FName						locKeyName = "moveToLocation";
-	FName						targetKeyName = "target";
+   FName locKeyName    = "moveToLocation";
+   FName targetKeyName = "target";
 
-public:
+ public:
+   UBTTask_Patrol(const FObjectInitializer& ObjectInitializer);
 
-	UBTTask_Patrol(const FObjectInitializer& ObjectInitializer);
+   EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) override;
 
-	EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) override;
+   EBTNodeResult::Type PatrolToNextLocation(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory);
+   uint16              GetInstanceMemorySize() const override;
+   virtual void        OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FName Message, int32 RequestID, bool bSuccess) override;
 
-	void				PatrolToNextLocation(uint8* nodeMemory);
-	uint16				GetInstanceMemorySize() const override;
-
-protected:
-	void				TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+ protected:
+   void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 };

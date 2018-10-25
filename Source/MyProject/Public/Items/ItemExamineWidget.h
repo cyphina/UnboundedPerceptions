@@ -7,20 +7,19 @@
 #include "ItemExamineWidget.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UItemExamineWidget : public UMyUserWidget
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:
+ public:
+   /**ID of the item who's picture should be examined when the item is used*/
+   UPROPERTY(BlueprintReadWrite)
+   int itemToDisplayID;
 
-	/**ID of the item who's picture should be examined when the item is used*/
-	UPROPERTY(BlueprintReadWrite)
-	int								itemToDisplayID;
-
-	/**Maps item id which is specified when this hud is opened to a corresponding picture*/
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TMap<int, UTexture2D*>			itemIDToDetailedPicture;							
+   /**Maps item id which is specified when this hud is opened to a corresponding picture*/
+   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+   TMap<int, UTexture2D*> itemIDToDetailedPicture;
 };

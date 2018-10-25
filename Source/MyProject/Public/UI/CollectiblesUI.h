@@ -6,26 +6,24 @@
 #include "CollectiblesUI.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UCollectiblesUI : public UUserWidget
 {
-	GENERATED_BODY()
-	
-protected:
+   GENERATED_BODY()
 
-	/*Responsible for adding the ItemToAdd to the UI*/
-	UFUNCTION(BlueprintImplementableEvent, Category = UI)
-		void AddItemToUI();
+ protected:
+   /*Responsible for adding the ItemToAdd to the UI*/
+   UFUNCTION(BlueprintImplementableEvent, Category = UI)
+   void AddItemToUI();
 
-	/*Next item that is going to get added to UI*/
-	UPROPERTY(BlueprintReadOnly)
-		FText ItemToAdd;
+   /*Next item that is going to get added to UI*/
+   UPROPERTY(BlueprintReadOnly)
+   FText ItemToAdd;
 
-public:
-	/*Adds name of the item we collected inside the UI by using AddItemToUI*/
+ public:
+   /*Adds name of the item we collected inside the UI by using AddItemToUI*/
 
-	void AddItemToUI(FText ItemName);
-	
+   void AddItemToUI(FText ItemName);
 };

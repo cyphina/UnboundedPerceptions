@@ -7,27 +7,26 @@
 #include "MyAbilitySystemComponent.generated.h"
 
 /**
- * Custom ability component with extra functionality 
+ * Custom ability component with extra functionality
  */
 
 UCLASS()
 class MYPROJECT_API UMyAbilitySystemComponent : public UAbilitySystemComponent
 {
-	GENERATED_BODY()
-	
-	UMyAbilitySystemComponent();
-	
-public:
-	/**Overriden to allow us to add things like purging buffs*/
-	FActiveGameplayEffectHandle			ApplyGameplayEffectSpecToSelf(const FGameplayEffectSpec &Spec, FPredictionKey PredictionKey) override;
+   GENERATED_BODY()
 
-	/** Get an outgoing GameplayEffectSpec that is ready to be applied to other things. */
-	FGameplayEffectSpecHandle			MakeOutgoingSpec(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level, FGameplayEffectContextHandle Context) const override;
+   UMyAbilitySystemComponent();
 
-private:
+ public:
+   /**Overriden to allow us to add things like purging buffs*/
+   FActiveGameplayEffectHandle ApplyGameplayEffectSpecToSelf(const FGameplayEffectSpec& Spec, FPredictionKey PredictionKey) override;
 
-	TMap<FGameplayTag, int>				purgeTagMap;
+   /** Get an outgoing GameplayEffectSpec that is ready to be applied to other things. */
+   FGameplayEffectSpecHandle MakeOutgoingSpec(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level, FGameplayEffectContextHandle Context) const override;
 
-	/**Gets how many effects will be purged by this purge effect*/
-	int									GetPurgeAmount(FGameplayTag purgeDescription);
+ private:
+   TMap<FGameplayTag, int> purgeTagMap;
+
+   /**Gets how many effects will be purged by this purge effect*/
+   int GetPurgeAmount(FGameplayTag purgeDescription);
 };

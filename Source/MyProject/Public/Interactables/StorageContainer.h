@@ -14,43 +14,34 @@
 class AUserInput;
 class UBackpack;
 
-UCLASS(HideCategories=(Input, Actor))
+UCLASS(HideCategories = (Input, Actor))
 class MYPROJECT_API AStorageContainer : public AInteractableBase
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	AUserInput*						controllerRef = nullptr;
+   AUserInput* controllerRef = nullptr;
 
-	UPROPERTY()
-	UBackpack*						backpack = nullptr;
+   UPROPERTY()
+   UBackpack* backpack = nullptr;
 
-public:
+ public:
+   AStorageContainer();
 
-	AStorageContainer();
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   TArray<FMyItem> initialItems;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FMyItem>					initialItems;
+   /*Sphere collision to determine if the hero has walked out of range of the storage container*/
+   UPROPERTY(VisibleAnywhere)
+   USphereComponent* sphereCollision;
 
-	UPROPERTY(VisibleAnywhere)
-	USceneComponent* 				scene;
+   void BeginPlay() override;
 
-	/*Mesh of the container*/
-	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* 			interactableMesh;
+   void    Interact_Implementation(ABaseHero* hero) override;
+   bool    CanInteract_Implementation() override;
+   FVector GetInteractableLocation_Implementation(ABaseHero* hero) override;
 
-	/*Sphere collision to determine if the hero has walked out of range othe storage container*/
-	UPROPERTY(VisibleAnywhere)
-	USphereComponent* 				sphereCollision;
+   UFUNCTION()
+   void OnLeaveRange(UPrimitiveComponent* overlappedComp, AActor* otherActor, UPrimitiveComponent* otherComp, int otherBodyIndex);
 
-
-	void							BeginPlay() override;
-
-	void							Interact_Implementation(ABaseHero* hero) override;
-	bool							CanInteract_Implementation() override;
-	FVector							GetInteractableLocation_Implementation() override;
-
-	UFUNCTION()
-	void							OnLeaveRange(UPrimitiveComponent* overlappedComp, AActor* otherActor, UPrimitiveComponent* otherComp, int otherBodyIndex);
-
-	void							SaveInteractable(FMapSaveInfo& mapData) override;
+   void SaveInteractable(FMapSaveInfo& mapData) override;
 };

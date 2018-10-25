@@ -11,62 +11,55 @@ USpellManager* USpellManager::SingletonManager = nullptr;
 
 USpellManager::USpellManager()
 {
-	static ConstructorHelpers::FObjectFinder<UDataTable> SpellLookupTableFinder(TEXT("/Game/RTS_Tutorial/Tables/SpellList"));
-	if (SpellLookupTableFinder.Object)
-		spellLookupTable = SpellLookupTableFinder.Object;	
+   static ConstructorHelpers::FObjectFinder<UDataTable> SpellLookupTableFinder(TEXT("/Game/RTS_Tutorial/Tables/SpellList"));
+   if (SpellLookupTableFinder.Object) spellLookupTable = SpellLookupTableFinder.Object;
 
-	//Caching the data table information can be problematic if we reimport
-	SetupSpells();
+   // Caching the data table information can be problematic if we reimport
+   SetupSpells();
 }
 
 void USpellManager::SetupSpells()
 {
-	static const FString ContextString(TEXT("GENERAL"));
-	if (spellLookupTable)
-	{
-		TArray<FSpellbookLookupRow*> table; 
-		TArray<FName> rowNames = spellLookupTable->GetRowNames(); //these are the ids since default row name is just row number
-		FSpellInfo spellInfo;
+   static const FString ContextString(TEXT("GENERAL"));
+   if (spellLookupTable) {
+      TArray<FSpellbookLookupRow*> table;
+      TArray<FName> rowNames = spellLookupTable->GetRowNames(); // these are the ids since default row name is just row number
+      FSpellInfo    spellInfo;
 
-		spellLookupTable->GetAllRows<FSpellbookLookupRow>(ContextString, table);
-		//UE_LOG(LogTemp, Warning, TEXT("%d"), rowNames.Num());
-		if (rowNames.Num() > 0 && table.Num() > 0)
-		{
-			int rowName;
-			for (int i = 0; i < rowNames.Num(); ++i)
-			{
-				rowName = FCString::Atoi(*rowNames[i].ToString());
-				spellInfo.name = table[i]->Name;
-				spellInfo.elem = table[i]->Elem;
-				spellInfo.desc = table[i]->Desc;
-				spellInfo.casttime = table[i]->Casttime;
-				spellInfo.cdDuration = table[i]->Cooldown;
-				spellInfo.maxLevel = table[i]->MaxLevel;
-				spellInfo.range = table[i]->Range;
-				spellInfo.reqLevel = table[i]->LevelReq;
-				spellInfo.cost = table[i]->Cost;
-				spellInfo.targetting = table[i]->Targetting;
-				spellInfo.duration = table[i]->Duration;			
-				spellInfo.damage = table[i]->Damage;
-				spellInfo.period = table[i]->Period;
-				spellInfo.AOE = table[i]->AOE;
-				spellInfo.preReqs = table[i]->PreReqs;
-				
-				/*ConstructorHelpers::FClassFinder<UMySpell> spellClassFinder(*(FString("/Game/RTS_Tutorial/Blueprints/SpellSystem/Spells/") + table[i]->FilePath));
-				if (spellClassFinder.Class)*/
-				spellClasses.Add(rowName, table[i]->spellClass);
-				spells.Add(rowName, spellInfo);
-			}
-		}
-		
-	}
+      spellLookupTable->GetAllRows<FSpellbookLookupRow>(ContextString, table);
+      // UE_LOG(LogTemp, Warning, TEXT("%d"), rowNames.Num());
+      if (rowNames.Num() > 0 && table.Num() > 0) {
+         int rowName;
+         for (int i = 0; i < rowNames.Num(); ++i) {
+            rowName              = FCString::Atoi(*rowNames[i].ToString());
+            spellInfo.name       = table[i]->Name;
+            spellInfo.elem       = table[i]->Elem;
+            spellInfo.desc       = table[i]->Desc;
+            spellInfo.casttime   = table[i]->Casttime;
+            spellInfo.cdDuration = table[i]->Cooldown;
+            spellInfo.maxLevel   = table[i]->MaxLevel;
+            spellInfo.range      = table[i]->Range;
+            spellInfo.reqLevel   = table[i]->LevelReq;
+            spellInfo.cost       = table[i]->Cost;
+            spellInfo.targetting = table[i]->Targetting;
+            spellInfo.duration   = table[i]->Duration;
+            spellInfo.damage     = table[i]->Damage;
+            spellInfo.period     = table[i]->Period;
+            spellInfo.AOE        = table[i]->AOE;
+            spellInfo.preReqs    = table[i]->PreReqs;
+
+            /*ConstructorHelpers::FClassFinder<UMySpell> spellClassFinder(*(FString("/Game/RTS_Tutorial/Blueprints/SpellSystem/Spells/") + table[i]->FilePath));
+            if (spellClassFinder.Class)*/
+            spellClasses.Add(rowName, table[i]->spellClass);
+            spells.Add(rowName, spellInfo);
+         }
+      }
+   }
 }
 
 void USpellManager::InitializeManager()
 {
-	check(!SingletonManager);
-	SingletonManager = NewObject<USpellManager>(GetTransientPackage(), NAME_None);
-	SingletonManager->AddToRoot();
+   check(!SingletonManager);
+   SingletonManager = NewObject<USpellManager>(GetTransientPackage(), NAME_None);
+   SingletonManager->AddToRoot();
 }
-
-

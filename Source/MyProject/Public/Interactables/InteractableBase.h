@@ -18,41 +18,49 @@ struct FInteractableSaveInfo;
 UCLASS()
 class MYPROJECT_API AInteractableBase : public AActor, public IInteractable, public IWorldObject
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:	
+ public:
+   AInteractableBase();
 
-	AInteractableBase();
+ protected:
+   /**An interactable decorator which extends the functionality of interactables*/
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (AllowPrivateAccess = "true"))
+   UInteractableActorDecoratorBase* decorator;
 
-protected:
+   virtual void BeginPlay() override;
 
-	/**An interactable decorator which extends the functionality of interactables*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (AllowPrivateAccess="true"))
-	UInteractableActorDecoratorBase* decorator;
+   /**Used to save the ncessary data for all interactable actors on the map*/
+   FInteractableSaveInfo SaveInteractableData();
 
-	virtual void							BeginPlay() override;
+   /**Used to load the necessary data for all interactable actors on the map*/
+   void LoadInteractableData(FInteractableSaveInfo& interactableInfo);
 
-	/**Used to save the ncessary data for all interactable actors on the map*/
-	FInteractableSaveInfo					SaveInteractableData();
+ public:
+   /*Scene root so that we can transform child components without having to worry about its parent's transformations*/
+   UPROPERTY(VisibleAnywhere)
+   USceneComponent* sceneRoot;
 
-	/**Used to load the necessary data for all interactable actors on the map*/
-	void									LoadInteractableData(FInteractableSaveInfo& interactableInfo);
+   /*Scene component represents the location a character must arrive to to interact with the interactable*/
+   UPROPERTY(VisibleAnywhere)
+   USceneComponent* sceneLocation;
 
-public:	
+   /*Mesh of the interactable (collision and visual).  Don't put on top of scene component or else the character can never reach the interactable destination*/
+   UPROPERTY(VisibleAnywhere)
+   UStaticMeshComponent* interactableMesh;
 
-	virtual void Tick(float DeltaTime) override;
+   virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION(BlueprintCallable, Category = "Accessors")
-	FORCEINLINE FText		GetGameName() const final override;
+   UFUNCTION(BlueprintCallable, Category = "Accessors")
+   FORCEINLINE FText GetGameName() const final override;
 
-	UFUNCTION(BlueprintCallable, Category = "Accessors")
-	void					SetGameName(FText value) final override;
+   UFUNCTION(BlueprintCallable, Category = "Accessors")
+   void SetGameName(FText value) final override;
 
-	void 					Interact_Implementation(ABaseHero* hero) override;
-	FVector 				GetInteractableLocation_Implementation() override;
-	bool 					CanInteract_Implementation() override;
+   void    Interact_Implementation(ABaseHero* hero) override;
+   FVector GetInteractableLocation_Implementation(ABaseHero* hero) override;
+   bool    CanInteract_Implementation() override;
 
-	virtual void			SaveInteractable(FMapSaveInfo& mapData);
-	void					LoadInteractable(FInteractableSaveInfo& interactableInfo);
-
+   virtual void SaveInteractable(FMapSaveInfo& mapData);
+   void         LoadInteractable(FInteractableSaveInfo& interactableInfo);
 };

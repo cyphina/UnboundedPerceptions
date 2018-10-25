@@ -8,24 +8,20 @@
 #include "EnvQueryTest_NumBuffs.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UEnvQueryTest_NumBuffs : public UEnvQueryTest
 {
-	GENERATED_BODY()
-	
-	UEnvQueryTest_NumBuffs();
+   GENERATED_BODY()
 
-	virtual void RunTest(FEnvQueryInstance& QueryInstance) const override;
+   UEnvQueryTest_NumBuffs();
 
-	virtual FText GetDescriptionTitle() const override;
+   virtual void RunTest(FEnvQueryInstance& QueryInstance) const override;
 
-	virtual FText GetDescriptionDetails() const override;
-	
-	static const FGameplayTag debuffTags;
+   virtual FText GetDescriptionTitle() const override;
+
+   virtual FText GetDescriptionDetails() const override;
+
+   static const FGameplayTag debuffTags;
 };
-
-
-
-

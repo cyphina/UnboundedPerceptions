@@ -3,67 +3,49 @@
 #pragma once
 
 /**
- * Attribute are the fundamental stats which are modifyable by leveling up and affect other useful combat properties of a unit 
+ * Attribute are the fundamental stats which are modifyable by leveling up and affect other useful combat properties of a unit
  * Relic of the past before I used the gameplay ability system
  */
 
-namespace CombatInfo {
-	class MYPROJECT_API Attribute
-	{
+namespace CombatInfo
+{
 
-	char* name;
-	float baseValue; //base value only increased by leveling up or equipment
-	float buffValue; //increased by some effects
+   class Stat;
 
-	public:
-		Attribute()
-		{
-			name = "";
-			baseValue = 0;
-			buffValue = 0;
-		}
+   class MYPROJECT_API Attribute
+   {
+      char* name;
+      float baseValue; // base value only increased by leveling up or equipment
+      float buffValue; // increased by some effects
 
-		Attribute(char* name, int baseV)
-		{
-			name = name;
-			baseValue = baseV;
-			buffValue = 0;
-		}
+    public:
+      Attribute()
+      {
+         name      = "";
+         baseValue = 0;
+         buffValue = 0;
+      }
 
-		int GetBaseValue() const
-		{
-			return baseValue;
-		}
+      Attribute(char* name, int baseV)
+      {
+         name      = name;
+         baseValue = baseV;
+         buffValue = 0;
+      }
 
-		void SetBaseValue(int value)
-		{
-			baseValue = value;
-		}
+      int GetBaseValue() const { return baseValue; }
 
-		int GetBuffValue() const
-		{
-			return buffValue;
-		}
+      void SetBaseValue(int value) { baseValue = value; }
 
-		void SetBuffValue(int value)
-		{
-			buffValue = value;
-		}
+      int GetBuffValue() const { return buffValue; }
 
-		//gets complete values
-		int GetAdjustedValue() const
-		{
-			return baseValue + buffValue;
-		}
+      void SetBuffValue(int value) { buffValue = value; }
 
-		char* GetName() const
-		{
-			return name;
-		}
+      // gets complete values
+      int GetAdjustedValue() const { return baseValue + buffValue; }
 
-		~Attribute()
-		{
-			
-		}
-	};
-}
+      char* GetName() const { return name; }
+
+      ~Attribute() {}
+   };
+} // namespace CombatInfo

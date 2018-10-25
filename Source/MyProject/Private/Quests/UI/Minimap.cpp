@@ -2,5 +2,3 @@
 
 #include "MyProject.h"
 #include "Minimap.h"
-
-

@@ -12,24 +12,20 @@ FItemPrice AShopNPC::defaultItemPrice = FItemPrice();
 
 void AShopNPC::SetupAppropriateView()
 {
-	controllerRef->GetHUDManager()->GetSocialWindow()->SetShopView();
+   controllerRef->GetHUDManager()->GetSocialWindow()->SetShopView();
 }
 
 void AShopNPC::BeginPlay()
 {
-	Super::BeginPlay();
-	itemsToSellBackpack = NewObject<UBackpack>(this);
-	for(FMyItem& item : itemsToSell)
-	{
-		itemsToSellBackpack->AddItem(item);
-	}
+   Super::BeginPlay();
+   itemsToSellBackpack = NewObject<UBackpack>(this);
+   for (FMyItem& item : itemsToSell) {
+      itemsToSellBackpack->AddItem(item);
+   }
 }
 
 FItemPrice& AShopNPC::GetItemPrice(int itemID)
 {
-	if(itemPrices.Contains(itemID))
-	{
-		return itemPrices[itemID];
-	}
-	return defaultItemPrice;
+   if (itemPrices.Contains(itemID)) { return itemPrices[itemID]; }
+   return defaultItemPrice;
 }

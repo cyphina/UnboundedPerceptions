@@ -7,14 +7,14 @@
 #include "VisibleAlliesQueryGenerator.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UVisibleAlliesQueryGenerator : public UEnvQueryGenerator
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	UVisibleAlliesQueryGenerator();
-	virtual void GenerateItems(FEnvQueryInstance& queryInstance) const override;
-	virtual FText GetDescriptionTitle() const override;
+   UVisibleAlliesQueryGenerator();
+   virtual void  GenerateItems(FEnvQueryInstance& queryInstance) const override;
+   virtual FText GetDescriptionTitle() const override;
 };

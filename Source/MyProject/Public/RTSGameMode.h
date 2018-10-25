@@ -10,7 +10,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLevelLoaded);
 
 /**
- * Game mode only exists on server.  Put things that only the server needs to know and use.  Can't replicate variables here, but calls here apply to server logic 
+ * Game mode only exists on server.  Put things that only the server needs to know and use.  Can't replicate variables here, but calls here apply to server logic
  */
 
 class UEventManager;
@@ -23,132 +23,131 @@ class IWorldObject;
 UCLASS()
 class MYPROJECT_API ARTSGameMode : public AGameModeBase
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	///<summary> Level Names </summary>
+   ///< summary> Level Names </summary>
 
-	const FString				startingLevelName = "StartMap";
-	const FString				sylphiaApartment = "SylphiaApartment";
-	const FString				roadToWubville = "RoadToWubville";
-	const FString				blockadeCity = "BlockadeCity";
-	
-	/**Stores the currently loaded level name*/
-	UPROPERTY(BlueprintReadWrite, Category = "Levels", Meta = (AllowPrivateAccess = "true"))
-	FString						currentLevelName;
+   const FString startingLevelName = "StartMap";
+   const FString sylphiaApartment  = "SylphiaApartment";
+   const FString roadToWubville    = "RoadToWubville";
+   const FString blockadeCity      = "BlockadeCity";
 
-	/**Stores a list of all the worldobjects for quick access.  For now enemies won't be here since enemies don't have unique names*/
-	TMap<FName, IWorldObject*>	worldObjectReferences;
+   /**Stores the currently loaded level name*/
+   UPROPERTY(BlueprintReadWrite, Category = "Levels", Meta = (AllowPrivateAccess = "true"))
+   FString currentLevelName;
 
-	/**Did we just load a new level because we loaded a game load?*/
-	bool						bLoading;
+   /**Stores a list of all the worldobjects for quick access.  For now enemies won't be here since enemies don't have unique names*/
+   TMap<FName, IWorldObject*> worldObjectReferences;
 
-	void BeginPlay() override;
+   /**Did we just load a new level because we loaded a game load?*/
+   bool bLoading;
 
-public:
-	
-	ARTSGameMode();
+   void BeginPlay() override;
 
-	///---Expose these classes so we can spawn a more derived blueprint class version of each manager in the code---
+ public:
+   ARTSGameMode();
 
-	/**
-	 * EventManager - Handles progressing in story and activating story based triggers
-	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
-	TSubclassOf<UEventManager>		eventManagerClass;
+   ///---Expose these classes so we can spawn a more derived blueprint class version of each manager in the code---
 
-	/**
-	 * TriggerManager - Handles activating and storing of trigger data across levels
-	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
-	TSubclassOf<UTriggerManager>	triggerManagerClass;
+   /**
+    * EventManager - Handles progressing in story and activating story based triggers
+    */
+   UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
+   TSubclassOf<UEventManager> eventManagerClass;
 
-	/**
-	 * QuestManager - Handles everything quest related
-	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
-	TSubclassOf<UQuestManager>		questManagerClass;
+   /**
+    * TriggerManager - Handles activating and storing of trigger data across levels
+    */
+   UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
+   TSubclassOf<UTriggerManager> triggerManagerClass;
 
-	UPROPERTY(BlueprintGetter = GetEventManager)
-	UEventManager*					eventManager;
+   /**
+    * QuestManager - Handles everything quest related
+    */
+   UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
+   TSubclassOf<UQuestManager> questManagerClass;
 
-	UPROPERTY(BlueprintGetter = GetTriggerManager)
-	UTriggerManager*				triggerManager;
+   UPROPERTY(BlueprintGetter = GetEventManager)
+   UEventManager* eventManager;
 
-	UPROPERTY(BlueprintGetter = GetQuestManager)
-	UQuestManager*					questManager;
+   UPROPERTY(BlueprintGetter = GetTriggerManager)
+   UTriggerManager* triggerManager;
 
-	UPROPERTY(BlueprintGetter = GetSaveManager)
-	USaveLoadClass*					saveLoadManager;
+   UPROPERTY(BlueprintGetter = GetQuestManager)
+   UQuestManager* questManager;
 
-	UPROPERTY(BlueprintGetter = GetConditionalManager)
-	UConditionalManager*			conditionalManager;
+   UPROPERTY(BlueprintGetter = GetSaveManager)
+   USaveLoadClass* saveLoadManager;
 
-	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-	FOnLevelLoaded					OnLevelLoaded;
+   UPROPERTY(BlueprintGetter = GetConditionalManager)
+   UConditionalManager* conditionalManager;
 
-	///---Manager class accessors---
-	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
-	UEventManager*					GetEventManager() const { return eventManager; }
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+   FOnLevelLoaded OnLevelLoaded;
 
-	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
-	UTriggerManager*				GetTriggerManager() const { return triggerManager; }
+   ///---Manager class accessors---
+   UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
+   UEventManager* GetEventManager() const { return eventManager; }
 
-	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
-	UQuestManager*					GetQuestManager() const { return questManager; }
+   UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
+   UTriggerManager* GetTriggerManager() const { return triggerManager; }
 
-	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
-	USaveLoadClass*					GetSaveManager() const { return saveLoadManager; }
+   UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
+   UQuestManager* GetQuestManager() const { return questManager; }
 
-	UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
-	UConditionalManager*			GetConditionalManager() const { return conditionalManager; }
+   UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
+   USaveLoadClass* GetSaveManager() const { return saveLoadManager; }
 
-	///---Level Things---
-	/**
-	 * Gets the name of the current level that has been last streamed in
-	 */
-	UFUNCTION(BlueprintCallable, Category = "RTSLevels")
-	FORCEINLINE FString					GetCurLevelName() const { return currentLevelName; }
+   UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
+   UConditionalManager* GetConditionalManager() const { return conditionalManager; }
 
-	/**
-	 * Gets the name of the start level (main screen when game is loaded)
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Levels")
-	FORCEINLINE FString					GetStartingLvlName() const { return startingLevelName; }
+   ///---Level Things---
+   /**
+    * Gets the name of the current level that has been last streamed in
+    */
+   UFUNCTION(BlueprintCallable, Category = "RTSLevels")
+   FORCEINLINE FString GetCurLevelName() const { return currentLevelName; }
 
-	/**
-	 * Gets the name of the introduction level (first level in demo with Zone waking up in Chapter 2)
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Levels")
-	FORCEINLINE FString					GetSylphiaAptLvlName() const { return sylphiaApartment; }
+   /**
+    * Gets the name of the start level (main screen when game is loaded)
+    */
+   UFUNCTION(BlueprintCallable, Category = "Levels")
+   FORCEINLINE FString GetStartingLvlName() const { return startingLevelName; }
 
-	/**
-	 * Gets the name of the level of the area between the inner city and Zone's apartment zone
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Levels")
-	FORCEINLINE FString					GetZoneNeighborhoodLvlName() const { return roadToWubville; }
+   /**
+    * Gets the name of the introduction level (first level in demo with Zone waking up in Chapter 2)
+    */
+   UFUNCTION(BlueprintCallable, Category = "Levels")
+   FORCEINLINE FString GetSylphiaAptLvlName() const { return sylphiaApartment; }
 
-	/**
-	 * Gets the name of the blockaded inner city
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Levels")
-	FORCEINLINE FString					GetBlockadedCityLevelName() const { return blockadeCity; }
+   /**
+    * Gets the name of the level of the area between the inner city and Zone's apartment zone
+    */
+   UFUNCTION(BlueprintCallable, Category = "Levels")
+   FORCEINLINE FString GetZoneNeighborhoodLvlName() const { return roadToWubville; }
 
-	/**Stream in a level and put in the loading screen*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "LevelLoading")
-	void								StreamLevelAsync(FName levelName);
+   /**
+    * Gets the name of the blockaded inner city
+    */
+   UFUNCTION(BlueprintCallable, Category = "Levels")
+   FORCEINLINE FString GetBlockadedCityLevelName() const { return blockadeCity; }
 
-	///---Saving---
-	/**
-	 * Saves the game in the SavedGames folder (in main project folder)
-	 * @param fileName - Filename of the new save file to be created
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Saving and Loading")
-	bool							SaveGame(FString saveName);
-	
-	/**
-	 * Loads a game in the SavedGames folder (in main project folder)
-	 * @param fileName - Filename of save file to load
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Saving and Loading")
-	bool							LoadGame(FString fileName);
+   /**Stream in a level and put in the loading screen*/
+   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "LevelLoading")
+   void StreamLevelAsync(FName levelName);
+
+   ///---Saving---
+   /**
+    * Saves the game in the SavedGames folder (in main project folder)
+    * @param fileName - Filename of the new save file to be created
+    */
+   UFUNCTION(BlueprintCallable, Category = "Saving and Loading")
+   bool SaveGame(FString saveName);
+
+   /**
+    * Loads a game in the SavedGames folder (in main project folder)
+    * @param fileName - Filename of save file to load
+    */
+   UFUNCTION(BlueprintCallable, Category = "Saving and Loading")
+   bool LoadGame(FString fileName);
 };

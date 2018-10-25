@@ -6,12 +6,11 @@
 
 void UMyUserWidget::NativeConstruct()
 {
-	CPC = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
-	Super::NativeConstruct();
+   CPC = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+   Super::NativeConstruct();
 }
 
 bool UMyUserWidget::OnWidgetAddToViewport_Implementation()
-{	
-	return true;
+{
+   return true;
 }
-

@@ -16,51 +16,48 @@ class UQuestJournalEntry;
 UCLASS()
 class MYPROJECT_API UQuestJournal : public UMyDraggableWidget
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:
+ public:
+   void NativeConstruct() override;
+   bool OnWidgetAddToViewport_Implementation() override;
 
-	void						NativeConstruct() override;
-	bool						OnWidgetAddToViewport_Implementation() override;
+   /** update all details of quest information window*/
+   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Quest Journal Updates")
+   void UpdateDetailWindow();
 
-	/** update all details of quest information window*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Quest Journal Updates")
-	void						UpdateDetailWindow(); 
+   /**add a new entry to the quest journal*/
+   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Quest Journal Updates")
+   void AddEntry(AQuest* quest);
 
-	/**add a new entry to the quest journal*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Quest Journal Updates")
-	void						AddEntry(AQuest* quest); 
+   /**when one of the quests in the journal is selected*/
+   UFUNCTION(BlueprintCallable, Category = "Quest Journal Interface")
+   void OnQuestEntryClicked(AQuest* quest, UQuestJournalEntry* questButton);
 
-	/**when one of the quests in the journal is selected*/
-	UFUNCTION(BlueprintCallable, Category = "Quest Journal Interface")
-	void						OnQuestEntryClicked(AQuest* quest, UQuestJournalEntry* questButton); 
+   /**remove a quest from the journal*/
+   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Quest Journal Interface")
+   void RemoveFromQuestJournal(AQuest* quest);
 
-	/**remove a quest from the journal*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Quest Journal Interface")
-	void						RemoveFromQuestJournal(AQuest* quest); 
+   /** Change the color of the suggested level text based on if it's higher or lower level than our party leader*/
+   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Quest Journal Interface")
+   void UpdateSuggestedLevelColor();
 
-	/** Change the color of the suggested level text based on if it's higher or lower level than our party leader*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Quest Journal Interface")
-	void						UpdateSuggestedLevelColor(); 
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
+   AQuest* GetSelectedQuest() const { return selectedQuest; }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-	AQuest*						GetSelectedQuest() const { return selectedQuest; } 
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
+   UQuestJournalEntry* GetQuestJournalEntry(AQuest* quest);
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-	UQuestJournalEntry*			GetQuestJournalEntry(AQuest* quest);
+   UPROPERTY(BlueprintReadWrite, Category = "References")
+   UQuestJournalEntry* currentQuestWidget;
 
-	UPROPERTY(BlueprintReadWrite, Category = "References")
-	UQuestJournalEntry*			currentQuestWidget;
+   UPROPERTY(BlueprintReadWrite, category = "Data")
+   TArray<UQuestJournalEntry*> questJournalEntries;
 
-	UPROPERTY(BlueprintReadWrite, category = "Data")
-	TArray<UQuestJournalEntry*> questJournalEntries;
-private:
+ private:
+   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "References")
+   ARTSGameMode* gameModeRef;
 
-	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "References")
-	ARTSGameMode*				gameModeRef;
-
-	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true ), Category = "References")
-	AQuest*						selectedQuest;
-
-
+   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "References")
+   AQuest* selectedQuest;
 };

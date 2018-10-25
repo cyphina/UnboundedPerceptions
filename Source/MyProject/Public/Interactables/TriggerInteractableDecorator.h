@@ -17,18 +17,17 @@ class ARTSGameMode;
 UCLASS()
 class MYPROJECT_API UTriggerInteractableDecorator : public UInteractableActorDecoratorBase
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	ARTSGameMode*				gameModeRef;
+   ARTSGameMode* gameModeRef;
 
-public:	
+ public:
+   UTriggerInteractableDecorator();
 
-	UTriggerInteractableDecorator();
+   void Init() override;
+   bool Interact() override;
 
-	void						Init() override;
-	bool 						Interact() override;
-
-	/**Set this trigger to something when you want to interact*/
-	UPROPERTY(EditAnywhere, Category = "Trigger")
-	TArray<FTriggerData> 		triggersActivatedOnInteract;
+   /**Set this trigger to something when you want to interact*/
+   UPROPERTY(EditAnywhere, Category = "Trigger")
+   TArray<FTriggerData> triggersActivatedOnInteract;
 };

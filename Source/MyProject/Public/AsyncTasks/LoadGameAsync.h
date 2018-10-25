@@ -9,21 +9,17 @@
 
 class MYPROJECT_API FAsyncLoadGameTask : public FNonAbandonableTask
 {
-public:
-	FAsyncLoadGameTask();
-	~FAsyncLoadGameTask();
+ public:
+   FAsyncLoadGameTask();
+   ~FAsyncLoadGameTask();
 
-protected:
+ protected:
+   void DoWork()
+   {
+      // Place the Async Code here.  This function runs automatically.
+   }
 
-	void DoWork()
-	{
-		// Place the Async Code here.  This function runs automatically.
-	}
- 
-	// This next section of code needs to be here.  Not important as to why.
- 
-	FORCEINLINE TStatId GetStatId() const
-	{
-		RETURN_QUICK_DECLARE_CYCLE_STAT(FCastSpellTask, STATGROUP_ThreadPoolAsyncTasks);
-	}
+   // This next section of code needs to be here.  Not important as to why.
+
+   FORCEINLINE TStatId GetStatId() const { RETURN_QUICK_DECLARE_CYCLE_STAT(FCastSpellTask, STATGROUP_ThreadPoolAsyncTasks); }
 };

@@ -5,15 +5,12 @@
 #include "ActionbarInterface.h"
 #include "../Slots/SkillSlot.h"
 
-
 void UActionbarInterface::UseSkill(int skillIndex)
 {
-	skillContainerRef->UseSkill(skillIndex);
+   if (this->IsVisible()) skillContainerRef->UseSkill(skillIndex);
 }
 
 void UActionbarInterface::ShowSkillVisualCD(int skillIndex)
 {
-	if(skillContainerRef->GetSkillSlot(skillIndex))
-		skillContainerRef->GetSkillSlot(skillIndex)->PlayTimeline(0);
+   if (skillContainerRef->GetSkillSlot(skillIndex)) skillContainerRef->GetSkillSlot(skillIndex)->PlayTimeline(0);
 }
-

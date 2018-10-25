@@ -12,12 +12,12 @@
 UCLASS()
 class MYPROJECT_API UWidgetDrag : public UDragDropOperation
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:
-	UPROPERTY(BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
-		UUserWidget* widgetToDrag; //reference to widget we need to drag so when we get the operation again, we can grab this information	
+ public:
+   UPROPERTY(BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
+   UUserWidget* widgetToDrag; // reference to widget we need to drag so when we get the operation again, we can grab this information
 
-	UPROPERTY(BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
-		FVector2D size; //Keep this at 0 if autosize
+   UPROPERTY(BlueprintReadWrite, Meta = (ExposeOnSpawn = true))
+   FVector2D size; // Keep this at 0 if autosize
 };

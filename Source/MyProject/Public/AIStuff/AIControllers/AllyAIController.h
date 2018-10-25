@@ -14,28 +14,26 @@
  */
 
 UENUM(BlueprintType)
-enum class AllyBehavioralMode : uint8
-{
-	ABM_Passive, //Heal and buff allies but run away of enemies are nearby
-	ABM_Defensive, //Avoid enemies, focus on healing and attack if the enemy isn't attacking back
-	ABM_Neutral, //Player controlled behavior (may change this to doing both controlled attack and defensive options)
-	ABM_Offensive, //Attack closest enemy and try to use spells as efficiently as possible
- 	ABM_Aggressive //Attack lowest hp enemy and drop all spells on weak enemy
+enum class AllyBehavioralMode : uint8 {
+   ABM_Passive,   // Heal and buff allies but run away of enemies are nearby
+   ABM_Defensive, // Avoid enemies, focus on healing and attack if the enemy isn't attacking back
+   ABM_Neutral,   // Player controlled behavior (may change this to doing both controlled attack and defensive options)
+   ABM_Offensive, // Attack closest enemy and try to use spells as efficiently as possible
+   ABM_Aggressive // Attack lowest hp enemy and drop all spells on weak enemy
 };
 
 UENUM(BlueprintType)
-enum class AllyGroupTacticsMode : uint8
-{
-	AM_Split, //Split up units
-	AM_Surround, //Surround a target
-	AM_TacGroup, //Stay in formation
-	AM_Lure, //Lure a unit
-	AM_Escape, //Escape safely 
-	AM_Run, //Escape hastily
-	AM_Protect, //Protect a target
-	AM_Tank, //Tanking procedures
-	AM_Explore, //Explore the surrounding
-	AM_None //No tactics enabled
+enum class AllyGroupTacticsMode : uint8 {
+   AM_Split,    // Split up units
+   AM_Surround, // Surround a target
+   AM_TacGroup, // Stay in formation
+   AM_Lure,     // Lure a unit
+   AM_Escape,   // Escape safely
+   AM_Run,      // Escape hastily
+   AM_Protect,  // Protect a target
+   AM_Tank,     // Tanking procedures
+   AM_Explore,  // Explore the surrounding
+   AM_None      // No tactics enabled
 };
 
 class UBehaviorTreeComponent;
@@ -45,36 +43,34 @@ class AAlly;
 UCLASS()
 class MYPROJECT_API AAllyAIController : public AUnitController
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	/**Behavior tree contains logic of our AI.  Will swap depending on tactic and behavioral mode*/
-	UPROPERTY(EditAnywhere)
-	TArray<UBehaviorTree*>			behaviorTrees;
+   /**Behavior tree contains logic of our AI.  Will swap depending on tactic and behavioral mode*/
+   UPROPERTY(EditAnywhere)
+   TArray<UBehaviorTree*> behaviorTrees;
 
-	/**blackboard key value name*/
-	const FName						blackboardEnemyKey = FName("Target");
+   /**blackboard key value name*/
+   const FName blackboardEnemyKey = FName("Target");
 
-	/*Current Behavior mode*/
-	UPROPERTY(BlueprintReadOnly, Category = "AI Mode", meta = (AllowPrivateAccess="true"))
-	AllyBehavioralMode				currentAllyBehavior;
+   /*Current Behavior mode*/
+   UPROPERTY(BlueprintReadOnly, Category = "AI Mode", meta = (AllowPrivateAccess = "true"))
+   AllyBehavioralMode currentAllyBehavior;
 
-	/*If this unit was part of a group tactic assignment, then set its tactic mode here*/
-	AllyGroupTacticsMode			tacticsBehavior;
-	AAlly*							allyRef;
+   /*If this unit was part of a group tactic assignment, then set its tactic mode here*/
+   AllyGroupTacticsMode tacticsBehavior;
+   AAlly*               allyRef;
 
-	UFUNCTION()
-	void							OnPerceptionUpdated(TArray<AActor*> UpdatedActors);
+   UFUNCTION()
+   void OnPerceptionUpdated(TArray<AActor*> UpdatedActors);
 
-public:
+ public:
+   const int NUM_BEHAVIORAL_MODES = 5;
 
-	const int						NUM_BEHAVIORAL_MODES = 5;
+   AAllyAIController();
 
-	AAllyAIController();
+   virtual void Tick(float deltaTime) override;
+   virtual void Possess(APawn* InPawn) override;
 
-	virtual void					Tick(float deltaTime) override; 
-	virtual void					Possess(APawn* InPawn) override;
-
-	UFUNCTION(BlueprintCallable, Category = "AI Mode")
-	void							SwitchAIModes(AllyBehavioralMode newMode);
-
+   UFUNCTION(BlueprintCallable, Category = "AI Mode")
+   void SwitchAIModes(AllyBehavioralMode newMode);
 };

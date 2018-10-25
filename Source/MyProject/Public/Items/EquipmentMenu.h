@@ -15,20 +15,20 @@ class ABaseHero;
 UCLASS()
 class MYPROJECT_API UEquipmentMenu : public UMyDraggableWidget
 {
-	GENERATED_BODY()
-	
-public:
+   GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite, Category = "References")
-	ABaseHero*		hero;
+ public:
+   UPROPERTY(BlueprintReadWrite, Category = "References")
+   ABaseHero* hero;
 
-	bool			OnWidgetAddToViewport_Implementation() override;
+   bool OnWidgetAddToViewport_Implementation() override;
 
-	//virtual void OnDragDetected_Implementation(FGeometry MyGeometry, const FPointerEvent& PointerEvent, UDragDropOperation*& Operation) { Super::OnDragDetected_Implementation(MyGeometry, PointerEvent, Operation); }
-	//virtual FEventReply OnMouseButtonDown_Implementation(FGeometry MyGeometry, const FPointerEvent& MouseEvent) { return Super::OnMouseButtonDown_Implementation(MyGeometry, MouseEvent); } //Setup offset and detect drag
+   // virtual void OnDragDetected_Implementation(FGeometry MyGeometry, const FPointerEvent& PointerEvent, UDragDropOperation*& Operation) { Super::OnDragDetected_Implementation(MyGeometry,
+   // PointerEvent, Operation); } virtual FEventReply OnMouseButtonDown_Implementation(FGeometry MyGeometry, const FPointerEvent& MouseEvent) { return
+   // Super::OnMouseButtonDown_Implementation(MyGeometry, MouseEvent); } //Setup offset and detect drag
 
-	/**Call to redraw what is in equipment*/
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Equipment")
-	void			Update();
-	void			Update_Implementation();
+   /**Call to redraw what is in equipment*/
+   UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Equipment")
+   void Update();
+   void Update_Implementation();
 };

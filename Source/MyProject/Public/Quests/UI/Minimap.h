@@ -7,18 +7,17 @@
 #include "Minimap.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UMinimap : public UMyUserWidget
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:
+ public:
+   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+   void ToggleDirectionArrowVisibility(bool shouldShow); // Toggle visibility, true means visible
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
-	void			ToggleDirectionArrowVisibility(bool shouldShow); //Toggle visibility, true means visible
-	
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
-	void			UpdateDirectionArrow(float arrowAngle); //set the direction arrow to some new render angle (in degrees please!)
+   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
+   void UpdateDirectionArrow(float arrowAngle); // set the direction arrow to some new render angle (in degrees please!)
 };

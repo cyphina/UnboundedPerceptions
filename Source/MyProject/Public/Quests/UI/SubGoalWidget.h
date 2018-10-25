@@ -16,48 +16,45 @@ class UQuestListSlot;
 UCLASS()
 class MYPROJECT_API USubGoalWidget : public UUserWidget
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	/**Information about the goal the widget is displaying*/
-	UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "Info")
-		FGoalInfo goalInfo;
-	
-	/**Quest this goal belongs to*/
-	UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "Info")
-		AQuest* assignedQuest;
+   /**Information about the goal the widget is displaying*/
+   UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "Info")
+   FGoalInfo goalInfo;
 
-	/**Corresponding questSlotWidget this goal widget is a part of*/
-	UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "Info")
-		UQuestListSlot* questSlotWidget;
+   /**Quest this goal belongs to*/
+   UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "Info")
+   AQuest* assignedQuest;
 
-	/**Index of what subgoal this is in the quest*/
-	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "Info")
-		int goalIndex;
+   /**Corresponding questSlotWidget this goal widget is a part of*/
+   UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "Info")
+   UQuestListSlot* questSlotWidget;
 
-public:
+   /**Index of what subgoal this is in the quest*/
+   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "Info")
+   int goalIndex;
 
-	void NativeConstruct() override;
+ public:
+   void NativeConstruct() override;
 
-	/**Update display text on this goal whenever things change like we hunt something, or a goal is completed*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "UI")
-		void UpdateText();
+   /**Update display text on this goal whenever things change like we hunt something, or a goal is completed*/
+   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "UI")
+   void UpdateText();
 
-	/**Changes if button is enabled and how goal looks when selected or deselected*/
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "UI")
-		void ToggleEnabled(bool shouldEnable);
+   /**Changes if button is enabled and how goal looks when selected or deselected*/
+   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "UI")
+   void ToggleEnabled(bool shouldEnable);
 
-	///---Accessors---
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accesors")
-		FGoalInfo GetGoalInfo() const { return goalInfo; }
+   ///---Accessors---
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accesors")
+   FGoalInfo GetGoalInfo() const { return goalInfo; }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accesors")
-		AQuest* GetAssignedQuest() const { return assignedQuest; }
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accesors")
+   AQuest* GetAssignedQuest() const { return assignedQuest; }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accesors")
-		UQuestListSlot* GetQuestSlotWidget() const { return questSlotWidget; }
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accesors")
+   UQuestListSlot* GetQuestSlotWidget() const { return questSlotWidget; }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accesors")
-		int GetGoalIndex() const { return goalIndex; }
-
-
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accesors")
+   int GetGoalIndex() const { return goalIndex; }
 };

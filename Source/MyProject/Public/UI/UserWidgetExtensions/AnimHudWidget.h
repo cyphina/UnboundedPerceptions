@@ -7,14 +7,14 @@
 #include "AnimHudWidget.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UAnimHudWidget : public UMyUserWidget
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		UWidgetAnimation* anim;
+ public:
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   UWidgetAnimation* anim;
 };

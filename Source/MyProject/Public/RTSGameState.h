@@ -14,112 +14,117 @@
 class UMainWidget;
 class AEnemy;
 class AAlly;
+class AFogOfWarPlane;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUpdateGameSpeed, float, speedMultiplier);
 
 UCLASS()
 class MYPROJECT_API ARTSGameState : public AGameStateBase
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	static constexpr int			arraySize = 3;
-	const float						SECONDS_IN_DAY = 86400;
+   static constexpr int arraySize      = 3;
+   const float          SECONDS_IN_DAY = 86400;
 
-	//how many seconds in game does one second IRL correspond to when at 1x speed?
-	float							defaultGameTimeSpeed = 60;
-	//rate at which our clock counts seconds.  By default defaultGameTimeSpeed but can be modified by speed modifiers
-	float							timeUnit; 
+   // how many seconds in game does one second IRL correspond to when at 1x speed?
+   float defaultGameTimeSpeed = 60;
+   // rate at which our clock counts seconds.  By default defaultGameTimeSpeed but can be modified by speed modifiers
+   float timeUnit;
 
-	//accumulates in-game seconds
-	double							clockwork;
+   // accumulates in-game seconds
+   double clockwork;
 
-	int								seconds{ 0 }, minutes{ 0 }, hours{ 0 };
-	int								days{ 0 }, months{ 0 }, years{ 0 };
+   int seconds{0}, minutes{0}, hours{0};
+   int days{0}, months{0}, years{0};
 
-	TArray<int>						gameTime;
-	TArray<int>						gameDate;
+   TArray<int> gameTime;
+   TArray<int> gameDate;
 
-	//Let this only update clock
-	void							Clock();
-	//Let this only update game calendar
-	void							Calendar();
+   // Let this only update clock
+   void Clock();
+   // Let this only update game calendar
+   void Calendar();
 
-public:
+ public:
+   ARTSGameState();
+   void Tick(float deltaSeconds) override;
+   void BeginPlay() override;
 
-	ARTSGameState();
-	void							Tick(float deltaSeconds) override;
-	void							BeginPlay() override;
+   /**Set by CPC*/
+   UPROPERTY(BlueprintReadWrite, Category = "References")
+   UMainWidget* mainWidgetRef;
 
-	/**Set by CPC*/
-	UPROPERTY(BlueprintReadWrite, Category = "References")
-	UMainWidget*					mainWidgetRef;
+   ///---Game Time and Speed---
+   UPROPERTY(BlueprintReadWrite, Category = "Speed")
+   float speedModifier = 1;
 
-	///---Game Time and Speed---
-	UPROPERTY(BlueprintReadWrite, Category = "Speed")
-	float							speedModifier = 1;
-	
-	/**Collection of callbacks when game speed updated*/
-	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Speed")
-	FUpdateGameSpeed				UpdateGameSpeedDelegate;
-	
+   /**Collection of callbacks when game speed updated*/
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Speed")
+   FUpdateGameSpeed UpdateGameSpeedDelegate;
 
-	/**Callback to update our timeunit when we change game speed*/
-	UFUNCTION()
-	void							UpdateGameSpeed(float speedMultiplier);
+   /**Callback to update our timeunit when we change game speed*/
+   UFUNCTION()
+   void UpdateGameSpeed(float speedMultiplier);
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Time")
-	TArray<int>						GetGameTime() const { return gameTime; }
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Time")
+   TArray<int> GetGameTime() const { return gameTime; }
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Time")
-	TArray<int>						GetGameDate()	const { return gameDate; }
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Time")
+   TArray<int> GetGameDate() const { return gameDate; }
 
-	/**Set the game time to some time*/
-	UFUNCTION(BlueprintCallable, Category = "Time")
-	void							UpdateGameTime(int second = 0, int minute = 0, int hour = 0);
-	/**Set the game date to some date*/
-	UFUNCTION(BlueprintCallable, Category = "Time")
-	void							UpdateGameDay(int days = 0, int months = 0, int years = 0);
-	/**Add game time*/
-	UFUNCTION(BlueprintCallable, Category = "Time")
-	void							AddGameTime(FDateTime timeToAdd);
+   /**Set the game time to some time*/
+   UFUNCTION(BlueprintCallable, Category = "Time")
+   void UpdateGameTime(int second = 0, int minute = 0, int hour = 0);
+   /**Set the game date to some date*/
+   UFUNCTION(BlueprintCallable, Category = "Time")
+   void UpdateGameDay(int days = 0, int months = 0, int years = 0);
+   /**Add game time*/
+   UFUNCTION(BlueprintCallable, Category = "Time")
+   void AddGameTime(FDateTime timeToAdd);
 
-	///---Unit Lists and Vision---
+   ///---Unit Lists and Vision---
 
-	FHitResult								visionHitResult;
-	FCollisionObjectQueryParams				queryParamVision;
+   FHitResult                  visionHitResult;
+   FCollisionObjectQueryParams queryParamVision;
 
-	FTimerHandle							allyVisionUpdateTimerHandle;
-	FTimerHandle							enemyVisionUpdateTimerHandle;
+   FTimerHandle allyVisionUpdateTimerHandle;
+   FTimerHandle enemyVisionUpdateTimerHandle;
 
-	/**Lists all party members that exist between every player (necessary for computing co op vision)*/
-	UPROPERTY(BlueprintReadWrite, Category = "SharedData")
-	TSet<AAlly*>					allyList;
+   /**Lists all party members that exist between every player (necessary for computing co op vision)*/
+   UPROPERTY(BlueprintReadWrite, Category = "SharedData")
+   TSet<AAlly*> allyList;
 
-	/**Lists of all enemies in the level*/
-	UPROPERTY(BlueprintReadWrite, Category = "SharedData")
-	TSet<AEnemy*>					enemyList;
-	
-	/**Lists what enemies are visible so we don't have to keep doing line traces which is an expensive op*/
-	UPROPERTY(BlueprintReadOnly, Category = "Vision")
-	TSet<AEnemy*>					visibleEnemies;
+   /**Lists of all enemies in the level*/
+   UPROPERTY(BlueprintReadWrite, Category = "SharedData")
+   TSet<AEnemy*> enemyList;
 
-	/**Lists what allies are visible so we don't have to keep doing line traces which is an expensive op*/
-	UPROPERTY(BlueprintReadOnly, Category = "Vision")
-	TSet<AAlly*>					visibleAllies;
+   /**Lists what enemies are visible so we don't have to keep doing line traces which is an expensive op*/
+   UPROPERTY(BlueprintReadOnly, Category = "Vision")
+   TSet<AEnemy*> visibleEnemies;
 
-	/**
-	 * Visiblity of enemies is like a state machine which has six states
-	 * Enemy enters vision range and we can see it - Add to possible enemies in radius and add to visible units
-	 * Enemy enters vision range but is behind a wall - Add to possible enemies in radius but not to visible units
-	 * Enemy leaves vision range - Remove from possible enemies in radius and from visible units
-	 * Enemy leaves vision range but was behind a wall so we never saw it - Remove from possible enemies in radius but not from visible units
-	 * Enemy peaks a wall and is now in vision - Add to visible enemies but not to possible enemies in radius
-	 * Enemy walks behind a wall and is not in vision - Remove from visible enemies but not from possible enemies in radius
-	 */
-	UFUNCTION()
-	void							UpdateVisibleEnemies();
+   /**Lists what allies are visible so we don't have to keep doing line traces which is an expensive op*/
+   UPROPERTY(BlueprintReadOnly, Category = "Vision")
+   TSet<AAlly*> visibleAllies;
 
-	/**For more info look at comments of UpdateVisibleEnemies*/
-	UFUNCTION()
-	void							UpdateVisibleAllies();
+   UPROPERTY(EditDefaultsOnly, Category = "Vision")
+   TSubclassOf<AFogOfWarPlane> FOWplaneClass;
+
+   UPROPERTY(BlueprintReadOnly, Category = "Vision")
+   AFogOfWarPlane* FOWplane;
+
+   /**
+    * Visiblity of enemies is like a state machine which has six states
+    * Enemy enters vision range and we can see it - Add to possible enemies in radius and add to visible units
+    * Enemy enters vision range but is behind a wall - Add to possible enemies in radius but not to visible units
+    * Enemy leaves vision range - Remove from possible enemies in radius and from visible units
+    * Enemy leaves vision range but was behind a wall so we never saw it - Remove from possible enemies in radius but not from visible units
+    * Enemy peaks a wall and is now in vision - Add to visible enemies but not to possible enemies in radius
+    * Enemy walks behind a wall and is not in vision - Remove from visible enemies but not from possible enemies in radius
+    */
+   UFUNCTION()
+   void UpdateVisibleEnemies();
+
+   /**For more info look at comments of UpdateVisibleEnemies*/
+   UFUNCTION()
+   void UpdateVisibleAllies();
 };

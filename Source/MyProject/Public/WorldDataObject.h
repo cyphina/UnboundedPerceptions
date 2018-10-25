@@ -10,9 +10,8 @@
 UCLASS(BlueprintType)
 class MYPROJECT_API UWorldDataObject : public UObject
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:
-	virtual void Init() PURE_VIRTUAL(UWorldDataObject::Init,);	
+ public:
+   virtual void Init() PURE_VIRTUAL(UWorldDataObject::Init, );
 };
-

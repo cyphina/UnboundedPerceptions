@@ -6,7 +6,6 @@
 
 HeroStateMachine::HeroStateMachine(ABaseHero* hero) : StateMachine(hero), Interacting{InteractState(hero)}, UsingItem{ItemState(hero)}
 {
-	
 }
 
 HeroStateMachine::~HeroStateMachine()
@@ -15,31 +14,27 @@ HeroStateMachine::~HeroStateMachine()
 
 void HeroStateMachine::ChangeState(EUnitState newState)
 {
-	//if we currently have a state in our state machine
-	if (!currentState)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Error, currentState is nullptr"));
-	}
+   // if we currently have a state in our state machine
+   if (!currentState) { GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Error, currentState is nullptr")); }
 
-	if (newState != currentState->GetName()) //make sure we're not just switching to the same state >_>
-	{
-		currentState->Exit(*unitOwner);
-		currentState = getStateFromEnum(newState);
-		currentState->Enter(*unitOwner);
-	}
+   if (newState != currentState->GetName()) // make sure we're not just switching to the same state >_>
+   {
+      currentState->Exit(*unitOwner);
+      currentState = getStateFromEnum(newState);
+      currentState->Enter(*unitOwner);
+   }
 }
 
-IUnitState* HeroStateMachine::getStateFromEnum(EUnitState enumVal) 
+IUnitState* HeroStateMachine::getStateFromEnum(EUnitState enumVal)
 {
-	switch (enumVal)
-	{
-		case EUnitState::STATE_IDLE: return &Idle;
-		case EUnitState::STATE_ATTACKING: return &Attacking;
-		case EUnitState::STATE_CASTING: return &Casting;
-		case EUnitState::STATE_INTERACTING: return &Interacting;
-		case EUnitState::STATE_ITEM: return &UsingItem;
-		case EUnitState::STATE_CHANNELING: return &Channeling;
-		case EUnitState::STATE_MOVING: return &Moving;
-		default: return nullptr;
-	}
+   switch (enumVal) {
+      case EUnitState::STATE_IDLE: return &Idle;
+      case EUnitState::STATE_ATTACKING: return &Attacking;
+      case EUnitState::STATE_CASTING: return &Casting;
+      case EUnitState::STATE_INTERACTING: return &Interacting;
+      case EUnitState::STATE_ITEM: return &UsingItem;
+      case EUnitState::STATE_CHANNELING: return &Channeling;
+      case EUnitState::STATE_MOVING: return &Moving;
+      default: return nullptr;
+   }
 }

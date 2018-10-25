@@ -8,28 +8,28 @@
 
 void UBreakMenu::NativeConstruct()
 {
-	gameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
-	UMyDraggableWidget::NativeConstruct();
+   gameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
+   UMyDraggableWidget::NativeConstruct();
 }
 
 void UBreakMenu::Resume()
 {
-	CPC->GetHUDManager()->AddHUD(static_cast<int>(HUDs::HS_Break));
+   CPC->GetHUDManager()->AddHUD(static_cast<int>(HUDs::HS_Break));
 }
 
 void UBreakMenu::SaveLoad()
 {
-	CPC->GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_SaveLoad));
-	Resume();
+   CPC->GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_SaveLoad));
+   Resume();
 }
 
 void UBreakMenu::Options()
 {
-	CPC->GetHUDManager()->AddHUD(static_cast<int>(HUDs::HS_Settings));
-	Resume();
+   CPC->GetHUDManager()->AddHUD(static_cast<int>(HUDs::HS_Settings));
+   Resume();
 }
 
 void UBreakMenu::Exit()
 {
-	gameModeRef->StreamLevelAsync(*gameModeRef->GetStartingLvlName());
+   gameModeRef->StreamLevelAsync(*gameModeRef->GetStartingLvlName());
 }

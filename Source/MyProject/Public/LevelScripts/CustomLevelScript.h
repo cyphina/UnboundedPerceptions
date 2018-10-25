@@ -6,14 +6,10 @@
 #include "CustomLevelScript.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API ACustomLevelScript : public ALevelScriptActor
 {
-	GENERATED_BODY()
-	
-	
-	
-	
+   GENERATED_BODY()
 };

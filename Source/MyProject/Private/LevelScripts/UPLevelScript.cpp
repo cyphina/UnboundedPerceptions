@@ -9,12 +9,11 @@
 #include "SaveLoadClass.h"
 
 void AUPLevelScript::BeginPlay()
-{	
-	controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+{
+   controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 
-	if(shouldTimePass)
-		Cast<ARTSGameState>(GetWorld()->GetGameState())->AddGameTime(timeToPass);
+   if (shouldTimePass) Cast<ARTSGameState>(GetWorld()->GetGameState())->AddGameTime(timeToPass);
 
-	ARTSGameMode* gameMode = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
-	Super::BeginPlay(); //remember this calls blueprint BeginPlay()
+   ARTSGameMode* gameMode = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
+   Super::BeginPlay(); // remember this calls blueprint BeginPlay()
 }

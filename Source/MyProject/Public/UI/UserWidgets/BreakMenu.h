@@ -15,26 +15,23 @@ class ARTSGameMode;
 UCLASS()
 class MYPROJECT_API UBreakMenu : public UMyDraggableWidget
 {
-	GENERATED_BODY()
-	
-public: 
+   GENERATED_BODY()
 
-	void						NativeConstruct() override;
+ public:
+   void NativeConstruct() override;
 
-private:
+ private:
+   ARTSGameMode* gameModeRef;
 
-	ARTSGameMode*				gameModeRef;
+   UFUNCTION(BlueprintCallable, Category = "BreakMenu Functionality")
+   void Resume();
 
-	UFUNCTION(BlueprintCallable, Category = "BreakMenu Functionality")
-	void						Resume();
+   UFUNCTION(BlueprintCallable, Category = "BreakMenu Functionality")
+   void SaveLoad();
 
-	UFUNCTION(BlueprintCallable, Category = "BreakMenu Functionality")
-	void						SaveLoad();
+   UFUNCTION(BlueprintCallable, Category = "BreakMenu Functionality")
+   void Options();
 
-	UFUNCTION(BlueprintCallable, Category = "BreakMenu Functionality")
-	void						Options();
-
-	UFUNCTION(BlueprintCallable, Category = "BreakMenu Functionality")
-	void						Exit();
-					
+   UFUNCTION(BlueprintCallable, Category = "BreakMenu Functionality")
+   void Exit();
 };

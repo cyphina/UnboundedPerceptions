@@ -7,14 +7,10 @@
 #include "DOTEffect.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UDOTEffect : public UGameplayEffect
 {
-	GENERATED_BODY()
-	
-	
-	
-	
+   GENERATED_BODY()
 };

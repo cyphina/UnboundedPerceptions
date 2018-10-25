@@ -15,20 +15,19 @@ class ARTSGameMode;
 UCLASS()
 class MYPROJECT_API UConditionalInteractableDecorator : public UInteractableActorDecoratorBase
 {
-	GENERATED_BODY()
-	
-	ARTSGameMode*							gameModeRef;
-	AUserInput*								cpcRef;
+   GENERATED_BODY()
 
-public:
+   ARTSGameMode* gameModeRef;
+   AUserInput*   cpcRef;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<FConditionData>					conditions;
+ public:
+   UPROPERTY(EditAnywhere, BlueprintReadOnly)
+   TArray<FConditionData> conditions;
 
-	/**Name of the custom conversation if conditions not met.  If empty, uses default notification (generated from conditions)*/
-	UPROPERTY(EditAnywhere)
-	FName									customDialogConversation;
+   /**Name of the custom conversation if conditions not met.  If empty, uses default notification (generated from conditions)*/
+   UPROPERTY(EditAnywhere)
+   FName customDialogConversation;
 
-	void									Init() override;
-	bool									Interact() override;
+   void Init() override;
+   bool Interact() override;
 };

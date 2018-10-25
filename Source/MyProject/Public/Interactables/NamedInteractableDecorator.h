@@ -14,24 +14,23 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnNamedInteractableInteracted);
 UCLASS()
 class MYPROJECT_API UNamedInteractableDecorator : public UInteractableActorDecoratorBase
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	/**Used to identify interactables in quests*/
-	UPROPERTY(EditAnywhere, Category = "Interactable Settings")
-	FText									name;
+   /**Used to identify interactables in quests*/
+   UPROPERTY(EditAnywhere, Category = "Interactable Settings")
+   FText name;
 
-	/**Wrapper function that calls quest manager update when we interact with this object*/
-	UFUNCTION()
-	void									OnInteractedQuestManagerWrapper(); 
+   /**Wrapper function that calls quest manager update when we interact with this object*/
+   UFUNCTION()
+   void OnInteractedQuestManagerWrapper();
 
-public:	
-	void									Init() override;
-	bool									Interact() override;				
+ public:
+   void Init() override;
+   bool Interact() override;
 
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	FORCEINLINE FText						GetName() override { return name; }
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   FORCEINLINE FText GetName() override { return name; }
 
-	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-	FOnNamedInteractableInteracted			OnInteracted;
-
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+   FOnNamedInteractableInteracted OnInteracted;
 };

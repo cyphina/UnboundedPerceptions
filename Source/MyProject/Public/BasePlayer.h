@@ -22,100 +22,99 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogTopicLearned, FGameplayTag,
 UCLASS()
 class MYPROJECT_API ABasePlayer : public APlayerState
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	/**List of what the player knows what to talk about*/
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Meta = (AllowPrivateAccess = true), Category = "Dialog")
-	FGameplayTagContainer		dialogTopics = FGameplayTagContainer();
-	
-	void						BeginPlay() override;
-	virtual void				OnConstruction(const FTransform& transform) override;
-	
-public:
+   /**List of what the player knows what to talk about*/
+   UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Meta = (AllowPrivateAccess = true), Category = "Dialog")
+   FGameplayTagContainer dialogTopics = FGameplayTagContainer();
+
+   void         BeginPlay() override;
+   virtual void OnConstruction(const FTransform& transform) override;
+
+ public:
 #pragma region PartyInfo
 
-	static const int			MAX_NUM_HEROES = 4;
+   static const int MAX_NUM_HEROES = 4;
 
-	/**Party leader should always be at slot 0*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-	TArray<ABaseHero*>			heroes;
+   /**Party leader should always be at slot 0*/
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
+   TArray<ABaseHero*> heroes;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-	TArray<ABaseHero*>			selectedHeroes;
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
+   TArray<ABaseHero*> selectedHeroes;
 
-	/**If there's any hero that is interacting currently with something blocking (preventing other actions).  Also needed in the case of storage because we need to know
-	 * who opened it
-	 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-	ABaseHero*					interactedHero;
+   /**If there's any hero that is interacting currently with something blocking (preventing other actions).  Also needed in the case of storage because we need to know
+    * who opened it
+    */
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
+   ABaseHero* interactedHero;
 
-	/**What is the current blocking interactable if there is any that is open?*/
+   /**What is the current blocking interactable if there is any that is open?*/
 
+   /**Returns list of alive heroes and friendly units.  Heroes should be first in the list*/
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
+   TArray<AAlly*> allies;
 
-	/**Returns list of alive heroes and friendly units.  Heroes should be first in the list*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-	TArray<AAlly*>				allies; 
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
+   TArray<AAlly*> selectedAllies;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-	TArray<AAlly*>				selectedAllies;
-	
-	/*List of all units summoned*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-	TArray<ASummon*>			summons;
+   /*List of all units summoned*/
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
+   TArray<ASummon*> summons;
 
-	/*List of NPCs that joined the party (usually on escort missions)*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-	TArray<AAlly*>				npcs;
+   /*List of NPCs that joined the party (usually on escort missions)*/
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
+   TArray<AAlly*> npcs;
 
-	/**List of current AI  ally groups*/
-	TArray<TSet<AUnit*>>		allyGroups;
+   /**List of current AI  ally groups*/
+   TArray<TSet<AUnit*>> allyGroups;
 #pragma endregion
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
-	AUnit*						focusedUnit;
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
+   AUnit* focusedUnit;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
-	int							unitIndex;
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
+   int unitIndex;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Quest")
-	UQuestManager*				questManager;
+   UPROPERTY(BlueprintReadWrite, Category = "Quest")
+   UQuestManager* questManager;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	int							money;
-	
-	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-	FOnDialogTopicLearned		OnDialogLearned;
+   UPROPERTY(BlueprintReadWrite, EditAnywhere)
+   int money;
 
-	ABasePlayer();
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+   FOnDialogTopicLearned OnDialogLearned;
 
-	/**Change a party around
-	 *@param newparty - This is an array with the new heroes that will be in the party.  Must be of sizes 1-4
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Player")
-	void						UpdateParty(TArray<ABaseHero*> newHeroes);
+   ABasePlayer();
 
-	/**Update the coins
-	@param amount - this is the amount to update the coins by, and can be positive or negative
-	*/
-	UFUNCTION(BlueprintCallable, Category = "Player")
-	void						UpdateGold(int32 amount);
+   /**Change a party around
+    *@param newparty - This is an array with the new heroes that will be in the party.  Must be of sizes 1-4
+    */
+   UFUNCTION(BlueprintCallable, Category = "Player")
+   void UpdateParty(TArray<ABaseHero*> newHeroes);
 
-	/**Update the exp gained by every party member
-	@param amount - this is the amount every party member gains as exp. Can only be positive.
-	*/
-	UFUNCTION(BlueprintCallable, Category = "Player")
-	void						UpdateEXP(int32 amount);
+   /**Update the coins
+   @param amount - this is the amount to update the coins by, and can be positive or negative
+   */
+   UFUNCTION(BlueprintCallable, Category = "Player")
+   void UpdateGold(int32 amount);
 
-	/**When Cyphina or whoever is the MC at the moment learns of something new to talk about
-	 *@param topic - This is the new conversation topic learned by MC
-	 */
-	UFUNCTION(BlueprintCallable, Category = "DialogAccessor")
-	void									LearnDialogTopic(FGameplayTag topic);
+   /**Update the exp gained by every party member
+   @param amount - this is the amount every party member gains as exp. Can only be positive.
+   */
+   UFUNCTION(BlueprintCallable, Category = "Player")
+   void UpdateEXP(int32 amount);
 
-	UFUNCTION(BlueprintCallable, Category = "DialogAccessor")
-	FGameplayTagContainer					GetDialogTopics() const { return dialogTopics; }
+   /**When Cyphina or whoever is the MC at the moment learns of something new to talk about
+    *@param topic - This is the new conversation topic learned by MC
+    */
+   UFUNCTION(BlueprintCallable, Category = "DialogAccessor")
+   void LearnDialogTopic(FGameplayTag topic);
 
-	/**Check to see if the player has learned this topic*/
-	UFUNCTION(BlueprintCallable, Category = "DialogAccessor")
-	FORCEINLINE bool						HasDialogTopic(FGameplayTag tagToCheck) const { return dialogTopics.HasTagExact(tagToCheck); }
+   UFUNCTION(BlueprintCallable, Category = "DialogAccessor")
+   FGameplayTagContainer GetDialogTopics() const { return dialogTopics; }
+
+   /**Check to see if the player has learned this topic*/
+   UFUNCTION(BlueprintCallable, Category = "DialogAccessor")
+   FORCEINLINE bool HasDialogTopic(FGameplayTag tagToCheck) const { return dialogTopics.HasTagExact(tagToCheck); }
 };

@@ -5,12 +5,10 @@
 
 void UHealthbar::SetHealth(float value)
 {
-	healthPercent = value;
+   healthPercent = value;
 }
 
 float UHealthbar::GetHealth() const
 {
-	return healthPercent;
+   return healthPercent;
 }
-
-

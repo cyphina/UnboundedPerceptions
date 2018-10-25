@@ -6,26 +6,24 @@
 #include "WorldObjects/Ally.h"
 #include "EnvironmentQuery/Items/EnvQueryItemType_Actor.h"
 
-
 UVisibleAlliesQueryGenerator::UVisibleAlliesQueryGenerator()
 {
-	ItemType = UEnvQueryItemType_Actor::StaticClass();
+   ItemType = UEnvQueryItemType_Actor::StaticClass();
 }
 
 void UVisibleAlliesQueryGenerator::GenerateItems(FEnvQueryInstance& queryInstance) const
 {
-	ARTSGameState* gameStateRef = Cast<ARTSGameState>(GEngine->GetWorldFromContextObject(queryInstance.Owner.Get(), EGetWorldErrorMode::LogAndReturnNull)->GetGameState());
-	TArray<AActor*> matchingActors;
+   ARTSGameState*  gameStateRef = Cast<ARTSGameState>(GEngine->GetWorldFromContextObject(queryInstance.Owner.Get(), EGetWorldErrorMode::LogAndReturnNull)->GetGameState());
+   TArray<AActor*> matchingActors;
 
-	for(AAlly* ally : gameStateRef->visibleAllies)
-	{
-		matchingActors.Add(ally);
-	}
+   for (AAlly* ally : gameStateRef->visibleAllies) {
+      matchingActors.Add(ally);
+   }
 
-	queryInstance.AddItemData<UEnvQueryItemType_Actor>(matchingActors);
+   queryInstance.AddItemData<UEnvQueryItemType_Actor>(matchingActors);
 }
 
 FText UVisibleAlliesQueryGenerator::GetDescriptionTitle() const
 {
-	return NSLOCTEXT("EnvQueryGenerator", "VisibleAlliesGenerator", "Generates allies in enemy vision");
+   return NSLOCTEXT("EnvQueryGenerator", "VisibleAlliesGenerator", "Generates allies in enemy vision");
 }

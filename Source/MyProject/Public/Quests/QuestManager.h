@@ -7,7 +7,6 @@
 #include "Items/Item.h"
 #include "QuestManager.generated.h"
 
-
 class ABasePlayer;
 class AQuest;
 class AUserInput;
@@ -23,122 +22,119 @@ class UNamedInteractableDecorator;
 UCLASS()
 class MYPROJECT_API UQuestMap : public UDataAsset
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:
-
-	/**Map of classes from which we can activate quests from*/
-	UPROPERTY(EditAnywhere)
-	TMap<FGameplayTag, TSubclassOf<AQuest>>		questClassList;
+ public:
+   /**Map of classes from which we can activate quests from*/
+   UPROPERTY(EditAnywhere)
+   TMap<FGameplayTag, TSubclassOf<AQuest>> questClassList;
 };
 
-//TODO: Add a delegate for if quest failed
+// TODO: Add a delegate for if quest failed
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnQuestCompleted);
-
 
 UCLASS(Blueprintable)
 class MYPROJECT_API UQuestManager : public UObject
 {
-	GENERATED_BODY()
-	
-public:	
+   GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite, Category = "References")
-	AUserInput*								controllerRef;
+ public:
+   UPROPERTY(BlueprintReadWrite, Category = "References")
+   AUserInput* controllerRef;
 
-	/**
-	 * UI element that lists all the quests in a sidebar
-	 */
-	UPROPERTY(BlueprintReadWrite, Category = "References") 
-	UQuestList*								questListRef;
+   /**
+    * UI element that lists all the quests in a sidebar
+    */
+   UPROPERTY(BlueprintReadWrite, Category = "References")
+   UQuestList* questListRef;
 
-	UPROPERTY(BlueprintReadWrite, Category = "References")
-	UQuestJournal*							questJournalRef;
+   UPROPERTY(BlueprintReadWrite, Category = "References")
+   UQuestJournal* questJournalRef;
 
-	/**
-	 *Map of quest GameplayTagName to quest class so we can add new quests via triggers
-	 */
-	UPROPERTY(EditAnywhere, Category = "Quest Data")
-	UQuestMap*								questMap;
+   /**
+    *Map of quest GameplayTagName to quest class so we can add new quests via triggers
+    */
+   UPROPERTY(EditAnywhere, Category = "Quest Data")
+   UQuestMap* questMap;
 
-	/**Actor that determies location of the quest*/
-	UPROPERTY(BlueprintReadWrite, Category = "References")
-	AGoalActor*								currentGoalActor;
-		
-	/**List of all quests currently happening*/
-	UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
-	TArray<AQuest*>							quests;
+   /**Actor that determies location of the quest*/
+   UPROPERTY(BlueprintReadWrite, Category = "References")
+   AGoalActor* currentGoalActor;
 
-	/**Distance away from goalactor*/
-	UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
-	int										currentDistance;
+   /**List of all quests currently happening*/
+   UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
+   TArray<AQuest*> quests;
 
-	/**Completed quests*/
-	UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
-	TArray<AQuest*>							completedQuests;
+   /**Distance away from goalactor*/
+   UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
+   int currentDistance;
 
-	/**Failed quests*/
-	UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
-	TArray<AQuest*>							failedQuests;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Quest HUD")
-	TSubclassOf<AGoalActor>					goalActorClass;
+   /**Completed quests*/
+   UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
+   TArray<AQuest*> completedQuests;
 
-	/**Called when a quest is completed to unlock new quests or such*/
-	UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-	FOnQuestCompleted						OnQuestCompletedDelegate;
+   /**Failed quests*/
+   UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
+   TArray<AQuest*> failedQuests;
 
-	void									Init();
+   UPROPERTY(EditDefaultsOnly, Category = "Quest HUD")
+   TSubclassOf<AGoalActor> goalActorClass;
 
-	/**Select a new quest in the quest list*/
-	UFUNCTION(BlueprintCallable, Category = "Quest Managing")
-	void									SelectNewQuest(AQuest* quest);
+   /**Called when a quest is completed to unlock new quests or such*/
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+   FOnQuestCompleted OnQuestCompletedDelegate;
 
-	/**Add a new current quest.  Returns true on success, false on failure
-	 * @param questClassToSpawn - Class of quest actor to spawn
-	 * @param forcedStart - Forces this quest to be selected in the quest journal
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Quest Managing")
-	bool									AddNewQuest(TSubclassOf<AQuest> questClassToSpawn, bool forcedStart);
+   void Init();
 
-	/**Called when switching subgoals to change goal actor location and change UI*/
-	UFUNCTION(BlueprintCallable, Category = "Quest Managing")
-	void									OnSwitchSubGoal();
+   /**Select a new quest in the quest list*/
+   UFUNCTION(BlueprintCallable, Category = "Quest Managing")
+   void SelectNewQuest(AQuest* quest);
 
-	/**Get distance to goal actor (distance marker)*/
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Quest Managing")
-	int										GetDistanceToGoal(); 
+   /**Add a new current quest.  Returns true on success, false on failure
+    * @param questClassToSpawn - Class of quest actor to spawn
+    * @param forcedStart - Forces this quest to be selected in the quest journal
+    */
+   UFUNCTION(BlueprintCallable, Category = "Quest Managing")
+   bool AddNewQuest(TSubclassOf<AQuest> questClassToSpawn, bool forcedStart);
 
-	/**Changes UI and data to match ending quest, and hands out rewards*/
-	UFUNCTION(BlueprintCallable, Category = "Quest Managing")
-	void									EndQuest(AQuest* questToEnd);
+   /**Called when switching subgoals to change goal actor location and change UI*/
+   UFUNCTION(BlueprintCallable, Category = "Quest Managing")
+   void OnSwitchSubGoal();
 
-	/**Used to complete all goals that aren't finished when completing a quest*/
-	UFUNCTION(BlueprintCallable, Category = "Quest Managing")
-	void									CompleteGoals(); 
+   /**Get distance to goal actor (distance marker)*/
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Quest Managing")
+   int GetDistanceToGoal();
 
-	/**Called when party leader moves to recalculate distance and move arrow around*/
-	UFUNCTION(BlueprintCallable, Category = "Callbacks")
-	void									OnPartyLeaderMove();
+   /**Changes UI and data to match ending quest, and hands out rewards*/
+   UFUNCTION(BlueprintCallable, Category = "Quest Managing")
+   void EndQuest(AQuest* questToEnd);
 
-	/**Callback when enemy dies to check to see if this quest condition is fufilled 
-	 * Need callbacks here since we specifically need that parameter
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Callbacks")
-	void									OnEnemyDie(AEnemy* enemyClass);
+   /**Used to complete all goals that aren't finished when completing a quest*/
+   UFUNCTION(BlueprintCallable, Category = "Quest Managing")
+   void CompleteGoals();
 
-	/**Callback when NPC is talked to to check to see if this quest condition is fufilled
-	 * @param nPCClass - Class of the NPC that we're talking to
-	 * @param conversationTopic - Gameplay tag representing conversationTopic.  If conversationTopic is default tag, then it means no conversation topic was used (default conversation)
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Callbacks")
-	void									OnTalkNPC(ANPC* talkedToNPC, FGameplayTag conversationTopic);
+   /**Called when party leader moves to recalculate distance and move arrow around*/
+   UFUNCTION(BlueprintCallable, Category = "Callbacks")
+   void OnPartyLeaderMove();
 
-	/**Callback when Item is picked up to see if this quest condition is fulfilled*/
-	UFUNCTION(BlueprintCallable, Category = "Callbacks")
-	void									OnItemPickup(FMyItem newItem);
+   /**Callback when enemy dies to check to see if this quest condition is fufilled
+    * Need callbacks here since we specifically need that parameter
+    */
+   UFUNCTION(BlueprintCallable, Category = "Callbacks")
+   void OnEnemyDie(AEnemy* enemyClass);
 
-	/**Callback when Interactable is sucessfully interacted with*/
-	UFUNCTION(BlueprintCallable, Category = "Callbacks")
-	void									OnInteracted(UNamedInteractableDecorator* interactable);
+   /**Callback when NPC is talked to to check to see if this quest condition is fufilled
+    * @param nPCClass - Class of the NPC that we're talking to
+    * @param conversationTopic - Gameplay tag representing conversationTopic.  If conversationTopic is default tag, then it means no conversation topic was used (default conversation)
+    */
+   UFUNCTION(BlueprintCallable, Category = "Callbacks")
+   void OnTalkNPC(ANPC* talkedToNPC, FGameplayTag conversationTopic);
+
+   /**Callback when Item is picked up to see if this quest condition is fulfilled*/
+   UFUNCTION(BlueprintCallable, Category = "Callbacks")
+   void OnItemPickup(FMyItem newItem);
+
+   /**Callback when Interactable is sucessfully interacted with*/
+   UFUNCTION(BlueprintCallable, Category = "Callbacks")
+   void OnInteracted(UNamedInteractableDecorator* interactable);
 };

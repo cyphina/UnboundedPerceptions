@@ -13,18 +13,15 @@
 UCLASS()
 class MYPROJECT_API ALevelManager : public AActor
 {
-	GENERATED_BODY()
-	
-public:	
-	ALevelManager();
+   GENERATED_BODY()
 
-protected:
-	virtual void BeginPlay() override;
+ public:
+   ALevelManager();
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+ protected:
+   virtual void BeginPlay() override;
 
-	
-	
+ public:
+   // Called every frame
+   virtual void Tick(float DeltaTime) override;
 };

@@ -11,23 +11,20 @@ class UInteractableActorDecoratorBase;
 UCLASS()
 class MYPROJECT_API ASavePoint : public AInteractableBase
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:
-	// Sets default values for this actor's properties
-	ASavePoint();
+ public:
+   // Sets default values for this actor's properties
+   ASavePoint();
 
-	UPROPERTY(EditAnywhere)
-	UInteractableActorDecoratorBase*						decoratedInteractable; 
+   UPROPERTY(EditAnywhere)
+   UInteractableActorDecoratorBase* decoratedInteractable;
 
-	virtual void			Interact_Implementation(ABaseHero* hero) override;
+   virtual void Interact_Implementation(ABaseHero* hero) override;
 
-protected:
+ protected:
+   virtual void BeginPlay() override;
 
-	virtual void				BeginPlay() override;
-
-public:
-
-	virtual void				Tick(float DeltaTime) override;
-
+ public:
+   virtual void Tick(float DeltaTime) override;
 };

@@ -10,49 +10,43 @@
 
 AIntimateNPC::AIntimateNPC() : ANPC()
 {
-	
 }
 
 void AIntimateNPC::BeginPlay()
 {
-	Super::BeginPlay();
-	gameModeRef = Cast<ARTSGameMode>(GetGameInstance());
+   Super::BeginPlay();
+   gameModeRef = Cast<ARTSGameMode>(GetGameInstance());
 }
 
 void AIntimateNPC::SetRelationshipPoints(int pointsToAdd)
 {
-	relationshipPoints += pointsToAdd;
-	if (relationshipPoints > relationshipEventPointValues[currentRelationshipEventIndex])
-	{
-		gameModeRef->GetTriggerManager()->ActivateTrigger(relationshipTriggers[currentRelationshipEventIndex]);
-	}
+   relationshipPoints += pointsToAdd;
+   if (relationshipPoints > relationshipEventPointValues[currentRelationshipEventIndex]) { gameModeRef->GetTriggerManager()->ActivateTrigger(relationshipTriggers[currentRelationshipEventIndex]); }
 }
 
 void AIntimateNPC::Interact_Implementation(ABaseHero* hero)
 {
-	Super::Interact_Implementation(hero);
+   Super::Interact_Implementation(hero);
 }
 
 void AIntimateNPC::SetupAppropriateView()
 {
-	controllerRef->GetHUDManager()->GetSocialWindow()->SetIntimateView();
+   controllerRef->GetHUDManager()->GetSocialWindow()->SetIntimateView();
 }
 
 void AIntimateNPC::SaveNPCData(FMapSaveInfo& mapInfo)
 {
-	FNPCIntimateSaveInfo intimateNPCSaveInfo;
-	MakeNPCData(intimateNPCSaveInfo.npcInfo);
-	intimateNPCSaveInfo.currentRelationshipEventIndex = currentRelationshipEventIndex;
-	intimateNPCSaveInfo.relationshipPoints = relationshipPoints;
+   FNPCIntimateSaveInfo intimateNPCSaveInfo;
+   MakeNPCData(intimateNPCSaveInfo.npcInfo);
+   intimateNPCSaveInfo.currentRelationshipEventIndex = currentRelationshipEventIndex;
+   intimateNPCSaveInfo.relationshipPoints            = relationshipPoints;
 
-	mapInfo.intimateNPCInfo.Add(intimateNPCSaveInfo);
+   mapInfo.intimateNPCInfo.Add(intimateNPCSaveInfo);
 }
 
 void AIntimateNPC::LoadNPCData(FNPCIntimateSaveInfo& npcSaveInfo)
 {
-	ANPC::LoadNPCData(npcSaveInfo.npcInfo);
-	relationshipPoints = npcSaveInfo.relationshipPoints;
-	currentRelationshipEventIndex = npcSaveInfo.currentRelationshipEventIndex;
-	
+   ANPC::LoadNPCData(npcSaveInfo.npcInfo);
+   relationshipPoints            = npcSaveInfo.relationshipPoints;
+   currentRelationshipEventIndex = npcSaveInfo.currentRelationshipEventIndex;
 }
-

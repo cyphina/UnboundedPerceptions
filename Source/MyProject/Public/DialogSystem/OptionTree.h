@@ -5,11 +5,11 @@
 #include "CoreMinimal.h"
 
 /**
- * 
+ *
  */
 class MYPROJECT_API OptionTree
 {
-public:
-	OptionTree();
-	~OptionTree();
+ public:
+   OptionTree();
+   ~OptionTree();
 };

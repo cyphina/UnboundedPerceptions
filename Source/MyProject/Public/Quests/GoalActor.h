@@ -6,24 +6,23 @@
 #include "GameFramework/Actor.h"
 #include "GoalActor.generated.h"
 
-
 UCLASS()
 class MYPROJECT_API AGoalActor : public AActor
 {
-	GENERATED_BODY()
-	
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Goal Circle Details", Meta = (AllowPrivateAccess = true))
-	bool			UseRadius;
+   GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Goal Circle Details", Meta = (AllowPrivateAccess = true))
-	float			radius;
+   UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Goal Circle Details", Meta = (AllowPrivateAccess = true))
+   bool UseRadius;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Goal Circle Details", Meta = (AllowPrivateAccess = true))
-	FLinearColor	color;
+   UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Goal Circle Details", Meta = (AllowPrivateAccess = true))
+   float radius;
 
-protected:
-	virtual void BeginPlay() override;
+   UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Goal Circle Details", Meta = (AllowPrivateAccess = true))
+   FLinearColor color;
 
-public:	
-	AGoalActor();	
+ protected:
+   virtual void BeginPlay() override;
+
+ public:
+   AGoalActor();
 };

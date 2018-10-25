@@ -7,7 +7,7 @@
 #include "UPBPLibrary.generated.h"
 
 /**
- * Library of important functionality 
+ * Library of important functionality
  */
 
 class UWorldDataObject;
@@ -16,11 +16,10 @@ class IWorldDataObject;
 UCLASS(MinimalAPI)
 class UUPBPLibrary : public UBlueprintFunctionLibrary
 {
-	GENERATED_BODY()
-	
-public:
+   GENERATED_BODY()
 
-	/*Wrapper function for construct object from class.  Make sure class inherits from UWorldDataObject*/
-	UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create WorldDataObject", BlueprintInternalUseOnly = "true"), Category = "Object Creation")
-	static class UWorldDataObject*			CreateWorldDataObject(TSubclassOf<UWorldDataObject> objectClass, UObject* outer, FName name);
+ public:
+   /*Wrapper function for construct object from class.  Make sure class inherits from UWorldDataObject*/
+   UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create WorldDataObject", BlueprintInternalUseOnly = "true"), Category = "Object Creation")
+   static class UWorldDataObject* CreateWorldDataObject(TSubclassOf<UWorldDataObject> objectClass, UObject* outer, FName name);
 };

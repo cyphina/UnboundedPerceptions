@@ -15,26 +15,26 @@ class AUserInput;
 UCLASS()
 class MYPROJECT_API UActionSlot : public UUserWidget
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:
-	UPROPERTY(BlueprintReadOnly)
-		AUserInput* CPCRef;
+ public:
+   UPROPERTY(BlueprintReadOnly)
+   AUserInput* CPCRef;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Action")
-		UTexture2D* actionImage;
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Action")
+   UTexture2D* actionImage;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Action", Meta = (ExposeOnSpawn = true))
-		int slotIndex;
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Action", Meta = (ExposeOnSpawn = true))
+   int slotIndex;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Action")
-		FText info;
+   UPROPERTY(BlueprintReadWrite, Category = "Action")
+   FText info;
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Action")
-		 void SetImage(UTexture2D* image);
+   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Action")
+   void SetImage(UTexture2D* image);
 
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Action")
-		void SetImageFromMaterial(UMaterialInstanceDynamic* image);
+   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Action")
+   void SetImageFromMaterial(UMaterialInstanceDynamic* image);
 
-	void NativeConstruct() override;
+   void NativeConstruct() override;
 };

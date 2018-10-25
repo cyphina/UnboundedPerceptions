@@ -5,6 +5,6 @@
 
 void UCollectiblesUI::AddItemToUI(FText ItemName)
 {
-	ItemToAdd = ItemName;
-	AddItemToUI();
+   ItemToAdd = ItemName;
+   AddItemToUI();
 }

@@ -8,59 +8,54 @@
 #include "MyGameInstance.h"
 #include "SettingsMenu.h"
 #include "MainWidget.h"
+#include "DialogBox.h"
 #include "EventSystem/EventManager.h"
 #include "EventSystem/Trigger.h"
 
 void UStartMenu::NativeConstruct()
-{	
-	gameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
-	controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+{
+   gameModeRef   = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
+   controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 
-	//Add setting menu to overlay in blueprints
-	Super::NativeConstruct(); //This calls blueprint Construct so call at end
+   // Add setting menu to overlay in blueprints
+   Super::NativeConstruct(); // This calls blueprint Construct so call at end
 }
 
 bool UStartMenu::CheckIfSaveFileExists(FString saveFileName)
 {
-	FString saveFilesPath = FPaths::ProjectDir().Append("\\SavedGames\\");
-	IPlatformFile& platformFile = FPlatformFileManager::Get().GetPlatformFile();
-	if(!platformFile.DirectoryExists(*saveFilesPath))
-	{
-		platformFile.CreateDirectory(*saveFilesPath);
-	}
-	if(platformFile.FileExists(*(saveFilesPath + "\\" + saveFileName)))
-	{
-		return true;
-	}
-	return false;
+   FString        saveFilesPath = FPaths::ProjectDir().Append("\\SavedGames\\");
+   IPlatformFile& platformFile  = FPlatformFileManager::Get().GetPlatformFile();
+   if (!platformFile.DirectoryExists(*saveFilesPath)) { platformFile.CreateDirectory(*saveFilesPath); }
+   if (platformFile.FileExists(*(saveFilesPath + "\\" + saveFileName))) { return true; }
+   return false;
 }
 
 void UStartMenu::StartGameLevelTransition()
 {
-	gameModeRef->StreamLevelAsync(*gameModeRef->GetSylphiaAptLvlName());
-	
-	//Renable ticks that are stopped in the level script
-	controllerRef->SetActorTickEnabled(true);
-	gameModeRef->SetActorTickEnabled(true);
-	GetWorld()->GetGameState()->SetActorTickEnabled(true);
+   gameModeRef->StreamLevelAsync(*gameModeRef->GetSylphiaAptLvlName());
 
-	controllerRef->EnableInput(controllerRef);
-	controllerRef->GetHUDManager()->GetMainHUD()->speedIndex = 2;
-	controllerRef->GetHUDManager()->GetMainHUD()->SetGameSpeed();
+   // Renable ticks that are stopped in the level script
+   controllerRef->SetActorTickEnabled(true);
+   gameModeRef->SetActorTickEnabled(true);
+   GetWorld()->GetGameState()->SetActorTickEnabled(true);
 
-	GameEventStartSetup();
+   controllerRef->EnableInput(controllerRef);
+   controllerRef->GetHUDManager()->GetMainHUD()->speedIndex = 2;
+   controllerRef->GetHUDManager()->GetMainHUD()->SetGameSpeed();
 
-	RemoveFromParent();
+   GameEventStartSetup();
+
+   RemoveFromParent();
 }
 
 void UStartMenu::GameEventStartSetup()
 {
-	controllerRef->GetHUDManager()->AddHUD("SylphiaApartmentIntro");
-	gameModeRef->GetEventManager()->MoveToNextSection();
-	FTriggerData addFirstQuestTrigger;
-	addFirstQuestTrigger.enabled = true;
-	addFirstQuestTrigger.numCalls = 1;
-	addFirstQuestTrigger.triggerType = ETriggerType::AddQuestTrigger;
-	addFirstQuestTrigger.triggerValues = {"TutorialQuest", "1"};
-	gameModeRef->GetTriggerManager()->ActivateTrigger(addFirstQuestTrigger);
+   controllerRef->GetHUDManager()->AddHUD("SylphiaApartmentIntro", EDialogSource::none);
+   gameModeRef->GetEventManager()->MoveToNextSection();
+   FTriggerData addFirstQuestTrigger;
+   addFirstQuestTrigger.enabled       = true;
+   addFirstQuestTrigger.numCalls      = 1;
+   addFirstQuestTrigger.triggerType   = ETriggerType::AddQuestTrigger;
+   addFirstQuestTrigger.triggerValues = {"TutorialQuest", "1"};
+   gameModeRef->GetTriggerManager()->ActivateTrigger(addFirstQuestTrigger);
 }

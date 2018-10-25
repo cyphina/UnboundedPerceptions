@@ -7,14 +7,12 @@
 #include "StunEffectCalc.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UStunEffectCalc : public UGameplayEffectExecutionCalculation
 {
-	GENERATED_BODY()
-	
-	void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& executionParams, OUT FGameplayEffectCustomExecutionOutput& outExecutionOutput) const override;
-	
-	
+   GENERATED_BODY()
+
+   void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& executionParams, OUT FGameplayEffectCustomExecutionOutput& outExecutionOutput) const override;
 };

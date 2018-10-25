@@ -7,13 +7,13 @@
 #include "NavFilter_Defensive.generated.h"
 
 /**
- * Filter when defensively moving (actively try to avoid enemes) 
+ * Filter when defensively moving (actively try to avoid enemes)
  */
 
 UCLASS()
 class MYPROJECT_API UNavFilter_Defensive : public UNavFilter_AIControllerDefault
 {
-	GENERATED_BODY()
-	
-	UNavFilter_Defensive();
+   GENERATED_BODY()
+
+   UNavFilter_Defensive();
 };

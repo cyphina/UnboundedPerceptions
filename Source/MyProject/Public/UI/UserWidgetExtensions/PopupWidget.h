@@ -13,20 +13,18 @@
 UCLASS()
 class MYPROJECT_API UPopupWidget : public UMyUserWidget
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:
+ public:
+   /**Changes header of the UI*/
+   UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+   void SetTitle(const FText& newText);
 
-	/**Changes header of the UI*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
-	void				SetTitle(const FText& newText);
+   /**Changes text description of popup UI*/
+   UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+   void SetDesc(const FText& newDesc);
 
-	/**Changes text description of popup UI*/
-	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
-	void				SetDesc(const FText& newDesc);
-
-	/**Calls the function when the confirmation is made*/
-	UFUNCTION(BlueprintCallable)
-	virtual void		Confirm() PURE_VIRTUAL(UPopupWidget::Confirm, );
-
+   /**Calls the function when the confirmation is made*/
+   UFUNCTION(BlueprintCallable)
+   virtual void Confirm() PURE_VIRTUAL(UPopupWidget::Confirm, );
 };

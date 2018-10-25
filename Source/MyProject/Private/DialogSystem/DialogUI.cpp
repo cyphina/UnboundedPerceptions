@@ -7,23 +7,21 @@
 
 void UDialogUI::NativeConstruct()
 {
-	Super::NativeConstruct();
+   Super::NativeConstruct();
 }
 
 void UDialogUI::SetMainView()
 {
-	switch(socialHUDState)
-	{
-		case ESocialHUDState::Conversation: SetConversationView(); break;
-		case ESocialHUDState::Intimate: SetIntimateView(); break;
-		case ESocialHUDState::Shop: SetShopView(); break;
-	}
+   switch (socialHUDState) {
+      case ESocialHUDState::Conversation: SetConversationView(); break;
+      case ESocialHUDState::Intimate: SetIntimateView(); break;
+      case ESocialHUDState::Shop: SetShopView(); break;
+   }
 }
 
 bool UDialogUI::OnWidgetAddToViewport_Implementation()
 {
-	//change view to whatever it is set to prior
-	//SetMainView(); 
-	return true;
+   // change view to whatever it is set to prior
+   // SetMainView();
+   return true;
 }
-

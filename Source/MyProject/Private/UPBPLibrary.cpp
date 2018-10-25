@@ -7,15 +7,12 @@
 UWorldDataObject* UUPBPLibrary::CreateWorldDataObject(TSubclassOf<UWorldDataObject> objectClass, UObject* outer, FName name)
 {
 
-	UWorldDataObject* obj = NewObject<UWorldDataObject>(outer, objectClass, name);
-	if(obj)
-	{
-		obj->Init();
-		return obj;
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Called CreateWorldDataObject on a non UWorldDataObject!"));
-		return nullptr;
-	}
+   UWorldDataObject* obj = NewObject<UWorldDataObject>(outer, objectClass, name);
+   if (obj) {
+      obj->Init();
+      return obj;
+   } else {
+      UE_LOG(LogTemp, Warning, TEXT("Called CreateWorldDataObject on a non UWorldDataObject!"));
+      return nullptr;
+   }
 }

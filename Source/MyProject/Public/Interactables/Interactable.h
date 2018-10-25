@@ -11,26 +11,25 @@
 UINTERFACE(BlueprintType)
 class MYPROJECT_API UInteractable : public UInterface
 {
-	GENERATED_UINTERFACE_BODY()
+   GENERATED_UINTERFACE_BODY()
 };
 
 class MYPROJECT_API IInteractable
 {
-	GENERATED_IINTERFACE_BODY()
+   GENERATED_IINTERFACE_BODY()
 
-public:	
+ public:
+   /** classes using this interface must implement this function
+    * @param hero - The hero who interacted with this interactable
+    */
+   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
+   void Interact(ABaseHero* hero);
 
-	/** classes using this interface must implement this function 
-	 * @param hero - The hero who interacted with this interactable
-	 */
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
-	void 				Interact(ABaseHero* hero);
+   /** classes using this interface must implement this function */
+   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
+   FVector GetInteractableLocation(ABaseHero* hero);
 
-	/** classes using this interface must implement this function */
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
-	FVector 			GetInteractableLocation();
-
-	/**Can this interactable be used?*/
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
-	bool 				CanInteract();
+   /**Can this interactable be used?*/
+   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
+   bool CanInteract();
 };

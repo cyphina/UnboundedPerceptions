@@ -12,20 +12,20 @@
 UCLASS()
 class MYPROJECT_API UBTDecorator_AnyVisibleEnemies : public UBTDecorator
 {
-	GENERATED_BODY()
-	
-	UBTDecorator_AnyVisibleEnemies();
-	
-	/** cached description */
-	UPROPERTY()
-	FString					CachedDescription;
+   GENERATED_BODY()
 
-	virtual bool			CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
-	virtual void			DescribeRuntimeValues(const UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTDescriptionVerbosity::Type Verbosity, TArray<FString>& Values) const override;
-	virtual FString			GetStaticDescription() const override;
+   UBTDecorator_AnyVisibleEnemies();
+
+   /** cached description */
+   UPROPERTY()
+   FString CachedDescription;
+
+   virtual bool    CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
+   virtual void    DescribeRuntimeValues(const UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTDescriptionVerbosity::Type Verbosity, TArray<FString>& Values) const override;
+   virtual FString GetStaticDescription() const override;
 
 #if WITH_EDITOR
-	void					BuildDescription();
-	virtual					void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+   void         BuildDescription();
+   virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 };

@@ -6,14 +6,14 @@
 #include "MyCharacterMovementComponent.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UMyCharacterMovementComponent : public UCharacterMovementComponent
 {
-	GENERATED_UCLASS_BODY()
-	
-protected:
-	virtual void			InitializeComponent() override;
-	virtual void			TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
+   GENERATED_UCLASS_BODY()
+
+ protected:
+   virtual void InitializeComponent() override;
+   virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 };

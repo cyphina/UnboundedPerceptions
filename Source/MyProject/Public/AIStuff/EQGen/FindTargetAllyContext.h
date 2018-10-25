@@ -7,12 +7,12 @@
 #include "FindTargetAllyContext.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UFindTargetAllyContext : public UEnvQueryContext
 {
-	GENERATED_BODY()
-	
-	virtual void ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const override;	
+   GENERATED_BODY()
+
+   virtual void ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const override;
 };

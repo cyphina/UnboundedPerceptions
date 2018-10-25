@@ -2,25 +2,23 @@
 
 #pragma once
 #include "Stats/Stat.h"
-namespace CombatInfo {
-	/**
-	 *
-	 */
-	class MYPROJECT_API Vital : public Stat
-	{
-		int curValue;
+namespace CombatInfo
+{
+   /**
+    *
+    */
+   class MYPROJECT_API Vital : public Stat
+   {
+      // vital num that represents current value (0-adjustedVal)
+      int curValue;
 
-	public:
+    public:
+      Vital(FGameplayAttributeData& att);
+      Vital(FGameplayAttributeData& att, int baseV, ModifyingAttribute mod);
+      ~Vital();
 
-		Vital(FGameplayAttributeData& att);
-		Vital(FGameplayAttributeData& att, int baseV, ModifyingAttribute mod);
-		~Vital();
+      int GetCurrValue();
 
-		int GetCurrValue();
-
-		void SetCurrValue(int value)
-		{
-			curValue = value;
-		}
-	};
-}
+      void SetCurrValue(int value) { curValue = value; }
+   };
+} // namespace CombatInfo

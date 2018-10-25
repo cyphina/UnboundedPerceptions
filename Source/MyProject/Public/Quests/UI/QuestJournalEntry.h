@@ -14,21 +14,20 @@ class UQuestJournal;
 UCLASS()
 class MYPROJECT_API UQuestJournalEntry : public UUserWidget
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:
-	//if is on, button will be enabled
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "UI")
-		void ToggleButtonEnabled(bool isOn);
+ public:
+   // if is on, button will be enabled
+   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "UI")
+   void ToggleButtonEnabled(bool isOn);
 
-	//update the color of the suggested level based on hero's level
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "UI")
-		void LevelColorUpdate();
+   // update the color of the suggested level based on hero's level
+   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "UI")
+   void LevelColorUpdate();
 
-	UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (ExposeOnSpawn = true))
-		UQuestJournal* questJournal;
+   UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (ExposeOnSpawn = true))
+   UQuestJournal* questJournal;
 
-	UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (ExposeOnSpawn = true))
-		AQuest* assignedQuest;
-	
+   UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (ExposeOnSpawn = true))
+   AQuest* assignedQuest;
 };

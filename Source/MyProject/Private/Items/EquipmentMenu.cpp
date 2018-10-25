@@ -7,13 +7,11 @@
 #include "UserInput.h"
 #include "UI/HUDManager.h"
 
-
 bool UEquipmentMenu::OnWidgetAddToViewport_Implementation()
 {
-	return Super::OnWidgetAddToViewport_Implementation();
+   return Super::OnWidgetAddToViewport_Implementation();
 }
 
 void UEquipmentMenu::Update_Implementation()
 {
-
 }

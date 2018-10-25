@@ -6,12 +6,12 @@
 
 CombatInfo::Vital::Vital(FGameplayAttributeData& att) : CombatInfo::Stat(att)
 {
-	curValue = 0;
+   curValue = 0;
 }
 
 CombatInfo::Vital::Vital(FGameplayAttributeData& att, int baseV, ModifyingAttribute mod) : CombatInfo::Stat(att, baseV, mod)
 {
-	curValue = baseV;
+   curValue = baseV;
 }
 
 CombatInfo::Vital::~Vital()
@@ -20,10 +20,6 @@ CombatInfo::Vital::~Vital()
 
 int CombatInfo::Vital::GetCurrValue()
 {
-	if (curValue >= bA.GetCurrentValue())
-	{
-		curValue = bA.GetCurrentValue();
-	}
-	return curValue;
+   if (curValue >= bA.GetCurrentValue()) { curValue = bA.GetCurrentValue(); }
+   return curValue;
 }
-

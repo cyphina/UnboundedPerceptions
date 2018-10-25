@@ -17,11 +17,9 @@ class AUserInput;
 UCLASS()
 class MYPROJECT_API UConfirmationBox : public UPopupWidget
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:
-
-	void		Confirm() override;
-	FOnConfirmation onConfirmationMade;
-	
+ public:
+   void            Confirm() override;
+   FOnConfirmation onConfirmationMade;
 };

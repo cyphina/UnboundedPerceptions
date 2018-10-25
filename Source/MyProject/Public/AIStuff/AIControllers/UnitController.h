@@ -19,79 +19,76 @@ class UMySpell;
 UCLASS()
 class MYPROJECT_API AUnitController : public AAIController
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	AUnit*								ownerRef = nullptr;
-	AUserInput*							CPCRef = nullptr;
-	TSet<AUnit*>*						groupRef; //part of what current group
+   AUnit*        ownerRef = nullptr;
+   AUserInput*   CPCRef   = nullptr;
+   TSet<AUnit*>* groupRef; // part of what current group
 
-protected:
+ protected:
+   /**blackboard key value name*/
+   const FName blackboardEnemyKey = FName("Target");
 
-	/**blackboard key value name*/
-	const FName							blackboardEnemyKey = FName("Target");
+ public:
+   AUnitController();
 
-public:
+   /** Location which our controller will patrol */
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AISettings")
+   TArray<FVector> patrolLocations;
 
-	AUnitController();
+   /**Behaviortreecomponent used to start a behavior tree*/
+   UBehaviorTreeComponent* behaviorTreeComp;
 
-	/** Location which our controller will patrol */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AISettings")
-	TArray<FVector>						patrolLocations;
+   /**blackboardcomponent used to initialize blackboard values and set/get values from a blackboard asset*/
+   UBlackboardComponent* blackboardComp;
 
-	/**Behaviortreecomponent used to start a behavior tree*/
-	UBehaviorTreeComponent*				behaviorTreeComp;
+   /**Make sure to call UseBlackboard/InitializeBlackboard in the children classes depending on how they use their blackboards as well as starting the tree*/
+   void Possess(APawn* InPawn) override;
+   void BeginPlay() override;
 
-	/**blackboardcomponent used to initialize blackboard values and set/get values from a blackboard asset*/
-	UBlackboardComponent*				blackboardComp;
+   inline AUnit*      GetUnitOwner() const { return ownerRef; }
+   inline AUserInput* GetCPCRef() const { return CPCRef; }
 
-	/**Make sure to call UseBlackboard/InitializeBlackboard in the children classes depending on how they use their blackboards as well as starting the tree*/
-	void								Possess(APawn* InPawn) override;
-	void								BeginPlay() override;
+   /**
+    *Find the best spot for targetting an AOE spell
+    *@param isSupport - Find best AOE location to hit the most enemies (false) or friends (true)?
+    */
+   virtual void FindBestAOELocation(int spellIndex, bool isSupport);
 
-	inline AUnit*						GetUnitOwner() const { return ownerRef; } 
-	inline AUserInput*					GetCPCRef() const { return CPCRef; }
+   /**
+    *Find the best unit to target a single spell
+    *@param isSupport - Find best AOE location to hit the most enemies (false) or friends (true)?
+    */
+   virtual void FindWeakestTarget(int spellIndex, bool isSupport);
 
-	/**
-	 *Find the best spot for targetting an AOE spell
-	 *@param isSupport - Find best AOE location to hit the most enemies (false) or friends (true)?
-	 */
-	virtual void						FindBestAOELocation(int spellIndex, bool isSupport);
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "AIModes")
+   FORCEINLINE int GetAggresionLevel() const { return aggressionLevel; }
 
-	/**
-	 *Find the best unit to target a single spell
-	 *@param isSupport - Find best AOE location to hit the most enemies (false) or friends (true)?
-	 */
-	virtual void						FindWeakestTarget(int spellIndex, bool isSupport);
+ protected:
+   /*Describes from 1-5 how aggressive the unit is (1 = Passive, 3 = Neutral, 5 = Aggresive).
+    *Not all units (enemies) need the complexity of having 5 states so we have an int to represent this*/
+   int aggressionLevel;
 
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "AIModes")
-	FORCEINLINE int						GetAggresionLevel() const { return aggressionLevel; }
+ private:
+   /**Spell to cast after target is found*/
+   int spellToCastIndex;
 
-protected:
-	/*Describes from 1-5 how aggressive the unit is (1 = Passive, 3 = Neutral, 5 = Aggresive).
-	 *Not all units (enemies) need the complexity of having 5 states so we have an int to represent this*/
-	int									aggressionLevel;
+   /**Environment query to find the best place to cast an AOE spell for maximum target hits when healing*/
+   UPROPERTY(EditDefaultsOnly)
+   UEnvQuery* findBestAOESupportLocation;
 
-private:
+   /**Environment query to find the best place to cast an AOE spell for maximum target hits when casting an AOE spell*/
+   UPROPERTY(EditDefaultsOnly)
+   UEnvQuery* findBestAOEAssaultLocation;
 
-	/**Spell to cast after target is found*/
-	int									spellToCastIndex;
+   /**Environment query to find the weakest allied unit.  Allies and enemies have should have different EQueries set*/
+   UPROPERTY(EditDefaultsOnly)
+   UEnvQuery* findWeakestAllyTarget;
 
-	/**Environment query to find the best place to cast an AOE spell for maximum target hits when healing*/
-	UPROPERTY(EditDefaultsOnly)
-	UEnvQuery*							findBestAOESupportLocation;
+   /**Environment query to find the weakest enemy unit.  Allies and enemies have should have different EQueries set*/
+   UPROPERTY(EditDefaultsOnly)
+   UEnvQuery* findWeakestEnemyTarget;
 
-	/**Environment query to find the best place to cast an AOE spell for maximum target hits when casting an AOE spell*/
-	UPROPERTY(EditDefaultsOnly)
-	UEnvQuery*							findBestAOEAssaultLocation;
-
-	/**Environment query to find the weakest allied unit.  Allies and enemies have should have different EQueries set*/
-	UPROPERTY(EditDefaultsOnly)
-	UEnvQuery*							findWeakestAllyTarget;
-
-	/**Environment query to find the weakest enemy unit.  Allies and enemies have should have different EQueries set*/
-	UPROPERTY(EditDefaultsOnly)
-	UEnvQuery*							findWeakestEnemyTarget;
-
-	void								OnAOELocationFound(TSharedPtr<FEnvQueryResult> result);
-	void								OnWeakestTargetFound(TSharedPtr<FEnvQueryResult> result);
-};	
+   void OnAOELocationFound(TSharedPtr<FEnvQueryResult> result);
+   void OnWeakestTargetFound(TSharedPtr<FEnvQueryResult> result);
+};

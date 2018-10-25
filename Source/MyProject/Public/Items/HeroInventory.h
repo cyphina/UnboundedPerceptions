@@ -7,23 +7,21 @@
 #include "HeroInventory.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UHeroInventory : public UInventory
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-public:
+ public:
+   UPROPERTY(BlueprintReadWrite)
+   int hIndex;
 
-	UPROPERTY(BlueprintReadWrite)
-	int					hIndex;
+   /**Runs when an itemSlot in the inventoryView is clicked on.  Depending on the inventory type, different things may occur.*/
+   void UseItemAtInventorySlot_Implementation(int32 iSlot) override;
 
-	/**Runs when an itemSlot in the inventoryView is clicked on.  Depending on the inventory type, different things may occur.*/
-	void				UseItemAtInventorySlot_Implementation(int32 iSlot) override;
-
-	/**Changes color of item if its currently going to be used*/
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Inventory Functions")
-	void				SetItemSelected();
-
+   /**Changes color of item if its currently going to be used*/
+   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Inventory Functions")
+   void SetItemSelected();
 };

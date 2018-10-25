@@ -7,13 +7,12 @@
 #include "FindVisibleEnemiesCenterContext.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UFindVisibleEnemiesCenterContext : public UEnvQueryContext
 {
-	GENERATED_BODY()
-	
-	void ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const override;
-	
+   GENERATED_BODY()
+
+   void ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const override;
 };

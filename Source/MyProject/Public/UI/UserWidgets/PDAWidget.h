@@ -7,14 +7,10 @@
 #include "PDAWidget.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UPDAWidget : public UMyUserWidget
 {
-	GENERATED_BODY()
-	
-	
-	
-	
+   GENERATED_BODY()
 };

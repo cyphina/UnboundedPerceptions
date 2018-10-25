@@ -3,8 +3,7 @@
 #include "MyProject.h"
 #include "TargetCheckBTS_Service.h"
 
-
 void UTargetCheckBTS_Service::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
+   Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 }

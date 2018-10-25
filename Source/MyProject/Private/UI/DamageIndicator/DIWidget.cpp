@@ -5,5 +5,5 @@
 
 void UDIWidget::NativeConstruct()
 {
-	Super::NativeConstruct();
+   Super::NativeConstruct();
 }

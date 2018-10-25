@@ -7,6 +7,5 @@
 
 void UConfirmationBox::Confirm()
 {
-	if(onConfirmationMade.Execute())
-		CPC->GetHUDManager()->AddHUDConfirm();
+   if (onConfirmationMade.Execute()) CPC->GetHUDManager()->AddHUDConfirm();
 }

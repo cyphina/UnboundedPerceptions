@@ -7,13 +7,13 @@
 #include "BTTask_AttTarget.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UBTTask_AttTarget : public UBTTaskNode
 {
-	GENERATED_BODY()
-	
-public:
-	EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) override;
+   GENERATED_BODY()
+
+ public:
+   EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) override;
 };

@@ -6,25 +6,27 @@ public class MyProject : ModuleRules
 {
 	public MyProject(ReadOnlyTargetRules Target) : base(Target)
 	{
-        //MinFilesUsingPrecompiledHeaderOverride = 1;
-       // bFasterWithoutUnity = true;
-        bUseRTTI = true;                
+		//MinFilesUsingPrecompiledHeaderOverride = 1;
+		// bFasterWithoutUnity = true;
+		bUseRTTI = true;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", 
-			"CoreUObject", 
+		PublicDependencyModuleNames.AddRange(new string[] { "Core",
+			"CoreUObject",
 			"Engine",
 			"InputCore",
-			"UMG", 
+			"UMG",
 			"GameplayTasks",
-			"GameplayTags", 
-			"GameplayAbilities", 
+			"GameplayTags",
+			"GameplayAbilities",
 			"AIModule",
-			"MyProjectEditor"});
+			"MyProjectEditor",
+			"ProceduralMeshComponent"
+		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { 
-			"Slate", 
+		PrivateDependencyModuleNames.AddRange(new string[] {
+			"Slate",
 			"SlateCore",
-			"GameplayAbilities", 
+			"GameplayAbilities",
 			"AIModule"
 		});
 

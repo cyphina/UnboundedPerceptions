@@ -8,23 +8,19 @@
 
 void UQuestList::NativeConstruct()
 {
-	if(gameModeRef->GetQuestManager())
-		gameModeRef->GetQuestManager()->questListRef = this;
-	Super::NativeConstruct();
+   if (gameModeRef->GetQuestManager()) gameModeRef->GetQuestManager()->questListRef = this;
+   Super::NativeConstruct();
 }
 
 bool UQuestList::OnWidgetAddToViewport_Implementation()
 {
-	return true;
+   return true;
 }
 
 UQuestListSlot* UQuestList::GetQuestListSlot(AQuest* quest) const
 {
-	auto pred = [&](UQuestListSlot* questSlot) { return questSlot->GetAssignedQuest() == quest; };
-	int index = questListSlots.IndexOfByPredicate(pred);
-	if(index != INDEX_NONE)
-		return questListSlots[index];
-	return nullptr;
+   auto pred  = [&](UQuestListSlot* questSlot) { return questSlot->GetAssignedQuest() == quest; };
+   int  index = questListSlots.IndexOfByPredicate(pred);
+   if (index != INDEX_NONE) return questListSlots[index];
+   return nullptr;
 }
-
-

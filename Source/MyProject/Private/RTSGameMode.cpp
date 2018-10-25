@@ -12,43 +12,42 @@
 
 ARTSGameMode::ARTSGameMode() : Super()
 {
-	static ConstructorHelpers::FClassFinder<APawn> playerPawnClassFinder(TEXT("/Game/RTS_Tutorial/Blueprints/CameraPawn"));
-	DefaultPawnClass = playerPawnClassFinder.Class;
+   static ConstructorHelpers::FClassFinder<APawn> playerPawnClassFinder(TEXT("/Game/RTS_Tutorial/Blueprints/CameraPawn"));
+   DefaultPawnClass = playerPawnClassFinder.Class;
 }
 
 void ARTSGameMode::BeginPlay()
 {
-	///Setup Manager Singletons
-	eventManager = NewObject<UEventManager>(this, eventManagerClass, TEXT("EventManager"), RF_NoFlags);
-	triggerManager = NewObject<UTriggerManager>(this, triggerManagerClass, TEXT("TriggerManager"), RF_NoFlags);
-	questManager = NewObject<UQuestManager>(this, questManagerClass, TEXT("QuestManager"), RF_NoFlags);
-	saveLoadManager = NewObject<USaveLoadClass>(this, TEXT("SaveManager"), RF_NoFlags);
-	conditionalManager = NewObject<UConditionalManager>(this, TEXT("ConditionManager"), RF_NoFlags);
+   /// Setup Manager Singletons
+   eventManager       = NewObject<UEventManager>(this, eventManagerClass, TEXT("EventManager"), RF_NoFlags);
+   triggerManager     = NewObject<UTriggerManager>(this, triggerManagerClass, TEXT("TriggerManager"), RF_NoFlags);
+   questManager       = NewObject<UQuestManager>(this, questManagerClass, TEXT("QuestManager"), RF_NoFlags);
+   saveLoadManager    = NewObject<USaveLoadClass>(this, TEXT("SaveManager"), RF_NoFlags);
+   conditionalManager = NewObject<UConditionalManager>(this, TEXT("ConditionManager"), RF_NoFlags);
 
-	///Initialize all their references
-	eventManager->Init();
-	triggerManager->Init();
-	questManager->Init();
-	saveLoadManager->Init();
-	conditionalManager->Init();
+   /// Initialize all their references
+   eventManager->Init();
+   triggerManager->Init();
+   questManager->Init();
+   saveLoadManager->Init();
+   conditionalManager->Init();
 
-	//Call blueprint BeginPlay() afterwards
-	Super::BeginPlay();
+   // Call blueprint BeginPlay() afterwards
+   Super::BeginPlay();
 }
 
 bool ARTSGameMode::SaveGame(FString saveName)
 {
-	return saveLoadManager->SaveToFilePath(FPaths::ProjectDir().Append("\\SavedGames\\" + saveName));
+   return saveLoadManager->SaveToFilePath(FPaths::ProjectDir().Append("\\SavedGames\\" + saveName));
 }
 
 bool ARTSGameMode::LoadGame(FString fileName)
 {
-	bLoading = true;
-	bool sucessfulLoad = saveLoadManager->LoadFromFilePath(FPaths::ProjectDir().Append("\\SavedGames\\" + fileName));
+   bLoading           = true;
+   bool sucessfulLoad = saveLoadManager->LoadFromFilePath(FPaths::ProjectDir().Append("\\SavedGames\\" + fileName));
 
-	if (sucessfulLoad)
-		saveLoadManager->SetupLoad();
+   if (sucessfulLoad) saveLoadManager->SetupLoad();
 
-	bLoading = false;
-	return sucessfulLoad;
+   bLoading = false;
+   return sucessfulLoad;
 }

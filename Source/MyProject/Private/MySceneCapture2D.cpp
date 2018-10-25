@@ -3,10 +3,9 @@
 #include "MyProject.h"
 #include "MySceneCapture2D.h"
 
-
 AMySceneCapture2D::AMySceneCapture2D()
 {
-	//TArray<FEngineShowFlagsSetting> f = TArray<FEngineShowFlagsSetting>();
-	//f.Add(FEngineShowFlagsSetting::ShowFlagName)
-	//GetCaptureComponent2D()->ShowFlagSettings = 
+   // TArray<FEngineShowFlagsSetting> f = TArray<FEngineShowFlagsSetting>();
+   // f.Add(FEngineShowFlagsSetting::ShowFlagName)
+   // GetCaptureComponent2D()->ShowFlagSettings =
 }

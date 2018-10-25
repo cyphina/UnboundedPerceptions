@@ -6,43 +6,40 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHeroAttTest, "Gameplay.Hero Attribute Test", E
 
 namespace BaseHeroTest
 {
-	ABaseHero* testHero;
-	UWorld* world;
+   ABaseHero* testHero;
+   UWorld*    world;
 
-	bool Setup()
-	{
-		if (GEngine)
-		{
-			if (AutomationOpenMap("/Game/RTS_Tutorial/Maps/TheIntroduction"))
-			{
-				world = GEngine->GetWorldContextFromPIEInstance(0)->World();
-				testHero = world->SpawnActor<ABaseHero>(ABaseHero::StaticClass(), FTransform(), FActorSpawnParameters());
-				return true;
-			}
-		}
-		return false;
-	}
-}
+   bool Setup()
+   {
+      if (GEngine) {
+         if (AutomationOpenMap("/Game/RTS_Tutorial/Maps/TheIntroduction")) {
+            world    = GEngine->GetWorldContextFromPIEInstance(0)->World();
+            testHero = world->SpawnActor<ABaseHero>(ABaseHero::StaticClass(), FTransform(), FActorSpawnParameters());
+            return true;
+         }
+      }
+      return false;
+   }
+} // namespace BaseHeroTest
 
 using namespace BaseHeroTest;
 
 bool FHeroAttTest::RunTest(const FString& params)
 {
-	if (BaseHeroTest::Setup())
-	{
-		TestNotNull(TEXT("GEngine is not null"), GEngine);
+   if (BaseHeroTest::Setup()) {
+      TestNotNull(TEXT("GEngine is not null"), GEngine);
 
-		int initialHeroAttPoints = testHero->attPoints;
-		Attributes attToTest = Attributes::Agility;
-		int initialAttValue = testHero->GetAttributeAdjValue(static_cast<uint8>(attToTest));
+      int        initialHeroAttPoints = testHero->attPoints;
+      Attributes attToTest            = Attributes::Agility;
+      int        initialAttValue      = testHero->GetAttributeAdjValue(static_cast<uint8>(attToTest));
 
-		testHero->ChangeAttribute(Attributes::Agility, true);
-		TestEqual("AttributePoints", testHero->attPoints, initialHeroAttPoints - 1);
-		TestEqual("AttributeValue", testHero->GetAttributeAdjValue(static_cast<uint8>(attToTest)), initialAttValue + 1);
-		testHero->ChangeAttribute(Attributes::Agility, false);
-		TestEqual("AttributePoints", testHero->attPoints, initialHeroAttPoints);
-		TestEqual("AttributeValue", testHero->GetAttributeAdjValue(static_cast<uint8>(attToTest)), initialAttValue);
-		return true;
-	}
-	return false;
+      testHero->ChangeAttribute(Attributes::Agility, true);
+      TestEqual("AttributePoints", testHero->attPoints, initialHeroAttPoints - 1);
+      TestEqual("AttributeValue", testHero->GetAttributeAdjValue(static_cast<uint8>(attToTest)), initialAttValue + 1);
+      testHero->ChangeAttribute(Attributes::Agility, false);
+      TestEqual("AttributePoints", testHero->attPoints, initialHeroAttPoints);
+      TestEqual("AttributeValue", testHero->GetAttributeAdjValue(static_cast<uint8>(attToTest)), initialAttValue);
+      return true;
+   }
+   return false;
 }

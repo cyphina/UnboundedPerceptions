@@ -4,11 +4,7 @@
 #include "BTDecorator_AnyVisibleAllies.h"
 #include "RTSGameState.h"
 
-
-bool UBTDecorator_AnyVisibleAllies::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp,
-	uint8* NodeMemory) const
+bool UBTDecorator_AnyVisibleAllies::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
-	return Cast<ARTSGameState>(GetWorld()->GetGameState())->visibleAllies.Num();
+   return Cast<ARTSGameState>(GetWorld()->GetGameState())->visibleAllies.Num();
 }
-
-

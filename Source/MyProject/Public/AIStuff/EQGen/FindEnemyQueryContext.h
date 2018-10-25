@@ -15,7 +15,7 @@
 UCLASS()
 class MYPROJECT_API UFindEnemyQueryContext : public UEnvQueryContext
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	virtual void ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const override;
+   virtual void ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const override;
 };

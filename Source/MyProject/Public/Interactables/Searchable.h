@@ -4,29 +4,27 @@
 #include "Items/Item.h"
 #include "Searchable.generated.h"
 
-/*Interactable we can scavange after a delay searching (think of those things in escape room games) 
- * Examples: Treasure chests, table, shelf, and cupboard.  
+/*Interactable we can scavange after a delay searching (think of those things in escape room games)
+ * Examples: Treasure chests, table, shelf, and cupboard.
  */
 UCLASS()
 class MYPROJECT_API ASearchable : public AInteractableBase
 {
-	GENERATED_BODY()
-	
-public:	
-	ASearchable();
+   GENERATED_BODY()
 
-	/**Items that can be looted from this place*/
-	UPROPERTY(EditAnywhere)
-	TArray<FMyItem>			lootableItems;
+ public:
+   ASearchable();
 
-	UPROPERTY(EditAnywhere)
-	bool					isLocked;
+   /**Items that can be looted from this place*/
+   UPROPERTY(EditAnywhere)
+   TArray<FMyItem> lootableItems;
 
+   UPROPERTY(EditAnywhere)
+   bool isLocked;
 
-protected:
-	virtual void			BeginPlay() override;
+ protected:
+   virtual void BeginPlay() override;
 
-public:	
-	virtual void			Tick(float DeltaTime) override;
-
+ public:
+   virtual void Tick(float DeltaTime) override;
 };

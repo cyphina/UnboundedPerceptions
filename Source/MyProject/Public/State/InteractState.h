@@ -4,22 +4,21 @@
 #include "IUnitState.h"
 
 /**
- * When a hero is currently interacting with an object 
+ * When a hero is currently interacting with an object
  */
 
 class ABaseHero;
 
 class MYPROJECT_API InteractState : public IUnitState
 {
-	ABaseHero* heroRef;
+   ABaseHero* heroRef;
 
-public:
+ public:
+   InteractState(ABaseHero* newHeroRef);
+   ~InteractState();
 
-	InteractState(ABaseHero* newHeroRef);
-	~InteractState();
-
-	virtual void Enter(AUnit& unit) override;
-	virtual void Exit(AUnit& unit) override;
-	virtual void Update(AUnit& unit, float deltaSeconds) override;
-	virtual EUnitState GetName() const override { return EUnitState::STATE_INTERACTING; }	
+   virtual void       Enter(AUnit& unit) override;
+   virtual void       Exit(AUnit& unit) override;
+   virtual void       Update(AUnit& unit, float deltaSeconds) override;
+   virtual EUnitState GetName() const override { return EUnitState::STATE_INTERACTING; }
 };

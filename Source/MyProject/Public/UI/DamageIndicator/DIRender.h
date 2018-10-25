@@ -15,28 +15,26 @@ class AUserInput;
 UCLASS()
 class MYPROJECT_API UDIRender : public UTextRenderComponent
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	FTimeline tL;
+   FTimeline tL;
 
-public:
+ public:
+   FVector            start, end;
+   static AUserInput* controllerRef;
 
-	FVector start, end;
-	static AUserInput* controllerRef;
+   UDIRender();
+   void BeginPlay() override;
+   void TickComponent(float deltaSeconds, ELevelTick tickType, FActorComponentTickFunction* thisTickFunction) override;
 
-	UDIRender();
-	void BeginPlay() override;
-	void TickComponent(float deltaSeconds, ELevelTick tickType, FActorComponentTickFunction* thisTickFunction) override;
+   // Function called from the timeline on a tick
+   UFUNCTION()
+   void TimelineEffect(float val);
 
+   // Function called when timeline ends
+   UFUNCTION()
+   void OnTimelineFinished();
 
-	//Function called from the timeline on a tick
-	UFUNCTION()
-	void TimelineEffect(float val);
-
-	//Function called when timeline ends
-	UFUNCTION()
-	void OnTimelineFinished();
-
-	UPROPERTY(BlueprintReadWrite, Category = "Target")
-	AUnit* target;
+   UPROPERTY(BlueprintReadWrite, Category = "Target")
+   AUnit* target;
 };

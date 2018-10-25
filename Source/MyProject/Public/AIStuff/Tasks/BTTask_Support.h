@@ -12,7 +12,7 @@
  * Node instances are shared for all behavior trees
  * see https://answers.unrealengine.com/questions/173494/bttask-nodememory.html for more details
  * Task for supporting (unit is on passive AI mode)
- * 
+ *
  * The act of supporting involves a few things:
  * 1. Moving to a defensive position
  * 2. Choosing a defensive spell not on cooldown
@@ -26,23 +26,22 @@ class AAlly;
 class AUnit;
 class UMySpell;
 
-struct FBTSupportTaskMemory
-{
-	UMySpell*						supportSpell = nullptr;
-	int								supportSpellIndex = -1; //use index because we need it to properly set CD
-	AUnit*							unitRef = nullptr;
-	AUnitController*				unitControllerRef = nullptr;
+struct FBTSupportTaskMemory {
+   UMySpell*        supportSpell      = nullptr;
+   int              supportSpellIndex = -1; // use index because we need it to properly set CD
+   AUnit*           unitRef           = nullptr;
+   AUnitController* unitControllerRef = nullptr;
 };
 
 UCLASS()
 class MYPROJECT_API UBTTask_Support : public UBTTaskNode
 {
-	GENERATED_BODY()
-	
-	UBTTask_Support();
+   GENERATED_BODY()
 
-	EBTNodeResult::Type				ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) override;
-	void							TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+   UBTTask_Support();
 
-	uint16							GetInstanceMemorySize() const override;
-};	
+   EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) override;
+   void                TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+
+   uint16 GetInstanceMemorySize() const override;
+};

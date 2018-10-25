@@ -6,24 +6,19 @@
 #include "WorldObjects/Enemies/Enemy.h"
 #include "RTSGameState.h"
 
-
-void UFindVisibleEnemiesCenterContext::ProvideContext(FEnvQueryInstance& QueryInstance,
-	FEnvQueryContextData& ContextData) const
+void UFindVisibleEnemiesCenterContext::ProvideContext(FEnvQueryInstance& QueryInstance, FEnvQueryContextData& ContextData) const
 {
-	Super::ProvideContext(QueryInstance, ContextData);
-	ARTSGameState* gameStateRef = Cast<ARTSGameState>(QueryInstance.Owner.Get()->GetWorld()->GetGameState());
-	if(gameStateRef)
-	{
-		
-		FVector centerPointOfVisibleEnemies = FVector::ZeroVector;
-		for(AActor* enemy : gameStateRef->visibleEnemies)
-		{
-			centerPointOfVisibleEnemies += enemy->GetActorLocation();
-		}
+   Super::ProvideContext(QueryInstance, ContextData);
+   ARTSGameState* gameStateRef = Cast<ARTSGameState>(QueryInstance.Owner.Get()->GetWorld()->GetGameState());
+   if (gameStateRef) {
 
-		if(gameStateRef->visibleEnemies.Num() != 0)
-			centerPointOfVisibleEnemies /= gameStateRef->visibleEnemies.Num();
+      FVector centerPointOfVisibleEnemies = FVector::ZeroVector;
+      for (AActor* enemy : gameStateRef->visibleEnemies) {
+         centerPointOfVisibleEnemies += enemy->GetActorLocation();
+      }
 
-		UEnvQueryItemType_Point::SetContextHelper(ContextData, centerPointOfVisibleEnemies);
-	}
+      if (gameStateRef->visibleEnemies.Num() != 0) centerPointOfVisibleEnemies /= gameStateRef->visibleEnemies.Num();
+
+      UEnvQueryItemType_Point::SetContextHelper(ContextData, centerPointOfVisibleEnemies);
+   }
 }

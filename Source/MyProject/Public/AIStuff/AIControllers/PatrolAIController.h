@@ -6,14 +6,10 @@
 #include "PatrolAIController.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API APatrolAIController : public AAIController
 {
-	GENERATED_BODY()
-	
-	
-	
-	
+   GENERATED_BODY()
 };

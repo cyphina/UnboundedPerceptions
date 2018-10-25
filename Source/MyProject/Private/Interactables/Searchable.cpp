@@ -3,22 +3,17 @@
 #include "MyProject.h"
 #include "Searchable.h"
 
-
 ASearchable::ASearchable()
 {
-	PrimaryActorTick.bCanEverTick = false;
-
+   PrimaryActorTick.bCanEverTick = false;
 }
 
 void ASearchable::BeginPlay()
 {
-	Super::BeginPlay();
-	
+   Super::BeginPlay();
 }
 
 void ASearchable::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-
+   Super::Tick(DeltaTime);
 }
-

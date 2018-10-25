@@ -16,14 +16,14 @@ class AUnit;
 UCLASS()
 class MYPROJECT_API UUnitQueryGenerator : public UEnvQueryGenerator
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	UUnitQueryGenerator();
-	 
-	/**Generates the items*/
-	virtual void GenerateItems(FEnvQueryInstance& queryInstance) const override;
+   UUnitQueryGenerator();
 
-	///**What type of units should be checked*/
-	//UPROPERTY(EditAnywhere, Category = "UnitProperties")
-	//TSubclassOf<AUnit>			unitClass;
+   /**Generates the items*/
+   virtual void GenerateItems(FEnvQueryInstance& queryInstance) const override;
+
+   ///**What type of units should be checked*/
+   // UPROPERTY(EditAnywhere, Category = "UnitProperties")
+   // TSubclassOf<AUnit>			unitClass;
 };

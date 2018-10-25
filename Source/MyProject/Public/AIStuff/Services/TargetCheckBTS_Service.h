@@ -7,13 +7,12 @@
 #include "TargetCheckBTS_Service.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UTargetCheckBTS_Service : public UBTService
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
-	
+   void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 };

@@ -7,14 +7,10 @@
 #include "MyItemManager.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API AMyItemManager : public AInfo
 {
-	GENERATED_BODY()
-	
-	
-	
-	
+   GENERATED_BODY()
 };

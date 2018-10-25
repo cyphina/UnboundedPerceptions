@@ -12,30 +12,30 @@
 UCLASS()
 class MYPROJECT_API ULoadingWidget : public UMyUserWidget
 {
-	GENERATED_BODY()
-	
-	ULoadingWidget();
+   GENERATED_BODY()
 
-	/**List of possible loading screen tips*/
-	TArray<FText>	tipList;
-	
-public:
-	void			NativeConstruct() override;
+   ULoadingWidget();
 
-	/**Has the level finished loading?*/
-	UPROPERTY(BlueprintReadWrite, Category = "Data")
-	bool			isReadyToContinue;
-	/**Current loading screen tip that is displayed*/
-	UPROPERTY(BlueprintReadWrite, Category = "Data")
-	FText			tip;
+   /**List of possible loading screen tips*/
+   TArray<FText> tipList;
 
-	/**Callback when level finished precaching*/
+ public:
+   void NativeConstruct() override;
 
-	/**Display a message when loading is finished*/
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Callbacks")
-	void			OnLoadingFinished();
+   /**Has the level finished loading?*/
+   UPROPERTY(BlueprintReadWrite, Category = "Data")
+   bool isReadyToContinue;
+   /**Current loading screen tip that is displayed*/
+   UPROPERTY(BlueprintReadWrite, Category = "Data")
+   FText tip;
 
-	/**Show a random game tip*/
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Data")
-	void			SetTip(const FText& newTip);
+   /**Callback when level finished precaching*/
+
+   /**Display a message when loading is finished*/
+   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Callbacks")
+   void OnLoadingFinished();
+
+   /**Show a random game tip*/
+   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Data")
+   void SetTip(const FText& newTip);
 };

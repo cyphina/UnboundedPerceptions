@@ -5,18 +5,16 @@
 
 void UMyAnim::UpdateAnimationProperties()
 {
-	APawn* pawn = TryGetPawnOwner();
-	if(pawn)
-	{
-		//Update our falling property
-		if(pawn->GetMovementComponent())
-		bIsFalling = pawn->GetMovementComponent()->IsFalling();
-		//Update our movement speed
-		movementSpeed = pawn->GetVelocity().Size();
-	}
+   APawn* pawn = TryGetPawnOwner();
+   if (pawn) {
+      // Update our falling property
+      if (pawn->GetMovementComponent()) bIsFalling = pawn->GetMovementComponent()->IsFalling();
+      // Update our movement speed
+      movementSpeed = pawn->GetVelocity().Size();
+   }
 }
 
 void UMyAnim::NativeUpdateAnimation(float deltaSeconds)
 {
-	UpdateAnimationProperties();
+   UpdateAnimationProperties();
 }

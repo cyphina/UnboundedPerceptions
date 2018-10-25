@@ -15,19 +15,18 @@
 UCLASS()
 class MYPROJECT_API UQuestJournalGoalEntry : public UUserWidget
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
-	int									goalIndex;
+   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
+   int goalIndex;
 
-	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
-	FGoalInfo							goalInfo;
+   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
+   FGoalInfo goalInfo;
 
-	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
-	AQuest*								questRef;
+   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
+   AQuest* questRef;
 
-public:
-
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void								Update();
+ public:
+   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+   void Update();
 };

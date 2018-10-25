@@ -7,7 +7,7 @@
 #include "CharacterMenu.generated.h"
 
 /**
- * Widget for seeing character stats 
+ * Widget for seeing character stats
  */
 
 class ABaseHero;
@@ -15,10 +15,10 @@ class ABaseHero;
 UCLASS()
 class MYPROJECT_API UCharacterMenu : public UMyUserWidget
 {
-	GENERATED_BODY()
-	
-	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "References")
-	ABaseHero*			baseHeroRef = nullptr;
+   GENERATED_BODY()
 
-	bool				OnWidgetAddToViewport_Implementation() override;
+   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "References")
+   ABaseHero* baseHeroRef = nullptr;
+
+   bool OnWidgetAddToViewport_Implementation() override;
 };

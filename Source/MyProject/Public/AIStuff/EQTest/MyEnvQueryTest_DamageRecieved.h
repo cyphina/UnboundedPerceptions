@@ -7,14 +7,10 @@
 #include "MyEnvQueryTest_DamageRecieved.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class MYPROJECT_API UMyEnvQueryTest_DamageRecieved : public UEnvQueryTest
 {
-	GENERATED_BODY()
-	
-	
-	
-	
+   GENERATED_BODY()
 };

@@ -2,7 +2,3 @@
 
 #include "MyProject.h"
 #include "QuestJournalEntry.h"
-
-
-
-

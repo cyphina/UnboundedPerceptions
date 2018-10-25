@@ -8,21 +8,20 @@
 
 void UNamedInteractableDecorator::OnInteractedQuestManagerWrapper()
 {
-	Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode())->GetQuestManager()->OnInteracted(this);
+   Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode())->GetQuestManager()->OnInteracted(this);
 }
 
 void UNamedInteractableDecorator::Init()
 {
-	UInteractableActorDecoratorBase::Init();
-	OnInteracted.AddDynamic(this, &UNamedInteractableDecorator::OnInteractedQuestManagerWrapper);
+   UInteractableActorDecoratorBase::Init();
+   OnInteracted.AddDynamic(this, &UNamedInteractableDecorator::OnInteractedQuestManagerWrapper);
 }
 
 bool UNamedInteractableDecorator::Interact()
 {
-	if(!decoratedInteractable || decoratedInteractable->Interact())
-	{
-		OnInteracted.Broadcast();
-		return true;
-	}
-	return false;
+   if (!decoratedInteractable || decoratedInteractable->Interact()) {
+      OnInteracted.Broadcast();
+      return true;
+   }
+   return false;
 }

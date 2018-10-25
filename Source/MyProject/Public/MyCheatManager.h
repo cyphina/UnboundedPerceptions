@@ -21,72 +21,69 @@ class AEnemy;
 UCLASS(Within = PlayerController)
 class MYPROJECT_API UMyCheatManager : public UCheatManager
 {
-	GENERATED_BODY()
+   GENERATED_BODY()
 
-	AUserInput*									userInputRef;
-	ARTSGameMode*								gameModeRef;
-	ARTSGameState*								gameStateRef;
+   AUserInput*    userInputRef;
+   ARTSGameMode*  gameModeRef;
+   ARTSGameState* gameStateRef;
 
-	virtual void								InitCheatManager() override;
+   virtual void InitCheatManager() override;
 
-	/** Level up hero once 
-	 * @param heroName - Name of the hero in the party
-	 */
-	UFUNCTION(exec, Category = "Cheats")
-	virtual void										LevelUp(FString heroName);
+   /** Level up hero once
+    * @param heroName - Name of the hero in the party
+    */
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void LevelUp(FString heroName);
 
-	/** Levels up hero to a certain level 
-	 * @param heroName - Name of the hero in the party
-	 * @param level - What level do we stop leveling up to.  If less than current level does nothing
-	 */
-	UFUNCTION(exec, Category = "Cheats")
-	virtual void										LevelUpToLevel(FString heroName, int level);
-	
-	/** Prevents a unit from dying/taking damage
-	* @param objectID - ID Name of the hero in the party
-	* @param toggleGodMode - If 0, turns off god mode, else turns it on
-	*/
-	UFUNCTION(exec, Category = "Cheats")
-	virtual void										GodMode(FString objectID, int toggleGodMode);
+   /** Levels up hero to a certain level
+    * @param heroName - Name of the hero in the party
+    * @param level - What level do we stop leveling up to.  If less than current level does nothing
+    */
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void LevelUpToLevel(FString heroName, int level);
 
-	/** Completes a quest that is accepted
-	* @param questName - Name of the quest to be completed
-	* @param isSucessful - Complete the quest sucesssfully? or fail quest?
-	*/
-	UFUNCTION(exec, Category = "Cheats")
-	virtual void										FinishQuest(FString questName, int isSucessful);
+   /** Prevents a unit from dying/taking damage
+    * @param objectID - ID Name of the hero in the party
+    * @param toggleGodMode - If 0, turns off god mode, else turns it on
+    */
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void GodMode(FString objectID, int toggleGodMode);
 
-	/** Completes a quest that is accepted
-	* @param heroName - Hero which this spell should be equipped to
-	* @param spellID - ID of the spell which should be added
-	* @param slot - What slot should this spell go in
-	*/
-	UFUNCTION(exec, Category = "Cheats")
-	virtual void										EquipSpell(FString heroName, int spellID, int slot);
+   /** Completes a quest that is accepted
+    * @param questName - Name of the quest to be completed
+    * @param isSucessful - Complete the quest sucesssfully? or fail quest?
+    */
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void FinishQuest(FString questName, int isSucessful);
 
-	/**Stops game time from continuing*/
-	UFUNCTION(exec, Category = "Cheats")
-	virtual void										PauseGameTimer();
+   /** Completes a quest that is accepted
+    * @param heroName - Hero which this spell should be equipped to
+    * @param spellID - ID of the spell which should be added
+    * @param slot - What slot should this spell go in
+    */
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void EquipSpell(FString heroName, int spellID, int slot);
 
-	/**Set what time it is in game*/
-	UFUNCTION(exec, Category = "Cheats")
-	virtual void										SetGameTime(int seconds, int minutes, int hours);
+   /**Stops game time from continuing*/
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void PauseGameTimer();
 
-	/**Set what day it is in game*/
-	UFUNCTION(exec, Category = "Cheats")
-	virtual void										SetGameDay(int day, int month, int year);
+   /**Set what time it is in game*/
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void SetGameTime(int seconds, int minutes, int hours);
 
-	/**Change unit current hp
-	 * @param unitName - Unit whose hp should be modified
-	 * @param hpVal - New unit's hp value
-	 */
-	UFUNCTION(exec, Category = "Cheats")
-	virtual void										SetUnitCurHP(FString unitName, int hpVal);
+   /**Set what day it is in game*/
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void SetGameDay(int day, int month, int year);
 
-	/**Gives vision over all the enemy units*/
-	UFUNCTION(exec, Category = "Cheats")
-	virtual void										SeeAll();
+   /**Change unit current hp
+    * @param unitName - Unit whose hp should be modified
+    * @param hpVal - New unit's hp value
+    */
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void SetUnitCurHP(FString unitName, int hpVal);
 
-
-
+   /**Gives vision over all the enemy units*/
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void SeeAll();
 };
