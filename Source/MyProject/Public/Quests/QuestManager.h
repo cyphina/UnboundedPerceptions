@@ -39,6 +39,8 @@ class MYPROJECT_API UQuestManager : public UObject
    GENERATED_BODY()
 
  public:
+   void PostInitProperties() override;
+
    UPROPERTY(BlueprintReadWrite, Category = "References")
    AUserInput* controllerRef;
 
@@ -54,8 +56,8 @@ class MYPROJECT_API UQuestManager : public UObject
    /**
     *Map of quest GameplayTagName to quest class so we can add new quests via triggers
     */
-   UPROPERTY(EditAnywhere, Category = "Quest Data")
-   UQuestMap* questMap;
+   UPROPERTY(EditAnywhere)
+   TMap<FGameplayTag, TSubclassOf<AQuest>> questClassList;
 
    /**Actor that determies location of the quest*/
    UPROPERTY(BlueprintReadWrite, Category = "References")

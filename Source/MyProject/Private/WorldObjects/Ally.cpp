@@ -4,6 +4,7 @@
 #include "Ally.h"
 #include "SpellSystem/MySpell.h"
 #include "RTSGameState.h"
+#include "RTSPawn.h"
 #include "UserInput.h"
 #include "BasePlayer.h"
 #include "UI/HUDManager.h"
@@ -37,6 +38,8 @@ AAlly::AAlly(const FObjectInitializer& oI) : AUnit(oI)
 #if UE_EDITOR
    visionSphere->SetHiddenInGame(false);
 #endif
+
+   AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 void AAlly::BeginPlay()
@@ -99,6 +102,13 @@ UGameplayAbility* AAlly::GetSpellInstance(TSubclassOf<UMySpell> spellClass) cons
    return nullptr;
 }
 
+bool AAlly::PressedCastSpell(int spellToCastIndex)
+{
+   bool spellSelected = PressedCastSpell(abilities[spellToCastIndex]);
+   if (spellSelected) SetSpellIndex(spellToCastIndex);
+   return spellSelected;
+}
+
 bool AAlly::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
 {
    UMySpell* spell = spellToCast.GetDefaultObject();
@@ -109,9 +119,9 @@ bool AAlly::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
             if (GetCurrentSpell() == spellToCast) // if already selected
             {
                SetCurrentSpell(nullptr); // deselect
-               controllerRef->HideSpellCircle();
-               controllerRef->SetSecondaryCursor(ECursorStateEnum::Select);
-               return true;
+               controllerRef->GetCameraPawn()->HideSpellCircle();
+               controllerRef->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Select);
+               return false;
             }
 
             // set our current spell to spellToCast for recording purposes
@@ -122,15 +132,15 @@ bool AAlly::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
                PreCastChannelingCheck(GetCurrentSpell());
             } else {
                // set wand targetting cursor
-               controllerRef->SetSecondaryCursor(ECursorStateEnum::Magic);
+               controllerRef->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Magic);
             }
 
             if (spell->GetTargetting().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))) {
                // TODO: depending on the spell area targetting, use different indicators
                // if it's an AOE spell show the targetting indicator
-               controllerRef->ShowSpellCircle(spell->GetAOE(GetAbilitySystemComponent()));
+               controllerRef->GetCameraPawn()->ShowSpellCircle(spell->GetAOE(GetAbilitySystemComponent()));
             } else {
-               controllerRef->HideSpellCircle();
+               controllerRef->GetCameraPawn()->HideSpellCircle();
             }
 
             return true;
@@ -186,14 +196,12 @@ bool AAlly::GetOverlappingObjects(TArray<FHitResult>& hits)
    const FName TraceTag("MyTraceTag");
    GetWorld()->DebugDrawTraceTag = TraceTag;
    // Sweep from capsule around hero to camera location
-   FVector start = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->GetCameraLocation();
+   FVector start = controllerRef->GetCameraPawn()->camera->GetComponentLocation();
    FVector end   = GetActorLocation();
    // FCollisionQueryParams params;
    // params.TraceTag = TraceTag;
-   UCapsuleComponent* capsule = GetCapsuleComponent();
-   if (capsule)
-      GetWorld()->SweepMultiByObjectType(hits, start, end, FQuat::Identity, queryParamVision,
-                                         FCollisionShape::MakeCapsule(capsule->GetScaledCapsuleRadius(), capsule->GetScaledCapsuleHalfHeight() * 2));
+
+   GetWorld()->LineTraceMultiByObjectType(hits, start, end, queryParamVision);
    if (!hits.Num()) return false;
    return true;
 }
@@ -234,7 +242,7 @@ bool AAlly::SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellC
                   // If casting on ourselves, then we can just instantly cast
                   if (targetData.targetUnit == this || FVector::Dist2D(targetData.targetLocation, GetActorLocation()) < 5.f) {
                      PreCastChannelingCheck(spellClass);
-                     controllerRef->ChangeCursor(ECursorStateEnum::Select);
+                     controllerRef->GetCameraPawn()->ChangeCursor(ECursorStateEnum::Select);
                      return true;
                   }
                }
@@ -259,7 +267,7 @@ bool AAlly::SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellC
       // Stop any queued commands since we're interrupting them to cast a spell
       ClearCommandQueue();
 
-      controllerRef->ChangeCursor(ECursorStateEnum::Select); // just turn it back to select so the loop will quickly change the cursor back to normal after spell casted
+      controllerRef->GetCameraPawn()->ChangeCursor(ECursorStateEnum::Select); // just turn it back to select so the loop will quickly change the cursor back to normal after spell casted
       state->ChangeState(EUnitState::STATE_CASTING);
       return true;
    }

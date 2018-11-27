@@ -52,22 +52,22 @@ void UBPNode_CreateGameplayEffect::AllocateDefaultPins()
 
 	CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Exec, nullptr, UEdGraphSchema_K2::PN_Execute);
 	CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, nullptr, UEdGraphSchema_K2::PN_Then);
-	
+
 	UEdGraphPin* ClassPin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Class, GetClassPinBaseClass(), *FBPNode_CreateGameplayEffectHelper::classPinName);
 	SetPinToolTip(*ClassPin, LOCTEXT("ClassPinDesc", "The effect class we're going to to create an instance of"));
 
-	UEdGraphPin* abilityPin = CreatePin(EGPD_Input,  UEdGraphSchema_K2::PC_Object, UMySpell::StaticClass(), *FBPNode_CreateGameplayEffectHelper::abilityPinName);
+	UEdGraphPin* abilityPin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Object, UMySpell::StaticClass(), *FBPNode_CreateGameplayEffectHelper::abilityPinName);
 	SetPinToolTip(*abilityPin, LOCTEXT("LevelPinDesc", "Owning ability of the effect"));
 
-	UEdGraphPin* durationPin = CreatePin(EGPD_Input,  UEdGraphSchema_K2::PC_Float, nullptr, *FBPNode_CreateGameplayEffectHelper::durationPinName);
+	UEdGraphPin* durationPin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Float, nullptr, *FBPNode_CreateGameplayEffectHelper::durationPinName);
 	SetPinToolTip(*durationPin, LOCTEXT("DurationPinDesc", "Duration of the Effect"));
 	durationPin->DefaultValue = "0";
 
-	UEdGraphPin* periodPin = CreatePin(EGPD_Input,  UEdGraphSchema_K2::PC_Float, nullptr, *FBPNode_CreateGameplayEffectHelper::periodPinName);
+	UEdGraphPin* periodPin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Float, nullptr, *FBPNode_CreateGameplayEffectHelper::periodPinName);
 	SetPinToolTip(*periodPin, LOCTEXT("PeriodPinDesc", "Period of the Effect"));
 	periodPin->DefaultValue = "0"; //Period is usually not a relevant value in timed effects but only periodic effects have executions, but modifiers will not be reset for periodic effects
 
-	UEdGraphPin* levelPin = CreatePin(EGPD_Input,  UEdGraphSchema_K2::PC_Int, nullptr, *FBPNode_CreateGameplayEffectHelper::levelPinName);
+	UEdGraphPin* levelPin = CreatePin(EGPD_Input, UEdGraphSchema_K2::PC_Int, nullptr, *FBPNode_CreateGameplayEffectHelper::levelPinName);
 	SetPinToolTip(*levelPin, LOCTEXT("LevelPinDesc", "Level of the Effect"));
 	levelPin->DefaultValue = "1";
 
@@ -126,13 +126,13 @@ FText UBPNode_CreateGameplayEffect::GetNodeTitle(ENodeTitleType::Type TitleType)
 
 bool UBPNode_CreateGameplayEffect::IsSpawnVarPin(UEdGraphPin* pin) const
 {
-	return(Super::IsSpawnVarPin(pin) && 
-		  pin->PinName != *FBPNode_CreateGameplayEffectHelper::periodPinName
-		  && pin->PinName != *FBPNode_CreateGameplayEffectHelper::durationPinName
-		  && pin->PinName != *FBPNode_CreateGameplayEffectHelper::abilityPinName
-		  && pin->PinName != *FBPNode_CreateGameplayEffectHelper::levelPinName
-		  && pin->PinName != *FBPNode_CreateGameplayEffectHelper::elemPinName
-		  && pin->PinName != *FBPNode_CreateGameplayEffectHelper::namePinName);
+	return(Super::IsSpawnVarPin(pin) &&
+		pin->PinName != *FBPNode_CreateGameplayEffectHelper::periodPinName
+		&& pin->PinName != *FBPNode_CreateGameplayEffectHelper::durationPinName
+		&& pin->PinName != *FBPNode_CreateGameplayEffectHelper::abilityPinName
+		&& pin->PinName != *FBPNode_CreateGameplayEffectHelper::levelPinName
+		&& pin->PinName != *FBPNode_CreateGameplayEffectHelper::elemPinName
+		&& pin->PinName != *FBPNode_CreateGameplayEffectHelper::namePinName);
 }
 
 /**Excpands node for our custom object, with properties set as EditAnywhere and meta=(ExposeOnSpawn)*/
@@ -143,13 +143,13 @@ void UBPNode_CreateGameplayEffect::ExpandNode(FKismetCompilerContext& compilerCo
 
 	///SETUP NAMES
 	//Look for static function in BP Library depending on class type (factory pattern)
-	if(GetClassToSpawn()->IsChildOf(UDamageEffect::StaticClass()))
-		createFunctionName = GET_FUNCTION_NAME_CHECKED(USpellFunctionLibrary, MakeDamageEffect); 
-	else if(GetClassToSpawn()->IsChildOf(UStatChangeEffect::StaticClass()))
-		createFunctionName = GET_FUNCTION_NAME_CHECKED(USpellFunctionLibrary, MakeStatChangeEffect); 
+	if (GetClassToSpawn()->IsChildOf(UDamageEffect::StaticClass()))
+		createFunctionName = GET_FUNCTION_NAME_CHECKED(USpellFunctionLibrary, MakeDamageEffect);
+	else if (GetClassToSpawn()->IsChildOf(UStatChangeEffect::StaticClass()))
+		createFunctionName = GET_FUNCTION_NAME_CHECKED(USpellFunctionLibrary, MakeStatChangeEffect);
 	else
 		createFunctionName = GET_FUNCTION_NAME_CHECKED(USpellFunctionLibrary, MakeGameplayEffect);
-	
+
 	//inputs for that function
 	static const FString abilityRefParamName = FString(TEXT("AbilityRef"));
 	static const FString effectClassParamName = FString(TEXT("EffectClass"));
@@ -178,7 +178,7 @@ void UBPNode_CreateGameplayEffect::ExpandNode(FKismetCompilerContext& compilerCo
 	UEdGraphPin* spawnNodeRes = createGameplayEffectNode->GetResultPin();
 
 	UClass* spawnClass = (spawnClassPin != NULL) ? Cast<UClass>(spawnClassPin->DefaultObject) : NULL;
-	if(0 == spawnClassPin->LinkedTo.Num() && (NULL == spawnClass))
+	if (0 == spawnClassPin->LinkedTo.Num() && (NULL == spawnClass))
 	{
 		compilerContext.MessageLog.Error(TEXT("Spawn node @@ must have a class specified."), createGameplayEffectNode);
 		createGameplayEffectNode->BreakAllNodeLinks();
@@ -186,16 +186,16 @@ void UBPNode_CreateGameplayEffect::ExpandNode(FKismetCompilerContext& compilerCo
 	}
 
 	//Create a function calling node calling the function that our new node is going to be linked to
-	UK2Node_CallFunction* callCreateNode = compilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(createGameplayEffectNode,sourceGraph);
+	UK2Node_CallFunction* callCreateNode = compilerContext.SpawnIntermediateNode<UK2Node_CallFunction>(createGameplayEffectNode, sourceGraph);
 	callCreateNode->FunctionReference.SetExternalMember(createFunctionName, USpellFunctionLibrary::StaticClass());
 	callCreateNode->AllocateDefaultPins();
 
 	//Prepare the function calling pin's nodes
 	UEdGraphPin* callCreateExec = callCreateNode->GetExecPin();
 	UEdGraphPin* callCreateDurationPin = callCreateNode->FindPinChecked(durationParamName);
-	UEdGraphPin* callCreatePeriodPin =  callCreateNode->FindPinChecked(periodParamName);
-	UEdGraphPin* callCreateLevelPin =  callCreateNode->FindPinChecked(levelParamName);
-	UEdGraphPin* callCreateAbilityRefPin =  callCreateNode->FindPinChecked(abilityRefParamName);
+	UEdGraphPin* callCreatePeriodPin = callCreateNode->FindPinChecked(periodParamName);
+	UEdGraphPin* callCreateLevelPin = callCreateNode->FindPinChecked(levelParamName);
+	UEdGraphPin* callCreateAbilityRefPin = callCreateNode->FindPinChecked(abilityRefParamName);
 	UEdGraphPin* callCreateEffectClassPin = callCreateNode->FindPinChecked(effectClassParamName);
 	UEdGraphPin* callCreateElemPin = callCreateNode->FindPinChecked(elemParamName);
 	UEdGraphPin* callCreateNamePin = callCreateNode->FindPinChecked(nameParamName);
@@ -207,7 +207,7 @@ void UBPNode_CreateGameplayEffect::ExpandNode(FKismetCompilerContext& compilerCo
 	//Move exec connection from this node to the node in our SpellFunctionLibrary
 	compilerContext.MovePinLinksToIntermediate(*spawnNodeExec, *callCreateExec);
 
-	if(spawnClassPin->LinkedTo.Num() > 0)
+	if (spawnClassPin->LinkedTo.Num() > 0)
 	{
 		//copy the blueprint connection from spawn node to the widget library connection
 		compilerContext.MovePinLinksToIntermediate(*spawnClassPin, *callCreateEffectClassPin);
@@ -234,17 +234,17 @@ void UBPNode_CreateGameplayEffect::ExpandNode(FKismetCompilerContext& compilerCo
 
 	//If we can find a corresponding input pin in our generated function (from our BP library) pins, then link our pin from this node to that pin
 	UEdGraphPin* callPin, *objPin;
-	for(int32 PinIdx = 0; PinIdx < createGameplayEffectNode->Pins.Num(); PinIdx++)
+	for (int32 PinIdx = 0; PinIdx < createGameplayEffectNode->Pins.Num(); PinIdx++)
 	{
 		objPin = createGameplayEffectNode->Pins[PinIdx]; //get pin from our special node
-		callPin = callCreateNode->FindPin(createGameplayEffectNode->Pins[PinIdx]->PinName); 
-		if(callPin)
+		callPin = callCreateNode->FindPin(createGameplayEffectNode->Pins[PinIdx]->PinName);
+		if (callPin)
 		{
 			compilerContext.MovePinLinksToIntermediate(*objPin, *callPin); //set them to the pins in our function
 		}
 	}
 
-	compilerContext.MovePinLinksToIntermediate(*spawnNodeThen,*callCreateNode->GetThenPin());
+	compilerContext.MovePinLinksToIntermediate(*spawnNodeThen, *callCreateNode->GetThenPin());
 	compilerContext.MovePinLinksToIntermediate(*spawnNodeRes, *callCreateRes);
 	createGameplayEffectNode->BreakAllNodeLinks();
 }
@@ -253,28 +253,28 @@ UEdGraphPin* UBPNode_CreateGameplayEffect::GetAbilityRefPin() const
 {
 	UEdGraphPin* pin = FindPin(FBPNode_CreateGameplayEffectHelper::abilityPinName);
 	check(pin == NULL || pin->Direction == EGPD_Input)
-	return pin;
+		return pin;
 }
 
 UEdGraphPin* UBPNode_CreateGameplayEffect::GetDurationPin() const
 {
 	UEdGraphPin* pin = FindPin(FBPNode_CreateGameplayEffectHelper::durationPinName);
 	check(pin == NULL || pin->Direction == EGPD_Input)
-	return pin;
+		return pin;
 }
 
 UEdGraphPin* UBPNode_CreateGameplayEffect::GetPeriodPin() const
 {
 	UEdGraphPin* pin = FindPin(FBPNode_CreateGameplayEffectHelper::periodPinName);
 	check(pin == NULL || pin->Direction == EGPD_Input)
-	return pin;
+		return pin;
 }
 
 UEdGraphPin* UBPNode_CreateGameplayEffect::GetLevelPin() const
 {
 	UEdGraphPin* pin = FindPin(FBPNode_CreateGameplayEffectHelper::levelPinName);
 	check(pin == NULL || pin->Direction == EGPD_Input)
-	return pin;
+		return pin;
 }
 
 UEdGraphPin* UBPNode_CreateGameplayEffect::GetResultPin() const
@@ -348,25 +348,25 @@ void UBPNode_CreateGameplayEffect::GetPinHoverText(const UEdGraphPin& Pin, FStri
 
 void UBPNode_CreateGameplayEffect::ReallocatePinsDuringReconstruction(TArray<UEdGraphPin*>& OldPins)
 {
-	Super::ReallocatePinsDuringReconstruction(OldPins); 
+	Super::ReallocatePinsDuringReconstruction(OldPins);
 	GetResultPin()->PinType.PinSubCategoryObject = FGameplayEffectSpecHandle::StaticStruct();
 }
 
 void UBPNode_CreateGameplayEffect::PostPlacedNewNode()
 {
-	Super::PostPlacedNewNode(); 
+	Super::PostPlacedNewNode();
 	GetResultPin()->PinType.PinSubCategoryObject = FGameplayEffectSpecHandle::StaticStruct();
 }
 
 void UBPNode_CreateGameplayEffect::PinDefaultValueChanged(UEdGraphPin* Pin)
 {
-	Super::PinDefaultValueChanged(Pin); 
+	Super::PinDefaultValueChanged(Pin);
 	GetResultPin()->PinType.PinSubCategoryObject = FGameplayEffectSpecHandle::StaticStruct();
 }
 
 void UBPNode_CreateGameplayEffect::PinConnectionListChanged(UEdGraphPin* Pin)
 {
-	Super::PinConnectionListChanged(Pin); 
+	Super::PinConnectionListChanged(Pin);
 	GetResultPin()->PinType.PinSubCategoryObject = FGameplayEffectSpecHandle::StaticStruct();
 }
 #undef LOCTEXT_NAMESPACE

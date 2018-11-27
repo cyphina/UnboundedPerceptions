@@ -64,3 +64,13 @@ void ResourceManager::ExecuteFunctionFromWorldObject(UObject* objectRef, FName f
       }
    }
 }
+
+template<>
+ABaseHero* ResourceManager::FindTriggerObjectInWorld<ABaseHero>(FString nameToMatch, UWorld* worldRef)
+{
+   AUserInput* cpcRef = Cast<AUserInput>(worldRef->GetFirstPlayerController());
+   for (ABaseHero* hero : cpcRef->GetBasePlayer()->allHeroes) {
+      if (hero->GetGameName().ToString() == nameToMatch) { return Cast<ABaseHero>(hero); }
+   }
+   return nullptr;
+}

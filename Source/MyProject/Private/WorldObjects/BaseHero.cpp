@@ -5,6 +5,7 @@
 #include "BasePlayer.h"
 #include "RTSGameMode.h"
 #include "UserInput.h"
+#include "RTSPawn.h"
 
 #include "Items/EquipmentMenu.h"
 #include "Items/HeroInventory.h"
@@ -48,6 +49,7 @@ void ABaseHero::BeginPlay()
    Super::BeginPlay();
    // Setup player reference
    player = Cast<ABasePlayer>(controllerRef->PlayerState);
+   player->allHeroes.Add(this);
 
    // Setup dynamic material instance and vector parameter references
    if (GetMesh() != nullptr) {
@@ -77,8 +79,8 @@ void ABaseHero::BeginPlay()
    backpack = NewObject<UBackpack>(this, "Backpack");
    backpack->SetItemMax(40);
    // This is the size of the hero equipment array.  Could make this a class later
-   equipment = NewObject<UEquipment>(this);
-   equipment->OnEquipped.BindUObject(this, &ABaseHero::OnEquipped);
+   equipment = NewObject<UEquipment>(this, "Equipment");
+   equipment->OnEquipped.BindDynamic(this, &ABaseHero::OnEquipped);
 
 #if UE_EDITOR
    for (int i = 0; i < 70; i++) {
@@ -237,7 +239,7 @@ void ABaseHero::BeginUseItem(int itemToUseID)
    state->ChangeState(EUnitState::STATE_ITEM);
    TSubclassOf<UMySpell> itemAbility = UItemManager::Get().GetConsumableInfo(itemToUseID)->abilityClass;
    PressedCastSpell(itemAbility);
-   if (itemAbility.GetDefaultObject()->GetTargetting() != FGameplayTag::RequestGameplayTag("Skill.Targetting.None")) { controllerRef->SetSecondaryCursor(ECursorStateEnum::Item); }
+   if (itemAbility.GetDefaultObject()->GetTargetting() != FGameplayTag::RequestGameplayTag("Skill.Targetting.None")) { controllerRef->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Item); }
 }
 
 void ABaseHero::PrepareInteract()

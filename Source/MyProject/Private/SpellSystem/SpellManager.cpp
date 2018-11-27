@@ -23,8 +23,8 @@ void USpellManager::SetupSpells()
    static const FString ContextString(TEXT("GENERAL"));
    if (spellLookupTable) {
       TArray<FSpellbookLookupRow*> table;
-      TArray<FName> rowNames = spellLookupTable->GetRowNames(); // these are the ids since default row name is just row number
-      FSpellInfo    spellInfo;
+      TArray<FName>                rowNames = spellLookupTable->GetRowNames(); // these are the ids since default row name is just row number
+      FSpellInfo                   spellInfo;
 
       spellLookupTable->GetAllRows<FSpellbookLookupRow>(ContextString, table);
       // UE_LOG(LogTemp, Warning, TEXT("%d"), rowNames.Num());

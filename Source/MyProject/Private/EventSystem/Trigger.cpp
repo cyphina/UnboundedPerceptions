@@ -11,6 +11,7 @@
 #include "Quests/QuestManager.h"
 #include "DialogSystem/DialogBox.h"
 #include "DialogSystem/DialogManager.h"
+#include "AIStuff/AIControllers/NPCAIController.h"
 #include "WorldObjects/NPC.h"
 #include "WorldObjects/Unit.h"
 #include "WorldObjects/BaseHero.h"
@@ -42,15 +43,13 @@ void UTriggerManager::ActivateTrigger(UPARAM(ref) FTriggerData& triggerData)
 
 void UTriggerManager::ChangeDialog(const FTriggerData& tdata)
 {
-   check(tdata.triggerObjects.Num() == 1 && tdata.triggerValues.Num() <= 2) if (ANPC* npc = ResourceManager::FindTriggerObjectInWorld<ANPC>(tdata.triggerObjects[0], cpcRef->GetWorld()))
-   {
+   check(tdata.triggerObjects.Num() == 1 && tdata.triggerValues.Num() <= 2);
+   if (ANPC* npc = ResourceManager::FindTriggerObjectInWorld<ANPC>(tdata.triggerObjects[0], cpcRef->GetWorld())) {
       if (tdata.triggerValues.Num() == 1)
          npc->SetCurrentDialog(*tdata.triggerValues[0]);
       else
          npc->SetSpecificDialog(FGameplayTag::RequestGameplayTag(*tdata.triggerValues[0]), *tdata.triggerValues[1]);
-   }
-   else
-   {
+   } else {
       // TODO: Find a way to add to trigger records w/o knowing if there's already an entry in triggerRecords
       AddTriggerToRecords(*tdata.triggerObjects[0], tdata);
    }
@@ -58,24 +57,24 @@ void UTriggerManager::ChangeDialog(const FTriggerData& tdata)
 
 void UTriggerManager::ModifyStats(const FTriggerData& tdata)
 {
-   check(tdata.triggerObjects.Num() == 1 && tdata.triggerValues.Num() <= 2) if (AUnit* unit = ResourceManager::FindTriggerObjectInWorld<AUnit>(
-                                                                                    tdata.triggerObjects[0], cpcRef->GetWorld())) for (int i = 0; i < tdata.triggerValues.Num(); i += 2)
-       unit->ApplyBonuses(FCString::Atoi(*tdata.triggerValues[i]), FCString::Atoi(*tdata.triggerValues[i + 1]));
+   check(tdata.triggerObjects.Num() == 1 && tdata.triggerValues.Num() <= 2);
+   if (AUnit* unit = ResourceManager::FindTriggerObjectInWorld<AUnit>(tdata.triggerObjects[0], cpcRef->GetWorld()))
+      for (int i = 0; i < tdata.triggerValues.Num(); i += 2)
+         unit->ApplyBonuses(FCString::Atoi(*tdata.triggerValues[i]), FCString::Atoi(*tdata.triggerValues[i + 1]));
 }
 
 void UTriggerManager::OpenHUDTrigger(const FTriggerData& tdata)
 {
-   checkf(tdata.triggerObjects.Num() == 0 && tdata.triggerValues.Num() == 1, TEXT("Incorrect parameters for OPENHUDTRIGGER"))
-       checkf(tdata.triggerValues[0].IsNumeric(), TEXT("OPENHUDTRIGGER triggerValue should be numeric"))
-       // GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, tdata.triggerValues[0]);
-       cpcRef->GetHUDManager()
-           ->AddHUD((uint8)FCString::Atoi(*tdata.triggerValues[0]));
+   checkf(tdata.triggerObjects.Num() == 0 && tdata.triggerValues.Num() == 1, TEXT("Incorrect parameters for OPENHUDTRIGGER"));
+   checkf(tdata.triggerValues[0].IsNumeric(), TEXT("OPENHUDTRIGGER triggerValue should be numeric"));
+   // GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, tdata.triggerValues[0]);
+   cpcRef->GetHUDManager()->AddHUD((uint8)FCString::Atoi(*tdata.triggerValues[0]));
 }
 
 void UTriggerManager::OpenHUDTriggerStorage(const FTriggerData& tdata)
 {
-   checkf(tdata.triggerObjects.Num() == 1 && tdata.triggerValues.Num() == 2, TEXT("Incorrect parameters for OPENHUDTRIGGER"))
-       checkf(tdata.triggerValues[0].IsNumeric(), TEXT("OPENHUDTRIGGER triggerValue should be numeric"))
+   checkf(tdata.triggerObjects.Num() == 1 && tdata.triggerValues.Num() == 2, TEXT("Incorrect parameters for OPENHUDTRIGGER"));
+   checkf(tdata.triggerValues[0].IsNumeric(), TEXT("OPENHUDTRIGGER triggerValue should be numeric"));
    // if(AInteractableBase* interactable = ResourceManager::FindTriggerObjectInWorld<AInteractableBase>(tdata.triggerObjects[0], cpcRef->GetWorld()))
    // if(ABaseHero* heroRef = ResourceManager::FindTriggerObjectInWorld<ABaseHero>(tdata.triggerObjects[1], cpcRef->GetWorld()))
    // cpcRef->GetHUDManager()->AddHUD(int);
@@ -112,13 +111,10 @@ void UTriggerManager::ChangeTriggerType(const FTriggerData& tdata)
 
 bool UTriggerManager::AddQuest(const FTriggerData& tdata)
 {
-   checkf(tdata.triggerObjects.Num() == 0 && tdata.triggerValues.Num() == 2, TEXT("Incorrect parameters for OPENHUDTRIGGER"))
-       checkf(tdata.triggerValues[1].IsNumeric(),
-              TEXT("ADDQUESTTRIGGER triggerValue 2 should be numeric")) if (gameModeRef->GetQuestManager()
-                                                                                ->AddNewQuest(gameModeRef->GetQuestManager()->questMap->questClassList[FGameplayTag::RequestGameplayTag(
-                                                                                                  *(FString("QuestName.") + tdata.triggerValues[0]))],
-                                                                                              FCString::Atoi(*tdata.triggerValues[1])))
-   {
+   checkf(tdata.triggerObjects.Num() == 0 && tdata.triggerValues.Num() == 2, TEXT("Incorrect parameters for OPENHUDTRIGGER"));
+   checkf(tdata.triggerValues[1].IsNumeric(), TEXT("ADDQUESTTRIGGER triggerValue 2 should be numeric"));
+   if (gameModeRef->GetQuestManager()->AddNewQuest(gameModeRef->GetQuestManager()->questClassList[FGameplayTag::RequestGameplayTag(*(FString("QuestName.") + tdata.triggerValues[0]))],
+                                                   FCString::Atoi(*tdata.triggerValues[1]))) {
       return true;
    }
    return false;
@@ -126,12 +122,11 @@ bool UTriggerManager::AddQuest(const FTriggerData& tdata)
 
 bool UTriggerManager::CompleteQuestGoal(const FTriggerData& tdata)
 {
-   checkf(tdata.triggerValues.Num() == 2, TEXT("Complete quest goal trigger should have 2 parameters!"))
-       checkf(tdata.triggerValues[1].IsNumeric(), TEXT("ADDQUESTTRIGGER triggerValue 2 should be numeric"))
+   checkf(tdata.triggerValues.Num() == 3, TEXT("Complete quest goal trigger should have 3 parameters!"));
+   checkf(tdata.triggerValues[1].IsNumeric(), TEXT("ADDQUESTTRIGGER triggerValue 2 should be numeric"));
 
-           AQuest* quest =
-               *gameModeRef->GetQuestManager()->quests.FindByPredicate([&](AQuest* questToFilter) { return questToFilter->questInfo.id.ToString() == "QuestName." + tdata.triggerValues[0]; });
-   int goalIndex = FCString::Atoi(*tdata.triggerValues[1]);
+   AQuest* quest     = *gameModeRef->GetQuestManager()->quests.FindByPredicate([&](AQuest* questToFilter) { return questToFilter->questInfo.id.ToString() == "QuestName." + tdata.triggerValues[0]; });
+   int     goalIndex = FCString::Atoi(*tdata.triggerValues[1]);
 
    if (quest->questInfo.subgoals[goalIndex].goalState == EGoalState::currentGoal) {
       quest->CompleteSubGoal(goalIndex, FCString::Atoi(*tdata.triggerValues[2]));
@@ -159,6 +154,58 @@ void UTriggerManager::DisplayConversation(const FTriggerData& tdata)
    cpcRef->GetHUDManager()->AddHUD(*tdata.triggerValues[0], EDialogSource::none);
 }
 
+void UTriggerManager::DestroyNPC(const FTriggerData& tdata)
+{
+   cpcRef->GetHUDManager()->GetDialogBox()->SetDialogSource(EDialogSource::none); // ensure we don't go back to any social menus afterwards
+   ResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld())->Destroy();
+   // in case this npc destroyed itself while we're talking, set the interactedHero to nullptr
+   cpcRef->GetBasePlayer()->interactedHero = nullptr;
+}
+
+void UTriggerManager::MoveNPC(const FTriggerData& tdata)
+{
+   FVector newLocation = FVector(FCString::Atof(*tdata.triggerValues[0]), FCString::Atof(*tdata.triggerValues[1]), FCString::Atof(*tdata.triggerValues[2]));
+   ResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld())->SetActorLocation(newLocation);
+}
+
+void UTriggerManager::AddItem(const FTriggerData& tdata)
+{
+   if (tdata.triggerObjects.Num() > 0) {
+      ResourceManager::FindTriggerObjectInWorld<ABaseHero>(*tdata.triggerObjects[0], cpcRef->GetWorld())
+          ->backpack->AddItem(FMyItem(FCString::Atoi(*tdata.triggerValues[0]), FCString::Atoi(*tdata.triggerValues[1])));
+   } else {
+      cpcRef->GetBasePlayer()->interactedHero->backpack->AddItem(FMyItem(FCString::Atoi(*tdata.triggerValues[0]), FCString::Atoi(*tdata.triggerValues[1])));
+   }
+}
+
+void UTriggerManager::LearnDialogTopic(const FTriggerData& tdata)
+{
+   cpcRef->GetBasePlayer()->LearnDialogTopic(FGameplayTag::RequestGameplayTag(*tdata.triggerValues[0]));
+}
+
+void UTriggerManager::SetNPCFollow(const FTriggerData& tdata)
+{
+   checkf(tdata.triggerObjects.Num() > 0 && tdata.triggerObjects.Num() < 3, TEXT("Set NPC follow trigger should have 1-2 parameters!"));
+   ANPC* npcRef = ResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld());
+   if (npcRef) {
+      ABaseHero* heroRef = nullptr;
+      if (tdata.triggerObjects.Num() > 1) {
+         int heroIndex = FCString::Atoi(*tdata.triggerObjects[0]);
+         if (heroIndex > 0 && heroIndex < cpcRef->GetBasePlayer()->heroes.Num()) heroRef = cpcRef->GetBasePlayer()->heroes[FCString::Atoi(*tdata.triggerObjects[0])];
+      } else
+         heroRef = cpcRef->GetBasePlayer()->interactedHero;
+
+      if (heroRef) Cast<ANPCAIController>(npcRef->GetController())->Follow(heroRef);
+   }
+}
+
+void UTriggerManager::SetNPCWantConverse(const FTriggerData& tdata)
+{
+   checkf(tdata.triggerObjects.Num() > 0 && tdata.triggerObjects.Num() < 3, TEXT("Set NPC want converse trigger should have 2 parameters!"));
+   ANPC* npcRef = ResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld());
+   if (npcRef) { npcRef->bWantsToConverse = FCString::Atoi(*tdata.triggerValues[0]); }
+}
+
 void UTriggerManager::TriggerEffect(FTriggerData& triggerData)
 {
 #if UE_EDITOR
@@ -181,6 +228,12 @@ void UTriggerManager::TriggerEffect(FTriggerData& triggerData)
          break;
       case ETriggerType::DisplayConversationTrigger: DisplayConversation(triggerData); break;
       case ETriggerType::DisplayDialogTrigger: DisplayDialog(triggerData); break;
+      case ETriggerType::DestroyNPCTrigger: DestroyNPC(triggerData); break;
+      case ETriggerType::MoveNPCTrigger: MoveNPC(triggerData); break;
+      case ETriggerType::AddItemTrigger: AddItem(triggerData); break;
+      case ETriggerType::LearnDialogTopic: LearnDialogTopic(triggerData); break;
+      case ETriggerType::SetNPCFollow: SetNPCFollow(triggerData); break;
+      case ETriggerType::SetNPCWantConverse: SetNPCWantConverse(triggerData); break;
       default: UE_LOG(LogTemp, Warning, TEXT("Unknown Trigger type attempted to be activated!"));
    }
 

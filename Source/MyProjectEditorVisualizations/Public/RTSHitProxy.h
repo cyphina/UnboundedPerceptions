@@ -5,7 +5,7 @@ struct HRTSVisProxy : public HComponentVisProxy
 {
 	DECLARE_HIT_PROXY();
 
-	HRTSVisProxy (const UActorComponent* inComponent) : HComponentVisProxy(inComponent, HPP_Wireframe) {}
+	HRTSVisProxy(const UActorComponent* inComponent) : HComponentVisProxy(inComponent, HPP_Wireframe) {}
 };
 
 struct HPatrolProxy : public HRTSVisProxy

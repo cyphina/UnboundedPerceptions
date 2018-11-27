@@ -16,9 +16,6 @@ void UPatrolComponent::BeginPlay()
    check(pawnOwner);
 
    ownerControllerRef = Cast<AAIController>(pawnOwner->GetController());
-   ownerControllerRef->ReceiveMoveCompleted.AddDynamic(this, &UPatrolComponent::OnMoveCompleted);
-
-   if (patrolPoints.Num() > 0) ownerControllerRef->MoveToLocation(patrolPoints[currentPatrolIndex]);
 }
 
 void UPatrolComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -32,17 +29,8 @@ void UPatrolComponent::DeletePatrolPoint(int patrolIndex)
    if (patrolIndex >= 0 && patrolIndex <= patrolPoints.Num()) { patrolPoints.RemoveAt(patrolIndex, 1); }
 }
 
-void UPatrolComponent::MoveToNextPatrolPoint()
+EPathFollowingRequestResult::Type UPatrolComponent::MoveToNextPatrolPoint()
 {
    currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Num();
-   ownerControllerRef->MoveToLocation(patrolPoints[currentPatrolIndex]);
-}
-
-void UPatrolComponent::OnMoveCompleted(FAIRequestID requestID, EPathFollowingResult::Type result)
-{
-   switch (result) {
-      case EPathFollowingResult::Success: MoveToNextPatrolPoint(); break;
-      case EPathFollowingResult::Aborted: break;
-      case EPathFollowingResult::Blocked: ownerControllerRef->MoveToLocation(patrolPoints[currentPatrolIndex]); break;
-   }
+   return ownerControllerRef->MoveToLocation(patrolPoints[currentPatrolIndex]);
 }

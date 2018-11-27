@@ -7,15 +7,16 @@
 #include "BTTask_PatrolTask.generated.h"
 
 /**
- * Task which directs unit to move to next patrol location
+ * Task which directs unit to move to next patrol location.  Relies on the unit having a patrol component
  */
 
 class AUnitController;
 class UBlackboardComponent;
+class UPatrolComponent;
 
 struct FBTPatrolTaskMemory {
-   int              patrolIndex;
-   AUnitController* AICon = nullptr;
+   AUnitController*  AICon      = nullptr;
+   UPatrolComponent* patrolComp = nullptr;
 };
 
 UCLASS()

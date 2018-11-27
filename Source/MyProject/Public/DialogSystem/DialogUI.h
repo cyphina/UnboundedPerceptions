@@ -57,6 +57,9 @@ class MYPROJECT_API UDialogUI : public UMyUserWidget
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
    void SetMainView();
 
+   UFUNCTION(BlueprintCallable, Category = "Functionality")
+   void Leave();
+
    bool  OnWidgetAddToViewport_Implementation() override;
    void  SetNPC(ANPC* newNpcRef) { this->npcRef = newNpcRef; }
    ANPC* GetNPC() { return npcRef; }

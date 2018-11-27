@@ -145,15 +145,13 @@ class MYPROJECT_API AHUDManager : public AInfo
 
    /**Allows us to add a HUD that requires a backpack parameter (storageHUD).
     * @param backpack - The backpack of the storage interactable or NPC
-    * @param interactingHero - If there's any hero that prompted this dialog, set the reference in basePlayer.  If it was played automatically, no need to set
     */
-   void AddHUD(UBackpack* backpack, ABaseHero* interactingHero = nullptr);
+   void AddHUD(UBackpack* backpack);
 
    /**Allows us to add a HUD that requires a NPC seller parameter (shopHUD).
     * @param shopNPC - The NPC selling us items
-    * @param interactingHero - If there's any hero that prompted this dialog, set the reference in basePlayer.  If it was played automatically, no need to set
     */
-   void AddHUD(AShopNPC* shopNPC, ABaseHero* interactingHero = nullptr);
+   void AddHUD(AShopNPC* shopNPC);
 
    /**Allows us to add the HUD which shows a detailed view of an item.  Didn't overlaod AddHUD because parameter prevents implcit uint8 conversion
     * @param itemID - ID of the item to show a detailed view of
@@ -174,43 +172,33 @@ class MYPROJECT_API AHUDManager : public AInfo
 
    /**Add dialog HUD by passing in a conversation name*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Hud Dialog with Topic"))
-   void BP_AddHUDDialog(FName conversationName, EDialogSource dialogSource) {
-      AddHUD(conversationName, dialogSource); }
+   void BP_AddHUDDialog(FName conversationName, EDialogSource dialogSource) { AddHUD(conversationName, dialogSource); }
 
    /**Add dialog HUD by passing in dialogLines rather than reading off dialogTable*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Hud Dialog with Dialog Lines"))
-   void BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, EDialogSource dialogSource)
-   {
-      AddHUD(linesToDisplay, dialogSource);
-   }
+   void BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, EDialogSource dialogSource) { AddHUD(linesToDisplay, dialogSource); }
 
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Item Examine HUD"))
-   void BP_AddHUDItemExamine(int itemID) {
-      AddItemExamineHUD(itemID); }
+   void BP_AddHUDItemExamine(int itemID) { AddItemExamineHUD(itemID); }
 
    /**Add the storage HUD by passing in a backpack with storage items*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Storage HUD"))
-   void BP_AddHUDStorage(UBackpack* backpack, ABaseHero* interacter) {
-      AddHUD(backpack, interacter); }
+   void BP_AddHUDStorage(UBackpack* backpack) { AddHUD(backpack); }
 
    /**Add the shop HUD by passing in a shopkeeper NPC*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Shop HUD"))
-   void BP_AddHUDShop(AShopNPC* shopNPC, ABaseHero* interacter) {
-      AddHUD(shopNPC, interacter); }
+   void BP_AddHUDShop(AShopNPC* shopNPC) { AddHUD(shopNPC); }
 
    /**Add the confirmationbox HUD by passing in the callback*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add ConfirmationBox HUD", AutoCreateRefTerm = "newTitle,newDesc"))
-   void BP_AddConfirmationBox(const FText& newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) {
-      AddHUDConfirm(funcName, funcObject, newTitle, newDesc); }
+   void BP_AddConfirmationBox(const FText& newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) { AddHUDConfirm(funcName, funcObject, newTitle, newDesc); }
 
    /**Add the inputbox HUD by passing in the callback*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add InputBox HUD", AutoCreateRefTerm = "newTitle,newDesc"))
-   void BP_AddInputBox(FText newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) {
-      AddHUDInput(funcName, funcObject, newTitle, newDesc); }
+   void BP_AddInputBox(FText newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) { AddHUDInput(funcName, funcObject, newTitle, newDesc); }
 
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle")
-   bool IsWidgetOnScreen(HUDs hudToCheck) const {
-      return currentlyDisplayedWidgetsBitSet[static_cast<int>(hudToCheck)]; }
+   bool IsWidgetOnScreen(HUDs hudToCheck) const { return currentlyDisplayedWidgetsBitSet[static_cast<int>(hudToCheck)]; }
 
 #pragma region accessors
 

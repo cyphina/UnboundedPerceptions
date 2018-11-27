@@ -73,10 +73,10 @@ bool UDialogWheel::OnWidgetAddToViewport_Implementation()
 {
    currentlySelectedTopicNode  = UGameplayTagsManager::Get().FindTagNode("Dialog").Get();
    previouslySelectedTopicNode = nullptr;
-
    conversationTopicTagNodes.Empty();
+
+   //Display only the topics of the base dialog topic only if we learned them
    for (TSharedPtr<FGameplayTagNode> it : currentlySelectedTopicNode->GetChildTagNodes()) {
-      // not running before we actually learn teh dialogs in camerapawncontroller fix dis
       if (CPC->GetBasePlayer()->GetDialogTopics().HasTag(it->GetSingleTagContainer().First())) conversationTopicTagNodes.Add(it.Get());
    }
 

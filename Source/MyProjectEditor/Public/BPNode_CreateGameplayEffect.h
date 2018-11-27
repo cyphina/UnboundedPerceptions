@@ -7,8 +7,8 @@ class MYPROJECTEDITOR_API UBPNode_CreateGameplayEffect : public UK2Node_Construc
 {
 	GENERATED_UCLASS_BODY()
 
-	///UEdGraphNode Interface
-	void					AllocateDefaultPins() override; //Creates the default pins on the node
+		///UEdGraphNode Interface
+		void					AllocateDefaultPins() override; //Creates the default pins on the node
 	FLinearColor			GetNodeTitleColor() const override; //Color of the node
 	/**Expand the node with additional pins*/
 	void					ExpandNode(class FKismetCompilerContext& compilerContext, UEdGraph* sourceGraph) override; //Used to create functionality (programs a node graph to represent this one node like a collapsed graph)

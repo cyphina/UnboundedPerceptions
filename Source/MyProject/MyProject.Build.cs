@@ -9,6 +9,8 @@ public class MyProject : ModuleRules
 		//MinFilesUsingPrecompiledHeaderOverride = 1;
 		// bFasterWithoutUnity = true;
 		bUseRTTI = true;
+		//PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		//PrivatePCHHeaderFile = Private/RTSPCHFile.h;
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core",
 			"CoreUObject",

@@ -3,6 +3,9 @@
 #include "MyProject.h"
 #include "DialogUI.h"
 #include "UserInput.h"
+#include "BasePlayer.h"
+#include "WorldObjects/NPC.h"
+#include "AIStuff/AIControllers/NPCAIController.h"
 #include "UI/HUDManager.h"
 
 void UDialogUI::NativeConstruct()
@@ -24,4 +27,13 @@ bool UDialogUI::OnWidgetAddToViewport_Implementation()
    // change view to whatever it is set to prior
    // SetMainView();
    return true;
+}
+
+void UDialogUI::Leave()
+{
+   CPC->GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_Social));
+   CPC->GetBasePlayer()->interactedHero = nullptr;
+   // A movement will reactivate patrolling if there is any
+   ANPCAIController* npcControllerRef = Cast<ANPCAIController>(npcRef->GetController());
+   if (npcControllerRef) npcControllerRef->MoveToLocation(npcRef->GetActorLocation());
 }

@@ -6,8 +6,8 @@
 #include "StoryStructs.h"
 #include "EventManager.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSectionCompleted, FGameplayTag, sectionName);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnChapterCompleted, FGameplayTag, chapterName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSectionCompleted, FGameplayTag, sectionName);
 
 class ARTSGameMode;
 

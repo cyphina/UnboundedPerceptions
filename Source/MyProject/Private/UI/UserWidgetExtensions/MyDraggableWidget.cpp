@@ -22,8 +22,8 @@ void UMyDraggableWidget::NativeOnDragDetected(const FGeometry& InGeometry, const
 {
    UWidgetDrag* dragOp       = Cast<UWidgetDrag>(UWidgetBlueprintLibrary::CreateDragDropOperation(UWidgetDrag::StaticClass()));
    dragOp->DefaultDragVisual = this;
-   dragOp->widgetToDrag = this; // set what widget we're dragging so we can figure out it later to add back to the screen
-   dragOp->Pivot = EDragPivot::MouseDown;
-   OutOperation  = dragOp;
+   dragOp->widgetToDrag      = this; // set what widget we're dragging so we can figure out it later to add back to the screen
+   dragOp->Pivot             = EDragPivot::MouseDown;
+   OutOperation              = dragOp;
    RemoveFromParent();
 }

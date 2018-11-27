@@ -29,8 +29,8 @@ int UEquipment::Equip(int equipItem)
          return SwapEquipsFromInventory(equipItem, 4);
    } else if (itemType.MatchesTag(FGameplayTag::RequestGameplayTag("Item.Equippable.Weapon"))) {
       for (int i = 5; i < 9; i++) {
-         if (equips[i] <= 0) { return SwapEquipsFromInventory(equipItem, i); }
-      } // if our equip slots are full, just swap with the last equip
+         if (equips[i] <= 0) { return SwapEquipsFromInventory(equipItem, i); } // if our equip slots are full, just swap with the last equip
+      } 
       return SwapEquipsFromInventory(equipItem, 9);
    } else {
       GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, "Error, equipping unknown type of item");
@@ -44,15 +44,15 @@ int UEquipment::SwapEquipsFromInventory(int equipID, int equipSlot)
    if (prevEquipId > 0) // already equipped item in slot
    {
       // remove bonuses and replace equipment
-      OnEquipped.Execute(equips[equipSlot], false);
+      OnEquipped.ExecuteIfBound(equips[equipSlot], false);
       equips[equipSlot] = equipID;
-      OnEquipped.Execute(equipID, true);
+      OnEquipped.ExecuteIfBound(equipID, true);
       return prevEquipId;
    } else // no item in slot currently
    {
       // just remove item and set bonuses
       equips[equipSlot] = equipID;
-      OnEquipped.Execute(equipID, true);
+      OnEquipped.ExecuteIfBound(equipID, true);
       return 0;
    }
 }

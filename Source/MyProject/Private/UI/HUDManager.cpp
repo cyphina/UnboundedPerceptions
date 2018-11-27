@@ -4,6 +4,7 @@
 #include "RTSGameMode.h"
 #include "HUDManager.h"
 #include "UserInput.h"
+#include "RTSPawn.h"
 #include "UserWidgets/MainWidget.h"
 
 #include "UserWidgets/ActionbarInterface.h"
@@ -79,77 +80,50 @@ void AHUDManager::AddHUD(uint8 newState)
 
 void AHUDManager::AddHUD(FName conversationName, EDialogSource dialogSource)
 {
-   if (!playerControllerRef->GetBasePlayer()->interactedHero) // Only one hero can do a "waiting" interaction at a time
+   if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)] && conversationName != "") // If not on screen
    {
-      if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)] && conversationName != "") // If not on screen
-      {
-         GetDialogBox()->SetConversation(conversationName);
-         GetDialogBox()->SetDialogSource(dialogSource);
-         ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
-      } else // if on screen (from being added by a trigger w/o a hero)
-      {
-         ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
-      }
-   } else {
-      if (currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) // If on screen
-      {
-         ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
-      }
+      GetDialogBox()->SetConversation(conversationName);
+      GetDialogBox()->SetDialogSource(dialogSource);
+      ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
+   } else // if on screen (from being added by a trigger w/o a hero)
+   {
+      ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
    }
 }
 
 void AHUDManager::AddHUD(TArray<FDialogData> linesToDisplay, EDialogSource dialogSource)
 {
-   if (!playerControllerRef->GetBasePlayer()->interactedHero) {
-      if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)] && linesToDisplay.Num() > 0) // If not on screen
-      {
-         GetDialogBox()->SetDialogLines(linesToDisplay);
-         GetDialogBox()->SetDialogSource(dialogSource);
-         ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
-      }
-   } else {
-      if (currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)]) // If on screen
-      {
-         ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
-      }
+   if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)] && linesToDisplay.Num() > 0) // If not on screen
+   {
+      GetDialogBox()->SetDialogLines(linesToDisplay);
+      GetDialogBox()->SetDialogSource(dialogSource);
+      ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
+   } else { // If on screen
+
+      ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
    }
 }
 
-void AHUDManager::AddHUD(UBackpack* backpack, ABaseHero* interactingHero)
+void AHUDManager::AddHUD(UBackpack* backpack)
 {
-   if (!playerControllerRef->GetBasePlayer()->interactedHero) {
-      if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Storage)] && backpack) // If not on screen (impossible state reached if on screen and there's no interactedHero)
-      {
-         playerControllerRef->GetBasePlayer()->interactedHero = interactingHero;
-         GetStorageHUD()->SetBackPack(backpack);
-         ApplyHUD(static_cast<int>(HUDs::HS_Storage), true, true, false, false);
-      }
+   if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Storage)] && backpack) // If not on screen (impossible state reached if on screen and there's no interactedHero)
+   {
+      GetStorageHUD()->SetBackPack(backpack);
+      ApplyHUD(static_cast<int>(HUDs::HS_Storage), true, true, false, false);
    } else {
-      if (currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Storage)]) // if on screen
-      {
-         playerControllerRef->GetBasePlayer()->interactedHero = nullptr;
-         ApplyHUD(static_cast<int>(HUDs::HS_Storage), true, true, false, false);
-      }
+      ApplyHUD(static_cast<int>(HUDs::HS_Storage), true, true, false, false);
    }
 }
 
-void AHUDManager::AddHUD(AShopNPC* shopNPC, ABaseHero* interactingHero)
+void AHUDManager::AddHUD(AShopNPC* shopNPC)
 {
-   if (!playerControllerRef->GetBasePlayer()->interactedHero) {
-      if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Shop_General)] && shopNPC) // if not on screen
-      {
-         playerControllerRef->GetBasePlayer()->interactedHero = interactingHero;
-         GetShopHUD()->SetBackPack(shopNPC->itemsToSellBackpack);
-         GetShopHUD()->shopkeeper = shopNPC;
-         ApplyHUD(static_cast<int>(HUDs::HS_Shop_General), true, true, false, false);
-      }
-
-   } else {
-      if (currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Shop_General)]) // if on screen
-      {
-         playerControllerRef->GetBasePlayer()->interactedHero = nullptr;
-         ApplyHUD(static_cast<int>(HUDs::HS_Shop_General), true, true, false, false);
-      }
+   if (!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Shop_General)] && shopNPC) // if not on screen
+   {
+      GetShopHUD()->SetBackPack(shopNPC->itemsToSellBackpack);
+      GetShopHUD()->shopkeeper = shopNPC;
+      ApplyHUD(static_cast<int>(HUDs::HS_Shop_General), true, true, false, false);
+   } else { // if on screen
+      ApplyHUD(static_cast<int>(HUDs::HS_Shop_General), true, true, false, false);
    }
 }
 
@@ -265,7 +239,7 @@ void AHUDManager::UpdateWidgetTracking(int updateIndex, bool showMouseCursor, bo
    // If this hud can't be opened during combat, then we should change the cursor to the UI cursor (restricting them from doing much) and prevent camera panning
    if (!canOpenCombat) {
       currentlyDisplayedWidgetsBitSet[updateIndex] ? ++numWidgetsBlocking : --numWidgetsBlocking;
-      numWidgetsBlocking > 0 ? playerControllerRef->isCamNavDisabled = true : playerControllerRef->isCamNavDisabled = false;
+      numWidgetsBlocking > 0 ? playerControllerRef->GetCameraPawn()->isCamNavDisabled = true : playerControllerRef->GetCameraPawn()->isCamNavDisabled = false;
    }
 }
 

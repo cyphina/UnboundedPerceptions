@@ -3,7 +3,7 @@
 #include "MyProject.h"
 #include "DIRender.h"
 #include "UserInput.h"
-#include "RTSCameraPawn.h"
+#include "RTSPawn.h"
 
 AUserInput* UDIRender::controllerRef = nullptr;
 

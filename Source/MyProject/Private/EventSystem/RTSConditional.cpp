@@ -86,7 +86,7 @@ bool UConditionalManager::GetOwnedItemConditionVal(FConditionData& condData) con
 {
    checkf(condData.conditionalValues.Num() == 1, TEXT("Error with number of owned item condition values (%d items)"), condData.conditionalValues.Num());
    for (ABaseHero* hero : cpcRef->GetBasePlayer()->heroes) {
-      if (hero->backpack->FindItem(FCString::Atoi(*condData.conditionalValues[0])) != -1) return true;
+      if (hero && hero->backpack->FindItem(FCString::Atoi(*condData.conditionalValues[0])) != -1) return true;
    }
    return false;
 }
@@ -114,20 +114,20 @@ FText UConditionalManager::GetConditionMessage(FConditionData& cond) const
       case EConditionalType::HasQuestCond:
          // Add the questName (not quest id to format string args)
          args.Add(gameModeRef->GetQuestManager()
-                      ->questMap->questClassList[FGameplayTag::RequestGameplayTag(*(FString("QuestName.") + cond.conditionalValues[0]))]
+                      ->questClassList[FGameplayTag::RequestGameplayTag(*(FString("QuestName.") + cond.conditionalValues[0]))]
                       ->GetDefaultObject<AQuest>()
                       ->questInfo.name);
          return cond.reverseResult ? FText::Format(LOCTEXT("QuestCompleteCond", "noncompletion of {0}"), args) : FText::Format(LOCTEXT("QuestCompleteCond", "completion of {0}"), args);
       case EConditionalType::QuestCompletionCond:
          // Add the questName (not quest id to format string args)
          args.Add(gameModeRef->GetQuestManager()
-                      ->questMap->questClassList[FGameplayTag::RequestGameplayTag(*(FString("QuestName.") + cond.conditionalValues[0]))]
+                      ->questClassList[FGameplayTag::RequestGameplayTag(*(FString("QuestName.") + cond.conditionalValues[0]))]
                       ->GetDefaultObject<AQuest>()
                       ->questInfo.name);
          return cond.reverseResult ? FText::Format(LOCTEXT("QuestCompleteCond", "noncompletion of {0}"), args) : FText::Format(LOCTEXT("QuestCompleteCond", "completion of {0}"), args);
       case EConditionalType::GoalsCompletionCond: {
          args.Add(gameModeRef->GetQuestManager()
-                      ->questMap->questClassList[FGameplayTag::RequestGameplayTag(*(FString("QuestName.") + cond.conditionalValues[0]))]
+                      ->questClassList[FGameplayTag::RequestGameplayTag(*(FString("QuestName.") + cond.conditionalValues[0]))]
                       ->GetDefaultObject<AQuest>()
                       ->questInfo.name);
          FString goalIndices;

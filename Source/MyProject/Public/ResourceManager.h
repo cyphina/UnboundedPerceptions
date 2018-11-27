@@ -1,8 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #pragma once
-#include "GameplayTagContainer.h"
-#include "GameFramework/Actor.h"
-#include "WorldObject.h"
+
+#include "UserInput.h"
+#include "BasePlayer.h"
+#include "BaseHero.h"
 
 #if UE_EDITOR
 #include <type_traits>
@@ -60,6 +61,9 @@ namespace ResourceManager
 #endif
       return nullptr;
    }
+
+   template <>
+   ABaseHero* FindTriggerObjectInWorld<ABaseHero>(FString nameToMatch, UWorld* worldRef);
 
    /**Executes a function inside an arbitrary UObject using UObject Reflection (granted T is a subclass of UObject)*/
    void ExecuteFunctionFromWorldObject(UObject* objectRef, FName functionToExecute, UWorld* worldRef);

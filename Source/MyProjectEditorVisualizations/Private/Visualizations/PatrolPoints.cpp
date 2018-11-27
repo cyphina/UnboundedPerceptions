@@ -62,7 +62,7 @@ void FPatrolVisualizer::DrawVisualization(const UActorComponent* component, cons
 		{
 			FLinearColor color = (i == currentlySelectedPointIndex) ? selectedColor : unselectedColor;
 			pdi->SetHitProxy(new HPatrolProxy(component, i));
-			pdi->DrawLine(patrolComponent->patrolPoints[i-1], patrolComponent->patrolPoints[i], color, SDPG_Foreground);
+			pdi->DrawLine(patrolComponent->patrolPoints[i - 1], patrolComponent->patrolPoints[i], color, SDPG_Foreground);
 			pdi->DrawPoint(patrolComponent->patrolPoints[i], color, 20.f, SDPG_Foreground);
 			pdi->SetHitProxy(NULL);
 		}

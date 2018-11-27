@@ -67,8 +67,8 @@ void AUnitController::OnAOELocationFound(TSharedPtr<FEnvQueryResult> result)
 {
    if (result->IsSuccsessful()) {
       FGameplayAbilityTargetingLocationInfo tInfo;
-      tInfo.LocationType     = EGameplayAbilityTargetingLocationType::LiteralTransform;
-      tInfo.LiteralTransform = FTransform(result->GetItemAsLocation(0));
+      tInfo.LocationType                          = EGameplayAbilityTargetingLocationType::LiteralTransform;
+      tInfo.LiteralTransform                      = FTransform(result->GetItemAsLocation(0));
       FGameplayAbilityTargetDataHandle targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromLocations(tInfo, tInfo); // start point isn't really used so we can put this twice
       GetUnitOwner()->BeginCastSpell(spellToCastIndex, targetData);
    } else

@@ -3,6 +3,7 @@
 #include "MyProject.h"
 #include "SaveLoadClass.h"
 #include "UserInput.h"
+#include "RTSPawn.h"
 #include "BasePlayer.h"
 #include "WorldObjects/Ally.h"
 #include "WorldObjects/Summon.h"
@@ -45,9 +46,9 @@ void USaveLoadClass::SetupSaveControllerData()
    sceneSaveData.levelName = *controllerRef->GetGameMode()->GetCurLevelName();
    // TODO: Save scene interactables
    // Save Camera
-   cameraSaveData.cameraTransform  = controllerRef->GetPawn()->GetTransform();
-   cameraSaveData.cameraSpeed      = controllerRef->camMoveSpeedMultiplier;
-   cameraSaveData.isCamNavDisabled = controllerRef->isCamNavDisabled;
+   cameraSaveData.cameraTransform  = controllerRef->GetCameraPawn()->GetTransform();
+   cameraSaveData.cameraSpeed      = controllerRef->GetCameraPawn()->camMoveSpeedMultiplier;
+   cameraSaveData.isCamNavDisabled = controllerRef->GetCameraPawn()->isCamNavDisabled;
 }
 
 void USaveLoadClass::SetupSavePlayerData()
@@ -151,9 +152,9 @@ void USaveLoadClass::SetupController()
 {
    GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Testing to see if code can be called after level load!"));
    controllerRef = Cast<AUserInput>(GetOuter()->GetWorld()->GetFirstPlayerController());
-   controllerRef->GetPawn()->SetActorTransform(cameraSaveData.cameraTransform);
-   controllerRef->camMoveSpeedMultiplier = cameraSaveData.cameraSpeed;
-   controllerRef->isCamNavDisabled       = cameraSaveData.isCamNavDisabled;
+   controllerRef->GetCameraPawn()->SetActorTransform(cameraSaveData.cameraTransform);
+   controllerRef->GetCameraPawn()->camMoveSpeedMultiplier = cameraSaveData.cameraSpeed;
+   controllerRef->GetCameraPawn()->isCamNavDisabled       = cameraSaveData.isCamNavDisabled;
 }
 
 void USaveLoadClass::SetupPlayer()

@@ -4,6 +4,7 @@
 #include "BTTask_PatrolTask.h"
 #include "../AIControllers/UnitController.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "WorldObjects/PatrolComponent.h"
 #include "WorldObjects/Unit.h"
 
 UBTTask_Patrol::UBTTask_Patrol(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -15,13 +16,14 @@ UBTTask_Patrol::UBTTask_Patrol(const FObjectInitializer& ObjectInitializer) : Su
 EBTNodeResult::Type UBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory)
 {
    FBTPatrolTaskMemory* myMemory = (FBTPatrolTaskMemory*)nodeMemory;
-   myMemory->patrolIndex         = -1;
    myMemory->AICon               = Cast<AUnitController>(ownerComp.GetAIOwner());
+   myMemory->patrolComp          = ownerComp.GetAIOwner()->GetPawn()->FindComponentByClass<UPatrolComponent>();
 
-   if (myMemory->AICon && myMemory->AICon->patrolLocations.Num() > 0) {
+   if (myMemory->AICon && myMemory->AICon->patrolLocations.Num() > 0)
+   {
       UBlackboardComponent* blackboardComp = ownerComp.GetBlackboardComponent();
       if (blackboardComp) {
-         if (myMemory->AICon->patrolLocations.Num() > 0) { return PatrolToNextLocation(ownerComp, nodeMemory); }
+         if (myMemory->patrolComp->patrolPoints.Num() > 0) { return PatrolToNextLocation(ownerComp, nodeMemory); }
       }
    }
    return EBTNodeResult::Failed;
@@ -42,12 +44,8 @@ EBTNodeResult::Type UBTTask_Patrol::PatrolToNextLocation(UBehaviorTreeComponent&
 {
    FBTPatrolTaskMemory* myMemory = (FBTPatrolTaskMemory*)nodeMemory;
 
-   ++myMemory->patrolIndex;
-
-   if (myMemory->patrolIndex > myMemory->AICon->patrolLocations.Num() - 1) myMemory->patrolIndex = 0;
-
-   myMemory->AICon->GetBlackboardComponent()->SetValueAsVector(locKeyName, myMemory->AICon->patrolLocations[myMemory->patrolIndex]);
-   EPathFollowingRequestResult::Type result = myMemory->AICon->GetUnitOwner()->Move(myMemory->AICon->patrolLocations[myMemory->patrolIndex]);
+   EPathFollowingRequestResult::Type result = myMemory->patrolComp->MoveToNextPatrolPoint();
+   myMemory->AICon->GetBlackboardComponent()->SetValueAsVector(locKeyName, myMemory->patrolComp->GetCurrentPatrolPoint());
 
    if (result == EPathFollowingRequestResult::RequestSuccessful) {
       WaitForMessage(ownerComp, UBrainComponent::AIMessage_MoveFinished);
@@ -56,7 +54,6 @@ EBTNodeResult::Type UBTTask_Patrol::PatrolToNextLocation(UBehaviorTreeComponent&
    } else if (result == EPathFollowingRequestResult::AlreadyAtGoal) {
       return EBTNodeResult::Succeeded;
    }
-
    return EBTNodeResult::Failed;
 }
 

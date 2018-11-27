@@ -44,9 +44,6 @@ class MYPROJECT_API AIntimateNPC : public ANPC
    UFUNCTION(BlueprintCallable, Category = "Relationships")
    int GetRelationshipPoints() const { return relationshipPoints; }
 
-   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interact")
-   void Interact(ABaseHero* hero);
-
    virtual void Interact_Implementation(ABaseHero* hero) override;
 
    /**

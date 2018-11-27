@@ -27,15 +27,17 @@ void ABasePlayer::UpdateParty(TArray<ABaseHero*> newHeroes)
 {
 #if UE_EDITOR
    if (newHeroes.Num() <= 0 && newHeroes.Num() > MAX_NUM_HEROES) UE_LOG(LogTemp, Warning, TEXT("Inappropriate size (%d) of hero array"), newHeroes.Num());
-      // checkf(newHeroes.Num() > 0 && newHeroes.Num() <= MAX_NUM_HEROES, TEXT("Inappropriate size (%d) of hero array"), newHeroes.Num());
+   // checkf(newHeroes.Num() > 0 && newHeroes.Num() <= MAX_NUM_HEROES, TEXT("Inappropriate size (%d) of hero array"), newHeroes.Num());
 #endif
 
    for (ABaseHero* hero : heroes) {
       hero->SetEnabled(false);
    }
    heroes = newHeroes;
+   int i  = -1;
    for (ABaseHero* hero : heroes) {
       hero->SetEnabled(true);
+      hero->heroIndex = ++i;
    }
 }
 

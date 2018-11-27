@@ -34,6 +34,9 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) : Super(objectInitiali
       }
    }
 
+   //Setup basic collision responses universal to all unit types
+   GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel7, ECollisionResponse::ECR_Block);
+
    // Setup components can only happen in the constructor
    unitSpellData.abilitySystem = CreateDefaultSubobject<UMyAbilitySystemComponent>(TEXT("AbilitySystem"));
    selectionCircleDecal        = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));
@@ -55,6 +58,9 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) : Super(objectInitiali
    visionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
    visionSphere->bUseAttachParentBound = true;
    visionSphere->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel5); // see this in defaultengine.ini
+
+   //Allows units to step up stairs.  The height of the stairs they can step is set in some navmesh params
+   GetCharacterMovement()->SetWalkableFloorAngle(90.f);
 }
 
 void AUnit::BeginPlay()

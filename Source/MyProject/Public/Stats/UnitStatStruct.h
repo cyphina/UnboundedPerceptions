@@ -1,5 +1,8 @@
 #pragma once
 
+#include "BaseCharacter.h"
+#include "GameplayTags.h"
+
 /**Used to setup initial stats for a unit*/
 USTRUCT(BlueprintType, NoExport)
 struct FUnitStatStruct {

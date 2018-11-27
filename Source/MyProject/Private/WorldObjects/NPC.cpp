@@ -27,6 +27,7 @@ ANPC::ANPC()
 
    GetCapsuleComponent()->SetCollisionProfileName("NPC");
    GetMesh()->SetCollisionProfileName("NoCollision");
+   FindComponentByClass<UArrowComponent>()->DestroyComponent();
 }
 
 void ANPC::BeginPlay()
@@ -97,7 +98,7 @@ void ANPC::Interact_Implementation(ABaseHero* hero)
    SetActorRotation(FRotationMatrix::MakeFromX(FVector(projectedDirection)).Rotator());
 
    // If this npc wants to converse, we go to another screen after the initial conversation where we can interact more
-   if (!controllerRef->GetBasePlayer()->interactedHero) {
+   if (Execute_CanInteract(this)) {
       if (bWantsToConverse) {
          controllerRef->GetHUDManager()->GetSocialWindow()->SetNPC(this);
          SetupAppropriateView();
@@ -112,8 +113,7 @@ void ANPC::Interact_Implementation(ABaseHero* hero)
             controllerRef->GetHUDManager()->AddHUD(conversationStarterName, EDialogSource::none);
          else {
             // if there was no entry for conversationStarterName, just display a default one
-            controllerRef->GetHUDManager()->AddHUD(TArray<FDialogData>{FDialogData({0}, NSLOCTEXT("NPCDialog", "Default", "This person is silent..."), FName())},
-                                                   EDialogSource::none);
+            controllerRef->GetHUDManager()->AddHUD(TArray<FDialogData>{FDialogData({}, NSLOCTEXT("NPCDialog", "Default", "This person is silent..."), FName())}, EDialogSource::none);
          }
       }
       controllerRef->GetGameMode()->GetQuestManager()->OnTalkNPC(this, FGameplayTag());
@@ -134,7 +134,7 @@ FVector ANPC::GetInteractableLocation_Implementation(ABaseHero* hero)
 
 bool ANPC::CanInteract_Implementation()
 {
-   return true;
+   return !controllerRef->GetBasePlayer()->interactedHero;
 }
 
 void ANPC::MakeNPCData(FNPCSaveInfo& npcSaveInfo)

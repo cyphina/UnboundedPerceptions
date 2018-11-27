@@ -7,7 +7,7 @@
 #include "StartLevelScript.generated.h"
 
 /**
- *
+ * The level script of the very first level (main menu)
  */
 UCLASS()
 class MYPROJECT_API AStartLevelScript : public AUPLevelScript

@@ -6,14 +6,13 @@
 #include "EventSystem/Trigger.h"
 #include "Quests/QuestManager.h"
 #include "EventSystem/RTSConditional.h"
+#include "Minigames/MinigameManager.h"
 #include "UserInput.h"
 #include "BasePlayer.h"
 #include "WorldObjects/BaseHero.h"
 
 ARTSGameMode::ARTSGameMode() : Super()
 {
-   static ConstructorHelpers::FClassFinder<APawn> playerPawnClassFinder(TEXT("/Game/RTS_Tutorial/Blueprints/CameraPawn"));
-   DefaultPawnClass = playerPawnClassFinder.Class;
 }
 
 void ARTSGameMode::BeginPlay()
@@ -24,6 +23,7 @@ void ARTSGameMode::BeginPlay()
    questManager       = NewObject<UQuestManager>(this, questManagerClass, TEXT("QuestManager"), RF_NoFlags);
    saveLoadManager    = NewObject<USaveLoadClass>(this, TEXT("SaveManager"), RF_NoFlags);
    conditionalManager = NewObject<UConditionalManager>(this, TEXT("ConditionManager"), RF_NoFlags);
+   minigameManager    = NewObject<UMinigameManager>(this, minigameManagerClass, TEXT("MinigameManager"), RF_NoFlags);
 
    /// Initialize all their references
    eventManager->Init();
@@ -31,6 +31,7 @@ void ARTSGameMode::BeginPlay()
    questManager->Init();
    saveLoadManager->Init();
    conditionalManager->Init();
+   minigameManager->Init();
 
    // Call blueprint BeginPlay() afterwards
    Super::BeginPlay();

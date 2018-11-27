@@ -27,7 +27,7 @@ class MYPROJECT_API UESkillContainer : public UUserWidget
     * Represents the container in the unit which the set of skills in this container comes from.  So far only use for this is having two sets of containers
     * in heroes (skill and class abilities)
     * May one day replace this with polymorphic SkillContainerSkillSet classes which allow us to get the right skill container polymorphically
-    
+    
    UPROPERTY(BlueprintReadOnly, Category = "Properties", Meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
    TArray<TSubclassOf<UMySpell>> skills;*/
 

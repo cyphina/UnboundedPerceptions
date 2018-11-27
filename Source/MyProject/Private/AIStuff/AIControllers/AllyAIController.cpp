@@ -33,7 +33,7 @@ void AAllyAIController::SwitchAIModes(AllyBehavioralMode newMode)
 {
    if (currentAllyBehavior != AllyBehavioralMode::ABM_Neutral) behaviorTreeComp->StopTree();
 
-   // if we choose neutral there's no behavior tree since it's element int the tree array is empty
+   // if we choose neutral there's no behavior tree since it's element in the tree array is empty
    if (behaviorTrees[static_cast<uint8>(newMode)]) {
       UseBlackboard(behaviorTrees[static_cast<uint8>(newMode)]->BlackboardAsset, blackboardComp);
       behaviorTreeComp->RestartTree(); // restart tree or we could be stuck on tasks that can't complete if they are stopped in progress

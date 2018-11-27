@@ -20,7 +20,7 @@ UENUM(BlueprintType)
 enum class ETriggerType : uint8 {
    /** Doesn't do anything */
    None,
-   /** Given an NPC name (object 1), changes dialog of topic (value 1 (is a fully qualified gameplaytag name)) to dialog name (value 2).  If (value2) empty, then changes default dialog to dialogName
+   /** Given an NPC name (object 1), changes dialog of topic (value 1 (is fully qualified gameplaytag)) to dialog (value 2).  If (value2) empty, changes default dialog to dialogName
       (value1)*/
    ChangeDialog,
    /** For each object, assumes object is a unit.  Changes Stat (value N) (ordered numerically by stats, skills, vitals, mechanics) by adding (value N+1) to it*/
@@ -44,7 +44,20 @@ enum class ETriggerType : uint8 {
    /** Displays the lines in TriggerValues as dialog.  Messages aren't localized, nor do they have a corresponding actor name, so better use DisplayConversationTrigger*/
    DisplayDialogTrigger,
    /** Gets the conversation from the conversation table named (value1) and display its contents*/
-   DisplayConversationTrigger
+   DisplayConversationTrigger,
+   /** Destroys the npc with name (object 1) */
+   DestroyNPCTrigger,
+   /** Moves the npc with name (object 1) to location X: (value 1), Y: (value2), Z: (value3)*/
+   MoveNPCTrigger,
+   /** Adds an item to hero (object 1) with id (value 1) and count (value 2).  If no hero is specified, then the interacting hero gets the item */
+   AddItemTrigger,
+   /** Adds the fully qualified gameplay tag name (value 1) as a new learned dialog topic*/
+   LearnDialogTopic,
+   /**Sets the NPC with name (object 1) to follow the hero with name (object 2).  If no hero name is specified, then the interacting hero is followed*/
+   SetNPCFollow,
+   /**Sets the IntimateNPC with name (object 1) to allow conversations (!= 0) or not (==0) (value1)*/
+   SetNPCWantConverse
+
 };
 
 USTRUCT(BlueprintType, NoExport)
@@ -124,6 +137,12 @@ class MYPROJECT_API UTriggerManager : public UObject
    bool CompleteQuestGoal(const FTriggerData& tdata);
    void DisplayDialog(const FTriggerData& tdata);
    void DisplayConversation(const FTriggerData& tdata);
+   void DestroyNPC(const FTriggerData& tdata);
+   void MoveNPC(const FTriggerData& tdata);
+   void AddItem(const FTriggerData& tdata);
+   void LearnDialogTopic(const FTriggerData& tdata);
+   void SetNPCFollow(const FTriggerData& tdata);
+   void SetNPCWantConverse(const FTriggerData& tdata);
 
    /**Function that triggers an effect when the trigger is activated*/
    void TriggerEffect(FTriggerData& tdata);

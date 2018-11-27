@@ -46,6 +46,7 @@ class MYPROJECT_API AAlly : public AUnit
    UPROPERTY(BlueprintSetter = SetSpellIndex, BlueprintGetter = GetSpellIndex, Category = "Spells")
    int spellIndex = -1;
 
+ protected:
    AAllyAIController* allyControllerRef;
 
  public:
@@ -110,8 +111,11 @@ class MYPROJECT_API AAlly : public AUnit
    /**Like CastSpell in Unit but triggers actionbar redraw*/
    bool CastSpell(TSubclassOf<UMySpell> spellToCast) override;
 
-   /**When spell hotkey is presssed down.  Returns true when spell sucessfully set up or casted*/
+   /**When spell hotkey is presssed down.  Returns true when spell sucessfully set up or casted.  Exposed to blueprints for actionbar usage.*/
    UFUNCTION(BlueprintCallable, Category = "Spells")
+   bool PressedCastSpell(int spellToCastIndex);
+
+   /**When spell hotkey is presssed down.  Returns true when spell sucessfully set up or casted.  Used for item usage.*/
    bool PressedCastSpell(TSubclassOf<UMySpell> spellToCast);
 
    /**Used for AI spellcasting instead of pressing the button explicitly when AI is neutral*/

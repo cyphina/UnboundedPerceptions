@@ -135,7 +135,8 @@ struct FGoalInfo {
 
    bool operator==(const FGoalInfo& otherGoal) const { return goalText.EqualTo(otherGoal.goalText) && goalState == otherGoal.goalState; }
 };
-// struct for possible quest rewards
+
+/**Struct for possible quest rewards*/
 USTRUCT(BlueprintType, NoExport)
 struct FQuestReward {
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -144,6 +145,15 @@ struct FQuestReward {
    int exp;
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
    TArray<FMyItem> items;
+};
+
+/**Struct representing when quest expires*/
+USTRUCT(BlueprintType, NoExport)
+struct FQuestExpiration {
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int chapter = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int section = 0; 
 };
 
 // Struct for quest properties (that may be replicated?)
@@ -173,6 +183,11 @@ struct FQuestInfo {
    /**What kind of quest is this?*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
    EQuestCategory questCategory;
+   /**
+   *Does this quest have an expiration time?  That is if this point of the story is reached, then the quest automatically fails
+   */
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   FQuestExpiration questExpiration;
    /**
     *A list of all the goals in this quest information
     */

@@ -18,6 +18,7 @@ class UTriggerManager;
 class UQuestManager;
 class ULoadingWidget;
 class UConditionalManager;
+class UMinigameManager;
 class IWorldObject;
 
 UCLASS()
@@ -31,6 +32,7 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
    const FString sylphiaApartment  = "SylphiaApartment";
    const FString roadToWubville    = "RoadToWubville";
    const FString blockadeCity      = "BlockadeCity";
+   const FString factory      = "Factory";
 
    /**Stores the currently loaded level name*/
    UPROPERTY(BlueprintReadWrite, Category = "Levels", Meta = (AllowPrivateAccess = "true"))
@@ -67,6 +69,12 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
    UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
    TSubclassOf<UQuestManager> questManagerClass;
 
+   /**
+    * MinigameManager - Handles starting and stopping of minigames
+    */
+   UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
+   TSubclassOf<UMinigameManager> minigameManagerClass;
+
    UPROPERTY(BlueprintGetter = GetEventManager)
    UEventManager* eventManager;
 
@@ -81,6 +89,9 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
 
    UPROPERTY(BlueprintGetter = GetConditionalManager)
    UConditionalManager* conditionalManager;
+
+   UPROPERTY(BlueprintGetter = GetMinigameManager)
+   UMinigameManager* minigameManager;
 
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnLevelLoaded OnLevelLoaded;
@@ -100,6 +111,9 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
 
    UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
    UConditionalManager* GetConditionalManager() const { return conditionalManager; }
+
+   UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
+   UMinigameManager* GetMinigameManager() const { return minigameManager; }
 
    ///---Level Things---
    /**
@@ -131,6 +145,12 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
     */
    UFUNCTION(BlueprintCallable, Category = "Levels")
    FORCEINLINE FString GetBlockadedCityLevelName() const { return blockadeCity; }
+
+   /**
+   * Gets the name of the factory where Zone realizes he's been living as if he's never existed this whole time
+   */
+   UFUNCTION(BlueprintCallable, Category = "Levels")
+   FORCEINLINE FString GetFactoryLevelName() const { return factory; }
 
    /**Stream in a level and put in the loading screen*/
    UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "LevelLoading")

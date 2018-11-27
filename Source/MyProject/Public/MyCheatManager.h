@@ -86,4 +86,8 @@ class MYPROJECT_API UMyCheatManager : public UCheatManager
    /**Gives vision over all the enemy units*/
    UFUNCTION(exec, Category = "Cheats")
    virtual void SeeAll();
+
+   /**Learn all the possible dialog topics*/
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void LearnAllTopics();
 };

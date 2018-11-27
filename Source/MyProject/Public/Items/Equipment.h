@@ -7,7 +7,7 @@
 
 class UBackpack;
 
-DECLARE_DELEGATE_TwoParams(FOnEquipped, int, bool);
+DECLARE_DYNAMIC_DELEGATE_TwoParams(FOnEquipped, int, equipSlot, bool, isEquipped);
 
 UCLASS(ClassGroup = (Custom))
 class MYPROJECT_API UEquipment : public UObject

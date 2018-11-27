@@ -2,6 +2,7 @@
 
 #include "MyProject.h"
 #include "SettingsMenu.h"
+#include "RTSPawn.h"
 #include "UserInput.h"
 
 USettingsMenu::USettingsMenu() : Super()
@@ -74,7 +75,7 @@ void USettingsMenu::ChangeFrameRateCap(bool inc)
 
 void USettingsMenu::ChangeCameraSpeed(float val)
 {
-   CPC->SetCamMoveSpeedMultiplier(val);
+   CPC->GetCameraPawn()->SetCamMoveSpeedMultiplier(val);
 }
 
 void USettingsMenu::ChangeAudioVolume(float val)

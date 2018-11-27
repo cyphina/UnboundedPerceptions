@@ -98,3 +98,26 @@ void UMyCheatManager::SeeAll()
       e->GetCapsuleComponent()->SetVisibility(true, true);
    }
 }
+
+void UMyCheatManager::LearnAllTopics()
+{
+   TSharedPtr<FGameplayTagNode>         rootDialogNode = UGameplayTagsManager::Get().FindTagNode("Dialog");
+   TSet<TSharedPtr<FGameplayTagNode>>   leafNodes{};
+   TSet<TSharedPtr<FGameplayTagNode>>   newLeafNodes{};
+   TArray<TSharedPtr<FGameplayTagNode>> childNodes{};
+
+   leafNodes.Add(rootDialogNode);
+
+   while (leafNodes.Num() > 0) {
+      for (TSharedPtr<FGameplayTagNode> node : leafNodes) {
+         childNodes = node->GetChildTagNodes();
+         if (childNodes.Num() > 0) {
+            newLeafNodes.Append(childNodes);
+         } else {
+            userInputRef->GetBasePlayer()->LearnDialogTopic(node->GetCompleteTag());
+         }
+      }
+      leafNodes = newLeafNodes;
+      newLeafNodes.Empty();
+   }
+}

@@ -24,12 +24,6 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
    UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
    FText name;
 
-   /**
-    * Does this NPC allow us to have a conversation (open up social menu) or does he/she just say something then walk away
-    */
-   UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true), Category = "NPCConversationSettings")
-   bool bWantsToConverse = false;
-
    /** Exposed name of default conversation to be quickly set in object properties.  This conversation is whatever they NPC will tell you before your
     * conversation digresses, so it may change when new events occur.  Rather than caching dialog, loading it form our table is fine
     * because our table is a map (constant time searches) */
@@ -98,6 +92,12 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
     */
    UPROPERTY(BlueprintReadWrite, Category = "NPCConversationSettings")
    ABaseHero* currentlyTalkingHero = false;
+
+   /**
+    * Does this NPC allow us to have a conversation (open up social menu) or does he/she just say something then walk away
+    */
+   UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (ExposeOnSpawn = true), Category = "NPCConversationSettings")
+   bool bWantsToConverse = false;
 
 #pragma region informationAccess
 

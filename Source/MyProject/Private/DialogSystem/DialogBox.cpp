@@ -167,10 +167,10 @@ void UDialogBox::ResetDialog()
    switch (dialogSource) {
       case EDialogSource::npc:
          controllerRef->GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_Social));
-         controllerRef->GetBasePlayer()->interactedHero = nullptr;
          break;
       case EDialogSource::conversation: controllerRef->GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_Social)); break;
       case EDialogSource::trigger: break;
+	  case EDialogSource::none: controllerRef->GetBasePlayer()->interactedHero = nullptr;
       default: break;
    }
 

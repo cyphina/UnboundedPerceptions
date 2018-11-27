@@ -18,9 +18,6 @@ class MYPROJECT_API UPatrolComponent : public USceneComponent
 
    AAIController* ownerControllerRef;
 
-   UFUNCTION()
-   void OnMoveCompleted(FAIRequestID requestID, EPathFollowingResult::Type result);
-
  public:
    UPatrolComponent();
 
@@ -46,5 +43,8 @@ class MYPROJECT_API UPatrolComponent : public USceneComponent
    void DeletePatrolPoint(int patrolIndex);
 
    UFUNCTION(BlueprintCallable)
-   void MoveToNextPatrolPoint();
+   EPathFollowingRequestResult::Type MoveToNextPatrolPoint();
+
+   UFUNCTION(BlueprintCallable)
+   FORCEINLINE FVector GetCurrentPatrolPoint() { return patrolPoints [ currentPatrolIndex ]; }
 };
