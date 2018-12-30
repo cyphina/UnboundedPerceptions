@@ -3,6 +3,7 @@
 #include "MyProject.h"
 #include "DamageCalculation.h"
 #include "WorldObjects/Unit.h"
+#include "AIStuff/AIControllers/UnitController.h"
 #include "AbilitySystemComponent.h"
 #include "GameplayTags.h"
 #include "StatChangeCalc.h"
@@ -78,7 +79,7 @@ void UDamageCalculation::DamageTarget(AUnit* sourceUnit, AUnit* targetUnit, Dama
    if (targetUnit->GetVitalCurValue(static_cast<int>(Vitals::Health)) <= 0) {
       if (!targetUnit->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Immortality"))) {
          targetUnit->Die();
-         sourceUnit->Stop();
+         sourceUnit->GetUnitController()->Stop();
       }
    }
 }
@@ -105,7 +106,7 @@ void UDamageCalculation::ReceiveEffects(AUnit* unit, Damage& d, FGameplayTagCont
    if (!effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Absolute")))
       d.damage = d.damage * (100 - unit->GetMechanicAdjValue(static_cast<int>(Mechanics::GlobalDamageModifier))) / 100;
    if (effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.NeverMiss"))) d.accuracy = 0;
-   if (unit->godMode) d.damage = 0;
+   if (unit->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.GodMode"))) d.damage = 0;
 }
 
 void UDamageCalculation::CalculateDamageReduction(AUnit* unit, Damage& d, FGameplayTagContainer& effects) const

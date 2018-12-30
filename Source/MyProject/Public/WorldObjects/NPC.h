@@ -34,7 +34,7 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
     *Name of the conversation the NPC will have if it doesn't know the topic asked about
     */
    UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true), Category = "NPCConversationSettings")
-   FName defaultResponseName;
+   FName defaultResponseName = "Default";
 
    /**
     *Maps DialogTopics to names in the dialogTable. For names not in the map, the NPC will not have a detailed conversation when asked about that topic

@@ -15,7 +15,7 @@ void AShootingEnemy::BeginPlay()
 
 void AShootingEnemy::Attack()
 {
-   if (!IsStunned() && combatParams.readyToAttack) // If we're not stunned and our attack rate is filled
+   if (!IsStunned()) // If we're not stunned and our attack rate is filled
    {
       FTransform      transform  = FTransform{FVector(GetActorLocation().X, GetActorLocation().Y, targetData.targetUnit->GetActorLocation().Z)};
       ARTSProjectile* projectile = GetWorld()->SpawnActorDeferred<ARTSProjectile>(projectileType, transform, this);
@@ -40,6 +40,5 @@ void AShootingEnemy::Attack()
       projectile->FinishSpawning(transform);
       projectile->FireInDirection((targetData.targetUnit->GetActorLocation() - FVector(GetActorLocation().X, GetActorLocation().Y, 0)).GetSafeNormal());
 
-      combatParams.readyToAttack = false;
    }
 }

@@ -5,6 +5,9 @@
 #include "AIController.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
+
+#include "UnitTargetData.h"
+
 #include "UnitController.generated.h"
 
 class AUnit;
@@ -13,7 +16,8 @@ class UEnvQuery;
 class UMySpell;
 
 /**
- * Base controller for all unit classes
+ * Base controller for all unit classes.  Controller manages a behavior, and allows different units
+ * to swap out how they behave.  Holds all of the task functions.
  */
 
 UCLASS()
@@ -23,11 +27,17 @@ class MYPROJECT_API AUnitController : public AAIController
 
    AUnit*        ownerRef = nullptr;
    AUserInput*   CPCRef   = nullptr;
-   TSet<AUnit*>* groupRef; // part of what current group
+   TSet<AUnit*>* groupRef;         // Denotes is unit is part of a group (group AI)
+   int           spellToCastIndex; // Spell to cast after target is found using EQS
 
  protected:
    /**blackboard key value name*/
-   const FName blackboardEnemyKey = FName("Target");
+   const FName blackboardEnemyKey   = FName("target");
+   const FName blackboardRiskKey    = FName("risk");
+   const FName blackboardProtectKey = FName("protect");
+   const FName blackboardThreatKey  = FName("threat");
+
+   static const FName AIMessage_Help; // sent when a unit needs some help defensively
 
  public:
    AUnitController();
@@ -36,59 +46,183 @@ class MYPROJECT_API AUnitController : public AAIController
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AISettings")
    TArray<FVector> patrolLocations;
 
-   /**Behaviortreecomponent used to start a behavior tree*/
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AISettings")
+   bool canProtect = false;
+
+   /** Behaviortreecomponent used to start/stop behavior trees */
    UBehaviorTreeComponent* behaviorTreeComp;
 
-   /**blackboardcomponent used to initialize blackboard values and set/get values from a blackboard asset*/
+   /** Blackboardcomponent used to initialize blackboard values and
+    * set/get values from a blackboard asset */
    UBlackboardComponent* blackboardComp;
 
-   /**Make sure to call UseBlackboard/InitializeBlackboard in the children classes depending on how they use their blackboards as well as starting the tree*/
+   /**Make sure to call UseBlackboard/InitializeBlackboard in the children classes depending
+    * on how they use their blackboards as well as starting the tree*/
    void Possess(APawn* InPawn) override;
    void BeginPlay() override;
+   void Tick(float deltaSeconds) override;
 
    inline AUnit*      GetUnitOwner() const { return ownerRef; }
    inline AUserInput* GetCPCRef() const { return CPCRef; }
 
-   /**
-    *Find the best spot for targetting an AOE spell
-    *@param isSupport - Find best AOE location to hit the most enemies (false) or friends (true)?
-    */
-   virtual void FindBestAOELocation(int spellIndex, bool isSupport);
+ private:
 
-   /**
-    *Find the best unit to target a single spell
-    *@param isSupport - Find best AOE location to hit the most enemies (false) or friends (true)?
-    */
-   virtual void FindWeakestTarget(int spellIndex, bool isSupport);
+   FAIMessageObserverHandle protectListener;
 
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "AIModes")
-   FORCEINLINE int GetAggresionLevel() const { return aggressionLevel; }
+/** Used to search for an actor/vector that matches certain criteria */
+#pragma region EnvironmentQuery
 
- protected:
-   /*Describes from 1-5 how aggressive the unit is (1 = Passive, 3 = Neutral, 5 = Aggresive).
-    *Not all units (enemies) need the complexity of having 5 states so we have an int to represent this*/
-   int aggressionLevel;
+ public:
+   /**Find the best spot for targetting an AOE spell
+    *@param isSupport - Find best AOE location to hit the most enemies (false) or friends (true)? */
+   virtual void FindBestAOELocation(bool isSupport);
+
+   /**Find the best unit to target a single spell
+    *@param isSupport - Find best AOE location to hit the most enemies (false) or friends (true)? */
+   virtual void FindWeakestTarget(bool isSupport);
 
  private:
-   /**Spell to cast after target is found*/
-   int spellToCastIndex;
-
    /**Environment query to find the best place to cast an AOE spell for maximum target hits when healing*/
    UPROPERTY(EditDefaultsOnly)
    UEnvQuery* findBestAOESupportLocation;
 
-   /**Environment query to find the best place to cast an AOE spell for maximum target hits when casting an AOE spell*/
+   /** Environment query to find the best place to cast an AOE spell for maximum target hits when casting an AOE spell*/
    UPROPERTY(EditDefaultsOnly)
    UEnvQuery* findBestAOEAssaultLocation;
 
-   /**Environment query to find the weakest allied unit.  Allies and enemies have should have different EQueries set*/
+   /** Environment query to find the weakest allied unit.  Allies and enemies have should have different EQueries set*/
    UPROPERTY(EditDefaultsOnly)
    UEnvQuery* findWeakestAllyTarget;
 
-   /**Environment query to find the weakest enemy unit.  Allies and enemies have should have different EQueries set*/
+   /** Environment query to find the weakest enemy unit.  Allies and enemies have should have different EQueries set*/
    UPROPERTY(EditDefaultsOnly)
    UEnvQuery* findWeakestEnemyTarget;
 
+   /** Environment query to find the best place to escape to.  Allies and enemies have should have different EQueries set*/
+   UPROPERTY(EditDefaultsOnly)
+   UEnvQuery* findBestDefensivePosition;
+
+   /** Environment query to find the best place to deal damage.  Allies and enemies have should have different EQueries set*/
+   UPROPERTY(EditDefaultsOnly)
+   UEnvQuery* findBestOffensivePosition;
+
+   /** Chances of the unit casting a spell when at state 0 - Passive, 1 - Defensive, 2 - Offensive, 3 - Aggressive*/
+   UPROPERTY(EditDefaultsOnly)
+   TArray<int> spellCastingChances;
+
+   void FindBestSpellTarget(FGameplayTag targettingTag, bool isSupport);
    void OnAOELocationFound(TSharedPtr<FEnvQueryResult> result);
    void OnWeakestTargetFound(TSharedPtr<FEnvQueryResult> result);
+
+#pragma endregion;
+
+/** Functions used for commands and AI tasks on the tree */
+#pragma region actions
+
+ public:
+   bool SearchAndCastSpell(const FGameplayTagContainer& spellRequirementTags);
+
+   virtual void Protect(UBrainComponent* BrainComp, const FAIMessage& Message);
+
+   /** Function for moving units around, based upon the ACharacter move.  Changes our state, and some different characters may move differently*/
+   UFUNCTION(BlueprintCallable, Category = "Movement")
+   virtual EPathFollowingRequestResult::Type Move(FVector newLocation);
+
+   /** Similar to Move function but moves to an actor */
+   UFUNCTION(BlueprintCallable, Category = "Movement")
+   virtual EPathFollowingRequestResult::Type MoveActor(AActor* targetActor);
+
+   /** Follows a target denoted by the followTarget field in the Unit class*/
+   void Follow();
+   /** Patrol around a set of points*/
+   void Patrol();
+   /** Move after a target even when it is out of vision by guessing where it could be*/
+   void Search();
+   /** Randomly move about the map*/
+   void Roam();
+   /** Get away from enemies*/
+   void Run();
+
+   /** Stop should be overidden based on the subclass because stopping some classes has to cancel more things*/
+   UFUNCTION(BlueprintCallable, Category = "Action")
+   virtual void Stop();
+
+   /**Used to initiate an attack on a target*/
+   UFUNCTION(BlueprintCallable, Category = "Combat")
+   virtual void BeginAttack(AUnit* target);
+
+   /**Initiate spell casting procedure without any input triggers.  Used for AI spellcasting.  Returns if we successfully transitioned to CASTING state*/
+   UFUNCTION(BlueprintCallable, Category = "Spells")
+   virtual bool BeginCastSpell(TSubclassOf<UMySpell> spellToCastIndex, const FGameplayAbilityTargetDataHandle& targetData);
+
+#pragma endregion
+
+/** Functions used to perform checks within the tasks */
+#pragma region ActionHelpers
+
+   /**Function for checking if a unit is in range of some action*/
+   UFUNCTION(BlueprintCallable, Category = "Movement")
+   bool IsTargetInRange(float range, FVector targetLocation);
+
+   /**Function to see if unit is facing the direction*/
+   UFUNCTION(BlueprintCallable, Category = "Movement")
+   bool IsFacingTarget(FVector targetLocation, float errorAngleCutoff = .02f); 
+
+protected:
+
+   /**Checks to see if spell has a cast time, and if so, it will start channeling process.  Else it will just cast the spell*/
+   virtual void PreCastChannelingCheck(TSubclassOf<UMySpell> spellToCast);
+
+   /** Initiates attack animation after moving into position */
+   UFUNCTION()
+   void PrepareAttack(); 
+
+#pragma endregion
+
+/** Not actions, but functions used to get the character in the right position */
+#pragma region MoveAdjustments
+
+public:
+
+   FQuat FindLookRotation(FVector targetPoint);
+
+   /**Function to turn self towards a direction*/
+   UFUNCTION(BlueprintCallable, Category = "Movement")
+   void TurnTowardsTarget(FVector targetLocation);
+
+   /**Function to turn self towards an actor*/
+   UFUNCTION(BlueprintCallable, Category = "Movement")
+   void TurnTowardsActor(AActor* targetActor);
+
+   /**Function to move to appropriate distance from target and face direction*/
+   virtual bool AdjustPosition(float range, FVector targetLocation);
+
+   /**Function to move to appropriate distance from target and face direction*/
+   virtual bool AdjustPosition(float range, AActor* targetActor);
+
+   UFUNCTION()
+   void OnActorTurnFinished();
+
+   UFUNCTION()
+   void ActionAfterTurning();
+
+   UPROPERTY(EditAnywhere, Category = "Movement")
+   float rotationRate = 0.03f;
+
+ private:
+
+   UCurveFloat* turnCurve;
+   FQuat        turnRotator;
+   FQuat        startRotation;
+
+   FTimeline turnTimeline;
+   FTimeline turnActorTimeline;
+
+   UFUNCTION()
+   void Turn(float turnValue);
+
+   UFUNCTION()
+   void TurnActor(float turnValue);
+
+#pragma endregion
 };

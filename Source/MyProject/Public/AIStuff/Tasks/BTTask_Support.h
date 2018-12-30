@@ -20,18 +20,9 @@
  * 4. Cast spell (ends when spell successfully cast)
  */
 
-class AUserInput;
 class AUnitController;
-class AAlly;
 class AUnit;
 class UMySpell;
-
-struct FBTSupportTaskMemory {
-   UMySpell*        supportSpell      = nullptr;
-   int              supportSpellIndex = -1; // use index because we need it to properly set CD
-   AUnit*           unitRef           = nullptr;
-   AUnitController* unitControllerRef = nullptr;
-};
 
 UCLASS()
 class MYPROJECT_API UBTTask_Support : public UBTTaskNode
@@ -39,9 +30,8 @@ class MYPROJECT_API UBTTask_Support : public UBTTaskNode
    GENERATED_BODY()
 
    UBTTask_Support();
-
    EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) override;
-   void                TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+   void                OnMessage(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory, FName message, int32 requestID, bool bSuccess) override;
 
-   uint16 GetInstanceMemorySize() const override;
+
 };

@@ -16,6 +16,9 @@
 #include "WorldObjects/Unit.h"
 #include "WorldObjects/BaseHero.h"
 #include "Interactables/InteractableBase.h"
+#include "Runtime/LevelSequence/Public/LevelSequence.h"
+#include "Runtime/LevelSequence/Public/LevelSequencePlayer.h"
+#include "Runtime/MovieScene/Public/MovieSceneSequencePlayer.h"
 
 FTriggerData FTriggerData::defaultTrigger = FTriggerData();
 
@@ -146,12 +149,12 @@ void UTriggerManager::DisplayDialog(const FTriggerData& tdata)
       }
    }
    dialog.Emplace(TArray<int>(), FText::FromString(tdata.triggerValues[tdata.triggerValues.Num() - 1]), "");
-   cpcRef->GetHUDManager()->AddHUD(dialog, EDialogSource::none);
+   cpcRef->GetHUDManager()->AddHUD(dialog, EDialogSource::trigger);
 }
 
 void UTriggerManager::DisplayConversation(const FTriggerData& tdata)
 {
-   cpcRef->GetHUDManager()->AddHUD(*tdata.triggerValues[0], EDialogSource::none);
+   cpcRef->GetHUDManager()->AddHUD(*tdata.triggerValues[0], EDialogSource::trigger);
 }
 
 void UTriggerManager::DestroyNPC(const FTriggerData& tdata)
@@ -206,6 +209,17 @@ void UTriggerManager::SetNPCWantConverse(const FTriggerData& tdata)
    if (npcRef) { npcRef->bWantsToConverse = FCString::Atoi(*tdata.triggerValues[0]); }
 }
 
+void UTriggerManager::PlaySequence(const FTriggerData& tdata)
+{
+   checkf(tdata.triggerValues.Num() == 1, TEXT("Missing sequence filepath parameter for triggerValue"));
+   FString               filePath = "/Game/RTS_Tutorial/Sequencer/" + tdata.triggerValues[0];
+   FStringAssetReference sequencetoLoad{filePath};
+   ALevelSequenceActor*  sequenceActorRef;
+   ULevelSequencePlayer* sequencePlayer =
+       ULevelSequencePlayer::CreateLevelSequencePlayer(cpcRef, Cast<ULevelSequence>(sequencetoLoad.TryLoad()), FMovieSceneSequencePlaybackSettings(), sequenceActorRef);
+   sequencePlayer->Play();
+}
+
 void UTriggerManager::TriggerEffect(FTriggerData& triggerData)
 {
 #if UE_EDITOR
@@ -234,6 +248,7 @@ void UTriggerManager::TriggerEffect(FTriggerData& triggerData)
       case ETriggerType::LearnDialogTopic: LearnDialogTopic(triggerData); break;
       case ETriggerType::SetNPCFollow: SetNPCFollow(triggerData); break;
       case ETriggerType::SetNPCWantConverse: SetNPCWantConverse(triggerData); break;
+      case ETriggerType::PlaySequence: PlaySequence(triggerData); break;
       default: UE_LOG(LogTemp, Warning, TEXT("Unknown Trigger type attempted to be activated!"));
    }
 

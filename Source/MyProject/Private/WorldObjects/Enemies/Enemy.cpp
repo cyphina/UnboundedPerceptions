@@ -15,18 +15,21 @@
 #include "NavArea_EnemySpot.h"
 #include "../BaseHero.h"
 
+#include "ResourceManager.h"
+
 AEnemy::AEnemy(const FObjectInitializer& oI) : AUnit(oI)
 {
    aggroRange = 20;
-   isEnemy    = true;
    state      = TUniquePtr<StateMachine>(new StateMachine(this));
-   SetActorHiddenInGame(true); // set hidden by default so won't be revealed by vision
+   SetActorHiddenInGame(true); //Set hidden by default so won't be revealed by vision
    GetMesh()->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel2);
-   GetCapsuleComponent()->AreaClass = UNavArea_EnemySpot::StaticClass();                                       // custom area class so navigation filter for defensive movement will avoid this
-   GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel8, ECollisionResponse::ECR_Block); // traceEnemyOnly
+   
+   GetCapsuleComponent()->AreaClass = UNavArea_EnemySpot::StaticClass(); //Custom area class so navigation filter for defensive movement will avoid this
+   GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel8, ECollisionResponse::ECR_Block); //TraceEnemyOnly
+  
    visionSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::OnVisionSphereOverlap);
    visionSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemy::OnVisionSphereEndOverlap);
-   visionSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel9, ECollisionResponse::ECR_Overlap); // Friendly
+   visionSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel9, ECollisionResponse::ECR_Overlap); //Friendly
    visionSphere->SetCanEverAffectNavigation(true);
    visionSphere->AreaClass = UNavArea_EnemySpot::StaticClass();
    visionSphere->SetAbsolute(false, false, true);
@@ -49,13 +52,13 @@ void AEnemy::Tick(float deltaSeconds)
    Super::Tick(deltaSeconds);
 }
 
-void AEnemy::Die()
+void AEnemy::Die_Implementation()
 {
    gameModeRef->GetQuestManager()->OnEnemyDie(this);
    controllerRef->GetBasePlayer()->UpdateEXP(expGiven);
    controllerRef->GetBasePlayer()->UpdateGold(moneyGiven);
    gameStateRef->enemyList.Remove(this);
-   Super::Die();
+   Super::Die_Implementation();
 }
 
 void AEnemy::SetSelected(bool value)
@@ -109,4 +112,15 @@ void AEnemy::InitializeStats()
       baseC->GetMechanic(static_cast<int>(x))->SetBaseValue(initialStats.defaultValues[++index]);
       baseC->GetMechanic(static_cast<int>(x))->SetCurrentValue(initialStats.defaultValues[index]);
    }
+}
+
+float AEnemy::CalculateTargetRisk()
+{
+   int targetNum = 0;
+   for (AAlly* a : controllerRef->GetGameState()->visibleAllies) {
+      if (a->GetTarget() == this) targetNum += 1;
+   }
+
+   const float targetRiskValue = FMath::Clamp(diminishFunc(targetNum), 0.f, 1.f);
+   return targetRiskValue;
 }

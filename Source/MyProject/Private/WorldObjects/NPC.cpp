@@ -76,6 +76,7 @@ FName ANPC::GetConversationName(FGameplayTag conversationTopic) const
       return conversationTopics[conversationTopic];
    } else // if no, return some default reply like "I'm not sure what that is sire!"
    {
+	  check(defaultResponseName != "");
       return defaultResponseName;
    }
 }

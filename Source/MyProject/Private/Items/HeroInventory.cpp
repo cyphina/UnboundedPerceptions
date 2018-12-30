@@ -5,15 +5,14 @@
 
 #include "UserInput.h"
 #include "BasePlayer.h"
+
 #include "UI/HUDManager.h"
+
 #include "WorldObjects/BaseHero.h"
 
-#include "Items/EquipmentMenu.h"
-#include "Items/Equipment.h"
+#include "AIStuff/AIControllers/HeroAIController.h"
+
 #include "ItemManager.h"
-#include "Items/Consumable.h"
-#include "InventoryView.h"
-#include "Weapon.h"
 
 #include "Backpack.h"
 
@@ -35,7 +34,7 @@ void UHeroInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)
          GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Magenta, TEXT("USED A CONSUMEABLE"));
 #endif
          // set it as the item the hero is going to be using, so we can now target the target which the consumeable is to be used upon
-         hero->BeginUseItem(itemUsed.id);
+         hero->GetHeroController()->BeginUseItem(itemUsed.id);
       } else // some item type that isnt specified
       {
 #if UE_EDITOR

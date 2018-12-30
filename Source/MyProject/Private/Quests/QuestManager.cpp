@@ -30,15 +30,13 @@ void UQuestManager::PostInitProperties()
    assetRegistry.ScanPathsSynchronous({questFolderPath});
    TArray<FAssetData> questAssets;
    assetRegistry.GetAssetsByPath(*questFolderPath, questAssets, true);
-   for (FAssetData& asset : questAssets) {
+   for (FAssetData&     asset : questAssets) {
       const UBlueprint* questBP = Cast<UBlueprint>(asset.GetAsset());
-	  if(questBP)
-	  {
-		 UE_LOG(LogTemp, Warning, TEXT("%s"), *questBP->ParentClass->GetDisplayNameText().ToString())
-         AQuest* quest = Cast<AQuest>(questBP->GeneratedClass->GetDefaultObject());
-		 TSubclassOf<AQuest> questClass = questBP->GeneratedClass.Get();
+      if (questBP) {
+         AQuest*             quest      = Cast<AQuest>(questBP->GeneratedClass->GetDefaultObject());
+         TSubclassOf<AQuest> questClass = questBP->GeneratedClass.Get();
          if (quest) questClassList.Add(quest->questInfo.id, questClass);
-	  }
+      }
    }
 }
 

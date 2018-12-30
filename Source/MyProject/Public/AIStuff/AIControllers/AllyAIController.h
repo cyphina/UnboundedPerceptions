@@ -1,12 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-
-#include "CoreMinimal.h"
 #include "UnitController.h"
+
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
+
+#include "UnitTargetData.h"
+
 #include "AllyAIController.generated.h"
+
+struct FGameplayAbilityTargetDataHandle;
 
 /**
  * AI Controller of Ally.
@@ -45,19 +49,20 @@ class MYPROJECT_API AAllyAIController : public AUnitController
 {
    GENERATED_BODY()
 
-   /**Behavior tree contains logic of our AI.  Will swap depending on tactic and behavioral mode*/
+   /** Behavior tree contains logic of our AI.  Will swap depending on tactic and behavioral mode */
    UPROPERTY(EditAnywhere)
    TArray<UBehaviorTree*> behaviorTrees;
 
-   /**blackboard key value name*/
+   /** Blackboard key value name */
    const FName blackboardEnemyKey = FName("Target");
 
-   /*Current Behavior mode*/
+   /** Current Behavior mode */
    UPROPERTY(BlueprintReadOnly, Category = "AI Mode", meta = (AllowPrivateAccess = "true"))
    AllyBehavioralMode currentAllyBehavior;
 
-   /*If this unit was part of a group tactic assignment, then set its tactic mode here*/
+   /** If this unit was part of a group tactic assignment, then set its tactic mode here */
    AllyGroupTacticsMode tacticsBehavior;
+
    AAlly*               allyRef;
 
    UFUNCTION()
@@ -73,4 +78,23 @@ class MYPROJECT_API AAllyAIController : public AUnitController
 
    UFUNCTION(BlueprintCallable, Category = "AI Mode")
    void SwitchAIModes(AllyBehavioralMode newMode);
+
+   /**When spell hotkey is presssed down.  Returns true when spell sucessfully set up or casted.  Used for item usage.*/
+   bool PressedCastSpell(TSubclassOf<UMySpell> spellToCast);
+
+   /**When spell hotkey is presssed down.  Returns true when spell sucessfully set up or casted.  Exposed to blueprints for actionbar usage.*/
+   UFUNCTION(BlueprintCallable, Category = "Spells")
+   bool PressedCastSpell(int spellToCastIndex);
+
+   /**From a raycast (left click) we can test to see if the target clicked on is a proper target for our spell
+    * @param result - Result of the target we found with a click
+    * @param spellClass - Pass in class because we can technically setup targetting for a new spell while casting a spell (and thus can't use currentSpell)
+    */
+   UFUNCTION(BlueprintCallable, Category = "Spells")
+   bool SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellClass);
+
+   virtual void Stop() override;
+
+   void BeginAttack(AUnit* target) override;
+   bool BeginCastSpell(TSubclassOf<UMySpell> spellToCastIndex, const FGameplayAbilityTargetDataHandle& targetData) override;
 };

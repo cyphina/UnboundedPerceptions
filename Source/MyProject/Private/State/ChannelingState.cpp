@@ -3,6 +3,7 @@
 #include "MyProject.h"
 #include "ChannelingState.h"
 #include "Unit.h"
+#include "AIStuff/AIControllers/UnitController.h"
 #include "MySpell.h"
 
 ChannelingState::ChannelingState()
@@ -15,12 +16,16 @@ ChannelingState::~ChannelingState()
 
 void ChannelingState::Enter(AUnit& unit)
 {
-   // Add channel UI bar to the screen
-   unit.unitSpellData.channelTime = unit.GetCurrentSpell().GetDefaultObject()->GetCastTime(unit.GetAbilitySystemComponent());
+   //todo: Add channel UI bar to the screen
 }
 
 void ChannelingState::Exit(AUnit& unit)
 {
+   // If we leave casting state before the spell can finish being casted, we've been interrupted so tell the AI system that
+   if (unit.unitSpellData.currentChannelTime < unit.unitSpellData.channelTime) {
+      FAIMessage msg(AUnit::AIMessage_SpellInterrupt, &unit);
+      FAIMessage::Send(unit.GetUnitController(), msg);
+   }
    unit.unitSpellData.currentChannelTime = 0;
 }
 

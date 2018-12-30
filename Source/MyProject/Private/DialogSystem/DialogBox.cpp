@@ -170,7 +170,7 @@ void UDialogBox::ResetDialog()
          break;
       case EDialogSource::conversation: controllerRef->GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_Social)); break;
       case EDialogSource::trigger: break;
-	  case EDialogSource::none: controllerRef->GetBasePlayer()->interactedHero = nullptr;
+	  case EDialogSource::none: controllerRef->GetBasePlayer()->interactedHero = nullptr; break;
       default: break;
    }
 

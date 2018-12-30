@@ -29,6 +29,17 @@ namespace ResourceManager
        FVector(-1.f, 1.f, -1.f),
    };
 
+   /**Returns the Simpson quadrature's coefficient*/
+   static const TFunction<float(float)> SimpsonSpacing = [](float space) { return 1.f / 3 * space; };
+   /**Function used to get diminishing return values 1/(x+1)^n.*/
+   const TFunction<float(float, float)> DiminishFunc = [](float x, float n) { return (FMath::Pow(x + 1.f, 1.f-n) - 1.f) / (1.f - n); };
+   /**Simple numerical integration from 0 to x, primarily used to estimate integral of the diminishing function*/
+   const TFunction<float(float, TFunction<float(float)>)> SimpsonApprox = [](float x, TFunction<float(float)> f)
+   {
+      GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Function values: %f, %f, %f"), f(0), f(x/2), x));
+      return SimpsonSpacing(x / 2) * (f(0) + 4 * f(x / 2) + f(x));
+   };
+
    void InitResourceManager();
    void InitElementalMap();
    void InitSupportTags();

@@ -14,37 +14,37 @@ class ABaseHero;
 UCLASS()
 class MYPROJECT_API ANPCAIController : public AAIController
 {
-	GENERATED_BODY()
-	
+   GENERATED_BODY()
+
 public:
 
-	ANPCAIController();
-	void Possess(APawn* inPawn) override;
-	void BeginPlay() override;
+   ANPCAIController();
+   void Possess(APawn* inPawn) override;
+   void BeginPlay() override;
 
-	UFUNCTION(BlueprintCallable, Category = "NPCActions")
-	void Follow(ABaseHero* heroToFollow);
+   UFUNCTION(BlueprintCallable, Category = "NPCActions")
+      void Follow(ABaseHero* heroToFollow);
 
-	UFUNCTION(BlueprintCallable, Category = "NPCActions")
-	void Patrol();
+   UFUNCTION(BlueprintCallable, Category = "NPCActions")
+      void Patrol();
 
-	UFUNCTION(BlueprintCallable, Category = "NPCActions")
-	void Stop();	
+   UFUNCTION(BlueprintCallable, Category = "NPCActions")
+      void Stop();
 
 private:
 
-	static const FName targetKeyName;
+   static const FName targetKeyName;
 
-	UPROPERTY(VisibleAnywhere, Category = "AIData")
-	UBlackboardComponent* blackboardComp;
+   UPROPERTY(VisibleAnywhere, Category = "AIData")
+      UBlackboardComponent* blackboardComp;
 
-	UPROPERTY(EditDefaultsOnly, Category = "AIData")
-	UBlackboardData* npcBB;
+   UPROPERTY(EditDefaultsOnly, Category = "AIData")
+      UBlackboardData* npcBB;
 
-	UPROPERTY(EditDefaultsOnly, Category = "AIData")
-	UBehaviorTree* followTree;
+   UPROPERTY(EditDefaultsOnly, Category = "AIData")
+      UBehaviorTree* followTree;
 
-	UPROPERTY(EditDefaultsOnly, Category = "AIData")
-	UBehaviorTree* patrolTree;
+   UPROPERTY(EditDefaultsOnly, Category = "AIData")
+      UBehaviorTree* patrolTree;
 
 };

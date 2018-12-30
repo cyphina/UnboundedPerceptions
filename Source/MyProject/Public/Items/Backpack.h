@@ -14,14 +14,15 @@ UCLASS(Blueprintable, BlueprintType)
 class MYPROJECT_API UBackpack : public UObject
 {
    GENERATED_BODY()
+
    TSparseArray<FMyItem> items;
 
    const int STACKMAX = 99; // max number of items in a stack
    int       itemMax  = 100;
 
  public:
+
    UBackpack();
-   ~UBackpack();
 
    /**Adds item to specified slot.  Returns number of items left (if new item is stackable and a place isn't found for it)
     * @param newItem - Data about new item that will be added

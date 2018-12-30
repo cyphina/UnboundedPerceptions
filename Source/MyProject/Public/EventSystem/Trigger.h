@@ -56,8 +56,9 @@ enum class ETriggerType : uint8 {
    /**Sets the NPC with name (object 1) to follow the hero with name (object 2).  If no hero name is specified, then the interacting hero is followed*/
    SetNPCFollow,
    /**Sets the IntimateNPC with name (object 1) to allow conversations (!= 0) or not (==0) (value1)*/
-   SetNPCWantConverse
-
+   SetNPCWantConverse,
+   /**Plays sequence with filePath (relative to sequence folder)*/
+   PlaySequence
 };
 
 USTRUCT(BlueprintType, NoExport)
@@ -143,7 +144,7 @@ class MYPROJECT_API UTriggerManager : public UObject
    void LearnDialogTopic(const FTriggerData& tdata);
    void SetNPCFollow(const FTriggerData& tdata);
    void SetNPCWantConverse(const FTriggerData& tdata);
-
+   void PlaySequence(const FTriggerData& tdata);
    /**Function that triggers an effect when the trigger is activated*/
    void TriggerEffect(FTriggerData& tdata);
 };

@@ -19,19 +19,19 @@ class MYPROJECT_API ARTSPawn : public APawn
 
  public:
    ARTSPawn();
-   UPROPERTY(VisibleAnywhere)
+   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    USceneComponent* scene;
 
-   UPROPERTY(VisibleAnywhere)
+   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    USpringArmComponent* cameraArm;
 
-   UPROPERTY(VisibleAnywhere)
+   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    UCameraComponent* camera;
 
-   UPROPERTY(VisibleAnywhere)
+   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    USpringArmComponent* mapArm;
 
-   UPROPERTY(VisibleAnywhere)
+   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    UChildActorComponent* mapCamera;
 
  protected:

@@ -3,6 +3,7 @@
 #include "AIController.h" //Need this to add to delegate OnMoveCompleted
 #include "AbilitySystemInterface.h"
 #include "CombatParameters.h"
+#include "UnitProperties.h"
 #include "GameFramework/Character.h"
 #include "GameplayEffect.h"
 #include "GameplayTags.h"
@@ -18,7 +19,7 @@
 
 class AUserInput;
 class ARTSGameState;
-class AAIController;
+class AUnitController;
 class UDamageEffect;
 class UHealthbarComp;
 
@@ -29,130 +30,153 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
 {
    GENERATED_BODY()
 
+   friend class AUnitController;
+
  public:
+
    AUnit(const FObjectInitializer& oI);
+
+/** Messages we can send to the controller to let it know something happened*/
+#pragma region listeningMessages
    static const FName AIMessage_AttackReady;
+   static const FName AIMessage_SpellCasted;
+   static const FName AIMessage_SpellInterrupt;
+   static const FName AIMessage_Stunned;
+   static const FName AIMessage_Silenced;
+#pragma endregion
 
-/*Information about this unit and important references/components*/
+/** Information about this unit and important references/components*/
 #pragma region UnitInfoAndReferences
- private:
-   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
-   FText name;
-   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
-   UTexture2D* image = nullptr;
-   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
-   bool canTarget = true;
-   UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
-   int visionRadius = 1000;
-
-   float height;
-   bool  isSelected = false;
 
  protected:
-   bool                       isEnemy    = false;   // protected so we can set this in enemy class
-   TUniquePtr<StateMachine>   state      = nullptr; // reference to statemachine
-   TUniquePtr<FBaseCharacter> baseC      = nullptr; // Reference to statmanager.  Is a pointer so we can make it and give it a reference to the attribute set
-   AAIController*             controller = nullptr; // reference to AIController
-   ARTSGameState*             gameState  = nullptr; // gamestate ref to keep track of game speed modifiers
-   UPAICombatParameters       combatParams;         // records combat stats to determine some AI parameters
+
+   /** Struct holding some editable unit properties */
+   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
+   FUnitProperties unitProperties;
 
    UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true"))
    AUserInput* controllerRef = nullptr;
 
+   TUniquePtr<StateMachine>   state          = nullptr; // reference to statemachine
+   TUniquePtr<FBaseCharacter> baseC          = nullptr; // Reference to statmanager.  Is a pointer so we can make it and give it a reference to the attribute set
+   AUnitController*           unitController = nullptr; // reference to AIController
+   ARTSGameState*             gameState      = nullptr; // gamestate ref to keep track of game speed modifiers
+
 #pragma endregion
 
+/** Attached components*/
+#pragma region components
  public:
-#if UE_EDITOR
-   bool godMode = false;
-#endif
 
-   /*--DECOR--*/
+   /** Component that hangs over our head to visually denote how much health we have left*/
    UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
    UHealthbarComp* healthBar;
 
-   /**material reference to unit's base material*/
+   /** Material reference to unit's base material*/
    UPROPERTY(EditAnywhere)
    UMaterialInterface* material;
 
-   /**selection circle decal below unit*/
+   /** Selection circle decal below unit*/
    UPROPERTY(EditAnywhere)
    UDecalComponent* selectionCircleDecal;
 
-   /**sphere representing vision radius*/
+   /** Sphere representing vision radius*/
    UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
    USphereComponent* visionSphere;
 
+#pragma endregion
+
+/** Functions in reponse to events */
 #pragma region Callbacks
+
    void BeginPlay() override;
    void Tick(float deltaSeconds) override;
+   void PossessedBy(AController* newController) override;
 
-   // Change speed based parameters when time multiplier changes
+   /**Change speed based parameters when time multiplier changes*/
    UFUNCTION(Category = "Callback")
    void OnUpdateGameSpeed(float speedMultiplier);
 
    /**Function called when unit dies :(*/
-   UFUNCTION(BlueprintCallable, Category = "Functionality")
-   virtual void Die();
-
-   /**Function to disable to not destroy this actor*/
-   UFUNCTION(BlueprintCallable, Category = "Functionality")
-   void SetEnabled(bool bEnabled);
+   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Functionality")
+   void         Die();
+   virtual void Die_Implementation();
 
  private:
-   /**Callback function for move completed*/
+
+   /** Callback function for move completed. Delegates can work with virtual functions. */
    UFUNCTION()
-   virtual void OnMoveCompleted(FAIRequestID RequestID, const EPathFollowingResult::Type Result);
+   void OnMoveCompleted(FAIRequestID RequestID, const EPathFollowingResult::Type Result);
 
 #pragma endregion
 
-// Accessing our private data members
+/** Private data member interface */
 #pragma region Accessors
  public:
+
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    EUnitState GetState() const; // Gets name of current state in statemachine
 
-   UFUNCTION(BlueprintCallable, Category = "Accessors")
-   void SetGameName(FText value) final override { name = value; }
-
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-   FText GetGameName() const final override { return name; }
+   FORCEINLINE AUnitController* GetUnitController() const { return unitController; }
 
    UFUNCTION(BlueprintCallable, Category = "Accessors")
-   void SetImage(UTexture2D* value) { image = value; }
+   void SetGameName(FText value) final override { unitProperties.name = value; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-   UTexture2D* GetImage() const { return image; }
+   FText GetGameName() const final override { return unitProperties.name; }
 
    UFUNCTION(BlueprintCallable, Category = "Accessors")
-   virtual void SetSelected(bool value) { isSelected = value; }
+   void SetImage(UTexture2D* value) { unitProperties.image = value; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-   virtual bool GetSelected() const { return isSelected; }
+   UTexture2D* GetImage() const { return unitProperties.image; }
+
+   UFUNCTION(BlueprintCallable, Category = "Accessors")
+   virtual void SetSelected(bool value) { unitProperties.isSelected = value; }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
+   virtual bool GetSelected() const { return unitProperties.isSelected; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   bool GetIsEnemy() const { return isEnemy; }
+   bool GetIsEnemy() const { return combatParams.isEnemy; }
+
+   /** Call this function over setting values manually (which will be made private one day) because it sets the targetActor and targetUnit, both which are used
+     * when dealing with unit tasks. */
+   UFUNCTION(BlueprintCallable, Category = "CombatAccessors")
+   void SetTarget(AUnit* value) { targetData.targetUnit = value; targetData.targetActor = value; }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   AUnit* GetTarget() const { return targetData.targetUnit; }
 
    UFUNCTION(BlueprintCallable, Category = "CombatAccessors")
-   void SetTarget(AUnit* value) { targetData.targetUnit = value; }
+   void SetCanTarget(bool value) { unitProperties.canTarget = value; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   bool GetTarget() const { return targetData.targetUnit; }
-
-   UFUNCTION(BlueprintCallable, Category = "CombatAccessors")
-   void SetCanTarget(bool value) { canTarget = value; }
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   bool GetCanTarget() const { return canTarget; }
+   bool GetCanTarget() const { return unitProperties.canTarget; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
    bool GetIsDead() const { return combatParams.isDead; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   int GetVisionRadius() const { return visionRadius; }
+   int GetVisionRadius() const { return unitProperties.visionRadius; }
 
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   float GetDPS(float timespan);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   float GetDamageRecievedPerSecond(float timespan);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   float GetHealingPerSecond(float timespan);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   float GetHealingRecievedPerSecond(float timespan);
+
+   // float GetStunPerSecond(float timespan);
    const FBaseCharacter& GetBaseCharacter() const { return *baseC; }
 
-///--expose stats to blueprints and other units but only change the stats from C++ which is why we don't see any setters--
+/** Expose stats to blueprints and other units but only change the stats from C++ which is why we don't see any setters */
 #pragma region Stats
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
@@ -186,127 +210,72 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    UFUNCTION(BlueprintCallable, Category = "StatAccessors")
    void SetVitalCurValue(int vit, int vitValue) const { baseC->GetVital(vit)->SetCurrValue(vitValue); }
 
-   /**
-    *Get Level of unit from baseCharacter
-    */
+   /**Get Level of unit from baseCharacter*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
    FORCEINLINE int GetLevel() const { return baseC->GetLevel(); }
 
    UFUNCTION(BlueprintCallable, Category = "Stats")
    void UpdateStats(); // call whenever stats get changed
 
-   /**
-    * Allows us to apply some bonuses to this hero's stat
-    * @param hero - Hero to apply bonus to
+   /**Allows us to apply some bonuses to this hero's stat
     * @param category - int representing what stat to modify
-    * @param value - value to modify the stat by
-    */
+    * @param value - value to modify the stat by */
    UFUNCTION(BlueprintCallable, Category = "Helper")
    void ApplyBonuses(int category, int value);
-#pragma endregion
 
 #pragma endregion
 
-///---Helper functions and members---///
-#pragma region utility
+#pragma endregion
 
  public:
-   // Function for checking if a unit is in range of some action
-   UFUNCTION(BlueprintCallable, Category = "Movement")
-   bool IsTargetInRange(float range, FVector targetLocation);
 
-   // Function to see if unit is facing the direction
-   UFUNCTION(BlueprintCallable, Category = "Movement")
-   bool IsFacingTarget(FVector targetLocation);
-
-   // Function to turn self towards a direction
-   UFUNCTION(BlueprintCallable, Category = "Movement")
-   void TurnTowardsTarget(FVector targetLocation);
-
-   // Function to move to appropriate distance from target and face direction
-   UFUNCTION(BlueprintCallable, Category = "Movement")
-   bool AdjustPosition(float range, FVector targetLocation);
-
-   // Function to find the bounds of a unit
+   /** Function to find the bounds of a unit */
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "UI")
    FBox2D FindBoundary();
-#pragma endregion
 
-///---Actions that trigger a change in unit state---///
-#pragma region actions
+   /** Function to disable to not destroy this actor*/
+   UFUNCTION(BlueprintCallable, Category = "Functionality")
+   void SetEnabled(bool bEnabled);
 
-   // Function for moving units around, based upon the ACharacter move.  Changing our state is pretty much the only reason we have a custom move
-   UFUNCTION(BlueprintCallable, Category = "Movement")
-   virtual EPathFollowingRequestResult::Type Move(FVector newLocation);
-
-   // Stop should be overidden based on the subclass because stopping some classes has to cancel more things
-   UFUNCTION(BlueprintCallable, Category = "Action")
-   virtual void Stop();
-
-   /**Used to initiate an attack on a target*/
-   UFUNCTION(BlueprintCallable, Category = "Combat")
-   void BeginAttack(AUnit* target);
-
-   /**Initiate spell casting procedure without any input triggers.  Used for AI spellcasting*/
-   UFUNCTION(BlueprintCallable, Category = "Spells")
-   virtual bool BeginCastSpell(int spellToCastIndex, FGameplayAbilityTargetDataHandle targetData);
-
-#pragma endregion
-
+/** Combat related functions and parameters */
 #pragma region combat
-   /**
-    *Get data on our spell target.  Is reset after the spell is sucessfully casted
-    */
+
+   /** Get data on our spell target.  Is reset after the spell is sucessfully casted*/
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
    FGameplayAbilityTargetDataHandle GetTargetData() const { return targetData.spellTargetData; }
 
-   /**
-    *Get data on targetted unit.  Used in single target spellcasting and attacking.  Reset after spell casted and if we attack a new target or stop.
-    *Faster to use this then cast GetTargetData() to some unit type
-    */
+   /** Get data on targetted unit.  Used in single target spellcasting and attacking.
+    * Reset after spell casted and if we attack a new target or stop.
+    * Faster to use this then cast GetTargetData() to some unit type */
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
    AUnit* GetTargetUnit() const { return targetData.targetUnit; }
 
-   // Process to create damage effect
-   virtual void Attack();
-
-   // Damage Calculations on Receiving End.  If using some magic armor, attacker may get some debuffs
+   /** Damage Calculations on Receiving End.  If using some magic armor, attacker may get some debuffs */
    friend void UDamageCalculation::DamageTarget(AUnit* sourceUnit, AUnit* targetUnit, Damage& d, FGameplayTagContainer effects) const;
 
-   /**
-    *Preparations before we can actually execute an attack with our weapon like getting in range and turning the right way
-    */
-   void PrepareAttack(); // PURE_VIRTUAL(AUnit::PrepareAttack, );
+ private:
+  
+   /** Process to create damage effect */
+   virtual void Attack();
 
  protected:
-   UnitTargetData targetData;
 
-   inline bool IsStunned() const; // are we currently stunned?
-   inline bool IsSilenced() const;
+   UnitTargetData       targetData;
+   UPAICombatParameters combatParams;
 
  public:
-   /**
-    *Create some text to display the damage dealt
-    */
+
+   UFUNCTION(BlueprintCallable)
+   inline bool IsStunned() const;
+
+   UFUNCTION(BlueprintCallable)
+   inline bool IsSilenced() const;
+
+   /**Create some text to display the damage dealt*/
    void ShowDamageDealt(Damage& damage);
 
-   /**
-    *Overload of ShowDamageDealt incase we get a dodge or block perhaps
-    */
+   /**Overload of ShowDamageDealt incase we get a dodge or block perhaps*/
    void ShowDamageDealt(FText occurance);
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
-   float GetDPS(float timespan);
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
-   float GetDamageRecievedPerSecond(float timespan);
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
-   float GetHealingPerSecond(float timespan);
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
-   float GetHealingRecievedPerSecond(float timespan);
-   // float								GetStunPerSecond(float timespan);
-
-   void CalculateRisk();
-   void CalculateThreat();
 
    inline UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
@@ -319,60 +288,77 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    float GetCurrentChannelTime() const { return unitSpellData.currentChannelTime; }
 
-///---Skills---
+#pragma endregion
+
+/** Skill related functions and parameters */
 #pragma region Skills
  public:
-   // List of abilities that are in unit's skill slots
+
+   /** List of abilities that are in unit's skill slots */
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
    TArray<TSubclassOf<class UMySpell>> abilities;
 
-   // Gets CDO of any spell.  CDOs of objects can only be given a struct, this function lets us get the CDO as the type of the object.  Also checks to see if hero has spell, else it won't work
-   // Trying to get instances only returns active instances, that is, spells that are marked "Active" and haven't been committed because they are on pause.  Use GetSpellInstance to get actual instance
+   /** Gets CDO of any spell.  CDOs of objects can only be given a struct, this function lets us get
+    * the CDO as the type of the object.  Also checks to see if hero has spell, else it won't work
+    * Trying to get instances only returns active instances, that is, spells
+    * that are marked "Active" and haven't been committed because they are on pause.
+    * Use GetSpellInstance to get actual instance */
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
    UMySpell* GetSpellCDO(TSubclassOf<UMySpell> spellClass) const;
 
-   // Function called when ability is activated to allow spell to drain resources.  Public because MySpell needs to reference it.
-   void CommitCast(UMySpell* spell);
-
-   // Do we have the resources necessary to cast this spell
+   /** Do we have the resources necessary to cast this spell */
    bool CanCast(TSubclassOf<UMySpell> spellToCheck);
 
  protected:
+
    inline void SetCurrentSpell(TSubclassOf<UMySpell> newCurrentSpell) { unitSpellData.currentSpell = newCurrentSpell; }
 
-   /**
-    * Actually activates the ability and triggers abilities that wait for click events to continue
-    * @param spellToCast - Spell we want to cast.  Left as a parameter because we can cast spells that aren't our current spells in some scenarios like item usage
-    */
+   /** Actually activates the ability when we're in range or  and triggers abilities that
+    * wait for click events to continue
+    * @param spellToCast - Spell we want to cast.  Left as a parameter because we can cast
+    * spells that aren't our current spells in some scenarios like item usage */
    virtual bool CastSpell(TSubclassOf<UMySpell> spellToCast);
 
-   /**Checks to see if spell has a cast time, and if so, it will start channeling process.  Else it will just cast the spell*/
-   void PreCastChannelingCheck(TSubclassOf<UMySpell> spellToCast);
-
- private:
    UnitSpellData unitSpellData;
-
-   // Adjust position for spell casting and check if stunned
-   void PrepareCastSpell();
 
 #pragma endregion
 
-   ///---Vision---
- public:
-   int  GetVisionCount() const { return enemyVisionCount; }
-   void IncVisionCount() { ++enemyVisionCount; }
-   void DecVisionCount() { --enemyVisionCount; }
+   /** Parameters used to record what units and parts of the map are visible */
+   #pragma region vision
+    public:
 
- private:
-   /**
-    *Counter for number of enemies (units with opposite value of isEnemy) that can see this unit
-    */
+      int  GetVisionCount() const { return enemyVisionCount; }
+      void IncVisionCount() { ++enemyVisionCount; }
+      void DecVisionCount() { --enemyVisionCount; }
+
+    private:
+
+   /** Counter for number of enemies (units with opposite value of isEnemy) that can see this unit */
    int enemyVisionCount;
 
    friend void USaveLoadClass::SetupBaseCharacter(AAlly* spawnedAlly, FBaseCharacterSaveInfo& baseCSaveInfo);
    friend ChannelingState;
    friend void CastingState::Update(AUnit& unit, float deltaSeconds);
    friend void AttackState::Update(AUnit& unit, float deltaSeconds);
+
+#pragma endregion
+
+/** Parameters and functions used to calculate certain values in the AI blackboard */
+#pragma region AIValues
+
+ private:
+   static const float                   diminishParam;
+
+ protected:
+   static const TFunction<float(float)> diminishFunc;
+
+ public:
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   float CalculateRisk();
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   float CalculateThreat();
+
+   virtual float CalculateTargetRisk() PURE_VIRTUAL(AUnit::CalculateTargetRisk, return 0.f;);
 
 #pragma endregion
 };

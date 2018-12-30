@@ -22,7 +22,7 @@ EBTNodeResult::Type UBTTask_RandomMoveAttRange::ExecuteTask(UBehaviorTreeCompone
 
       // ensure this path is actually closeby since there could be obstacles making the path long even if the point is close
       if (navSys->FindPathSync(q).Path->GetLength() < attackRange * 2) {
-         ownerComp.GetBlackboardComponent()->SetValueAsVector("moveToLocation", targetLocation + pointInRange);
+         ownerComp.GetBlackboardComponent()->SetValueAsVector("targetLocation", targetLocation + pointInRange);
          return EBTNodeResult::Succeeded;
       }
    }

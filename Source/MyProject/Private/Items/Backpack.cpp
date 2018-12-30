@@ -11,10 +11,6 @@ UBackpack::UBackpack()
    items.Reserve(itemMax);
 }
 
-UBackpack::~UBackpack()
-{
-}
-
 int UBackpack::AddItem(FMyItem newItem)
 {
    FMyItem& newItemReference = newItem;

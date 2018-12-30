@@ -18,6 +18,7 @@
 #include "UI/Slots/SkillSlot.h"
 
 #include "SpellSystem/SpellManager.h"
+#include "SpellSystem/MyAbilitySystemComponent.h"
 
 #include "WorldObjects/Unit.h"
 #include "WorldObjects/BaseHero.h"
@@ -50,9 +51,9 @@ void UMyCheatManager::GodMode(FString objectID, int toggleGodMode)
 #if UE_EDITOR
    if (AUnit* unitRef = ResourceManager::FindTriggerObjectInWorld<AUnit>(objectID, userInputRef->GetWorld())) {
       if (toggleGodMode)
-         unitRef->godMode = true;
+         unitRef->GetAbilitySystemComponent()->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.GodMode"));
       else
-         unitRef->godMode = false;
+         unitRef->GetAbilitySystemComponent()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.GodMode"));
    }
 #endif
 }
@@ -68,6 +69,21 @@ void UMyCheatManager::EquipSpell(FString heroName, int spellID, int slot)
    if (ABaseHero* heroRef = *userInputRef->GetBasePlayer()->heroes.FindByPredicate([heroName](ABaseHero* hero) { return hero->GetGameName().ToString() == heroName; })) {
       if (slot >= 0 && slot < heroRef->abilities.Num())
          userInputRef->GetHUDManager()->GetActionHUD()->skillContainerRef->skillSlots[slot]->UpdateSkillSlot(USpellManager::Get().GetSpellClass(spellID));
+   }
+}
+
+void UMyCheatManager::RefreshSpells(FString heroName)
+{
+   for (AAlly* ally : userInputRef->GetBasePlayer()->allies)
+      ally->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Name")));
+   for (AEnemy* enemy : userInputRef->GetGameState()->enemyList)
+      enemy->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Name")));
+}
+
+void UMyCheatManager::RefreshHeroSpells(FString heroName)
+{
+   if (ABaseHero* heroRef = *userInputRef->GetBasePlayer()->heroes.FindByPredicate([heroName](ABaseHero* hero) { return hero->GetGameName().ToString() == heroName; })) {
+      heroRef->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Name")));
    }
 }
 

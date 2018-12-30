@@ -23,13 +23,14 @@ void UDialogWheel::SelectNextConversationTopics(int selectedIndex)
 
    GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, FString::FromInt(currentlySelectedTopicNode->GetChildTagNodes().Num()));
 
-   // If this is a root node in our tree of dialog options (gameplaytag tree)
+   //If this is a root node in our tree of dialog options (gameplaytag tree) then we talk about this topic
    if (currentlySelectedTopicNode->GetChildTagNodes().Num() == 0) {
-      // Close the social menu, and add the textbox withh the conversation loaded up
+      //Close the social menu, and add the textbox withh the conversation loaded up
       CPC->GetHUDManager()->AddHUD(static_cast<int>(HUDs::HS_Social));
 
       FName conversationName = socialWindowRef->GetNPC()->GetConversationName(currentlySelectedTopicNode->GetCompleteTag());
 
+	  //Setup textbox and update any records that keep track of who we talked to
       CPC->GetHUDManager()->AddHUD(conversationName, EDialogSource::conversation);
       CPC->GetGameMode()->GetQuestManager()->OnTalkNPC(socialWindowRef->GetNPC(), currentlySelectedTopicNode->GetCompleteTag());
       socialWindowRef->GetNPC()->AddConversedDialog(conversationName);
@@ -38,6 +39,7 @@ void UDialogWheel::SelectNextConversationTopics(int selectedIndex)
 
    conversationTopicTagNodes.Empty();
 
+   //If this isn't a root node, show the child nodes on the wheel
    for (TSharedPtr<FGameplayTagNode> it : currentlySelectedTopicNode->GetChildTagNodes()) {
       if (CPC->GetBasePlayer()->GetDialogTopics().HasTag(it->GetSingleTagContainer().First())) conversationTopicTagNodes.Add(it.Get());
    }

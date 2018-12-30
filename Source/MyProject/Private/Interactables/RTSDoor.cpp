@@ -63,8 +63,12 @@ void ARTSDoor::BeginPlay()
 // Called every frame
 void ARTSDoor::Tick(float DeltaTime)
 {
-   Super::Tick(DeltaTime);
-   tL.TickTimeline(DeltaTime);
+   //I guess this means the door won't open until it is on the screen so if we try and do any longrange opening...  it's not going to work till we see it
+   if (WasRecentlyRendered())
+   {
+      Super::Tick(DeltaTime);
+      tL.TickTimeline(DeltaTime);
+   }
 }
 
 void ARTSDoor::Interact_Implementation(ABaseHero* hero)

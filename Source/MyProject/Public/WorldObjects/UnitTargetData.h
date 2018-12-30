@@ -15,4 +15,7 @@ struct UnitTargetData {
 
    UPROPERTY(BlueprintReadOnly)
    FGameplayAbilityTargetDataHandle spellTargetData = FGameplayAbilityTargetDataHandle(); // detailed spell targetting information
+
+   UPROPERTY(BlueprintReadOnly)
+   AUnit* followTarget; // A target that we can follow.  We can still target something else to attack it while following this unit perhaps?
 };

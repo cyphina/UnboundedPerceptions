@@ -7,6 +7,12 @@
 #include "AIControllers/UnitController.h"
 #include "State/AttackState.h"
 
+UBTTask_AttTarget::UBTTask_AttTarget()
+{
+   NodeName = "Attack Target";
+   bNotifyTick = false;
+}
+
 EBTNodeResult::Type UBTTask_AttTarget::ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory)
 {
    AUnitController* AICon = Cast<AUnitController>(ownerComp.GetAIOwner());
@@ -15,13 +21,21 @@ EBTNodeResult::Type UBTTask_AttTarget::ExecuteTask(UBehaviorTreeComponent& owner
       if (target && target->GetCanTarget()) {
          // AICon->GetUnitOwner()->SetTarget(target);
          // if we aren't already attacking this target
-         if (AICon->GetUnitOwner()->GetState() != EUnitState::STATE_ATTACKING && AICon->GetUnitOwner()->GetTargetUnit() != target) {
-            AICon->GetUnitOwner()->BeginAttack(target);
-            return EBTNodeResult::Succeeded;
-         }
-      } else {
-         ownerComp.GetBlackboardComponent()->SetValueAsObject("target", nullptr);
+         AICon->BeginAttack(target);
+         WaitForMessage(ownerComp, AUnit::AIMessage_AttackReady);
+         WaitForMessage(ownerComp, AUnit::AIMessage_Stunned);
+         return EBTNodeResult::InProgress;
       }
    }
+   else {
+      ownerComp.GetBlackboardComponent()->SetValueAsObject("target", nullptr);
+   }
+
    return EBTNodeResult::Failed;
+}
+
+void UBTTask_AttTarget::OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FName Message, int32 RequestID, bool bSuccess)
+{
+   bSuccess = Message != AUnit::AIMessage_Stunned;
+   Super::OnMessage(OwnerComp, NodeMemory, Message, RequestID, bSuccess);
 }

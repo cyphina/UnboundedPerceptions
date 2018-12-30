@@ -26,26 +26,28 @@ UCLASS()
 class MYPROJECT_API AEnemy : public AUnit
 {
    GENERATED_BODY()
-   /**
-    *range enemy will attack you
-    */
+
+   /** Range enemy will attack you */
    int aggroRange;
 
-   /**
-    *if this enemy is in a combat ready state
-    */
+   /** If this enemy is in a combat ready state */
    bool isActive;
 
  public:
    AEnemy(const FObjectInitializer& oI);
 
-   UPROPERTY(BlueprintReadWrite, EditAnywhere)
+   /** Lets us set initial stat values for our enemy */
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Enemy Parameters")
    FUnitStatStruct initialStats;
 
-   UPROPERTY(BlueprintReadWrite, EditAnywhere)
-   int expGiven; // how much money given on death
-   UPROPERTY(BlueprintReadWrite, EditAnywhere)
-   int moneyGiven; // how much exp given on death
+   /**How much money given on death*/
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Enemy Parameters")
+   int expGiven;
+
+   /**How much exp given on death*/
+   UPROPERTY(BlueprintReadWrite, EditAnywhere,  Category = "Enemy Parameters")
+   int moneyGiven;
+   
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
    TArray<FSpellCombination> combinations; // List of combinations by priority.  Combination 0 will always be an opener
 
@@ -54,7 +56,7 @@ class MYPROJECT_API AEnemy : public AUnit
 
    void BeginPlay() override;
    void Tick(float deltaSeconds) override;
-   void Die() override;
+   void Die_Implementation() override;
 
    void SetSelected(bool value) override;
 
@@ -62,7 +64,6 @@ class MYPROJECT_API AEnemy : public AUnit
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
    bool GetIsActive() const { return isActive; }
 
-   /**/
    UFUNCTION(BlueprintCallable, Category = "Combat")
    void SetIsActive(bool value) { isActive = value; }
 
@@ -78,4 +79,6 @@ class MYPROJECT_API AEnemy : public AUnit
    void OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex);
 
    void InitializeStats();
+
+   float CalculateTargetRisk() override;
 };

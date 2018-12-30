@@ -14,18 +14,9 @@
  * 4. Cast spells and attack
  */
 
-class AUserInput;
 class AUnitController;
-class AAlly;
 class AUnit;
 class UMySpell;
-
-struct FBTAggresssionTaskMemory {
-   UMySpell*        attackSpell       = nullptr;
-   int              attackSpellIndex  = -1;
-   AUnit*           unitRef           = nullptr;
-   AUnitController* unitControllerRef = nullptr;
-};
 
 /**Uses a single offensive spell (chosen by set priority) with targetting chosen by an aggressive ruleset*/
 UCLASS()
@@ -36,7 +27,5 @@ class MYPROJECT_API UBTTask_Aggresion : public UBTTaskNode
    UBTTask_Aggresion();
 
    EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) override;
-   void                TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
-
-   uint16 GetInstanceMemorySize() const override;
+   void                OnMessage(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory, FName message, int32 requestID, bool bSuccess) override;
 };

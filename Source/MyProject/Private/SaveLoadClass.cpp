@@ -5,6 +5,7 @@
 #include "UserInput.h"
 #include "RTSPawn.h"
 #include "BasePlayer.h"
+#include "AIStuff/AIControllers/UnitController.h"
 #include "WorldObjects/Ally.h"
 #include "WorldObjects/Summon.h"
 #include "SpellSystem/MySpell.h"
@@ -174,7 +175,7 @@ void USaveLoadClass::SetupAlliedUnits()
       if (AAlly* spawnedNPCAlly = ResourceManager::FindTriggerObjectInWorld<AAlly>(*npc.name.ToString(), controllerRef->GetWorld())) {
          spawnedNPCAlly->SetActorTransform(npc.actorTransform);
          SetupBaseCharacter(spawnedNPCAlly, npc.baseCSaveInfo);
-         spawnedNPCAlly->Stop();
+         spawnedNPCAlly->GetUnitController()->Stop();
       } else {
          FAssetRegistryModule& assetReg = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
          // TArray<FAssetData> allyAssets;
@@ -203,7 +204,7 @@ void USaveLoadClass::SetupAlliedUnits()
          spawnedHero->attPoints = hero.attPoints;
          spawnedHero->SetCurrentExp(hero.currentExp);
          spawnedHero->expForLevel = hero.expToNextLevel;
-         spawnedHero->Stop();
+         spawnedHero->GetUnitController()->Stop();
 
          for (int i = 0; i < hero.backpackInfo.itemIDs.Num(); ++i) {
             spawnedHero->backpack->AddItemToSlot(FMyItem(hero.backpackInfo.itemIDs[i], hero.backpackInfo.itemCounts[i]), hero.backpackInfo.itemSlots[i]);
@@ -232,7 +233,7 @@ void USaveLoadClass::SetupAlliedUnits()
          spawnedSummon->SetActorTransform(summon.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedSummon, summon.allyInfo.baseCSaveInfo);
          spawnedSummon->timeLeft = summon.duration;
-         spawnedSummon->Stop();
+         spawnedSummon->GetUnitController()->Stop();
       } else {
          FAssetRegistryModule& assetReg    = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
          FAssetData            summonAsset = assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/") + summon.allyInfo.name.ToString()));

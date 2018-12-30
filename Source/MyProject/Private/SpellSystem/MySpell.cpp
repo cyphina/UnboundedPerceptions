@@ -68,18 +68,18 @@ FGameplayEffectContextHandle UMySpell::MakeEffectContext(const FGameplayAbilityS
 
 void UMySpell::CommitExecute(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
-   // ApplyCooldown(Handle, ActorInfo, ActivationInfo);
-   ///---Our version of applying the cooldown---
+   //ApplyCooldown(Handle, ActorInfo, ActivationInfo);
+   //Our version of applying the cooldown
    FGameplayEffectSpecHandle sH = MakeOutgoingGameplayEffectSpec(CooldownGameplayEffectClass, 1);
    UAbilitySystemBlueprintLibrary::SetDuration(sH, GetCDDuration(ActorInfo->AbilitySystemComponent.Get()));
    UAbilitySystemBlueprintLibrary::AddGrantedTag(sH, AbilityTags.GetByIndex(0));
-   // ActorInfo->AbilitySystemComponent.Get()->AddLooseGameplayTag(AbilityTags.GetByIndex(0));
-   // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::FromInt(GetCDDuration(ActorInfo->AbilitySystemComponent.Get())));
+   //ActorInfo->AbilitySystemComponent.Get()->AddLooseGameplayTag(AbilityTags.GetByIndex(0));
+   //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::FromInt(GetCDDuration(ActorInfo->AbilitySystemComponent.Get())));
    K2_ApplyGameplayEffectSpecToOwner(sH);
 
    unitRef = Cast<AUnit>(ActorInfo->AvatarActor.Get());
    if (unitRef) {
-      unitRef->CommitCast(this);
+      unitRef->SetVitalCurValue(static_cast<uint8>(Vitals::Mana), unitRef->GetVitalCurValue(static_cast<uint8>(Vitals::Mana)) - GetCost(unitRef->GetAbilitySystemComponent()));
       // GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString("Committing ability for unit:") + unitRef->GetName());
    }
 }

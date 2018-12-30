@@ -6,6 +6,7 @@ public class MyProjectEditorVisualizations : ModuleRules
 {
 	public MyProjectEditorVisualizations(ReadOnlyTargetRules Target) : base(Target)
 	{
+		PrivatePCHHeaderFile = "Public/MyProjectEditorVisualizations.h";
 		PublicIncludePaths.AddRange(new string[] { "MyProjectEditorVisualizations/Public" });
 		PrivateIncludePaths.AddRange(new string[] { "MyProjectEditorVisualizations/Private" });
 		PublicDependencyModuleNames.AddRange(new string[] { });

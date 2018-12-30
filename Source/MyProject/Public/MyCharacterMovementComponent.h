@@ -6,9 +6,9 @@
 #include "MyCharacterMovementComponent.generated.h"
 
 /**
- *
+ * Custom movement component
  */
-UCLASS()
+UCLASS(HideCategories=("Character Movement (General Settings)", "Character Movement: Swimming", "Character Movement: Flying"))
 class MYPROJECT_API UMyCharacterMovementComponent : public UCharacterMovementComponent
 {
    GENERATED_UCLASS_BODY()

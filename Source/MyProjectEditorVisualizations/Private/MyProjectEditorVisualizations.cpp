@@ -13,13 +13,17 @@ DEFINE_LOG_CATEGORY(MyProjectEditorVisualizations);
 void FMyProjectEditorVisualizationsModule::StartupModule()
 {
 	UE_LOG(MyProjectEditorVisualizations, Warning, TEXT("MyProjectEditorVisualizations: Log Started"));
-	GUnrealEd->RegisterComponentVisualizer(UPatrolComponent::StaticClass()->GetFName(), MakeShareable(new FPatrolVisualizer));
+	GUnrealEd->RegisterComponentVisualizer(UPatrolComponent::StaticClass()->GetFName(),
+	                                       MakeShareable(new FPatrolVisualizer));
 }
 
 void FMyProjectEditorVisualizationsModule::ShutdownModule()
 {
-	UE_LOG(MyProjectEditorVisualizations, Warning, TEXT("MyProjectEditorVisualizations: Log Ended"));
-	GUnrealEd->UnregisterComponentVisualizer(UPatrolComponent::StaticClass()->GetFName());
+	if (GUnrealEd != NULL)
+	{
+		UE_LOG(MyProjectEditorVisualizations, Warning, TEXT("MyProjectEditorVisualizations: Log Ended"));
+		GUnrealEd->UnregisterComponentVisualizer(UPatrolComponent::StaticClass()->GetFName());
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

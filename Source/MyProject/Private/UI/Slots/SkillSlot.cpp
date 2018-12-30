@@ -33,7 +33,7 @@ void USkillSlot::NativeConstruct()
 void USkillSlot::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
    Super::NativeTick(MyGeometry, InDeltaTime);
-   if (cdTimeline.IsPlaying()) { cdTimeline.TickTimeline(InDeltaTime); }
+   cdTimeline.TickTimeline(InDeltaTime); 
 }
 
 // void USkillSlot::PerformAction()

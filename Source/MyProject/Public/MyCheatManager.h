@@ -64,6 +64,16 @@ class MYPROJECT_API UMyCheatManager : public UCheatManager
    UFUNCTION(exec, Category = "Cheats")
    virtual void EquipSpell(FString heroName, int spellID, int slot);
 
+   /** Refreshes the spells of all units (puts them off CD) */
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void RefreshSpells(FString heroName);
+
+   /** Refreshes the spells of a certain hero
+    * @param heroName - Hero who should have all their spell cooldowns reset.  If unspecificed, resets cds of every unit
+    */
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void RefreshHeroSpells(FString heroName);
+
    /**Stops game time from continuing*/
    UFUNCTION(exec, Category = "Cheats")
    virtual void PauseGameTimer();

@@ -90,7 +90,8 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase
    FTimerHandle allyVisionUpdateTimerHandle;
    FTimerHandle enemyVisionUpdateTimerHandle;
 
-   /**Lists all party members that exist between every player (necessary for computing co op vision)*/
+   /**Lists all party members that exist between every player (necessary for computing co op vision).  Faster to keep stuff in a set for quick addition and removal
+    * Also it holds all of the references to allies (across all players) if there ever is multiplayer*/
    UPROPERTY(BlueprintReadWrite, Category = "SharedData")
    TSet<AAlly*> allyList;
 

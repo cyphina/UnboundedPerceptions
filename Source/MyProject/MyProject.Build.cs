@@ -10,7 +10,7 @@ public class MyProject : ModuleRules
 		// bFasterWithoutUnity = true;
 		bUseRTTI = true;
 		//PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-		//PrivatePCHHeaderFile = Private/RTSPCHFile.h;
+		PrivatePCHHeaderFile = "Public/MyProject.h";
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core",
 			"CoreUObject",
@@ -22,7 +22,9 @@ public class MyProject : ModuleRules
 			"GameplayAbilities",
 			"AIModule",
 			"MyProjectEditor",
-			"ProceduralMeshComponent"
+			"ProceduralMeshComponent",
+			"MovieScene",
+			"LevelSequence"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {

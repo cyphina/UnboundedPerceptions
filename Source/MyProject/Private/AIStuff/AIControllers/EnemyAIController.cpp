@@ -2,14 +2,12 @@
 
 #include "MyProject.h"
 #include "EnemyAIController.h"
-#include "WorldObjects/BaseHero.h"
+
 #include "WorldObjects/Unit.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
-#include "Perception/AISense_Sight.h"
-#include "WorldObjects/Unit.h"
-#include "EnvironmentQuery/EQSTestingPawn.h"
+
 
 void AEnemyAIController::OnPerceptionUpdated(const TArray<AActor*>& updatedActors)
 {
@@ -84,6 +82,19 @@ AEnemyAIController::AEnemyAIController()
    // register the sense to our Perception Component
    AIPerceptionComponent->ConfigureSense(*sight);
    currentClosest = INT_MAX;
+}
+
+void AEnemyAIController::BeginPlay()
+{
+   Super::BeginPlay();
+   switch(idleMovementType)
+   {
+      case EEnemyIdleMovementType::Idle: idleMoveFunction.BindUObject(this, &AEnemyAIController::Stop); break;
+      case EEnemyIdleMovementType::Patrol: idleMoveFunction.BindUObject(this, &AEnemyAIController::Patrol); break;
+      case EEnemyIdleMovementType::Search: idleMoveFunction.BindUObject(this, &AEnemyAIController::Search); break;
+      case EEnemyIdleMovementType::Follow: idleMoveFunction.BindUObject(this, &AEnemyAIController::Follow); break;
+      case EEnemyIdleMovementType::Roam: idleMoveFunction.BindUObject(this, &AEnemyAIController::Roam); break;
+   }
 }
 
 void AEnemyAIController::Possess(APawn* InPawn)
