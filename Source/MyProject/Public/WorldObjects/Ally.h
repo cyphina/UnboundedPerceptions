@@ -22,7 +22,7 @@ class MYPROJECT_API AAlly : public AUnit
 {
    GENERATED_BODY()
 
-   friend class AAllyAIController;
+      friend class AAllyAIController;
 
    /*---Help Text---*/
    static const FText notEnoughManaText;
@@ -42,11 +42,11 @@ class MYPROJECT_API AAlly : public AUnit
 
    /* SpellIndex to remember what slot was used so we can set the visual indicator to be on CD after casting spell.  Don't make it part of begincast because items don't need it */
    UPROPERTY(BlueprintSetter = SetSpellIndex, BlueprintGetter = GetSpellIndex, Category = "Spells")
-   int spellIndex = -1;
+      int spellIndex = -1;
 
    AAllyAIController* allyController;
 
- public:
+public:
 
    static const int MAX_NUM_SPELLS = 6; // max spells an ally can have in their actionbar
 
@@ -56,6 +56,9 @@ class MYPROJECT_API AAlly : public AUnit
    void Tick(float deltaSeconds) override;
    void EndPlay(const EEndPlayReason::Type eReason) override;
    void PossessedBy(AController* newAllyControllerRef) override;
+   void SetEnabled(bool bEnabled) override;
+   void Die_Implementation() override;
+   void Attack_Implementation() override;
 
 #pragma region Accessors
 
@@ -64,7 +67,7 @@ class MYPROJECT_API AAlly : public AUnit
 
    /** Get the class of the spell at this slot (CHECKED INDEX ACCESS) */
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-   TSubclassOf<UMySpell> GetSpellAtSlot(int index) const
+      TSubclassOf<UMySpell> GetSpellAtSlot(int index) const
    {
       if (index >= 0 && index < abilities.Num()) return abilities[index];
       return TSubclassOf<UMySpell>();
@@ -72,27 +75,27 @@ class MYPROJECT_API AAlly : public AUnit
 
    /** Sees if there's any active instances of a spell and gets them -- Used to get current spell CD timer */
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-   UGameplayAbility* GetSpellInstance(TSubclassOf<UMySpell> spellClass) const;
+      UGameplayAbility* GetSpellInstance(TSubclassOf<UMySpell> spellClass) const;
 
    UFUNCTION(BlueprintPure, BlueprintGetter, Category = "Spells")
-   int GetSpellIndex() const { return spellIndex; }
+      int GetSpellIndex() const { return spellIndex; }
 
    UFUNCTION(BlueprintSetter, Category = "Spells")
-   void SetSpellIndex(int index);
+      void SetSpellIndex(int index);
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
-   FORCEINLINE AAllyAIController* GetAllyAIController() const { return allyController; }
+      FORCEINLINE AAllyAIController* GetAllyAIController() const { return allyController; }
 
 #pragma endregion
 
-/** Various functions to help with Ally functionality */
- #pragma region utility
+   /** Various functions to help with Ally functionality */
+#pragma region utility
 
- public:
+public:
 
    /**Check to see if things are above us so we know to make the roofs transparent as we walk underneath them*/
    UFUNCTION(BlueprintCallable, Category = "Overlap")
-   bool GetOverlappingObjects(TArray<FHitResult>& hits);
+      bool GetOverlappingObjects(TArray<FHitResult>& hits);
 
    void QueueAction(TFunction<void()> actionToQueue); // Queues an action to our action queue
 
@@ -105,42 +108,42 @@ private:
 
 #pragma endregion
 
- protected:
+protected:
    /**Like CastSpell in Unit but triggers actionbar redraw*/
    bool CastSpell(TSubclassOf<UMySpell> spellToCast) override;
 
-///< summary>
-/// The vision section contains information on making units hidden and visible based upon hiding behind walls, and information relevant
-/// to creating a custom mesh that represents a visibility polygon which will be used in a post processing effect to create an alpha mask
-///</summary>
+   ///< summary>
+   /// The vision section contains information on making units hidden and visible based upon hiding behind walls, and information relevant
+   /// to creating a custom mesh that represents a visibility polygon which will be used in a post processing effect to create an alpha mask
+   ///</summary>
 #pragma region Vision
 
- public:
+public:
 
    /** What enemies are in our radius determined via sphere overlap events */
    TSet<AEnemy*> possibleEnemiesInRadius;
    /** Used by fog of war plane to figure out how to draw itself, and could be used by AI */
    TArray<FVector> visionPolygonVertices;
 
-   /** Sorts the corner points, adds points to make visibility polygon shape approximate a circle, 
+   /** Sorts the corner points, adds points to make visibility polygon shape approximate a circle,
      * and then orders the trace to find the visibility polygon vertices */
    void FindVisibilityPoints();
 
- private:
+private:
 
    TSet<FTraceHandle> traceHandlers;
    FTraceDatum        traceResults;
    TSet<FVector>      visionBlockerCorners;
 
-   /** Add units to the visibiilty check if they are in the visibility sphere.  
+   /** Add units to the visibiilty check if they are in the visibility sphere.
     * Also used to add corners to be taken into account when drawing visibility polygon*/
    UFUNCTION()
-   void OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep, const FHitResult& sweepRes);
-   
-   /**Remove units from visibility checking if they are not in range.  
+      void OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep, const FHitResult& sweepRes);
+
+   /**Remove units from visibility checking if they are not in range.
     * Also used to remove corners of being visibility checked (used to draw visibility polygon)*/
    UFUNCTION()
-   void OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex);
+      void OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex);
 
    /**Adds the corners of the visionblockers that we overlapped to the possible list of corners
     * we have to check for the visibility polygon*/
@@ -152,7 +155,7 @@ private:
 
    /**Reads the Async line trace results of FindVisibilityPoints*/
    UFUNCTION()
-   void GetTraceResults();
+      void GetTraceResults();
 
 #pragma endregion
 

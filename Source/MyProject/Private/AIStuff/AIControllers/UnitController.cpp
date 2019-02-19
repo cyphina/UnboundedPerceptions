@@ -279,6 +279,7 @@ bool AUnitController::BeginCastSpell(TSubclassOf<UMySpell> spellToCast, const FG
                unitOwner->targetData.spellTargetData = targetData;
 
                if (spell->GetTargetting().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))) {
+                  //The ground location should be determined by EQS
                   spellTargetLocation = unitOwner->targetData.targetLocation = UAbilitySystemBlueprintLibrary::GetTargetDataEndPoint(unitOwner->targetData.spellTargetData, 0);
                } else {
                   unitOwner->targetData.targetActor = UAbilitySystemBlueprintLibrary::GetActorsFromTargetData(unitOwner->targetData.spellTargetData, 0)[0];

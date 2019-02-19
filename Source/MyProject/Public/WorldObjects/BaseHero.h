@@ -36,6 +36,7 @@ class MYPROJECT_API ABaseHero : public AAlly
    void Tick(float deltaSeconds) override;
    void EndPlay(const EEndPlayReason::Type epr) override;
    void PossessedBy(AController* newController) override;
+   void Die_Implementation() override;
 
 #pragma endregion
 

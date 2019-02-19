@@ -40,6 +40,7 @@ void UStartMenu::StartGameLevelTransition()
    GetWorld()->GetGameState()->SetActorTickEnabled(true);
 
    controllerRef->EnableInput(controllerRef);
+   controllerRef->GetPawn()->EnableInput(controllerRef);
    controllerRef->GetHUDManager()->GetMainHUD()->speedIndex = 2;
    controllerRef->GetHUDManager()->GetMainHUD()->SetGameSpeed();
 

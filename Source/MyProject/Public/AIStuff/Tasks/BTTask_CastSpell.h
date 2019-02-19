@@ -5,12 +5,11 @@
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "BTTask_CastSpell.generated.h"
 
-/**
- * Task which allows you cast a certain spell on the target denoted by the blackboard key
- */
-
 class UMySpell;
 
+/**
+ * Spell casting task where the spell and target is chosen.  The spell is a property where the target is the blackboard key
+ */
 UCLASS()
 class MYPROJECT_API UBTTask_CastSpell : public UBTTask_BlackboardBase
 {

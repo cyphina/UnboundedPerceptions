@@ -16,6 +16,8 @@
 
 #include "UI/DamageIndicator/DIRender.h"
 #include "UI/Healthbar/HealthbarComp.h"
+#include "UI/HUDManager.h"
+#include "UI/UserWidgets/ActionbarInterface.h"
 
 #include "SpellSystem/MyAbilitySystemComponent.h"
 #include "SpellSystem/MySpell.h"
@@ -40,6 +42,7 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) : Super(objectInitiali
 {
    // Setup variables
    PrimaryActorTick.bCanEverTick = true;
+   AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
    combatParams.combatStyle      = ECombatType::Melee;
 
    //--Destroy arrow component so there isn't some random arrow sticking out of our units--
@@ -59,10 +62,11 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) : Super(objectInitiali
    selectionCircleDecal        = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));
    selectionCircleDecal->SetupAttachment(RootComponent);
    healthBar = CreateDefaultSubobject<UHealthbarComp>(FName("Healthbar"));
+   healthBar->SetRelativeLocation(FVector(0,0,45));
    healthBar->SetupAttachment(RootComponent);
 
-   // Mesh needs an offset because it isn't aligned with capsule component at the beginning
-   GetMesh()->SetRelativeLocation(FVector(0, 0, -90));
+   // Mesh needs an offset because it isn't aligned with capsule component at the beginning.  Offset by the mesh size
+   GetMesh()->SetRelativeLocation(FVector(0, 0, -GetMesh()->Bounds.BoxExtent.Z));
    GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
 
    //--Find healthbar widget to set it as our default healthbar's widget class
@@ -84,8 +88,6 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) : Super(objectInitiali
 
 void AUnit::BeginPlay()
 {
-   Super::BeginPlay();
-
    /// Setup initial parameters
    controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
    gameState     = Cast<ARTSGameState>(GetWorld()->GetGameState());
@@ -125,6 +127,8 @@ void AUnit::BeginPlay()
    // Setup vision parameters
    visionSphere->SetSphereRadius(unitProperties.visionRadius);
    visionSphere->SetRelativeLocation(FVector::ZeroVector);
+
+   Super::BeginPlay();
 }
 
 void AUnit::PossessedBy(AController* newController)
@@ -164,6 +168,10 @@ void AUnit::Die_Implementation()
    SetCanTarget(false);
    combatParams.isDead = true;
 
+   //If this unit's info is being watched on the actionbar, remove it for now until I find a better fix
+   if(controllerRef->GetBasePlayer()->focusedUnit == this)
+         controllerRef->GetHUDManager()->GetActionHUD()->DeadUnitView();
+
    // Trigger "Death Events" in all skills that need them like Soul Catcher
    FGameplayEventData eD = FGameplayEventData();
    eD.EventTag           = FGameplayTag::RequestGameplayTag("Event.Death");
@@ -171,8 +179,6 @@ void AUnit::Die_Implementation()
    if (GetAbilitySystemComponent()->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("Event.Death"), &eD)) {
       // GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Emerald, FString("Wee") + FString::FromInt(currentSpellIndex));
    }
-
-   Destroy();
 }
 
 void AUnit::SetEnabled(bool bEnabled)
@@ -180,10 +186,12 @@ void AUnit::SetEnabled(bool bEnabled)
    // Basically keep this unit loaded, but remove any trace of it
    if (bEnabled) {
       SetCanTarget(true);
+      SetSelected(false);
       GetCapsuleComponent()->SetVisibility(true, true);
       SetActorEnableCollision(true);
       SetActorTickEnabled(true);
       GetCapsuleComponent()->SetEnableGravity(true);
+      GetCharacterMovement()->GravityScale = 1;
       GetCapsuleComponent()->SetSimulatePhysics(false); // can't move w/o physics
       bCanAffectNavigationGeneration = true;
    } else {
@@ -192,12 +200,13 @@ void AUnit::SetEnabled(bool bEnabled)
       SetActorEnableCollision(false);
       SetActorTickEnabled(false);
       GetCapsuleComponent()->SetEnableGravity(false);
+      GetCharacterMovement()->GravityScale = 0;
       GetCapsuleComponent()->SetSimulatePhysics(true); // but will drop if physics isn't set to true
       bCanAffectNavigationGeneration = false;
    }
 }
 
-void AUnit::Attack()
+void AUnit::Attack_Implementation()
 {
    // If we're not stunned and our attack rate is filled
    if (!IsStunned()) {
@@ -224,6 +233,9 @@ void AUnit::Attack()
       UAbilitySystemBlueprintLibrary::AddAssetTag(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Element.Force"));
       GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*damageEffectHandle.Data.Get(), targetData.targetUnit->GetAbilitySystemComponent());
    }
+
+    //Remove invisibility if you attack somebody
+    GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
 }
 
 UMySpell* AUnit::GetSpellCDO(TSubclassOf<UMySpell> spellClass) const
@@ -373,7 +385,6 @@ float AUnit::CalculateRisk()
 
 float AUnit::CalculateThreat()
 {
-
    const float damageDealt = GetDPS(1), healingDealt = GetHealingPerSecond(1);
    // Calculate score based on how much damage we're dealing
    // Should be done differently for enemies and allies float avgDPS = 0, avgHealing = 0;

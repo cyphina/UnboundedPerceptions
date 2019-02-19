@@ -13,7 +13,7 @@ void AShootingEnemy::BeginPlay()
    Super::BeginPlay();
 }
 
-void AShootingEnemy::Attack()
+void AShootingEnemy::Attack_Implementation()
 {
    if (!IsStunned()) // If we're not stunned and our attack rate is filled
    {
@@ -27,9 +27,7 @@ void AShootingEnemy::Attack()
       // set all the effect's custom magnitude values else it complains
       UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Strength"), 0);
       UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Intelligence"), 0);
-      UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), 0);
       UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Understanding"), 0);
-
       UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), 100);
 
       UAbilitySystemBlueprintLibrary::AddAssetTag(damageEffectHandle, initialStats.element);

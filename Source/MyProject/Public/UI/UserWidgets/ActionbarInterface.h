@@ -46,5 +46,9 @@ class MYPROJECT_API UActionbarInterface : public UMyUserWidget
    UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "View")
    void SingleAllyViewIndexFree(AAlly* allyToFocus);
 
+   /**View when the focused unit dies*/
+   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "View")
+   void DeadUnitView();
+
 #pragma endregion
 };

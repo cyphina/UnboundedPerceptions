@@ -30,15 +30,26 @@ void ABasePlayer::UpdateParty(TArray<ABaseHero*> newHeroes)
    // checkf(newHeroes.Num() > 0 && newHeroes.Num() <= MAX_NUM_HEROES, TEXT("Inappropriate size (%d) of hero array"), newHeroes.Num());
 #endif
 
+   //Disable the units in our old party
+   int index = 0;
    for (ABaseHero* hero : heroes) {
       hero->SetEnabled(false);
+      allies[allies.Find(hero)] = newHeroes[index];
+      ++index;
    }
    heroes = newHeroes;
+
+   //Enable the units in our new party
    int i  = -1;
    for (ABaseHero* hero : heroes) {
       hero->SetEnabled(true);
-      hero->heroIndex = ++i;
+      hero->heroIndex = ++i;    
    }
+}
+
+void ABasePlayer::JoinParty(ABaseHero* newHero)
+{
+   allHeroes.Add(newHero);
 }
 
 void ABasePlayer::UpdateGold(int32 amount)

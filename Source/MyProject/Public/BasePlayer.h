@@ -52,8 +52,6 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    ABaseHero* interactedHero;
 
-   /**What is the current blocking interactable if there is any that is open?*/
-
    /**Returns list of alive heroes and friendly units.  Heroes should be first in the list*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    TArray<AAlly*> allies;
@@ -95,6 +93,10 @@ class MYPROJECT_API ABasePlayer : public APlayerState
     */
    UFUNCTION(BlueprintCallable, Category = "Player")
    void UpdateParty(TArray<ABaseHero*> newHeroes);
+
+   /**Called when a new hero joins the team and can be assigned to the 4 man squad*/
+   UFUNCTION(BlueprintCallable, Category = "Player")
+   void JoinParty(ABaseHero* newHero);
 
    /**Update the coins
    @param amount - this is the amount to update the coins by, and can be positive or negative

@@ -93,6 +93,10 @@ class MYPROJECT_API AAllyAIController : public AUnitController
    UFUNCTION(BlueprintCallable, Category = "Spells")
    bool SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellClass);
 
+private:
+   void FinalizeSpellTargetting(TSubclassOf<UMySpell> spellClass);
+
+public:
    virtual void Stop() override;
 
    void BeginAttack(AUnit* target) override;

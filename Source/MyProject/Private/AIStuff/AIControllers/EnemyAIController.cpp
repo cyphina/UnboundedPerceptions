@@ -68,18 +68,18 @@ AEnemyAIController::AEnemyAIController()
    // Component Init
    AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(FName("PerceptionComp"));
 
-   // create a sight sense
+   //Create a sight sense
    sight                               = CreateDefaultSubobject<UAISenseConfig_Sight>(FName("Sight Config"));
    sight->SightRadius                  = 1000.f;
    sight->LoseSightRadius              = 1500.f;
    sight->PeripheralVisionAngleDegrees = 145.f;
 
-   // tell sight to detect everything
+   //Tell sight to detect everything
    sight->DetectionByAffiliation.bDetectEnemies    = true;
    sight->DetectionByAffiliation.bDetectFriendlies = true;
    sight->DetectionByAffiliation.bDetectNeutrals   = true;
 
-   // register the sense to our Perception Component
+   //Register the sense to our Perception Component
    AIPerceptionComponent->ConfigureSense(*sight);
    currentClosest = INT_MAX;
 }

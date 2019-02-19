@@ -1,36 +1,35 @@
-Weird glitch with move towards actor not working for an interactable that wasn't updated properly.   I supposed something was glitched with the actor since it had two 
-two static mesh components, one from before I added the component to the InteractableBase constructor, and creating a new copy with the same properties fixed it.
-Fixed WinterBlast not committing when casting while attacking
-Removed CastClick event (need to update all spells relying on this).  Instead just casted Avatar and got the targetData.
-Fixed glitch with actionbar effects not showing properly due to an optimization where i stored what was shown but never updated it
-Changed stop to not reset the currentItem 
-Removed range check from casting point targetted spells right next to self
-Fix glitch with effect bar not showing effect if it is the second time we get effected by it
+Fixed shooting enemy not having a default projectile set in factory
+Fixed crash when displaying a dead unit's effect bar
+Dialog node parsers can now handle line breaks of the form \r\n
+Fixed the homing ability of projectiles
+Fixed ranged enemy shooting bullet at ground
+Added projectile blocking walls
+Added some collision profiles to better organize ally and enemy collision.  
+Added a collision object type just for our vision spheres (profile name Vision)
+AOE spells now target the right units instead of hitting friendlies and enemies
+Fixed spells that need different targetting schemes depending on if an ally or enemy casts them (HealBullet, Firestorm, Healing Circle, etc.)
+Changed DPRS to DRPS (Damage Recieved Per Second)
+Added some extra features to disable when calling SetEnabled for a unit.  Customized what is disabled per class
+Modified what things occur in the Die Function
+Removed references to a hero leftover from the ally array and ally vision set when changing the party
+Added an exploding enemy that can be pushed around
+Added an endgame screen and updated pawn to stop taking input when the screen is reached
+Fixed casting one spell on a hero causing another hero which was casting a spell to recast his/her spell
+Added functionality for Seinen Departure and Cloak I spells.  Modified their values in data table 
+Added an invisibility gameplay effect and cues
+Fixed null references in enemyList in vision set in RTSGameState due to references in the set being deleted when the enemies are destroyed due to the level switch (added the cleanup in EndPlay)
+Fixed explosion not calling Die() when suiciding, but just getting destroyed without leaving anything. 
+Fixed cursor hovering over enemies indicating where they are when they are out of the vision sphere.  Left it for interactables since there are bright maps (maps where everything is pretty much visible) 
+Fixed targetted actions (spell casting/attacking/item usage) on invisible units (cursor targetting click check) and untargettable units
+Fixed enemies being able to target invisible allies without true sight
+Also fixed glitch abusing leftover target data when using an item on an invisible unit to bypass target AI blueprint conditional checks.  Handled with changes to handling invisible unit in parent CastSpell(), since item usage is just a spell casting wrapper.
+Fix enemy not visible when loading level (delayed visibility check in MyEnemy blueprint).  Still need a good solution to initializing enemy visibility before adding it to the C++ code.
+Fixed heroes (loaded in the background) falling during the main menu
+Fixed glitch with new unit turn rate system not taking into account that spells can be casted on interactables (like unlock)
+Fixed AOE targetted spells targetting location too high (and then the caster couldn't reach the targetLocation) due to the trace hitting higher up on a big enemy
+Fixed AOE targetting spells actual cast location (depending on unit or ground target)
+Fixed projectile class pushing caster back when it is spawned too close
+Fixed single target spells not following unit targets and interactable targets
+Changed AOE spells cast targetting so it follow single target units if a unit was targetted
 
-Fix moving while spell-casting (at least in AI)
-Fixed some hit trace presets
-Optimized wall fading a bit but it still needs work
-Fix default dialogue
-Interact Wardrobe + Dialogue messed up again? - Fixed by changing EDialogSource in trigger to trigger type ... dunno why it wasn't that
-Equipment messed up again in main game? - Fixed when deleted intermediate :/
-Renamed GetAIController function since it hides the one from the Pawn class
-Rewrote several AI tasks
-Renamed all the heroes since during refactoring the name field in struct
-Removed allies from the allyList (global list of allies if we ever create multiplayer) on destroyed.  Also made sure game was playing when cleaning up in destroyed since destroyed can be called when it is not.
-Fixed various settings in EQS system.
-Fixed effectbar not showing status effects if it is the second time afflicted by one and optimized it a different way.  
-
-Changed structure of all tasks and hid the looping code.  Tasks look more like callback functions, which should in theory optimize the game a bit, cause less weird errors when the AI moves from task to task, and simplified the code a bit.  
-Added a more special gunner AI that swaps between different behaviours depending on RNG (with controllable odds)
-Added some new cheats to help tests
-Huge refactoring job moving a lot of actions from the model classes to the controller classes even though we don't use true MVC
-Added a beginnings listening system task node that allows AI to respond to certain messages that can be sent out by other units.
-Modified the fade trace shape and what kinds of walls get traced
-
-TODO:
-Let Player choose if queue interrupted by stun
-Write a crap ton of functional tests
-Further work on the fade system is necessary
-Stop cursor from changing in darkness
-Add the rest of the things to save data
-Make sure AI targeting filters invalid targets (so we don't get a help text popup)
+TODO: Fixup spellcasting on massive enemies

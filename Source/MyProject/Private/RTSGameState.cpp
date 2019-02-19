@@ -7,6 +7,7 @@
 #include "WorldObjects/Ally.h"
 #include "WorldObjects/Enemies/Enemy.h"
 #include "FogOfWar/FogOfWarPlane.h"
+#include "GameplayAbilities/Public/AbilitySystemComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 DECLARE_CYCLE_STAT(TEXT("Unit Vision Update"), STAT_UnitVision, STATGROUP_RTSUnits)
@@ -143,14 +144,19 @@ void ARTSGameState::UpdateVisibleEnemies()
             if (!visibleEnemies.Contains(enemy)) {
                // If we can trace a line and hit the enemy without hitting a wall
                if (!GetWorld()->LineTraceSingleByObjectType(visionHitResult, ally->GetActorLocation(), enemy->GetActorLocation(), queryParamVision)) {
-                  // make it visible
-                  if (!enemy->GetCapsuleComponent()->bVisible) { enemy->GetCapsuleComponent()->SetVisibility(true, true); }
-                  visibleEnemies.Add(enemy);
+                  //If the enemy isn't invisible
+                  if (!enemy->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")) ||
+                     ally->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.TrueSight"))) {
+                     //Make it visible
+                     if (!enemy->GetCapsuleComponent()->bVisible) { enemy->GetCapsuleComponent()->SetVisibility(true, true); }
+                     visibleEnemies.Add(enemy);
+                  }
                }
             }
          }
       }
 
+      //If there's an ally that is not visible this time, but was last time, make sure he's now invisible
       for (AEnemy* visibleEnemy : lastVisibleEnemies) {
          if (!visibleEnemies.Contains(visibleEnemy)) { visibleEnemy->GetCapsuleComponent()->SetVisibility(false, true); }
       }
@@ -167,8 +173,11 @@ void ARTSGameState::UpdateVisibleAllies()
          if (!visibleAllies.Contains(ally)) {
             // If we can trace a line and hit the ally without hitting a wall
             if (!GetWorld()->LineTraceSingleByObjectType(visionHitResult, enemy->GetActorLocation(), ally->GetActorLocation(), queryParamVision)) {
-               // make it visible
-               visibleAllies.Add(ally);
+               if (!ally->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")) ||
+                  enemy->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.TrueSight"))) {
+                  // make it visible
+                  visibleAllies.Add(ally);
+               }
             }
          }
       }

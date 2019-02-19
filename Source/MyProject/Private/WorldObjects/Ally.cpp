@@ -34,9 +34,9 @@ AAlly::AAlly(const FObjectInitializer& oI) : AUnit(oI)
    abilities.SetNum(MAX_NUM_SPELLS); //Size of abilities that can be used on actionbar
   
    //Set collision to friendly type and block traces made on the AllyTrace channel
-   GetCapsuleComponent()->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel9);
-   GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel10, ECollisionResponse::ECR_Block); 
-   
+   GetCapsuleComponent()->SetCollisionProfileName("Ally");
+
+   visionSphere->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel9);
    visionSphere->OnComponentBeginOverlap.AddDynamic(this, &AAlly::OnVisionSphereOverlap);
    visionSphere->OnComponentEndOverlap.AddDynamic(this, &AAlly::OnVisionSphereEndOverlap);
    visionSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap); // Enemy
@@ -75,20 +75,37 @@ void AAlly::Tick(float deltaSeconds)
 void AAlly::EndPlay(const EEndPlayReason::Type eReason)
 {
    Super::EndPlay(eReason);
-   switch(eReason)
-   {
-      case EEndPlayReason::Destroyed:
-      controllerRef->GetBasePlayer()->allies.Remove(this);
-      controllerRef->GetGameState()->allyList.Remove(this);
-      break;
-      default: break;
-   }
+   //Errors when we stop play in editor since the vision check keeps going on even after these actors are destroyed
 }
 
 void AAlly::PossessedBy(AController* newAllyControllerRef)
 {
    Super::PossessedBy(newAllyControllerRef);
    allyController = Cast<AAllyAIController>(newAllyControllerRef);
+}
+
+void AAlly::SetEnabled(bool bEnabled)
+{
+   Super::SetEnabled(bEnabled);
+   if(bEnabled)
+      controllerRef->GetGameState()->allyList.Add(this);
+   else
+      controllerRef->GetGameState()->allyList.Remove(this);
+}
+
+void AAlly::Die_Implementation()
+{
+   //Allies that aren't heroes can get destroyed when they die 
+   Super::Die_Implementation();
+   controllerRef->GetBasePlayer()->allies.Remove(this);  
+   Destroy();
+}
+
+void AAlly::Attack_Implementation()
+{
+   Super::Attack_Implementation();
+   if(!gameState->visibleEnemies.Contains(Cast<AEnemy>(targetData.targetUnit)))
+      GetAllyAIController()->Stop();
 }
 
 void AAlly::SetSelected(bool value)
@@ -119,9 +136,18 @@ UGameplayAbility* AAlly::GetSpellInstance(TSubclassOf<UMySpell> spellClass) cons
 
 bool AAlly::CastSpell(TSubclassOf<UMySpell> spellToCast)
 {
+   bool invis = GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility"));
    if (Super::CastSpell(spellToCast)) {
-      if (controllerRef->GetBasePlayer()->focusedUnit == this) controllerRef->GetHUDManager()->GetActionHUD()->ShowSkillVisualCD(spellIndex);
-      return true;
+      if (controllerRef->GetBasePlayer()->focusedUnit == this) {
+         controllerRef->GetHUDManager()->GetActionHUD()->ShowSkillVisualCD(spellIndex);
+         //Cancel AI targetting if enemy turns invisible
+         if (IsValid(targetData.targetUnit) && !gameState->visibleEnemies.Contains(Cast<AEnemy>(targetData.targetUnit)))
+            GetAllyAIController()->Stop();
+         //Reveal self if invisile when spell casted.  If we don't check this before spell casted, we could just end up canceling an invisibility spell being cast
+         if(invis)
+            GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
+         return true;
+      }
    }
    return false;
 }

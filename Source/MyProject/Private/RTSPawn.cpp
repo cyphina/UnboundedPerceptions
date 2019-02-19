@@ -173,7 +173,7 @@ void ARTSPawn::CursorHover()
                case ECollisionChannel::ECC_WorldStatic: ChangeCursor(ECursorStateEnum::Moving); break;
                case ECollisionChannel::ECC_GameTraceChannel3: ChangeCursor(ECursorStateEnum::Interact); break;
                case ECollisionChannel::ECC_GameTraceChannel4: ChangeCursor(ECursorStateEnum::Talking); break;
-               case ECollisionChannel::ECC_GameTraceChannel2: ChangeCursor(ECursorStateEnum::Attack); break;
+               case ECollisionChannel::ECC_GameTraceChannel2: if(hitActor->GetDefaultAttachComponent()->IsVisible()) ChangeCursor(ECursorStateEnum::Attack); break;
                default: ChangeCursor(ECursorStateEnum::Select); break;
                }
             }

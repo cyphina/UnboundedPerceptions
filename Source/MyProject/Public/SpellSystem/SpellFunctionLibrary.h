@@ -33,4 +33,5 @@ class USpellFunctionLibrary : public UBlueprintFunctionLibrary
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Stat Change Effect", BlueprintInternalUseOnly = "true"), Category = "EffectFactory")
    static struct FGameplayEffectSpecHandle MakeStatChangeEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration, float Period, FGameplayTag Elem,
                                                                 FGameplayTag Name, FGameplayTagContainer assetTags, TArray<FStatChange> StatChanges);
+
 };

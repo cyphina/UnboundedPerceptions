@@ -4,6 +4,7 @@
 
 #include "BasePlayer.h"
 #include "RTSGameMode.h"
+#include "RTSGameState.h"
 #include "UserInput.h"
 #include "RTSPawn.h"
 
@@ -104,8 +105,6 @@ void ABaseHero::BeginPlay()
    spellbook          = NewObject<USpellBook>(this, spellbookClass.Get());
    spellbook->heroRef = this;
    spellbook->Init();
-
-   SetEnabled(false);
 }
 
 // Called every frame
@@ -119,20 +118,30 @@ void ABaseHero::Tick(float deltaSeconds)
 void ABaseHero::EndPlay(EEndPlayReason::Type epr)
 {
    Super::EndPlay(epr);
-   switch (epr) {
-      case EEndPlayReason::Destroyed: if (player) {
-            player->heroes.RemoveAt(player->heroes.Find(this));
-            Die();
-         }
-         break;
-      default: break;
-   }
 }
 
 void ABaseHero::PossessedBy(AController* newController)
 {
    Super::PossessedBy(newController);
    heroController = Cast<AHeroAIController>(GetController());
+}
+
+void ABaseHero::Die_Implementation()
+{
+   //Set typical unit die parameters, deselect unit if it is selected, remove references to it in the vision calculation set, and gameover if all heroes died
+   AUnit::Die_Implementation();
+
+   bool isAllDead = true;
+   for (ABaseHero* hero : controllerRef->GetBasePlayer()->heroes)
+   {
+      if (!hero->combatParams.isDead)
+      {
+         isAllDead = false;
+         break;
+      }
+   }
+   if (isAllDead)
+      controllerRef->GetGameMode()->GameOver();
 }
 #pragma endregion
 
@@ -214,9 +223,9 @@ void ABaseHero::SwapEquip(int equipSlot1, int equipSlot2)
 
 void ABaseHero::UseItem(int itemID)
 {
-   // TODO: removes first instance for now
+   // TODO: removes first instance for now instead of slot clicked
    if (UItemManager::Get().GetItemInfo(itemID)->itemType.GetTagName() != "Item.Consumeable.Utility.Reusable") backpack->RemoveItem(FMyItem(itemID));
-
+   // Refresh inventory after to update visual changes
    if (controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Inventory)) controllerRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
 }
 

@@ -22,5 +22,5 @@ class MYPROJECT_API AShootingEnemy : public AEnemy
    TSubclassOf<ARTSProjectile> projectileType;
 
    void BeginPlay() override;
-   void Attack() override;
+   void Attack_Implementation() override;
 };

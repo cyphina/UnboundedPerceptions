@@ -170,4 +170,9 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
     */
    UFUNCTION(BlueprintCallable, Category = "Saving and Loading")
    bool LoadGame(FString fileName);
+
+   ///---GamewideEvents---
+   /**Trigger a gameover screeen*/
+   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "LevelLoading")
+   void GameOver();
 };

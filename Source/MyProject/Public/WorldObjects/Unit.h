@@ -57,10 +57,10 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true"))
    AUserInput* controllerRef = nullptr;
 
-   TUniquePtr<StateMachine>   state          = nullptr; // reference to statemachine
+   TUniquePtr<StateMachine>   state          = nullptr; // Reference to statemachine
    TUniquePtr<FBaseCharacter> baseC          = nullptr; // Reference to statmanager.  Is a pointer so we can make it and give it a reference to the attribute set
-   AUnitController*           unitController = nullptr; // reference to AIController
-   ARTSGameState*             gameState      = nullptr; // gamestate ref to keep track of game speed modifiers
+   AUnitController*           unitController = nullptr; // Reference to AIController
+   ARTSGameState*             gameState      = nullptr; // Gamestate ref to keep track of game speed modifiers
 
 #pragma endregion
 
@@ -159,6 +159,9 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    bool GetIsDead() const { return combatParams.isDead; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   bool GetIsReadyToAttack() const { return combatParams.readyToAttack; }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
    int GetVisionRadius() const { return unitProperties.visionRadius; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
@@ -233,9 +236,9 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "UI")
    FBox2D FindBoundary();
 
-   /** Function to disable to not destroy this actor*/
+   /** Function to disable (pretty much erases its trace from the world) but not destroy this actor in memory*/
    UFUNCTION(BlueprintCallable, Category = "Functionality")
-   void SetEnabled(bool bEnabled);
+   virtual void SetEnabled(bool bEnabled);
 
 /** Combat related functions and parameters */
 #pragma region combat
@@ -253,10 +256,10 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    /** Damage Calculations on Receiving End.  If using some magic armor, attacker may get some debuffs */
    friend void UDamageCalculation::DamageTarget(AUnit* sourceUnit, AUnit* targetUnit, Damage& d, FGameplayTagContainer effects) const;
 
- private:
-  
    /** Process to create damage effect */
-   virtual void Attack();
+   UFUNCTION(BlueprintNativeEvent)
+   void Attack();
+   virtual void Attack_Implementation();
 
  protected:
 
@@ -324,14 +327,14 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
 #pragma endregion
 
    /** Parameters used to record what units and parts of the map are visible */
-   #pragma region vision
-    public:
+#pragma region vision
+public:
 
-      int  GetVisionCount() const { return enemyVisionCount; }
-      void IncVisionCount() { ++enemyVisionCount; }
-      void DecVisionCount() { --enemyVisionCount; }
+   int  GetVisionCount() const { return enemyVisionCount; }
+   void IncVisionCount() { ++enemyVisionCount; }
+   void DecVisionCount() { --enemyVisionCount; }
 
-    private:
+private:
 
    /** Counter for number of enemies (units with opposite value of isEnemy) that can see this unit */
    int enemyVisionCount;

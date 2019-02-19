@@ -7,7 +7,7 @@
 #include "BTTask_AttTarget.generated.h"
 
 /**
- *
+ *Attacks a target and on sucessful attack completes the task.  To peform N attacks, use a loop decorator
  */
 UCLASS()
 class MYPROJECT_API UBTTask_AttTarget : public UBTTaskNode
