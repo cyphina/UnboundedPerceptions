@@ -50,6 +50,9 @@ class MYPROJECT_API ARTSProjectile : public AActor
    bool canGoThroughWalls = false;
 
    UFUNCTION(BlueprintCallable, Category = "Projectile")
+   FORCEINLINE bool IsHoming() { return projectileMovementComponent->bIsHomingProjectile; }
+
+   UFUNCTION(BlueprintCallable, Category = "Projectile")
    void FireInDirection(const FVector& shootDirection);
 
    UFUNCTION(BlueprintCallable, Category = "Projectile")

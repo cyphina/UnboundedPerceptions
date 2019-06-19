@@ -14,6 +14,7 @@ CastingState::~CastingState()
 
 void CastingState::Enter(AUnit& unit)
 {
+ 
 }
 
 void CastingState::Exit(AUnit& unit)

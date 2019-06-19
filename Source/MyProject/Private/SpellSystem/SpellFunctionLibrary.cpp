@@ -3,6 +3,8 @@
 #include "GameplayAbility.h"
 #include "GameplayTagContainer.h"
 #include "GameplayEffect.h"
+#include "RTSProjectile.h"
+#include "WorldObjects/Unit.h"
 
 USpellFunctionLibrary::USpellFunctionLibrary(const FObjectInitializer& o) : Super(o)
 {
@@ -48,4 +50,24 @@ FGameplayEffectSpecHandle USpellFunctionLibrary::MakeStatChangeEffect(UGameplayA
    }
    // statChanges = MoveTemp(StatChanges);
    return effect;
+}
+
+ARTSProjectile* USpellFunctionLibrary::SetupBulletTargetting(TSubclassOf<ARTSProjectile> bulletClass, AUnit* unitRef, FGameplayEffectSpecHandle& specHandle, bool canGoThroughWalls)
+{
+   ARTSProjectile* projectile     = nullptr;
+   FVector         spawnLocation  = unitRef->GetActorForwardVector() * 10.f + unitRef->GetActorLocation();
+   FTransform      spawnTransform = unitRef->GetActorTransform();
+   spawnTransform.SetLocation(spawnLocation);
+
+   if (unitRef->GetIsEnemy()) {
+      projectile = unitRef->GetWorld()->SpawnActorDeferred<ARTSProjectile>(bulletClass, spawnTransform);
+      projectile->targetting = EBulletTargettingScheme::Bullet_Ally;
+   } else {
+      projectile             = unitRef->GetWorld()->SpawnActorDeferred<ARTSProjectile>(bulletClass, spawnTransform);
+      projectile->targetting = EBulletTargettingScheme::Bullet_Enemy;
+   }
+   projectile->hitEffects        = TArray<FGameplayEffectSpecHandle>{specHandle};
+   projectile->canGoThroughWalls = canGoThroughWalls;
+   projectile->FinishSpawning(spawnTransform);
+   return projectile;
 }

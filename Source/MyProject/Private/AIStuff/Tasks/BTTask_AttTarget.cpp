@@ -22,7 +22,7 @@ EBTNodeResult::Type UBTTask_AttTarget::ExecuteTask(UBehaviorTreeComponent& owner
          // AICon->GetUnitOwner()->SetTarget(target);
          // if we aren't already attacking this target
          AICon->BeginAttack(target);
-         WaitForMessage(ownerComp, AUnit::AIMessage_AttackReady);
+         WaitForMessage(ownerComp, AUnit::AIMessage_TargetLoss);
          WaitForMessage(ownerComp, AUnit::AIMessage_Stunned);
          return EBTNodeResult::InProgress;
       }
@@ -36,6 +36,6 @@ EBTNodeResult::Type UBTTask_AttTarget::ExecuteTask(UBehaviorTreeComponent& owner
 
 void UBTTask_AttTarget::OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FName Message, int32 RequestID, bool bSuccess)
 {
-   bSuccess = Message != AUnit::AIMessage_Stunned;
+   bSuccess = Message != AUnit::AIMessage_Stunned & Message != AUnit::AIMessage_TargetLoss;
    Super::OnMessage(OwnerComp, NodeMemory, Message, RequestID, bSuccess);
 }

@@ -4,6 +4,7 @@
 #include "SettingsMenu.h"
 #include "RTSPawn.h"
 #include "UserInput.h"
+#include "MyGameInstance.h"
 
 USettingsMenu::USettingsMenu() : Super()
 {
@@ -85,4 +86,9 @@ void USettingsMenu::ChangeAudioVolume(float val)
 void USettingsMenu::ChangeEffectVolume(float val)
 {
    // GetWorld()->SetS
+}
+
+void USettingsMenu::ToggleQuickCast()
+{
+   CPC->GetMyGameInstance()->playerQuickCast = !CPC->GetMyGameInstance()->playerQuickCast;
 }

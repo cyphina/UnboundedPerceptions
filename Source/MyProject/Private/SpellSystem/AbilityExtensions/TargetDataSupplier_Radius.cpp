@@ -29,7 +29,6 @@ TArray<TWeakObjectPtr<AActor>> ATargetDataSupplier_Radius::PerformOverlap2(const
    bool                  bTraceComplex          = false;
    FCollisionQueryParams Params(RadiusTargetingOverlap, bTraceComplex);
    Params.bReturnPhysicalMaterial = false;
-   Params.bTraceAsyncScene        = false;
 
    TArray<FOverlapResult>      Overlaps;
    FCollisionObjectQueryParams p;

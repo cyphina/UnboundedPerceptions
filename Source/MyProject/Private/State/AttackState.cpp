@@ -19,6 +19,7 @@ AttackState::~AttackState()
 
 void AttackState::Enter(AUnit& unit)
 {
+
 }
 
 void AttackState::Exit(AUnit& unit)
@@ -42,7 +43,7 @@ void AttackState::Update(AUnit& unit, float deltaSeconds)
                if (unit.combatParams.currentAttTime < 2 / ((unit.GetSkillAdjValue(static_cast<int>(UnitStats::Attack_Speed)) + 100) * 0.01)) {
                   unit.combatParams.currentAttTime += deltaSeconds * unit.gameState->speedModifier;
                } else {
-                  unit.combatParams.currentAttTime = 0;
+                  unit.combatParams.currentAttTime = 0;           
                   unit.Attack();
                   FAIMessage msg(AUnit::AIMessage_AttackReady, &unit);
                   FAIMessage::Send(unit.unitController, msg);
@@ -53,6 +54,14 @@ void AttackState::Update(AUnit& unit, float deltaSeconds)
                unit.SetActorRotation(unit.unitController->FindLookRotation(unit.targetData.targetUnit->GetActorLocation()));
             }
          }
+      }
+   }
+   else
+   {
+      //If the unit goes out of vision while we're attempting to chase it during our attack positional adjustment
+      if(!unit.targetData.targetUnit->IsVisible())
+      {
+         unit.state->ChangeState(EUnitState::STATE_CHASING);
       }
    }
 }

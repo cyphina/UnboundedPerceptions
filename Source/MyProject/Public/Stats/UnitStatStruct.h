@@ -18,7 +18,7 @@ struct FUnitStatStruct {
    UPROPERTY(EditAnywhere, Category = "ShootingStats")
    TArray<int> defaultValues;
 
-   /**Element of standard attacks*/
+   /**Element of standard attacks (Defaults to "None" aka nonelemental)*/
    UPROPERTY(EditAnywhere, Category = "ShootingStats")
-   FGameplayTag element;
+   FGameplayTag element = FGameplayTag::RequestGameplayTag("Combat.Element.None");
 };

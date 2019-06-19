@@ -10,17 +10,6 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "EnemyAIController.generated.h"
 
-UENUM(BlueprintType)
-enum class EEnemyIdleMovementType : uint8 {
-   Idle,
-   Patrol,
-   Search,
-   Follow,
-   Roam
-};
-
-DECLARE_DELEGATE(FIdleMoveDelegate)
-
 /**
  * Base controller for enemies.  Enemies have sight which they use to react to things, but once they see an enemy (which is a hero to them),
  * they can react as if they know where the whole team is (we don't have to keep track of visible allies hence).
@@ -61,22 +50,19 @@ class MYPROJECT_API AEnemyAIController : public AUnitController
 
  public:
    /**Behavior tree contains logic of our AI*/
-   UPROPERTY(EditAnywhere)
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
    UBehaviorTree* behaviorTree;
 
-   /**Change how the enemy moves around the area when it hasn't spotted any allies*/
-   UPROPERTY(EditAnywhere)
-   EEnemyIdleMovementType idleMovementType;
+   /**Change how the enemy moves around the area when it hasn't spotted any allies (choose one of the four trees for
+    * Idle, Patrol, Search, Follow, or Roam
+    */
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   UBehaviorTree* idleMoveTree;
 
    AEnemyAIController();
    void BeginPlay() override;
-   void Possess(APawn* InPawn) override;
+   void OnPossess(APawn* InPawn) override;
 
    /** Returns the seeing pawn.  Returns null if our AI has no unitTarget. */
-   AActor* GetSeeingPawn();
-
-   /**The actual movement function we use depends on what movement type we want if the enemy doesn't see a target
-    * 4 Options: Don't move, Patrol, Search, Follow, and Roam
-    */
-   FIdleMoveDelegate idleMoveFunction;  
+   AActor* GetSeeingPawn();   
 };

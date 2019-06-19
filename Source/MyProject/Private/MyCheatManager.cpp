@@ -8,7 +8,7 @@
 #include "UserInput.h"
 #include "BasePlayer.h"
 
-#include "ResourceManager.h"
+#include "UpResourceManager.h"
 #include "Quests/QuestManager.h"
 #include "Quests/Quest.h"
 
@@ -49,7 +49,7 @@ void UMyCheatManager::LevelUpToLevel(FString heroName, int level)
 void UMyCheatManager::GodMode(FString objectID, int toggleGodMode)
 {
 #if UE_EDITOR
-   if (AUnit* unitRef = ResourceManager::FindTriggerObjectInWorld<AUnit>(objectID, userInputRef->GetWorld())) {
+   if (AUnit* unitRef = UpResourceManager::FindTriggerObjectInWorld<AUnit>(objectID, userInputRef->GetWorld())) {
       if (toggleGodMode)
          unitRef->GetAbilitySystemComponent()->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.GodMode"));
       else
@@ -104,7 +104,7 @@ void UMyCheatManager::SetGameDay(int day, int month, int year)
 
 void UMyCheatManager::SetUnitCurHP(FString unitName, int hpVal)
 {
-   if (AUnit* unit = ResourceManager::FindTriggerObjectInWorld<AUnit>(unitName, GetWorld())) { unit->SetVitalCurValue(static_cast<uint8>(Vitals::Health), hpVal); }
+   if (AUnit* unit = UpResourceManager::FindTriggerObjectInWorld<AUnit>(unitName, GetWorld())) { unit->SetVitalCurValue(static_cast<uint8>(Vitals::Health), hpVal); }
 }
 
 void UMyCheatManager::SeeAll()

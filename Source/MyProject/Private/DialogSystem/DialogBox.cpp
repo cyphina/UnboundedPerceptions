@@ -123,8 +123,8 @@ const FDialogData& UDialogBox::HandleTriggers()
    // GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, FString("Trigger Line!"));
    // Check for double slash (\\n) since when converting \n in FText to \n in FString, it replaces \n with \\n
    // Ensure there's three lines (TriggerType, TriggerObjects, TriggerValues)
-   const TCHAR* delimArray[] = {TEXT("\n"), TEXT("\r\n")};
-   if (dialogLines[currentNodeNum].dialog.ToString().ParseIntoArray(parsingInfo, delimArray, false) == 3) {
+   const TCHAR* delimArray[] = {TEXT("\n"), LINE_TERMINATOR};
+   if (dialogLines[currentNodeNum].dialog.ToString().ParseIntoArray(parsingInfo, delimArray, 2, false) == 3) {
       FTriggerData triggerData = FTriggerData();
       triggerData.triggerType  = static_cast<ETriggerType>(FCString::Atoi(*parsingInfo[0]));
 

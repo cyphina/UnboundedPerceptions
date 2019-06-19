@@ -21,7 +21,7 @@
 #include "NavArea_EnemySpot.h"
 #include "../BaseHero.h"
 
-#include "ResourceManager.h"
+#include "UpResourceManager.h"
 
 #include "Interactables/Pickup.h"
 
@@ -43,6 +43,8 @@ AEnemy::AEnemy(const FObjectInitializer& oI) : AUnit(oI)
    visionSphere->AreaClass = UNavArea_EnemySpot::StaticClass();
    visionSphere->SetAbsolute(false, false, true);
    visionSphere->bDynamicObstacle = true;
+
+   GetMesh()->CustomDepthStencilValue = 254;
 }
 
 void AEnemy::BeginPlay()
@@ -98,8 +100,10 @@ void AEnemy::Destroyed()
 void AEnemy::Attack_Implementation()
 {
    Super::Attack_Implementation();
-   if(!gameState->visibleAllies.Contains(Cast<AAlly>(targetData.targetUnit)))
-      GetUnitController()->Stop();
+   //If they die and the targets get canceled out, then targetUnit can be nulled
+   if(IsValid(targetData.targetUnit))
+      if(!targetData.targetUnit->IsVisible())
+         GetUnitController()->Stop();
 }
 
 bool AEnemy::CastSpell(TSubclassOf<UMySpell> spellToCast)
@@ -108,7 +112,7 @@ bool AEnemy::CastSpell(TSubclassOf<UMySpell> spellToCast)
    if (Super::CastSpell(spellToCast))
    {
       //Cancel AI targetting if enemy turns invisible
-      if (IsValid(targetData.targetUnit) && !gameState->visibleAllies.Contains(Cast<AAlly>(targetData.targetUnit)))
+      if (IsValid(targetData.targetUnit) && !gameState->visibleAllies.Contains(targetData.targetUnit))
          GetUnitController()->Stop();
       //Reveal self if invisile when spell casted
       //Reveal self if invisile when spell casted.  If we don't check this before spell casted, we could just end up canceling an invisibility spell being cast
@@ -137,6 +141,16 @@ void AEnemy::SetEnabled(bool bEnabled)
       controllerRef->GetGameState()->enemyList.Remove(this);
 }
 
+bool AEnemy::IsVisible()
+{
+   return gameState->visibleEnemies.Contains(this);
+}
+
+TSet<AUnit*>* AEnemy::GetSeenEnemies()
+{
+   return &possibleEnemiesInRadius;
+}
+
 void AEnemy::OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep, const FHitResult& sweepRes)
 {
    if (otherActor->IsA(AAlly::StaticClass())) {
@@ -149,7 +163,7 @@ void AEnemy::OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AAc
 
 void AEnemy::OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex)
 {
-   AAlly* ally = Cast<AAlly>(otherActor);
+   AUnit* ally = Cast<AUnit>(otherActor);
    if (IsValid(ally)) {
       possibleEnemiesInRadius.Remove(ally);
       ally->DecVisionCount();
@@ -183,7 +197,7 @@ void AEnemy::InitializeStats()
 float AEnemy::CalculateTargetRisk()
 {
    int targetNum = 0;
-   for (AAlly* a : controllerRef->GetGameState()->visibleAllies) {
+   for (AUnit* a : controllerRef->GetGameState()->visibleAllies) {
       if (a->GetTarget() == this) targetNum += 1;
    }
 

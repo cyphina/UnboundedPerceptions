@@ -53,6 +53,7 @@ EBTNodeResult::Type UBTTask_CastSpell::ExecuteTask(UBehaviorTreeComponent& owner
       {
          WaitForMessage(ownerComp, AUnit::AIMessage_SpellCasted);
          WaitForMessage(ownerComp, AUnit::AIMessage_SpellInterrupt);
+         WaitForMessage(ownerComp, AUnit::AIMessage_TargetLoss);
          return EBTNodeResult::InProgress;
       }
    }
@@ -61,7 +62,7 @@ EBTNodeResult::Type UBTTask_CastSpell::ExecuteTask(UBehaviorTreeComponent& owner
 
 void UBTTask_CastSpell::OnMessage(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory, FName message, int32 requestID, bool bSuccess)
 {
-   bSuccess &= (message != AUnit::AIMessage_SpellInterrupt);
+   bSuccess = message != AUnit::AIMessage_Stunned & message != AUnit::AIMessage_TargetLoss;
    Super::OnMessage(ownerComp, nodeMemory, message, requestID, bSuccess);
 }
 

@@ -25,4 +25,5 @@ class MYPROJECT_API UDamageEffect : public UGameplayEffect
    FSetByCallerFloat intelligence;
    FSetByCallerFloat agility;
    FSetByCallerFloat understanding;
+   FSetByCallerFloat health;
 };

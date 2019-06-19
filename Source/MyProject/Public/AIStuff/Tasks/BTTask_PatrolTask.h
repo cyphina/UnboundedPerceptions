@@ -6,10 +6,6 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "BTTask_PatrolTask.generated.h"
 
-/**
- * Task which directs unit to move to next patrol location.  Relies on the unit having a patrol component
- */
-
 class AUnitController;
 class UBlackboardComponent;
 class UPatrolComponent;
@@ -19,6 +15,11 @@ struct FBTPatrolTaskMemory {
    UPatrolComponent* patrolComp = nullptr;
 };
 
+/**
+ * Task which directs unit to move to next patrol location.  Relies on the unit having a patrol component else it fails.  
+ * Patrol component ended up being the best place to store the control points since the points are really a decorative member.
+ * Does not initiate any attacks on its own
+ */
 UCLASS()
 class MYPROJECT_API UBTTask_Patrol : public UBTTaskNode
 {

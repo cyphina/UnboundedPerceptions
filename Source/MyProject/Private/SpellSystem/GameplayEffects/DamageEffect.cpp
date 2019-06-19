@@ -12,6 +12,7 @@ UDamageEffect::UDamageEffect()
    intelligence.DataName  = "Intelligence";
    agility.DataName       = "Agility";
    understanding.DataName = "Understanding";
+   health.DataName =        "Health";
 
    // When overriding this it doesn't have to necessarily still be instant
    DurationPolicy = EGameplayEffectDurationType::Instant;
@@ -44,8 +45,15 @@ UDamageEffect::UDamageEffect()
    modifierInfo4.ModifierOp                           = EGameplayModOp::Override; // set it to max so nothing happens with the data, we're just using it as params during damage calculation
    modifierInfo4.ModifierMagnitude                    = FGameplayEffectModifierMagnitude(understanding);
 
+   FGameplayEffectExecutionScopedModifierInfo modifierInfo5;
+   health.DataTag                                  = FGameplayTag::RequestGameplayTag("Combat.Stats.Health");
+   modifierInfo5.CapturedAttribute.AttributeSource    = EGameplayEffectAttributeCaptureSource::Source;
+   modifierInfo5.CapturedAttribute.AttributeToCapture = UMyAttributeSet::HealthAttribute();
+   modifierInfo5.ModifierOp                           = EGameplayModOp::Override; // set it to max so nothing happens with the data, we're just using it as params during damage calculation
+   modifierInfo5.ModifierMagnitude                    = FGameplayEffectModifierMagnitude(health);
+
    FGameplayEffectExecutionDefinition e;
    e.CalculationClass = UDamageCalculation::StaticClass();
-   e.CalculationModifiers.Append({modifierInfo, modifierInfo2, modifierInfo3, modifierInfo4});
+   e.CalculationModifiers.Append({modifierInfo, modifierInfo2, modifierInfo3, modifierInfo4, modifierInfo5});
    Executions.Add(e);
 }

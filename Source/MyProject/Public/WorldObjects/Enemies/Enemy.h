@@ -63,7 +63,7 @@ class MYPROJECT_API AEnemy : public AUnit
    TArray<FSpellCombination> combinations; // List of combinations by priority.  Combination 0 will always be an opener
 
    /**What enemies are in our radius determined via sphere overlap events*/
-   TSet<AAlly*> possibleEnemiesInRadius;
+   TSet<AUnit*> possibleEnemiesInRadius;
 
    void BeginPlay() override;
    void Tick(float deltaSeconds) override;
@@ -82,6 +82,9 @@ class MYPROJECT_API AEnemy : public AUnit
 
    UFUNCTION(BlueprintCallable, Category = "Combat")
    void SetIsActive(bool value) { isActive = value; }
+
+   bool IsVisible() override;
+   TSet<AUnit*>* GetSeenEnemies() override;
 
  private:
    AUserInput*    controllerRef;

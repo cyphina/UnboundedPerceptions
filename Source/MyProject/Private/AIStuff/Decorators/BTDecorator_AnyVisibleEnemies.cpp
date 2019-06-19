@@ -19,7 +19,7 @@ bool UBTDecorator_AnyVisibleEnemies::CalculateRawConditionValue(UBehaviorTreeCom
 
    // if we see at least one enemy we've seen something
    // this also means one enemy sees us (if enemy has some kind of ward we'll treat it as a visible enemy)
-   return Cast<ARTSGameState>(GetWorld()->GetGameState())->visibleEnemies.Num();
+   return (bool)Cast<ARTSGameState>(GetWorld()->GetGameState())->visibleEnemies.Num();
 }
 
 void UBTDecorator_AnyVisibleEnemies::DescribeRuntimeValues(const UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTDescriptionVerbosity::Type Verbosity, TArray<FString>& Values) const

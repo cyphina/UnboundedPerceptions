@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/CheatManager.h"
-#include "ResourceManager.h"
+#include "UpResourceManager.h"
 #include "MyCheatManager.generated.h"
 
 /**

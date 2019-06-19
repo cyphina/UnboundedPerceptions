@@ -8,6 +8,8 @@
 
 class UGameplayAbility;
 class UGameplayEffect;
+class ARTSProjectile;
+class AUnit;
 
 /**A class that holds a blueprint library, that is it can be used anywhere inside blueprints so we can get our spellInfo via the manager in our blueprints
  * Recently I've exposed all the information inside UMySpell, so if you can use one of the accesors to get a default instance of the spell, you can get all the data
@@ -34,4 +36,7 @@ class USpellFunctionLibrary : public UBlueprintFunctionLibrary
    static struct FGameplayEffectSpecHandle MakeStatChangeEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration, float Period, FGameplayTag Elem,
                                                                 FGameplayTag Name, FGameplayTagContainer assetTags, TArray<FStatChange> StatChanges);
 
+   /**Sets up targetting for spells with bullets that can be casted by ally or enemy units but requires different targetting for either*/
+   UFUNCTION(BlueprintCallable, meta = (DisplayName = "Setup Bullet Targetting"), Category = "EffectFactory")
+   static ARTSProjectile* SetupBulletTargetting(TSubclassOf<ARTSProjectile> bulletClass, AUnit* unitRef, UPARAM(ref) FGameplayEffectSpecHandle& specHandle, bool canGoThroughWalls);
 };

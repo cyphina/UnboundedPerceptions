@@ -74,7 +74,7 @@ class MYPROJECT_API AAllyAIController : public AUnitController
    AAllyAIController();
 
    virtual void Tick(float deltaTime) override;
-   virtual void Possess(APawn* InPawn) override;
+   virtual void OnPossess(APawn* InPawn) override;
 
    UFUNCTION(BlueprintCallable, Category = "AI Mode")
    void SwitchAIModes(AllyBehavioralMode newMode);

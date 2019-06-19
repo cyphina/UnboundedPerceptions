@@ -135,20 +135,24 @@ void ARTSGameState::UpdateVisibleEnemies()
 
    SCOPE_CYCLE_COUNTER(STAT_UnitVision)
    {
-      TSet<AEnemy*> lastVisibleEnemies;
+      TSet<AUnit*> lastVisibleEnemies;
       Swap(lastVisibleEnemies, visibleEnemies);
 
       for (AAlly* ally : allyList) {
-         for (AEnemy* enemy : ally->possibleEnemiesInRadius) {
+         for (AUnit* enemy : ally->possibleEnemiesInRadius) {
             // if enemy hasn't been checked yet so we don't do it twice
             if (!visibleEnemies.Contains(enemy)) {
-               // If we can trace a line and hit the enemy without hitting a wall
-               if (!GetWorld()->LineTraceSingleByObjectType(visionHitResult, ally->GetActorLocation(), enemy->GetActorLocation(), queryParamVision)) {
+               // If we can trace a line and hit the enemy without hitting a wall (unitVisionTrace channel)
+               if (!GetWorld()->LineTraceSingleByChannel(visionHitResult, ally->GetActorLocation(), enemy->GetActorLocation(), ECollisionChannel::ECC_GameTraceChannel13)) {
                   //If the enemy isn't invisible
                   if (!enemy->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")) ||
                      ally->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.TrueSight"))) {
                      //Make it visible
-                     if (!enemy->GetCapsuleComponent()->bVisible) { enemy->GetCapsuleComponent()->SetVisibility(true, true); }
+                     if (!enemy->GetCapsuleComponent()->bVisible)
+                     {
+                        enemy->GetCapsuleComponent()->SetVisibility(true, true);
+                        enemy->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel7, ECollisionResponse::ECR_Block); //not selectable by clicks
+                     }
                      visibleEnemies.Add(enemy);
                   }
                }
@@ -157,8 +161,12 @@ void ARTSGameState::UpdateVisibleEnemies()
       }
 
       //If there's an ally that is not visible this time, but was last time, make sure he's now invisible
-      for (AEnemy* visibleEnemy : lastVisibleEnemies) {
-         if (!visibleEnemies.Contains(visibleEnemy)) { visibleEnemy->GetCapsuleComponent()->SetVisibility(false, true); }
+      for (AUnit* visibleEnemy : lastVisibleEnemies) {
+         if (!visibleEnemies.Contains(visibleEnemy))
+         {
+            visibleEnemy->GetCapsuleComponent()->SetVisibility(false, true);
+            visibleEnemy->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel7, ECollisionResponse::ECR_Ignore);
+         }
       }
    }
 }
@@ -168,11 +176,11 @@ void ARTSGameState::UpdateVisibleAllies()
    visibleAllies.Empty(visibleAllies.Num());
 
    for (AEnemy* enemy : enemyList) {
-      for (AAlly* ally : enemy->possibleEnemiesInRadius) {
+      for (AUnit* ally : enemy->possibleEnemiesInRadius) {
          // if ally hasn't been checked yet so we don't do it twice
          if (!visibleAllies.Contains(ally)) {
             // If we can trace a line and hit the ally without hitting a wall
-            if (!GetWorld()->LineTraceSingleByObjectType(visionHitResult, enemy->GetActorLocation(), ally->GetActorLocation(), queryParamVision)) {
+            if (!GetWorld()->LineTraceSingleByChannel(visionHitResult, enemy->GetActorLocation(), ally->GetActorLocation(), ECollisionChannel::ECC_GameTraceChannel13)) {
                if (!ally->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")) ||
                   enemy->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.TrueSight"))) {
                   // make it visible

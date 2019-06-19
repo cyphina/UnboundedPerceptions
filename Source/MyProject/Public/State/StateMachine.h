@@ -8,12 +8,13 @@
 #include "ChannelingState.h"
 #include "InteractState.h"
 #include "ItemState.h"
+#include "ChasingState.h"
 
 DECLARE_STATS_GROUP(TEXT("UnitStateMachine"), STATGROUP_UnitStateMachine, STATCAT_Advanced);
 
 class StateMachine
 {
- public:
+public:
    StateMachine(AUnit* unitOwner);
    virtual ~StateMachine();
 
@@ -28,11 +29,12 @@ class StateMachine
    static AttackState     Attacking;
    static CastingState    Casting;
    static ChannelingState Channeling;
+   static ChasingState    Chasing;
 
- protected:
+protected:
    AUnit*      unitOwner = nullptr;
    IUnitState* currentState;
 
- private:
+private:
    virtual IUnitState* getStateFromEnum(EUnitState enumVal);
 };

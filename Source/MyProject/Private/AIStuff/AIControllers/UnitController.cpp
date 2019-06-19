@@ -6,7 +6,7 @@
 #include "UnitController.h"
 
 #include "UserInput.h"
-#include "ResourceManager.h"
+#include "UpResourceManager.h"
 
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -18,13 +18,14 @@
 #include "AbilitySystemBlueprintLibrary.h"
 
 #include "SpellSystem/MySpell.h"
+#include "PatrolComponent.h"
 
 const FName AUnitController::AIMessage_Help = TEXT("HelpMe!");
 
 AUnitController::AUnitController()
 {
    behaviorTreeComp = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorComp"));
-   blackboardComp   = CreateDefaultSubobject<UBlackboardComponent>(FName("BlackboardComp"));
+   blackboardComp = CreateDefaultSubobject<UBlackboardComponent>(FName("BlackboardComp"));
 
    SetActorTickInterval(0.f);
 
@@ -32,9 +33,9 @@ AUnitController::AUnitController()
    if (loadedCurve.Succeeded()) turnCurve = loadedCurve.Object;
 }
 
-void AUnitController::Possess(APawn* InPawn)
+void AUnitController::OnPossess(APawn* InPawn)
 {
-   Super::Possess(InPawn);
+   Super::OnPossess(InPawn);
    ownerRef = Cast<AUnit>(GetPawn());
 }
 
@@ -104,9 +105,11 @@ void AUnitController::FindBestSpellTarget(FGameplayTag targettingTag, bool isSup
 {
    if (targettingTag == FGameplayTag::RequestGameplayTag("Skill.Targetting.Area")) {
       FindBestAOELocation(isSupport);
-   } else if (targettingTag == FGameplayTag::RequestGameplayTag("Skill.Targetting.None")) {
+   }
+   else if (targettingTag == FGameplayTag::RequestGameplayTag("Skill.Targetting.None")) {
       BeginCastSpell(ownerRef->abilities[spellToCastIndex], FGameplayAbilityTargetDataHandle());
-   } else if (targettingTag.MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Single"))) {
+   }
+   else if (targettingTag.MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Single"))) {
       FindWeakestTarget(isSupport);
    }
 }
@@ -118,7 +121,7 @@ bool AUnitController::SearchAndCastSpell(const FGameplayTagContainer& spellRequi
       if (IsValid(ownerRef->abilities[i])) {
          if (ownerRef->abilities[i].GetDefaultObject()->AbilityTags.HasAny(spellRequirementTags) && ownerRef->CanCast(ownerRef->abilities[i])) {
             spellToCastIndex = i;
-            spellToCast      = ownerRef->abilities[i].GetDefaultObject();
+            spellToCast = ownerRef->abilities[i].GetDefaultObject();
          }
       }
    }
@@ -134,11 +137,12 @@ void AUnitController::OnAOELocationFound(TSharedPtr<FEnvQueryResult> result)
 {
    if (result->IsSuccsessful()) {
       FGameplayAbilityTargetingLocationInfo tInfo;
-      tInfo.LocationType                          = EGameplayAbilityTargetingLocationType::LiteralTransform;
-      tInfo.LiteralTransform                      = FTransform(result->GetItemAsLocation(0));
+      tInfo.LocationType = EGameplayAbilityTargetingLocationType::LiteralTransform;
+      tInfo.LiteralTransform = FTransform(result->GetItemAsLocation(0));
       FGameplayAbilityTargetDataHandle targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromLocations(tInfo, tInfo); // start point isn't really used so we can put this twice
       BeginCastSpell(ownerRef->abilities[spellToCastIndex], targetData);
-   } else
+   }
+   else
       // Aborting means it needs some cleanup while fail just ends the node
       Cast<UBTTaskNode>(behaviorTreeComp->GetActiveNode())->FinishLatentTask(*behaviorTreeComp, EBTNodeResult::Failed);
 }
@@ -147,17 +151,18 @@ void AUnitController::OnWeakestTargetFound(TSharedPtr<FEnvQueryResult> result)
 {
    GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("FOUND WEAKEST TARGET!"));
    if (result.IsValid())
-   // need to actually check here since our filter could end up with us having no heroes to target like if all heroes are full
+      // need to actually check here since our filter could end up with us having no heroes to target like if all heroes are full
    {
       FGameplayAbilityTargetDataHandle targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(result->GetItemAsActor(0));
       BeginCastSpell(ownerRef->abilities[spellToCastIndex], targetData);
-   } else
+   }
+   else
       Cast<UBTTaskNode>(behaviorTreeComp->GetActiveNode())->FinishLatentTask(*behaviorTreeComp, EBTNodeResult::Failed);
 }
 
 FQuat AUnitController::FindLookRotation(FVector targetPoint)
 {
-   FVector difference         = targetPoint - ownerRef->GetActorLocation();
+   FVector difference = targetPoint - ownerRef->GetActorLocation();
    FVector projectedDirection = FVector(difference.X, difference.Y, 0);
    return FRotationMatrix::MakeFromX(FVector(projectedDirection)).ToQuat();
 }
@@ -179,8 +184,11 @@ EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation)
       FVector shiftedLocation = newLocation - ownerRef->GetActorLocation().GetSafeNormal() * ownerRef->GetCapsuleComponent()->GetScaledCapsuleRadius() / 2;
       // setup end rotation here in case we decide to do a ministep where we want to turn but not move
       ownerRef->targetData.targetLocation = shiftedLocation;
-      EPathFollowingRequestResult::Type result      = MoveToLocation(shiftedLocation, 10, true, true, false, true);
-      if (result == EPathFollowingRequestResult::RequestSuccessful) { ownerRef->state->ChangeState(EUnitState::STATE_MOVING); }
+      EPathFollowingRequestResult::Type result = MoveToLocation(shiftedLocation, 10, true, true, false, true);
+      if (result == EPathFollowingRequestResult::RequestSuccessful)
+      {
+         ownerRef->state->ChangeState(EUnitState::STATE_MOVING);
+      }
       else TurnTowardsTarget(shiftedLocation);
       return result;
    }
@@ -192,7 +200,7 @@ EPathFollowingRequestResult::Type AUnitController::MoveActor(AActor* targetActor
    if (!ownerRef->IsStunned()) {
       Stop();
       ownerRef->targetData.targetLocation = targetActor->GetActorLocation();
-      EPathFollowingRequestResult::Type result      = MoveToActor(targetActor);
+      EPathFollowingRequestResult::Type result = MoveToActor(targetActor);
 
       if (result == EPathFollowingRequestResult::RequestSuccessful) {
          ownerRef->state->ChangeState(EUnitState::STATE_MOVING);
@@ -208,8 +216,18 @@ void AUnitController::Follow()
    if (ownerRef->targetData.followTarget) { MoveActor(ownerRef->targetData.followTarget); }
 }
 
-void AUnitController::Patrol()
+void AUnitController::Patrol(TArray<FVector> newPatrolPoints)
 {
+   UPatrolComponent* patrolComp = GetUnitOwner()->FindComponentByClass<UPatrolComponent>();
+   patrolComp->patrolPoints = newPatrolPoints;
+   if (patrolComp)
+   {
+      if(behaviorTreeComp->IsRunning()) 
+         behaviorTreeComp->StopTree();
+      UseBlackboard(patrolComp->patrolTree->BlackboardAsset, blackboardComp);
+      behaviorTreeComp->RestartTree();
+      behaviorTreeComp->StartTree(*patrolComp->patrolTree);
+   }
 }
 
 void AUnitController::Search()
@@ -224,6 +242,16 @@ void AUnitController::Run()
 {
 }
 
+void AUnitController::Chase()
+{
+   ownerRef->GetUnitController()->AdjustPosition(CHASE_RANGE, ownerRef->targetData.targetUnit->GetActorLocation());
+}
+
+bool AUnitController::ChasingQuit()
+{
+   return true;
+}
+
 void AUnitController::Stop()
 {
    // Stop will not only stop unit in its track, but will also make it forget its target, and set its state to idle so it can transition to something else
@@ -232,13 +260,14 @@ void AUnitController::Stop()
    turnActorTimeline.Stop();
    turnTimeline.Stop();
    ownerRef->SetCurrentSpell(nullptr);
-   ownerRef->targetData.targetUnit       = nullptr;
-   ownerRef->targetData.targetActor      = nullptr;
-   ownerRef->targetData.targetLocation   = FVector();
-   ownerRef->combatParams.readyToAttack  = false;
+   ownerRef->targetData.targetUnit = nullptr;
+   ownerRef->targetData.targetActor = nullptr;
+   ownerRef->targetData.targetLocation = FVector();
+   ownerRef->combatParams.readyToAttack = false;
    ownerRef->combatParams.currentAttTime = 0.f;
    ownerRef->unitController->StopMovement();
    ownerRef->state->ChangeState(EUnitState::STATE_IDLE);
+   ownerRef->StopAnimMontage();
 }
 
 void AUnitController::BeginAttack(AUnit* target)
@@ -251,37 +280,39 @@ void AUnitController::BeginAttack(AUnit* target)
       ownerRef->unitProperties.turnAction.BindUObject(this, &AUnitController::PrepareAttack);
 
       //If only we don't have to adjust our position, then attack.  Else adjust position and let callbacks handle what's next
-      if(AdjustPosition(ownerRef->GetMechanicAdjValue(static_cast<int>(Mechanics::AttackRange)), target))
-      ownerRef->unitProperties.turnAction.Execute();
+      if (AdjustPosition(ownerRef->GetMechanicAdjValue(static_cast<int>(Mechanics::AttackRange)), target))
+         ownerRef->unitProperties.turnAction.Execute();
    }
 }
 
 bool AUnitController::BeginCastSpell(TSubclassOf<UMySpell> spellToCast, const FGameplayAbilityTargetDataHandle& targetData)
 {
    AUnit*    unitOwner = ownerRef;
-   UMySpell* spell     = spellToCast.GetDefaultObject();
+   UMySpell* spell = spellToCast.GetDefaultObject();
    FVector  spellTargetLocation;
-   
-   if (IsValid(spell)) 
+
+   if (IsValid(spell))
    {
       if (unitOwner->CanCast(spellToCast)) { //Check to see if we have enough mana and aren't silenced or stunned
 
          Stop();
          unitOwner->SetCurrentSpell(spellToCast); //Keep track of the spell since we may cast it later (like targetted spells casted by an ally)
-         
+
          if (spell->GetTargetting().GetTagName() == "Skill.Targetting.None") //Non targetted?  Then just cast it
          {
             unitOwner->state->ChangeState(EUnitState::STATE_CASTING);
             PreCastChannelingCheck(unitOwner->GetCurrentSpell());
             return true;
-         } else {          
+         }
+         else {
             if (targetData.Num() > 0) { //This spell requires a ground or unit target
                unitOwner->targetData.spellTargetData = targetData;
 
                if (spell->GetTargetting().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))) {
                   //The ground location should be determined by EQS
                   spellTargetLocation = unitOwner->targetData.targetLocation = UAbilitySystemBlueprintLibrary::GetTargetDataEndPoint(unitOwner->targetData.spellTargetData, 0);
-               } else {
+               }
+               else {
                   unitOwner->targetData.targetActor = UAbilitySystemBlueprintLibrary::GetActorsFromTargetData(unitOwner->targetData.spellTargetData, 0)[0];
                   spellTargetLocation = unitOwner->targetData.targetActor->GetActorLocation();
                }
@@ -296,8 +327,8 @@ bool AUnitController::BeginCastSpell(TSubclassOf<UMySpell> spellToCast, const FG
                //If our spell requires us to go through the whole movement process, call the processes here
                unitOwner->state->ChangeState(EUnitState::STATE_CASTING);
                if (!AdjustPosition(spell->GetRange(unitOwner->GetAbilitySystemComponent()), spellTargetLocation)) {
-               static auto castTurnAction = [this](){PreCastChannelingCheck(ownerRef->GetCurrentSpell());};
-               unitOwner->unitProperties.turnAction.BindLambda(castTurnAction);
+                  static auto castTurnAction = [this]() {PreCastChannelingCheck(ownerRef->GetCurrentSpell());};
+                  unitOwner->unitProperties.turnAction.BindLambda(castTurnAction);
                }
                else
                   PreCastChannelingCheck(ownerRef->GetCurrentSpell());
@@ -311,11 +342,18 @@ bool AUnitController::BeginCastSpell(TSubclassOf<UMySpell> spellToCast, const FG
    return false;
 }
 
+void AUnitController::AttackMove(FVector moveLocation)
+{
+   Stop();
+   TArray<FVector> targetLoc = {moveLocation};
+   Patrol(targetLoc);
+}
+
 bool AUnitController::IsTargetInRange(float range, FVector targetLocation)
 {
    FVector currentLocation = ownerRef->GetActorLocation();
-   FVector difference      = currentLocation - targetLocation;
-   difference.Z            = 0;
+   FVector difference = currentLocation - targetLocation;
+   difference.Z = 0;
 
    if (FVector::DotProduct(difference, difference) <= range * range) return true;
    return false;
@@ -325,7 +363,7 @@ bool AUnitController::IsFacingTarget(FVector targetLocation, float angleErrorCut
 {
    // Lets ensure the vector between our location and the target location is close to the same direction we're facing
    FVector difference = targetLocation - ownerRef->GetActorLocation();
-   float   dot        = FVector::DotProduct(ownerRef->GetActorForwardVector(), FVector(difference.X, difference.Y, ownerRef->GetActorForwardVector().Z).GetSafeNormal());
+   float   dot = FVector::DotProduct(ownerRef->GetActorForwardVector(), FVector(difference.X, difference.Y, ownerRef->GetActorForwardVector().Z).GetSafeNormal());
    //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("%f"), 1.f - dot));
 
    if (dot > 1.f - angleErrorCutoff) // .05 is 18 degrees lenient by default (only from right side).
@@ -341,18 +379,21 @@ void AUnitController::PrepareAttack()
    if (!ownerRef->combatParams.readyToAttack && !ownerRef->IsStunned() && ownerRef->targetData.targetUnit) { // check that target is still alive and we can act
       if (ownerRef->targetData.targetUnit->GetCanTarget()) {                             // check that target can even be targetted
 
-         FVector targetLoc   = ownerRef->targetData.targetUnit->GetActorLocation();
+         FVector targetLoc = ownerRef->targetData.targetUnit->GetActorLocation();
          float   attackRange = ownerRef->GetMechanicAdjValue(static_cast<int>(Mechanics::AttackRange));
 
          if (IsTargetInRange(attackRange + ownerRef->combatParams.attackRangeCancel, targetLoc)) {
             ownerRef->combatParams.readyToAttack = true;
-         } else {
+         }
+         else {
             AdjustPosition(ownerRef->GetMechanicAdjValue(static_cast<int>(Mechanics::AttackRange)), ownerRef->targetData.targetUnit);
          }
-      } else {
+      }
+      else {
          ownerRef->SetTarget(nullptr);
       }
-   } else {
+   }
+   else {
       // necessary or else Attack() will use a nullptr target
       Stop();
    }
@@ -361,7 +402,7 @@ void AUnitController::PrepareAttack()
 void AUnitController::TurnTowardsTarget(FVector targetLocation)
 {
    startRotation = ownerRef->GetActorRotation().Quaternion();
-   turnRotator   = FindLookRotation(targetLocation);
+   turnRotator = FindLookRotation(targetLocation);
    turnTimeline.SetPlayRate(rotationRate * ownerRef->GetCharacterMovement()->RotationRate.Yaw / FMath::Abs(ownerRef->GetActorQuat().AngularDistance(turnRotator)));
    turnTimeline.PlayFromStart();
 }
@@ -369,7 +410,7 @@ void AUnitController::TurnTowardsTarget(FVector targetLocation)
 void AUnitController::TurnTowardsActor(AActor* targetActor)
 {
    startRotation = ownerRef->GetActorRotation().Quaternion();
-   turnRotator   = FindLookRotation(targetActor->GetActorLocation());
+   turnRotator = FindLookRotation(targetActor->GetActorLocation());
    turnActorTimeline.SetPlayRate(rotationRate * ownerRef->GetCharacterMovement()->RotationRate.Yaw / FMath::Abs(ownerRef->GetActorQuat().AngularDistance(turnRotator)));
    turnActorTimeline.PlayFromStart();
 }
@@ -387,7 +428,7 @@ void AUnitController::OnActorTurnFinished()
 
 void AUnitController::ActionAfterTurning()
 {
-   ownerRef->unitProperties.turnAction.ExecuteIfBound(); 
+   ownerRef->unitProperties.turnAction.ExecuteIfBound();
 }
 
 void AUnitController::TurnActor(float turnValue)
@@ -416,7 +457,8 @@ bool AUnitController::AdjustPosition(float range, FVector targetLoc)
    if (!IsTargetInRange(range, targetLoc)) {
       MoveToLocation(targetLoc, range);
       return false;
-   } else {
+   }
+   else {
       if (!IsFacingTarget(targetLoc)) {
          TurnTowardsTarget(targetLoc);
          return false;
@@ -431,7 +473,8 @@ bool AUnitController::AdjustPosition(float range, AActor* targetActor)
    if (!IsTargetInRange(range, targetActorLocation)) {
       MoveToActor(targetActor, range);
       return false;
-   } else {
+   }
+   else {
       if (!IsFacingTarget(targetActorLocation)) {
          TurnTowardsActor(targetActor);
          return false;
@@ -445,7 +488,8 @@ void AUnitController::PreCastChannelingCheck(TSubclassOf<UMySpell> spellToCast)
    float castTime = spellToCast.GetDefaultObject()->GetCastTime(ownerRef->GetAbilitySystemComponent());
    if (!castTime) { //If there isn't a cast time
       ownerRef->CastSpell(spellToCast);
-   } else {
+   }
+   else {
       ownerRef->unitSpellData.channelTime = castTime;
       ownerRef->state->ChangeState(EUnitState::STATE_CHANNELING); //Start channeling
    }

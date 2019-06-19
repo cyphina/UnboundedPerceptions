@@ -121,13 +121,16 @@ protected:
 public:
 
    /** What enemies are in our radius determined via sphere overlap events */
-   TSet<AEnemy*> possibleEnemiesInRadius;
+   TSet<AUnit*> possibleEnemiesInRadius;
    /** Used by fog of war plane to figure out how to draw itself, and could be used by AI */
    TArray<FVector> visionPolygonVertices;
 
    /** Sorts the corner points, adds points to make visibility polygon shape approximate a circle,
      * and then orders the trace to find the visibility polygon vertices */
    void FindVisibilityPoints();
+
+   bool IsVisible() override;
+   TSet<AUnit*>* GetSeenEnemies() override;
 
 private:
 

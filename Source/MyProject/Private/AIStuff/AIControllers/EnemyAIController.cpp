@@ -87,19 +87,11 @@ AEnemyAIController::AEnemyAIController()
 void AEnemyAIController::BeginPlay()
 {
    Super::BeginPlay();
-   switch(idleMovementType)
-   {
-      case EEnemyIdleMovementType::Idle: idleMoveFunction.BindUObject(this, &AEnemyAIController::Stop); break;
-      case EEnemyIdleMovementType::Patrol: idleMoveFunction.BindUObject(this, &AEnemyAIController::Patrol); break;
-      case EEnemyIdleMovementType::Search: idleMoveFunction.BindUObject(this, &AEnemyAIController::Search); break;
-      case EEnemyIdleMovementType::Follow: idleMoveFunction.BindUObject(this, &AEnemyAIController::Follow); break;
-      case EEnemyIdleMovementType::Roam: idleMoveFunction.BindUObject(this, &AEnemyAIController::Roam); break;
-   }
 }
 
-void AEnemyAIController::Possess(APawn* InPawn)
+void AEnemyAIController::OnPossess(APawn* InPawn)
 {
-   Super::Possess(InPawn);
+   Super::OnPossess(InPawn);
    if (behaviorTree) {
       // Initialize blackboard and start attached behavior tree
       UseBlackboard(behaviorTree->BlackboardAsset, blackboardComp);
@@ -109,6 +101,9 @@ void AEnemyAIController::Possess(APawn* InPawn)
    AIPerceptionComponent->OnPerceptionUpdated.AddDynamic(this, &AEnemyAIController::OnPerceptionUpdated);
 
    GetAIPerceptionComponent()->GetActorsPerception(GetPawn(), info);
+
+   if(idleMoveTree)
+      behaviorTreeComp->SetDynamicSubtree(FGameplayTag::RequestGameplayTag("Combat.AI.InjectTreeTag"), idleMoveTree);
 }
 
 AActor* AEnemyAIController::GetSeeingPawn()

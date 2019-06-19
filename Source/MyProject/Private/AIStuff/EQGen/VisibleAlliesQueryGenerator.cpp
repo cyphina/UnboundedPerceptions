@@ -16,7 +16,7 @@ void UVisibleAlliesQueryGenerator::GenerateItems(FEnvQueryInstance& queryInstanc
    ARTSGameState*  gameStateRef = Cast<ARTSGameState>(GEngine->GetWorldFromContextObject(queryInstance.Owner.Get(), EGetWorldErrorMode::LogAndReturnNull)->GetGameState());
    TArray<AActor*> matchingActors;
 
-   for (AAlly* ally : gameStateRef->visibleAllies) {
+   for (AUnit* ally : gameStateRef->visibleAllies) {
       matchingActors.Add(ally);
    }
 

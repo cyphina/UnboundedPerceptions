@@ -12,7 +12,7 @@
 UDamageCalculation::UDamageCalculation(const FObjectInitializer& objectInitializer) : Super(objectInitializer)
 {
    AttStruct attributes;
-   // RelevantAttributesToCapture.Add(attributes.HealthDef);
+   RelevantAttributesToCapture.Add(attributes.HealthDef);
    RelevantAttributesToCapture.Add(attributes.StrengthDef);
    RelevantAttributesToCapture.Add(attributes.UnderstandingDef);
    RelevantAttributesToCapture.Add(attributes.IntelligenceDef);
@@ -64,6 +64,10 @@ void UDamageCalculation::DamageTarget(AUnit* sourceUnit, AUnit* targetUnit, Dama
 
    if (d.damage <= 0) d.damage = 1;
 
+   //TODO: Add lifesteal as healing?
+   if(effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Lifesteal")))
+      sourceUnit->baseC->GetVital(static_cast<int>(Vitals::Health))->SetCurrValue(targetUnit->GetVitalCurValue(static_cast<int>(Vitals::Health)) + d.damage);
+
    float worldTime = sourceUnit->GetWorld()->GetTimeSeconds();
    if (!effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Healing"))) {
       targetUnit->baseC->GetVital(static_cast<int>(Vitals::Health))->SetCurrValue(targetUnit->GetVitalCurValue(static_cast<int>(Vitals::Health)) - d.damage);
@@ -97,6 +101,8 @@ void UDamageCalculation::CalculateDamage(AUnit* unit, Damage& d, FGameplayTagCon
 
 void UDamageCalculation::ApplyEffects(AUnit* unit, Damage& d, FGameplayTagContainer& effects) const
 {
+   if (!effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Absolute")))
+      d.damage = d.damage * (100 - unit->GetMechanicAdjValue(static_cast<int>(Mechanics::GlobalDamageModifier))) / 100;
 }
 
 void UDamageCalculation::ReceiveEffects(AUnit* unit, Damage& d, FGameplayTagContainer& effects) const

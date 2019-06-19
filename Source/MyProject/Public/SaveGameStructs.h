@@ -129,6 +129,19 @@ struct FBackpackSaveInfo {
    }
 };
 
+struct FSpellbookSaveInfo
+{
+   TArray<int> learnedSpellIDs;
+   TArray<int> learnedSpellLevels;
+
+   friend FArchive& operator<<(FArchive& ar, FSpellbookSaveInfo& saveData)
+   {
+      ar << saveData.learnedSpellIDs;
+      ar << saveData.learnedSpellLevels;
+      return ar;
+   }
+};
+
 struct FHeroSaveInfo {
    FAllySaveInfo     allyInfo;
    int               currentExp;

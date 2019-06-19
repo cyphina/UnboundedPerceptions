@@ -10,6 +10,8 @@ enum class EUnitState : uint8 {
    STATE_IDLE,
    STATE_MOVING,
    STATE_ATTACKING,   // Attacking an enemy
+   STATE_ATTACK_MOVE, // Attacking while moving
+   STATE_CHASING, // Chase a unit targetted when it goes out of vision
    STATE_INTERACTING, // Moving to interacting position
    STATE_CASTING,     // Moving to spell position
    STATE_ITEM,        // Moving to item position

@@ -54,7 +54,9 @@ void UStatChangeCalc::Execute_Implementation(const FGameplayEffectCustomExecutio
                    modifiedAtt.Attribute = statChange.changedAtt;
                    modifiedAtt.TotalMagnitude = statChange.changeStatMagnitude;
                    executionParams.GetOwningSpecForPreExecuteMod()->ModifiedAttributes.Add(modifiedAtt);
-                   
+                   
+
+
            }
            targetUnit->ApplyGameplayEffects(executionParams.GetOwningSpec());
    }*/

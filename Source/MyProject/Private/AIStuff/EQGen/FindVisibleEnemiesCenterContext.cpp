@@ -13,7 +13,7 @@ void UFindVisibleEnemiesCenterContext::ProvideContext(FEnvQueryInstance& QueryIn
    if (gameStateRef) {
 
       FVector centerPointOfVisibleEnemies = FVector::ZeroVector;
-      for (AActor* enemy : gameStateRef->visibleEnemies) {
+      for (AUnit* enemy : gameStateRef->visibleEnemies) {
          centerPointOfVisibleEnemies += enemy->GetActorLocation();
       }
 

@@ -3,7 +3,7 @@
 #include "MyProject.h"
 #include "Trigger.h"
 #include "RTSGameMode.h"
-#include "ResourceManager.h"
+#include "UpResourceManager.h"
 #include "UserInput.h"
 #include "BasePlayer.h"
 #include "UI/HUDManager.h"
@@ -47,7 +47,7 @@ void UTriggerManager::ActivateTrigger(UPARAM(ref) FTriggerData& triggerData)
 void UTriggerManager::ChangeDialog(const FTriggerData& tdata)
 {
    check(tdata.triggerObjects.Num() == 1 && tdata.triggerValues.Num() <= 2);
-   if (ANPC* npc = ResourceManager::FindTriggerObjectInWorld<ANPC>(tdata.triggerObjects[0], cpcRef->GetWorld())) {
+   if (ANPC* npc = UpResourceManager::FindTriggerObjectInWorld<ANPC>(tdata.triggerObjects[0], cpcRef->GetWorld())) {
       if (tdata.triggerValues.Num() == 1)
          npc->SetCurrentDialog(*tdata.triggerValues[0]);
       else
@@ -61,7 +61,7 @@ void UTriggerManager::ChangeDialog(const FTriggerData& tdata)
 void UTriggerManager::ModifyStats(const FTriggerData& tdata)
 {
    check(tdata.triggerObjects.Num() == 1 && tdata.triggerValues.Num() <= 2);
-   if (AUnit* unit = ResourceManager::FindTriggerObjectInWorld<AUnit>(tdata.triggerObjects[0], cpcRef->GetWorld()))
+   if (AUnit* unit = UpResourceManager::FindTriggerObjectInWorld<AUnit>(tdata.triggerObjects[0], cpcRef->GetWorld()))
       for (int i = 0; i < tdata.triggerValues.Num(); i += 2)
          unit->ApplyBonuses(FCString::Atoi(*tdata.triggerValues[i]), FCString::Atoi(*tdata.triggerValues[i + 1]));
 }
@@ -78,8 +78,8 @@ void UTriggerManager::OpenHUDTriggerStorage(const FTriggerData& tdata)
 {
    checkf(tdata.triggerObjects.Num() == 1 && tdata.triggerValues.Num() == 2, TEXT("Incorrect parameters for OPENHUDTRIGGER"));
    checkf(tdata.triggerValues[0].IsNumeric(), TEXT("OPENHUDTRIGGER triggerValue should be numeric"));
-   // if(AInteractableBase* interactable = ResourceManager::FindTriggerObjectInWorld<AInteractableBase>(tdata.triggerObjects[0], cpcRef->GetWorld()))
-   // if(ABaseHero* heroRef = ResourceManager::FindTriggerObjectInWorld<ABaseHero>(tdata.triggerObjects[1], cpcRef->GetWorld()))
+   // if(AInteractableBase* interactable = UpResourceManager::FindTriggerObjectInWorld<AInteractableBase>(tdata.triggerObjects[0], cpcRef->GetWorld()))
+   // if(ABaseHero* heroRef = UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(tdata.triggerObjects[1], cpcRef->GetWorld()))
    // cpcRef->GetHUDManager()->AddHUD(int);
 }
 
@@ -92,7 +92,7 @@ void UTriggerManager::ChangeParty(const FTriggerData& tdata)
       // empty string means no hero at that slot
       if (heroName.IsEmpty()) { break; }
 
-      ABaseHero* hero = ResourceManager::FindTriggerObjectInWorld<ABaseHero>(heroName, cpcRef->GetWorld());
+      ABaseHero* hero = UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(heroName, cpcRef->GetWorld());
       if (hero) { newHeroes.Add(hero); }
    }
    // GetBasePlayer will return null if we don't go through persistent level setup first
@@ -117,7 +117,7 @@ bool UTriggerManager::AddQuest(const FTriggerData& tdata)
    checkf(tdata.triggerObjects.Num() == 0 && tdata.triggerValues.Num() == 2, TEXT("Incorrect parameters for OPENHUDTRIGGER"));
    checkf(tdata.triggerValues[1].IsNumeric(), TEXT("ADDQUESTTRIGGER triggerValue 2 should be numeric"));
    if (gameModeRef->GetQuestManager()->AddNewQuest(gameModeRef->GetQuestManager()->questClassList[FGameplayTag::RequestGameplayTag(*(FString("QuestName.") + tdata.triggerValues[0]))],
-                                                   FCString::Atoi(*tdata.triggerValues[1]))) {
+                                                   (bool)FCString::Atoi(*tdata.triggerValues[1]))) {
       return true;
    }
    return false;
@@ -132,7 +132,7 @@ bool UTriggerManager::CompleteQuestGoal(const FTriggerData& tdata)
    int     goalIndex = FCString::Atoi(*tdata.triggerValues[1]);
 
    if (quest->questInfo.subgoals[goalIndex].goalState == EGoalState::currentGoal) {
-      quest->CompleteSubGoal(goalIndex, FCString::Atoi(*tdata.triggerValues[2]));
+      quest->CompleteSubGoal(goalIndex, (bool)FCString::Atoi(*tdata.triggerValues[2]));
       return true;
    }
    return false;
@@ -160,7 +160,7 @@ void UTriggerManager::DisplayConversation(const FTriggerData& tdata)
 void UTriggerManager::DestroyNPC(const FTriggerData& tdata)
 {
    cpcRef->GetHUDManager()->GetDialogBox()->SetDialogSource(EDialogSource::none); // ensure we don't go back to any social menus afterwards
-   ResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld())->Destroy();
+   UpResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld())->Destroy();
    // in case this npc destroyed itself while we're talking, set the interactedHero to nullptr
    cpcRef->GetBasePlayer()->interactedHero = nullptr;
 }
@@ -168,13 +168,13 @@ void UTriggerManager::DestroyNPC(const FTriggerData& tdata)
 void UTriggerManager::MoveNPC(const FTriggerData& tdata)
 {
    FVector newLocation = FVector(FCString::Atof(*tdata.triggerValues[0]), FCString::Atof(*tdata.triggerValues[1]), FCString::Atof(*tdata.triggerValues[2]));
-   ResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld())->SetActorLocation(newLocation);
+   UpResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld())->SetActorLocation(newLocation);
 }
 
 void UTriggerManager::AddItem(const FTriggerData& tdata)
 {
    if (tdata.triggerObjects.Num() > 0) {
-      ResourceManager::FindTriggerObjectInWorld<ABaseHero>(*tdata.triggerObjects[0], cpcRef->GetWorld())
+      UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(*tdata.triggerObjects[0], cpcRef->GetWorld())
           ->backpack->AddItem(FMyItem(FCString::Atoi(*tdata.triggerValues[0]), FCString::Atoi(*tdata.triggerValues[1])));
    } else {
       cpcRef->GetBasePlayer()->interactedHero->backpack->AddItem(FMyItem(FCString::Atoi(*tdata.triggerValues[0]), FCString::Atoi(*tdata.triggerValues[1])));
@@ -189,7 +189,7 @@ void UTriggerManager::LearnDialogTopic(const FTriggerData& tdata)
 void UTriggerManager::SetNPCFollow(const FTriggerData& tdata)
 {
    checkf(tdata.triggerObjects.Num() > 0 && tdata.triggerObjects.Num() < 3, TEXT("Set NPC follow trigger should have 1-2 parameters!"));
-   ANPC* npcRef = ResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld());
+   ANPC* npcRef = UpResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld());
    if (npcRef) {
       ABaseHero* heroRef = nullptr;
       if (tdata.triggerObjects.Num() > 1) {
@@ -205,8 +205,8 @@ void UTriggerManager::SetNPCFollow(const FTriggerData& tdata)
 void UTriggerManager::SetNPCWantConverse(const FTriggerData& tdata)
 {
    checkf(tdata.triggerObjects.Num() > 0 && tdata.triggerObjects.Num() < 3, TEXT("Set NPC want converse trigger should have 2 parameters!"));
-   ANPC* npcRef = ResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld());
-   if (npcRef) { npcRef->bWantsToConverse = FCString::Atoi(*tdata.triggerValues[0]); }
+   ANPC* npcRef = UpResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld());
+   if (npcRef) { npcRef->bWantsToConverse = (bool)FCString::Atoi(*tdata.triggerValues[0]); }
 }
 
 void UTriggerManager::PlaySequence(const FTriggerData& tdata)

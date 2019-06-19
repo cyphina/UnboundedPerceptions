@@ -19,7 +19,7 @@ EBTNodeResult::Type UBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& ownerCom
    myMemory->AICon               = Cast<AUnitController>(ownerComp.GetAIOwner());
    myMemory->patrolComp          = ownerComp.GetAIOwner()->GetPawn()->FindComponentByClass<UPatrolComponent>();
 
-   if (myMemory->AICon && myMemory->AICon->patrolLocations.Num() > 0)
+   if (myMemory->AICon && myMemory->patrolComp->patrolPoints.Num() > 0)
    {
       UBlackboardComponent* blackboardComp = ownerComp.GetBlackboardComponent();
       if (blackboardComp) {

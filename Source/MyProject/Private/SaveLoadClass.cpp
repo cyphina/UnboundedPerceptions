@@ -2,18 +2,26 @@
 
 #include "MyProject.h"
 #include "SaveLoadClass.h"
+
 #include "UserInput.h"
 #include "RTSPawn.h"
 #include "BasePlayer.h"
+
 #include "AIStuff/AIControllers/UnitController.h"
+
 #include "WorldObjects/Ally.h"
 #include "WorldObjects/Summon.h"
-#include "SpellSystem/MySpell.h"
 #include "Stats/BaseCharacter.h"
 #include "WorldObjects/BaseHero.h"
+
+#include "SpellSystem/MySpell.h"
+
 #include "AssetRegistryModule.h"
-#include "ResourceManager.h"
+
+#include "UpResourceManager.h"
+
 #include "RTSGameMode.h"
+#include "MyGameInstance.h"
 
 USaveLoadClass::~USaveLoadClass()
 {
@@ -39,6 +47,7 @@ void USaveLoadClass::SetupSaveData()
    SetupSaveHeroData();
    SetupSaveSummonData();
    SetupNPCEscortData();
+   SetupLevelSaveData();
 }
 
 void USaveLoadClass::SetupSaveControllerData()
@@ -142,11 +151,22 @@ void USaveLoadClass::SetupNPCEscortData()
    }
 }
 
+void USaveLoadClass::SetupLevelSaveData()
+{
+   controllerRef->GetMyGameInstance()->SaveLevelData(*controllerRef->GetGameMode()->GetCurLevelName());
+   //Only save levels that has changed
+   for(auto level : controllerRef->GetMyGameInstance()->savedLevels) {
+      mapSaveData[level] = controllerRef->GetMyGameInstance()->mapInfo[level];
+   }
+   controllerRef->GetMyGameInstance()->savedLevels.Empty();
+}
+
 void USaveLoadClass::SetupLoad()
 {
    SetupController();
    SetupPlayer();
    SetupAlliedUnits();
+   SetupLevelLoadData();
 }
 
 void USaveLoadClass::SetupController()
@@ -172,7 +192,7 @@ void USaveLoadClass::SetupAlliedUnits()
    FActorSpawnParameters spawnParams;
 
    for (FAllySaveInfo npc : npcsSaveData) {
-      if (AAlly* spawnedNPCAlly = ResourceManager::FindTriggerObjectInWorld<AAlly>(*npc.name.ToString(), controllerRef->GetWorld())) {
+      if (AAlly* spawnedNPCAlly = UpResourceManager::FindTriggerObjectInWorld<AAlly>(*npc.name.ToString(), controllerRef->GetWorld())) {
          spawnedNPCAlly->SetActorTransform(npc.actorTransform);
          SetupBaseCharacter(spawnedNPCAlly, npc.baseCSaveInfo);
          spawnedNPCAlly->GetUnitController()->Stop();
@@ -190,7 +210,7 @@ void USaveLoadClass::SetupAlliedUnits()
    }
 
    for (FHeroSaveInfo hero : heroesSaveData) {
-      if (ABaseHero* spawnedHero = ResourceManager::FindTriggerObjectInWorld<ABaseHero>(*hero.allyInfo.name.ToString(), controllerRef->GetWorld())) {
+      if (ABaseHero* spawnedHero = UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(*hero.allyInfo.name.ToString(), controllerRef->GetWorld())) {
          spawnedHero->SetActorTransform(hero.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedHero, hero.allyInfo.baseCSaveInfo);
          for (int i = 0; i < hero.spellIDs.Num(); ++i) {
@@ -229,7 +249,7 @@ void USaveLoadClass::SetupAlliedUnits()
    }
 
    for (FSummonSaveInfo summon : summonsSaveData) {
-      if (ASummon* spawnedSummon = ResourceManager::FindTriggerObjectInWorld<ASummon>(*summon.allyInfo.name.ToString(), controllerRef->GetWorld())) {
+      if (ASummon* spawnedSummon = UpResourceManager::FindTriggerObjectInWorld<ASummon>(*summon.allyInfo.name.ToString(), controllerRef->GetWorld())) {
          spawnedSummon->SetActorTransform(summon.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedSummon, summon.allyInfo.baseCSaveInfo);
          spawnedSummon->timeLeft = summon.duration;
@@ -262,6 +282,11 @@ void USaveLoadClass::SetupBaseCharacter(AAlly* spawnedAlly, FBaseCharacterSaveIn
    }
 }
 
+void USaveLoadClass::SetupLevelLoadData()
+{
+  controllerRef->GetMyGameInstance()->mapInfo = mapSaveData;
+}
+
 void USaveLoadClass::SaveLoadFunction(FArchive& ar, bool isSaving)
 {
    /*Slow since we have to construct and assign an empty copy, but this way is safer than the alternatives which could involve looping with manually inputted indices
@@ -277,12 +302,13 @@ void USaveLoadClass::SaveLoadFunction(FArchive& ar, bool isSaving)
    heroesSaveData   = TArray<FHeroSaveInfo>();
    summonsSaveData  = TArray<FSummonSaveInfo>();
    npcsSaveData     = TArray<FAllySaveInfo>();
+   // Don't need to reset mapData since not all of it will be changed at once mapSaveData      = TMap<FName, FMapSaveInfo>();
 
+   //If saving, load all the structs with information
    if (isSaving)
       SetupSaveData();
-   else
-      SetupLoad();
 
+   //If saving, store all information from structs to archive.  If loading, operator overloaded to load all information from binary array to structs
    ar << gameSaveSaveData;
    ar << sceneSaveData;
    ar << cameraSaveData;
@@ -290,6 +316,11 @@ void USaveLoadClass::SaveLoadFunction(FArchive& ar, bool isSaving)
    ar << heroesSaveData;
    ar << summonsSaveData;
    ar << npcsSaveData;
+   ar << mapSaveData;
+
+   //If loading, use loaded structs to restore world state
+   if(!isSaving)
+      SetupLoad();
 }
 
 bool USaveLoadClass::SaveToFilePath(const FString& filePath)

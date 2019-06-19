@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyProject.h"
-#include "ResourceManager.h"
+#include "UpResourceManager.h"
 #include "MyGameInstance.h"
 #include "WorldObjects/NPC.h"
 #include "WorldObjects/IntimateNPC.h"
@@ -17,8 +17,8 @@ UMyGameInstance::UMyGameInstance()
 void UMyGameInstance::Init()
 {
    Super::Init();
-   // Set up resourcemanager globals
-   ResourceManager::InitResourceManager();
+   // Set up UpResourceManager globals
+   UpResourceManager::InitUpResourceManager();
 }
 
 void UMyGameInstance::Shutdown()
@@ -41,6 +41,8 @@ void UMyGameInstance::SaveLevelData(FName levelName)
          for (TActorIterator<AInteractableBase> actItr(GetWorld()); actItr; ++actItr) {
             (*actItr)->SaveInteractable(mapData);
          }
+
+         savedLevels.Add(levelName);
       }
    }
 }

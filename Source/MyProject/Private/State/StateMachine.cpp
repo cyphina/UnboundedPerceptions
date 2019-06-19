@@ -1,11 +1,12 @@
 #include "MyProject.h"
 #include "StateMachine.h"
 
-MovingState     StateMachine::Moving     = MovingState();
-AttackState     StateMachine::Attacking  = AttackState();
-IdleState       StateMachine::Idle       = IdleState();
-CastingState    StateMachine::Casting    = CastingState();
-ChannelingState StateMachine::Channeling = ChannelingState();
+MovingState       StateMachine::Moving = MovingState();
+AttackState       StateMachine::Attacking = AttackState();
+IdleState         StateMachine::Idle = IdleState();
+CastingState      StateMachine::Casting = CastingState();
+ChannelingState   StateMachine::Channeling = ChannelingState();
+ChasingState      StateMachine::Chasing = ChasingState();
 
 StateMachine::StateMachine(AUnit* unitOwner)
 {
@@ -39,6 +40,7 @@ IUnitState* StateMachine::getStateFromEnum(EUnitState enumVal)
       case EUnitState::STATE_CASTING: return &Casting;
       case EUnitState::STATE_CHANNELING: return &Channeling;
       case EUnitState::STATE_MOVING: return &Moving;
+      case EUnitState::STATE_CHASING: return &Chasing;
       default: return nullptr;
    }
 }

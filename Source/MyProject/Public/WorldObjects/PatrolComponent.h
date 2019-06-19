@@ -8,6 +8,7 @@
 #include "PatrolComponent.generated.h"
 
 class AAIController;
+class UBehaviorTree;
 
 /**Allows us to easily set patrol points for enemy and npc*/
 
@@ -33,6 +34,9 @@ class MYPROJECT_API UPatrolComponent : public USceneComponent
    /**List of NPC patrol points.  NPC will go to each point in order and loop.*/
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NPCMovement")
    TArray<FVector> patrolPoints;
+
+   UPROPERTY(EditAnywhere)
+   UBehaviorTree* patrolTree;
 
    int currentPatrolIndex = 0;
 

@@ -19,7 +19,7 @@ class MYPROJECT_API ANPCAIController : public AAIController
 public:
 
    ANPCAIController();
-   void Possess(APawn* inPawn) override;
+   void OnPossess(APawn* inPawn) override;
    void BeginPlay() override;
 
    UFUNCTION(BlueprintCallable, Category = "NPCActions")

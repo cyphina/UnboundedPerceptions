@@ -1,35 +1,56 @@
-Fixed shooting enemy not having a default projectile set in factory
-Fixed crash when displaying a dead unit's effect bar
-Dialog node parsers can now handle line breaks of the form \r\n
-Fixed the homing ability of projectiles
-Fixed ranged enemy shooting bullet at ground
-Added projectile blocking walls
-Added some collision profiles to better organize ally and enemy collision.  
-Added a collision object type just for our vision spheres (profile name Vision)
-AOE spells now target the right units instead of hitting friendlies and enemies
-Fixed spells that need different targetting schemes depending on if an ally or enemy casts them (HealBullet, Firestorm, Healing Circle, etc.)
-Changed DPRS to DRPS (Damage Recieved Per Second)
-Added some extra features to disable when calling SetEnabled for a unit.  Customized what is disabled per class
-Modified what things occur in the Die Function
-Removed references to a hero leftover from the ally array and ally vision set when changing the party
-Added an exploding enemy that can be pushed around
-Added an endgame screen and updated pawn to stop taking input when the screen is reached
-Fixed casting one spell on a hero causing another hero which was casting a spell to recast his/her spell
-Added functionality for Seinen Departure and Cloak I spells.  Modified their values in data table 
-Added an invisibility gameplay effect and cues
-Fixed null references in enemyList in vision set in RTSGameState due to references in the set being deleted when the enemies are destroyed due to the level switch (added the cleanup in EndPlay)
-Fixed explosion not calling Die() when suiciding, but just getting destroyed without leaving anything. 
-Fixed cursor hovering over enemies indicating where they are when they are out of the vision sphere.  Left it for interactables since there are bright maps (maps where everything is pretty much visible) 
-Fixed targetted actions (spell casting/attacking/item usage) on invisible units (cursor targetting click check) and untargettable units
-Fixed enemies being able to target invisible allies without true sight
-Also fixed glitch abusing leftover target data when using an item on an invisible unit to bypass target AI blueprint conditional checks.  Handled with changes to handling invisible unit in parent CastSpell(), since item usage is just a spell casting wrapper.
-Fix enemy not visible when loading level (delayed visibility check in MyEnemy blueprint).  Still need a good solution to initializing enemy visibility before adding it to the C++ code.
-Fixed heroes (loaded in the background) falling during the main menu
-Fixed glitch with new unit turn rate system not taking into account that spells can be casted on interactables (like unlock)
-Fixed AOE targetted spells targetting location too high (and then the caster couldn't reach the targetLocation) due to the trace hitting higher up on a big enemy
-Fixed AOE targetting spells actual cast location (depending on unit or ground target)
-Fixed projectile class pushing caster back when it is spawned too close
-Fixed single target spells not following unit targets and interactable targets
-Changed AOE spells cast targetting so it follow single target units if a unit was targetted
+Fixed not being able to target enemy behind invisible enemies due to tracing stopping at inivisble enemies
+Allowed us to transition to next level with units being dead
+Added some unit highlighting when mouse cursor is hovered (needs post process effects to be enabled)
+Fixed problem with cursor not resetting after cast due to glitches introduced with the unit highlighting
+Fixed up AOE self cast targetting
+Fixed unable to target units with their collision cylindars hidden
+Fixed enemy bullets shooting at the ground
+Set standard attacks to be nonelemental by default to prevent crashing with ranged attacks
+Added some various animations
+Added extra code to shooter enemy to allow it to handle homing and dumbfire projectiles
+Fixed crashes due to null references when checking the target which has been deleted to see if we can keep attacking it due to visibility
 
-TODO: Fixup spellcasting on massive enemies
+Added a chasing state
+Added an attack move behavior option
+Added quickcast and quick attack move
+Refactored some input code in CameraPawn due to moving hiding AOE indicator inside spell targetting function
+Changed some instances of ChangeCursor that was trying to reset the secondary cursor bool but never actually did to SetSecondaryCursor()
+
+Changed ResourceManager name to RTSResourceManager so I could upgrade code to 4.22
+Also moved code from Posesss() to OnPosess()
+Added white cursor highlighting to NPCS
+Fixed issue with loading restoring game values before loading up structs from loaded binary array
+Added collision profiles for interactables that can be walked through and walls that should have raycasting pass through them.
+Fixed up some constructors (NPC, Ally, Enemy, and respective controllers) to clean up BP subclassing
+Added dynamic behavior tree options for enemies, so their navigation around the map can be different from when they are battling
+Removed fade effect manipulating collision.  I think that I'll let the player have more responsibility controlling the camera to see behind walls, although when the heroes get near we'll fade out the walls.
+Fixed up gravity on start level by splitting up unit default location, and making sure default gravity was set to 0 in component (not just from the setenable call since it runs on a delay which will not prevent the units from accelerating downards)
+Added crappy attack animations and blended them in with movement (for robot)
+Fixed issue in quests where the 4.22 updated the function ParseIntoArray() to take in the new parameter indicating the number of delimeters.  It moved the empty culling to the fourth parameter, which screwed the parsing.
+Removed transient modifier from items in datatable (forgot why that was there but it screwed me over for a while)
+Fixed units having correct collision at the start (relies on visibility so units with visibility on for debugging purposes is a problem)
+
+Added Lifesteal effect
+Added Insatiable Hunger Spell
+Added Ice Bullet Spell
+Added Enrage Spell
+Fixed IronMaiden spell
+ALL THESE SPELLS MY NEED MORE FIXING
+
+Added health as a stat to be captured when dealing damage (so we can do damage based on max hp of source or target)
+Fixed damagestruct to capture health as a stat so we weren't doing massive damage scaling on our health without us setting it
+
+Refactored input functions names inside APawn
+Changed Equip and Spell Menu combat opening functionality (now they don't block UI when they are opened)
+Add delay on changing equipment
+Changed vision tracing inside RTSGameState to be traces by channel
+Removed Vision Channel 
+Added a toggle for fading 
+Fade now prevents objects from being clicked on but it can be toggled with Z
+Removed previous functionality bound to Z key in CPC (Debugging Level Move/XP Gain)
+Added messages when toggling fade on/off
+Added messages when toggling camera pan lock on/off
+
+Added chatbox UI
+Added some stuff for using BERT to order commands needs the preprocessing steps to be fixed
+Next up is to add the commands in game

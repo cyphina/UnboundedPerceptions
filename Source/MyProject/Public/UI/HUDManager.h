@@ -73,7 +73,9 @@ enum class HUDs : uint8 {
    /**Shows a confirmation box*/
    HS_Confirmation,
    /**Shows a box that lets you input a number*/
-   HS_InputBox
+   HS_InputBox,
+   /**Chatbox to type in commands to be processed via NLP and converted to actions*/
+   HS_ChatBox
 };
 
 // The purpose of the HUDManager is for easy swapping in and out widgets.  Not too useful for getting references though
@@ -87,7 +89,7 @@ class MYPROJECT_API AHUDManager : public AInfo
 {
    GENERATED_BODY()
 
-   static const int HUDCount = 19; // Number of huds we have total.  Change if adding more. Assertion fails if we dont have enough space to remind us to update this size
+   static const int HUDCount = 20; // Number of huds we have total.  Change if adding more. Assertion fails if we dont have enough space to remind us to update this size
 
    ARTSGameMode*                        gameMode;
    AUserInput*                          playerControllerRef;

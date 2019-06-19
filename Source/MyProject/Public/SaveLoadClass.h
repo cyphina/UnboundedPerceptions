@@ -1,5 +1,6 @@
 #pragma once
 #include "SaveGameStructs.h"
+#include "LevelSaveStructs.h"
 #include "SaveLoadClass.generated.h"
 
 /**
@@ -36,13 +37,14 @@ class MYPROJECT_API USaveLoadClass : public UObject
    bool        currentlyLoading; // Check if a load was initiated so level callback knows to deal with it
 
  private:
-   FSaveGameDataInfo       gameSaveSaveData;
-   FSceneSaveInfo          sceneSaveData;
-   FCameraSaveInfo         cameraSaveData;
-   FBasePlayerSaveInfo     playerSaveData;
-   TArray<FAllySaveInfo>   npcsSaveData;
-   TArray<FSummonSaveInfo> summonsSaveData;
-   TArray<FHeroSaveInfo>   heroesSaveData;
+   FSaveGameDataInfo         gameSaveSaveData;
+   FSceneSaveInfo            sceneSaveData;
+   FCameraSaveInfo           cameraSaveData;
+   FBasePlayerSaveInfo       playerSaveData;
+   TArray<FAllySaveInfo>     npcsSaveData;
+   TArray<FSummonSaveInfo>   summonsSaveData;
+   TArray<FHeroSaveInfo>     heroesSaveData;
+   TMap<FName, FMapSaveInfo> mapSaveData;
 
    // Remember: Passing Information by reference doesn't require storage and doesn't require indirection
    /**Function used to save and load data from binary array by using the overloaded << operator which saves/loads depending on FArchive derived type
@@ -68,7 +70,8 @@ class MYPROJECT_API USaveLoadClass : public UObject
    void SetupSaveHeroData();
    /**Save data about npc escorts in party*/
    void SetupNPCEscortData();
-
+   /**Save data about any changes occuring inside levels*/
+   void SetupLevelSaveData();
    /**Actually set the actor's data values according to what is loaded*/
 
 #pragma endregion
@@ -79,7 +82,7 @@ class MYPROJECT_API USaveLoadClass : public UObject
    inline void SetupPlayer();
    inline void SetupAlliedUnits();
    inline void SetupBaseCharacter(AAlly* spawnedAlly, FBaseCharacterSaveInfo& baseCSaveInfo);
-
+   inline void SetupLevelLoadData();
    /**Called after player attempts to load a save*/
    void SetupLoad();
 #pragma endregion

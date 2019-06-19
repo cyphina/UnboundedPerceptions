@@ -16,9 +16,4 @@ UCoolDownEffect::UCoolDownEffect(const FObjectInitializer& ObjectInitializer) : 
    StackDurationRefreshPolicy           = EGameplayEffectStackingDurationPolicy::RefreshOnSuccessfulApplication;
    StackPeriodResetPolicy               = EGameplayEffectStackingPeriodPolicy::ResetOnSuccessfulApplication;
    bRequireModifierSuccessToTriggerCues = true;
-
-#if WITH_EDITORONLY_DATA
-   ShowAllProperties = true;
-   Template          = nullptr;
-#endif
 }

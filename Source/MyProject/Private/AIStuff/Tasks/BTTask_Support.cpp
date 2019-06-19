@@ -6,7 +6,7 @@
 #include "WorldObjects/Unit.h"
 #include "UnitController.h"
 
-#include "ResourceManager.h"
+#include "UpResourceManager.h"
 
 #include "BehaviorTree/BTFunctionLibrary.h"
 
@@ -19,7 +19,7 @@ UBTTask_Support::UBTTask_Support()
 EBTNodeResult::Type UBTTask_Support::ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory)
 {
    AUnitController* unitControllerRef = Cast<AUnitController>(ownerComp.GetAIOwner());
-   if (unitControllerRef->SearchAndCastSpell(ResourceManager::supportTags))
+   if (unitControllerRef->SearchAndCastSpell(UpResourceManager::supportTags))
       return EBTNodeResult::InProgress;
    // if there's no spell to be casted
    return EBTNodeResult::Failed;

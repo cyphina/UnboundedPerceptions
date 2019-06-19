@@ -32,9 +32,9 @@ void AAllyAIController::Tick(float deltaTime)
    Super::Tick(deltaTime);
 }
 
-void AAllyAIController::Possess(APawn* InPawn)
+void AAllyAIController::OnPossess(APawn* InPawn)
 {
-   Super::Possess(InPawn);
+   Super::OnPossess(InPawn);
    allyRef = Cast<AAlly>(GetPawn());
    currentAllyBehavior = AllyBehavioralMode::ABM_Neutral;
 }
@@ -168,8 +168,9 @@ bool AAllyAIController::SetupSpellTargetting(FHitResult result, TSubclassOf<UMyS
             allyRef->SetTarget(unitRef);
 
             FinalizeSpellTargetting(spellClass);
-            if (AdjustPosition(spell->GetRange(allyRef->GetAbilitySystemComponent()), allyRef->targetData.targetActor))
+            if (allyRef->targetData.targetUnit == allyRef || AdjustPosition(spell->GetRange(allyRef->GetAbilitySystemComponent()), allyRef->targetData.targetActor))
                PreCastChannelingCheck(spellClass);
+            GetCPCRef()->GetCameraPawn()->HideSpellCircle();
             return true;
          }
          else //Else cast on the ground
@@ -178,6 +179,7 @@ bool AAllyAIController::SetupSpellTargetting(FHitResult result, TSubclassOf<UMyS
             FinalizeSpellTargetting(spellClass);
             if (AdjustPosition(spell->GetRange(allyRef->GetAbilitySystemComponent()), allyRef->targetData.targetLocation))
                PreCastChannelingCheck(spellClass);
+            GetCPCRef()->GetCameraPawn()->HideSpellCircle();
             return true;
          }
       }
@@ -185,7 +187,7 @@ bool AAllyAIController::SetupSpellTargetting(FHitResult result, TSubclassOf<UMyS
       {
          if (IsValid(result.Actor.Get())) {
             //If we clicked on a unit, we must be using a single target spell.  Make sure actor is a unit and that it is visible (we have vision over the target)
-            if (result.Actor->GetDefaultAttachComponent()->IsVisible() && result.Actor->GetClass()->IsChildOf(AUnit::StaticClass())) {
+            if (result.Actor->GetClass()->IsChildOf(AUnit::StaticClass())) {
                if (spellTargetting != "Skill.Targetting.Single.Interactable") {
                   AUnit* unit = Cast<AUnit>(result.Actor.Get());
                   if (unit->GetCanTarget())
@@ -213,9 +215,14 @@ bool AAllyAIController::SetupSpellTargetting(FHitResult result, TSubclassOf<UMyS
                      if (allyRef->targetData.targetUnit == allyRef) {
                         allyRef->SetCurrentSpell(spellClass); //Set it again for now since we had to stop
                         PreCastChannelingCheck(spellClass);
-                        GetCPCRef()->GetCameraPawn()->ChangeCursor(ECursorStateEnum::Select);
+                        GetCPCRef()->GetCameraPawn()->SetSecondaryCursor();
                         return true;
                      }
+                  }
+                  else //Invulnerable unit
+                  {
+                     allyRef->controllerRef->GetHUDManager()->GetMainHUD()->DisplayHelpText(allyRef->invalidTargetText);
+                     return false;
                   }
                }
             }
@@ -254,7 +261,7 @@ bool AAllyAIController::SetupSpellTargetting(FHitResult result, TSubclassOf<UMyS
 
 void AAllyAIController::FinalizeSpellTargetting(TSubclassOf<UMySpell> spellClass)
 {
-   GetCPCRef()->GetCameraPawn()->ChangeCursor(ECursorStateEnum::Select); //Just set cursor to to select so the loop will quickly change the cursor back to normal
+   GetCPCRef()->GetCameraPawn()->SetSecondaryCursor();//Just set cursor to to select so the loop will quickly change the cursor back to normal
    auto castTurnAction = [this, spellClass]() { PreCastChannelingCheck(spellClass);};
    allyRef->unitProperties.turnAction.BindLambda(castTurnAction);
    allyRef->SetCurrentSpell(spellClass); //Set it again for now since we had to stop

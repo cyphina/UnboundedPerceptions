@@ -8,7 +8,7 @@
 
 UVisibleEnemiesQueryGenerator::UVisibleEnemiesQueryGenerator()
 {
-   ItemType = UEnvQueryItemType_ActorBase::StaticClass();
+   ItemType = UEnvQueryItemType_Actor::StaticClass();
 }
 
 void UVisibleEnemiesQueryGenerator::GenerateItems(FEnvQueryInstance& queryInstance) const
@@ -16,7 +16,7 @@ void UVisibleEnemiesQueryGenerator::GenerateItems(FEnvQueryInstance& queryInstan
    ARTSGameState*  gameStateRef = Cast<ARTSGameState>(GEngine->GetWorldFromContextObject(queryInstance.Owner.Get(), EGetWorldErrorMode::LogAndReturnNull)->GetGameState());
    TArray<AActor*> matchingActors;
 
-   for (AEnemy* enemy : gameStateRef->visibleEnemies) {
+   for (AUnit* enemy : gameStateRef->visibleEnemies) {
       matchingActors.Add(enemy);
    }
 

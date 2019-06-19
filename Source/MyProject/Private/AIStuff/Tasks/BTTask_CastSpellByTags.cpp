@@ -6,7 +6,7 @@
 #include "WorldObjects/Unit.h"
 #include "UnitController.h"
 
-#include "ResourceManager.h"
+#include "UpResourceManager.h"
 #include "BehaviorTree/BTFunctionLibrary.h"
 
 
@@ -23,6 +23,7 @@ EBTNodeResult::Type UBTTask_CastSpellByTags::ExecuteTask(UBehaviorTreeComponent&
    {
       WaitForMessage(ownerComp, AUnit::AIMessage_SpellCasted);
       WaitForMessage(ownerComp, AUnit::AIMessage_SpellInterrupt);
+      WaitForMessage(ownerComp, AUnit::AIMessage_TargetLoss);
       return EBTNodeResult::InProgress;
    }
    // if there's no spell to be casted
@@ -31,12 +32,6 @@ EBTNodeResult::Type UBTTask_CastSpellByTags::ExecuteTask(UBehaviorTreeComponent&
 
 void UBTTask_CastSpellByTags::OnMessage(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory, FName message, int32 requestID, bool bSuccess)
 {
-   //Finishes task if we get a message representing a successful action or if we get stunned or something
-   if (message == AUnit::AIMessage_SpellCasted) {
-      Super::OnMessage(ownerComp, nodeMemory, message, requestID, bSuccess);
-   }
-   else { //finishes task if our spell casting gets interrupted
-      bSuccess &= (message != AUnit::AIMessage_SpellInterrupt);
-      Super::OnMessage(ownerComp, nodeMemory, message, requestID, bSuccess);
-   }
+   bSuccess &= message == AUnit::AIMessage_SpellCasted & message != AUnit::AIMessage_SpellInterrupt & message != AUnit::AIMessage_TargetLoss;
+   Super::OnMessage(ownerComp, nodeMemory, message, requestID, bSuccess);
 }

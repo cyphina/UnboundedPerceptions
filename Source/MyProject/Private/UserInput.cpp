@@ -46,7 +46,7 @@ void AUserInput::SetupInputComponent()
    Super::SetupInputComponent();
    check(InputComponent);
 
-   InputComponent->BindAction("Break", IE_Pressed, this, &AUserInput::ToggleBreakMenu);
+   InputComponent->BindAction("ToggleBreakMenu", IE_Pressed, this, &AUserInput::ToggleBreakMenu);
 }
 
 void AUserInput::ToggleBreakMenu()

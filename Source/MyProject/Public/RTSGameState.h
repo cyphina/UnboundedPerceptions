@@ -14,6 +14,7 @@
 class UMainWidget;
 class AEnemy;
 class AAlly;
+class AUnit;
 class AFogOfWarPlane;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUpdateGameSpeed, float, speedMultiplier);
@@ -101,11 +102,11 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase
 
    /**Lists what enemies are visible so we don't have to keep doing line traces which is an expensive op*/
    UPROPERTY(BlueprintReadOnly, Category = "Vision")
-   TSet<AEnemy*> visibleEnemies;
+   TSet<AUnit*> visibleEnemies;
 
    /**Lists what allies are visible so we don't have to keep doing line traces which is an expensive op*/
    UPROPERTY(BlueprintReadOnly, Category = "Vision")
-   TSet<AAlly*> visibleAllies;
+   TSet<AUnit*> visibleAllies;
 
    UPROPERTY(EditDefaultsOnly, Category = "Vision")
    TSubclassOf<AFogOfWarPlane> FOWplaneClass;

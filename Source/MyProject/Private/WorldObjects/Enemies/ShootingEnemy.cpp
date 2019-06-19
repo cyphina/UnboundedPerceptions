@@ -29,6 +29,7 @@ void AShootingEnemy::Attack_Implementation()
       UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Intelligence"), 0);
       UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Understanding"), 0);
       UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), 100);
+      UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Health"), 0);
 
       UAbilitySystemBlueprintLibrary::AddAssetTag(damageEffectHandle, initialStats.element);
       projectile->hitEffects.Add(damageEffectHandle);
@@ -36,7 +37,10 @@ void AShootingEnemy::Attack_Implementation()
       projectile->targetting        = EBulletTargettingScheme::Bullet_Ally;
 
       projectile->FinishSpawning(transform);
-      projectile->FireInDirection((targetData.targetUnit->GetActorLocation() - FVector(GetActorLocation().X, GetActorLocation().Y, 0)).GetSafeNormal());
 
+      if(projectile->IsHoming())
+         projectile->FireAtTarget(targetData.targetUnit);
+      else
+         projectile->FireInDirection((targetData.targetUnit->GetActorLocation() - FVector(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z)).GetSafeNormal());
    }
 }

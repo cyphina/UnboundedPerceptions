@@ -8,7 +8,7 @@
 
 #include "GameplayEffect.h"
 #include "AbilitySystemComponent.h"
-#include "ResourceManager.h"
+#include "UpResourceManager.h"
 
 void UEffectStatusBar::NativeConstruct()
 {
@@ -54,7 +54,7 @@ void UEffectStatusBar::UpdateStatusBar()
 
          FLinearColor finalColor;
          for (FGameplayTag elemTag : elemTags) {
-            finalColor = ResourceManager::elementalMap[elemTag].WithAlpha(0.5);
+            finalColor = UpResourceManager::elementalMap[elemTag].WithAlpha(0.5);
          }
 
          ToggleGameplayEffectIcon(effect, nameTag, effectIcon, finalColor, i);

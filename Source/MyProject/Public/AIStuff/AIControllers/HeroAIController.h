@@ -19,7 +19,7 @@ class MYPROJECT_API AHeroAIController : public AAllyAIController
    ABaseHero* heroRef;
 
 public:
-   virtual void Possess(APawn* InPawn) override;
+   virtual void OnPossess(APawn* InPawn) override;
 
    UFUNCTION(BlueprintCallable, Category = "Misc")
    void BeginInteract(AActor* interactor);

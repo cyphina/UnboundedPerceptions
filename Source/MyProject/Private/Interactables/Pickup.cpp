@@ -15,9 +15,8 @@ APickup::APickup()
    // Set up the mesh for the pickup, and set the item name, help text, and item value
    interactableMesh->SetSimulatePhysics(false);
    PrimaryActorTick.bCanEverTick = false;
-   interactableMesh->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel3);
-   interactableMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore); // Enemy
-   interactableMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel9, ECollisionResponse::ECR_Ignore); // Friendly
+
+   interactableMesh->SetCollisionProfileName("InteractableWalkable");
 }
 
 void APickup::BeginPlay()

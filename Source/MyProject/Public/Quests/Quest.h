@@ -109,11 +109,6 @@ struct FGoalInfo {
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
    TArray<int> requiredSubGoalIndices;
    /**If we fail this goal the quest will fail*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
-   bool canFailQuest;
-   /**If we finish this goal the quest will be done*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
-   bool canCompleteQuest;
    /**Should any triggers be run when this goal begins?*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
    TArray<FTriggerData> prevGoalTriggers;
@@ -129,6 +124,12 @@ struct FGoalInfo {
    /**What's the color of the location tracker*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Minimap")
    FLinearColor circleColor;
+      /**If we fail this goal the quest will fail*/
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
+   bool canFailQuest;
+   /**If we finish this goal the quest will be done*/
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
+   bool canCompleteQuest;
    /**Location to spawn the tracker*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Minimap")
    FVector goalLocation = invalidGoalLocation;

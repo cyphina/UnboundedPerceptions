@@ -43,6 +43,7 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    static const FName AIMessage_SpellInterrupt;
    static const FName AIMessage_Stunned;
    static const FName AIMessage_Silenced;
+   static const FName AIMessage_TargetLoss;
 #pragma endregion
 
 /** Information about this unit and important references/components*/
@@ -148,6 +149,9 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
    AUnit* GetTarget() const { return targetData.targetUnit; }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   FVector GetTargetLoc() const { return targetData.targetLocation; }
 
    UFUNCTION(BlueprintCallable, Category = "CombatAccessors")
    void SetCanTarget(bool value) { unitProperties.canTarget = value; }
@@ -291,6 +295,15 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    float GetCurrentChannelTime() const { return unitSpellData.currentChannelTime; }
 
+   UPROPERTY(EditAnywhere, Category = "Animations")
+   UAnimMontage* moveAnimation = nullptr;
+
+   UPROPERTY(EditAnywhere, Category = "Animations")
+   UAnimMontage* attackAnimation = nullptr;
+
+   UPROPERTY(EditAnywhere, Category = "Animations")
+   UAnimMontage* castAnimation = nullptr;
+
 #pragma endregion
 
 /** Skill related functions and parameters */
@@ -334,15 +347,22 @@ public:
    void IncVisionCount() { ++enemyVisionCount; }
    void DecVisionCount() { --enemyVisionCount; }
 
+   virtual bool IsVisible() PURE_VIRTUAL(AUnit::IsVisible, return false; ); 
+   virtual TSet<AUnit*>* GetSeenEnemies() PURE_VIRTUAL(AUnit::GetSeenEnemies, return nullptr; );  
+
 private:
 
    /** Counter for number of enemies (units with opposite value of isEnemy) that can see this unit */
    int enemyVisionCount;
 
    friend void USaveLoadClass::SetupBaseCharacter(AAlly* spawnedAlly, FBaseCharacterSaveInfo& baseCSaveInfo);
-   friend ChannelingState;
-   friend void CastingState::Update(AUnit& unit, float deltaSeconds);
-   friend void AttackState::Update(AUnit& unit, float deltaSeconds);
+
+   friend class ChannelingState;
+   friend class CastingState;
+   friend class AttackState;
+   friend class MovingState;
+   friend class AttackMoveState;
+   friend class ChasingState;
 
 #pragma endregion
 

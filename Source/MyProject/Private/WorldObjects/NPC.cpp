@@ -28,6 +28,9 @@ ANPC::ANPC()
    GetCapsuleComponent()->SetCollisionProfileName("NPC");
    GetMesh()->SetCollisionProfileName("NoCollision");
    FindComponentByClass<UArrowComponent>()->DestroyComponent();
+
+   GetMesh()->SetRenderCustomDepth(false);
+   GetMesh()->CustomDepthStencilValue = 255;
 }
 
 void ANPC::BeginPlay()

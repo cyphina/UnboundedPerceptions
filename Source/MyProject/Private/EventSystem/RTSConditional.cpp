@@ -29,7 +29,7 @@ bool UConditionalManager::GetCondition(FConditionData& condData) const
       case EConditionalType::GoalsCompletionCond: conditionValue = GetGoalsCompletedVal(condData); break;
       case EConditionalType::HadConversationCond: conditionValue = GetHadConversationConditionVal(condData); break;
       case EConditionalType::OwnsItemCond: conditionValue = GetOwnedItemConditionVal(condData); break;
-      case EConditionalType::CustomCond: conditionValue = FCString::Atoi(*condData.conditionalValues[0]);
+      case EConditionalType::CustomCond: conditionValue = (bool)FCString::Atoi(*condData.conditionalValues[0]);
       default: break;
    }
 

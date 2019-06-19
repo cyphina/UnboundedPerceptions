@@ -57,11 +57,11 @@ void AHUDManager::AddHUD(uint8 newState)
    switch (newState) {
       case HUDs::HS_Ingame: ApplyHUD(newState, true, true, true, false); break;
       case HUDs::HS_Inventory: ApplyHUD(newState, true, true, true, false); break;
-      case HUDs::HS_Equipment: ApplyHUD(newState, true, true, false, false); break;
+      case HUDs::HS_Equipment: ApplyHUD(newState, true, true, true, false); break;
       case HUDs::HS_Character: ApplyHUD(newState, true, true, true, false); break;
       case HUDs::HS_QuestJournal: ApplyHUD(newState, true, true, false, false); break;
       case HUDs::HS_QuestList: ApplyHUD(newState, true, true, true, true); break;
-      case HUDs::HS_Spellbook: ApplyHUD(newState, true, true, false, false); break;
+      case HUDs::HS_Spellbook: ApplyHUD(newState, true, true, true, false); break;
       case HUDs::HS_Dialog:
       case HUDs::HS_Storage:
       case HUDs::HS_Shop_General:
@@ -70,10 +70,11 @@ void AHUDManager::AddHUD(uint8 newState)
          GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("Don't call AddHUD(uint8) for widgets with parameters.  Call their respective AddHUD"));
 #endif
          break;
-      case HUDs::HS_Social: ApplyHUD(newState, true, true, false, false); break;
+      case HUDs::HS_Social: ApplyHUD(newState, true, true, false, false); break;    
       case HUDs::HS_Break: ApplyHUD(newState, true, true, true, false); break;
       case HUDs::HS_Settings: ApplyHUD(newState, true, true, false, false); break;
       case HUDs::HS_SaveLoad: ApplyHUD(newState, true, true, false, false); break;
+      case HUDs::HS_ChatBox: ApplyHUD(newState, true, true, true, false); break;
       default: break;
    }
 }
@@ -239,7 +240,17 @@ void AHUDManager::UpdateWidgetTracking(int updateIndex, bool showMouseCursor, bo
    // If this hud can't be opened during combat, then we should change the cursor to the UI cursor (restricting them from doing much) and prevent camera panning
    if (!canOpenCombat) {
       currentlyDisplayedWidgetsBitSet[updateIndex] ? ++numWidgetsBlocking : --numWidgetsBlocking;
-      numWidgetsBlocking > 0 ? playerControllerRef->GetCameraPawn()->isCamNavDisabled = true : playerControllerRef->GetCameraPawn()->isCamNavDisabled = false;
+      if(numWidgetsBlocking > 0) {
+         playerControllerRef->GetCameraPawn()->isCamNavDisabled = true;
+         playerControllerRef->GetCameraPawn()->DisableInput(playerControllerRef);
+         playerControllerRef->GetCameraPawn()->SetActorTickEnabled(false);
+         playerControllerRef->GetCameraPawn()->ChangeCursor(ECursorStateEnum::UI);
+      }
+      else {
+         playerControllerRef->GetCameraPawn()->isCamNavDisabled = false;
+         playerControllerRef->GetCameraPawn()->EnableInput(playerControllerRef);
+         playerControllerRef->GetCameraPawn()->SetActorTickEnabled(true);
+      }
    }
 }
 

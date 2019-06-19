@@ -40,6 +40,9 @@ class MYPROJECT_API AUnitController : public AAIController
    static const FName AIMessage_Help; // sent when a unit needs some help defensively
 
  public:
+   
+   static const int CHASE_RANGE = 100;
+
    AUnitController();
 
    /** Location which our controller will patrol */
@@ -58,7 +61,7 @@ class MYPROJECT_API AUnitController : public AAIController
 
    /**Make sure to call UseBlackboard/InitializeBlackboard in the children classes depending
     * on how they use their blackboards as well as starting the tree*/
-   void Possess(APawn* InPawn) override;
+   void OnPossess(APawn* InPawn) override;
    void BeginPlay() override;
    void Tick(float deltaSeconds) override;
 
@@ -125,35 +128,49 @@ class MYPROJECT_API AUnitController : public AAIController
    virtual void Protect(UBrainComponent* BrainComp, const FAIMessage& Message);
 
    /** Function for moving units around, based upon the ACharacter move.  Changes our state, and some different characters may move differently*/
-   UFUNCTION(BlueprintCallable, Category = "Movement")
+   UFUNCTION(BlueprintCallable, Category = "Action")
    virtual EPathFollowingRequestResult::Type Move(FVector newLocation);
 
    /** Similar to Move function but moves to an actor */
-   UFUNCTION(BlueprintCallable, Category = "Movement")
+   UFUNCTION(BlueprintCallable, Category = "Action")
    virtual EPathFollowingRequestResult::Type MoveActor(AActor* targetActor);
 
    /** Follows a target denoted by the followTarget field in the Unit class*/
-   void Follow();
+   virtual void Follow();
+
    /** Patrol around a set of points*/
-   void Patrol();
+   virtual void Patrol(TArray<FVector> newPatrolPoints);
+
    /** Move after a target even when it is out of vision by guessing where it could be*/
-   void Search();
+   virtual void Search();
+
    /** Randomly move about the map*/
-   void Roam();
+   virtual void Roam();
+
    /** Get away from enemies*/
-   void Run();
+   virtual void Run();
+
+   /** Used to chase after enemies that leave the vision radius*/
+   virtual void Chase();
+
+   /** Condition used to indicate chasing failure.  Chasing sucess is finding the enemy again*/
+   virtual bool ChasingQuit();
 
    /** Stop should be overidden based on the subclass because stopping some classes has to cancel more things*/
    UFUNCTION(BlueprintCallable, Category = "Action")
    virtual void Stop();
 
    /**Used to initiate an attack on a target*/
-   UFUNCTION(BlueprintCallable, Category = "Combat")
+   UFUNCTION(BlueprintCallable, Category = "Action")
    virtual void BeginAttack(AUnit* target);
 
    /**Initiate spell casting procedure without any input triggers.  Used for AI spellcasting.  Returns if we successfully transitioned to CASTING state*/
-   UFUNCTION(BlueprintCallable, Category = "Spells")
+   UFUNCTION(BlueprintCallable, Category = "Action")
    virtual bool BeginCastSpell(TSubclassOf<UMySpell> spellToCastIndex, const FGameplayAbilityTargetDataHandle& targetData);
+
+   /** Move to a location searching for a target to attack or attack the unit closest to the location*/
+   UFUNCTION(BlueprintCallable, Category = "Action")
+   virtual void AttackMove(FVector moveLocation);
 
 #pragma endregion
 
@@ -161,11 +178,11 @@ class MYPROJECT_API AUnitController : public AAIController
 #pragma region ActionHelpers
 
    /**Function for checking if a unit is in range of some action*/
-   UFUNCTION(BlueprintCallable, Category = "Movement")
+   UFUNCTION(BlueprintCallable, Category = "Positioning")
    bool IsTargetInRange(float range, FVector targetLocation);
 
    /**Function to see if unit is facing the direction*/
-   UFUNCTION(BlueprintCallable, Category = "Movement")
+   UFUNCTION(BlueprintCallable, Category = "Positioning")
    bool IsFacingTarget(FVector targetLocation, float errorAngleCutoff = .02f); 
 
 protected:
@@ -175,7 +192,7 @@ protected:
 
    /** Initiates attack animation after moving into position */
    UFUNCTION()
-   void PrepareAttack(); 
+   void PrepareAttack();
 
 #pragma endregion
 
@@ -195,10 +212,10 @@ public:
    void TurnTowardsActor(AActor* targetActor);
 
    /**Function to move to appropriate distance from target and face direction*/
-   virtual bool AdjustPosition(float range, FVector targetLocation);
+   bool AdjustPosition(float range, FVector targetLocation);
 
    /**Function to move to appropriate distance from target and face direction*/
-   virtual bool AdjustPosition(float range, AActor* targetActor);
+   bool AdjustPosition(float range, AActor* targetActor);
 
    UFUNCTION()
    void OnActorTurnFinished();

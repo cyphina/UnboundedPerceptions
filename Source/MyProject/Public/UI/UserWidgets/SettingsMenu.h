@@ -81,4 +81,7 @@ class MYPROJECT_API USettingsMenu : public UMyUserWidget
 
    UFUNCTION(BlueprintCallable, Category = "Setings Change Functionality")
    void ChangeEffectVolume(float val);
+
+   UFUNCTION(BlueprintCallable, Category = "Setings Change Functionality")
+   void ToggleQuickCast();
 };

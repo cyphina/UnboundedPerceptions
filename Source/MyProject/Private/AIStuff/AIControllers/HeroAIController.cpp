@@ -15,9 +15,9 @@
 #include "UserInput.h"
 #include "RTSPawn.h"
 
-void AHeroAIController::Possess(APawn* InPawn)
+void AHeroAIController::OnPossess(APawn* InPawn)
 {
-   Super::Possess(InPawn);
+   Super::OnPossess(InPawn);
    heroRef = Cast<ABaseHero>(GetPawn());
 }
 

@@ -8,7 +8,7 @@
 #include "Unit.h"
 #include "Enemy.h"
 
-#include "ResourceManager.h"
+#include "UpResourceManager.h"
 
 #include "State/StateMachine.h"
 
@@ -29,21 +29,22 @@
 
 #include "BrainComponent.h"
 
-const FName AUnit::AIMessage_AttackReady    = TEXT("AttackReady");
-const FName AUnit::AIMessage_SpellCasted    = TEXT("SpellCasted!");
+const FName AUnit::AIMessage_AttackReady = TEXT("AttackReady");
+const FName AUnit::AIMessage_SpellCasted = TEXT("SpellCasted!");
 const FName AUnit::AIMessage_SpellInterrupt = TEXT("SpellInterrupted!");
-const FName AUnit::AIMessage_Stunned        = TEXT("Stunned!");
-const FName AUnit::AIMessage_Silenced       = TEXT("Silenced!");
+const FName AUnit::AIMessage_Stunned = TEXT("Stunned!");
+const FName AUnit::AIMessage_Silenced = TEXT("Silenced!");
+const FName AUnit::AIMessage_TargetLoss = TEXT("TargetLoss");
 
 const float                   AUnit::diminishParam = 1.8f;
-const TFunction<float(float)> AUnit::diminishFunc  = [](float x) { return ResourceManager::DiminishFunc(x, diminishParam); };
+const TFunction<float(float)> AUnit::diminishFunc = [](float x) { return UpResourceManager::DiminishFunc(x, diminishParam); };
 
 AUnit::AUnit(const FObjectInitializer& objectInitializer) : Super(objectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
    // Setup variables
    PrimaryActorTick.bCanEverTick = true;
    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
-   combatParams.combatStyle      = ECombatType::Melee;
+   combatParams.combatStyle = ECombatType::Melee;
 
    //--Destroy arrow component so there isn't some random arrow sticking out of our units--
    auto components = GetComponents();
@@ -59,10 +60,10 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) : Super(objectInitiali
 
    // Setup components can only happen in the constructor
    unitSpellData.abilitySystem = CreateDefaultSubobject<UMyAbilitySystemComponent>(TEXT("AbilitySystem"));
-   selectionCircleDecal        = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));
+   selectionCircleDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));
    selectionCircleDecal->SetupAttachment(RootComponent);
    healthBar = CreateDefaultSubobject<UHealthbarComp>(FName("Healthbar"));
-   healthBar->SetRelativeLocation(FVector(0,0,45));
+   healthBar->SetRelativeLocation(FVector(0, 0, 45));
    healthBar->SetupAttachment(RootComponent);
 
    // Mesh needs an offset because it isn't aligned with capsule component at the beginning.  Offset by the mesh size
@@ -71,7 +72,7 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) : Super(objectInitiali
 
    //--Find healthbar widget to set it as our default healthbar's widget class
    ConstructorHelpers::FClassFinder<UUserWidget> healthBarWig(TEXT("/Game/RTS_Tutorial/HUDs/Hitpoints/HealthbarWidget"));
-   if (healthBarWig.Succeeded()) { healthBar->SetWidgetClass(healthBar->StaticClass()); }
+   if (healthBarWig.Succeeded()) { healthBar->SetWidgetClass(healthBarWig.Class); }
 
    visionSphere = CreateDefaultSubobject<USphereComponent>(FName("VisionRadius"));
    visionSphere->SetupAttachment(RootComponent);
@@ -82,15 +83,18 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) : Super(objectInitiali
 
    // Allows units to step up stairs.  The height of the stairs they can step is set in some navmesh params
    GetCharacterMovement()->SetWalkableFloorAngle(90.f);
-   GetCharacterMovement()->RotationRate              = FRotator(0, 300.f, 0);
+   GetCharacterMovement()->RotationRate = FRotator(0, 300.f, 0);
    GetCharacterMovement()->bOrientRotationToMovement = true;
+
+   // Turn this off to make sure the unit highlights when hovered over
+   GetMesh()->SetRenderCustomDepth(false);
 }
 
 void AUnit::BeginPlay()
 {
    /// Setup initial parameters
    controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
-   gameState     = Cast<ARTSGameState>(GetWorld()->GetGameState());
+   gameState = Cast<ARTSGameState>(GetWorld()->GetGameState());
 
    FVector origin, extent;
    GetActorBounds(true, origin, extent);
@@ -113,7 +117,7 @@ void AUnit::BeginPlay()
    if (GetAbilitySystemComponent()) {
       // Make sure owner is player controller else the whole ability systme fails to function
       GetAbilitySystemComponent()->InitAbilityActorInfo(GetWorld()->GetFirstPlayerController(), this); // setup owner and avatar
-      baseC                                = TUniquePtr<FBaseCharacter>(new FBaseCharacter(GetAbilitySystemComponent()->AddSet<UMyAttributeSet>()));
+      baseC = TUniquePtr<FBaseCharacter>(new FBaseCharacter(GetAbilitySystemComponent()->AddSet<UMyAttributeSet>()));
       GetCharacterMovement()->MaxWalkSpeed = GetMechanicAdjValue(static_cast<int>(Mechanics::MovementSpeed));
 
       for (TSubclassOf<UMySpell> ability : abilities) {
@@ -169,15 +173,34 @@ void AUnit::Die_Implementation()
    combatParams.isDead = true;
 
    //If this unit's info is being watched on the actionbar, remove it for now until I find a better fix
-   if(controllerRef->GetBasePlayer()->focusedUnit == this)
-         controllerRef->GetHUDManager()->GetActionHUD()->DeadUnitView();
+   if (controllerRef->GetBasePlayer()->focusedUnit == this)
+      controllerRef->GetHUDManager()->GetActionHUD()->DeadUnitView();
 
    // Trigger "Death Events" in all skills that need them like Soul Catcher
    FGameplayEventData eD = FGameplayEventData();
-   eD.EventTag           = FGameplayTag::RequestGameplayTag("Event.Death");
-   eD.TargetData         = targetData.spellTargetData;
+   eD.EventTag = FGameplayTag::RequestGameplayTag("Event.Death");
+   eD.TargetData = targetData.spellTargetData;
    if (GetAbilitySystemComponent()->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("Event.Death"), &eD)) {
       // GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Emerald, FString("Wee") + FString::FromInt(currentSpellIndex));
+   }
+
+   for (auto enemy : gameState->enemyList)
+   {
+      if (enemy->GetTarget() == this)
+      {
+         enemy->GetUnitController()->Stop();
+         FAIMessage msg(AUnit::AIMessage_TargetLoss, enemy);
+         FAIMessage::Send(enemy->GetUnitController(), msg);
+      }
+   }
+   for (auto ally : gameState->allyList)
+   {
+      if (ally->GetTarget() == this)
+      {
+         ally->GetUnitController()->Stop();
+         FAIMessage msg(AUnit::AIMessage_TargetLoss, ally);
+         FAIMessage::Send(ally->GetUnitController(), msg);
+      }
    }
 }
 
@@ -194,7 +217,8 @@ void AUnit::SetEnabled(bool bEnabled)
       GetCharacterMovement()->GravityScale = 1;
       GetCapsuleComponent()->SetSimulatePhysics(false); // can't move w/o physics
       bCanAffectNavigationGeneration = true;
-   } else {
+   }
+   else {
       SetCanTarget(false);
       GetCapsuleComponent()->SetVisibility(false, true);
       SetActorEnableCollision(false);
@@ -220,22 +244,25 @@ void AUnit::Attack_Implementation()
       UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Intelligence"), 0);
       UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), 0);
       UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Understanding"), 0);
+      UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Health"), 0);
 
       // Stat used to determine damage depends on attack style
       switch (combatParams.combatStyle) {
-         case ECombatType::Melee: UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Strength"), 100); break;
-         case ECombatType::Magic: UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Intelligence"), 100);
-         case ECombatType::Ranged: UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), 100); break;
-         default: UE_LOG(LogTemp, Warning, TEXT("Error, combatstyle tag is not what it should be!")); return;
+      case ECombatType::Melee: UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Strength"), 100); break;
+      case ECombatType::Magic: UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Intelligence"), 100);
+      case ECombatType::Ranged: UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), 100); break;
+      default: UE_LOG(LogTemp, Warning, TEXT("Error, combatstyle tag is not what it should be!")); return;
       }
 
       // TODO: Should add weapon element here
       UAbilitySystemBlueprintLibrary::AddAssetTag(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Element.Force"));
       GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*damageEffectHandle.Data.Get(), targetData.targetUnit->GetAbilitySystemComponent());
+      if (attackAnimation)
+         PlayAnimMontage(attackAnimation, 2 / GetSkillAdjValue(static_cast<int>(UnitStats::Attack_Speed)) + 100 * 0.01);
    }
 
-    //Remove invisibility if you attack somebody
-    GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
+   //Remove invisibility if you attack somebody
+   GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
 }
 
 UMySpell* AUnit::GetSpellCDO(TSubclassOf<UMySpell> spellClass) const
@@ -284,8 +311,8 @@ void AUnit::OnMoveCompleted(FAIRequestID RequestID, const EPathFollowingResult::
    {
       switch (GetState()) {
       case EUnitState::STATE_MOVING:
-         state->ChangeState(EUnitState::STATE_IDLE);
          if (!unitController->IsFacingTarget(targetData.targetLocation)) unitController->TurnTowardsTarget(targetData.targetLocation);
+         state->ChangeState(EUnitState::STATE_IDLE);
          break;
       case EUnitState::STATE_ATTACKING:
          !unitController->IsFacingTarget(targetData.targetUnit->GetActorLocation()) ? unitController->TurnTowardsActor(targetData.targetUnit) : unitProperties.turnAction.Execute();
@@ -298,6 +325,19 @@ void AUnit::OnMoveCompleted(FAIRequestID RequestID, const EPathFollowingResult::
          break;
       case EUnitState::STATE_INTERACTING:
          !unitController->IsFacingTarget(targetData.targetLocation) ? unitController->TurnTowardsTarget(targetData.targetLocation) : unitProperties.turnAction.Execute();
+         break;
+      case EUnitState::STATE_CHASING:
+         if (unitController->ChasingQuit())
+         {
+            unitController->Stop();
+            FAIMessage msg(AUnit::AIMessage_TargetLoss, this);
+            FAIMessage::Send(unitController, msg);
+         }      
+         else
+            unitController->Chase();
+         break;
+      case EUnitState::STATE_ATTACK_MOVE:
+         unitController->Stop();
          break;
       default: break;
       }
@@ -316,7 +356,7 @@ void AUnit::ShowDamageDealt(Damage& d)
          tRC->SetWorldSize(200.f);
       else
          tRC->SetWorldSize(100.f);
-      tRC->SetTextRenderColor(ResourceManager::elementalMap[d.element]);
+      tRC->SetTextRenderColor(UpResourceManager::elementalMap[d.element]);
       tRC->SetHorizontalAlignment(EHorizTextAligment::EHTA_Center);
       tRC->SetVerticalAlignment(EVerticalTextAligment::EVRTA_TextBottom);
       tRC->SetRelativeLocation(FVector(0, 0, FindBoundary().Max.Y - FindBoundary().Min.Y + 100));
@@ -364,12 +404,12 @@ float AUnit::CalculateRisk()
 {
    //Calculate score based on how much health is missing
    const float currentHealth = GetVitalCurValue(static_cast<uint8>(Vitals::Health));
-   const float totalHealth   = GetVitalAdjValue(static_cast<uint8>(Vitals::Health));
-   const float healthPer     = (totalHealth - currentHealth) / totalHealth;
+   const float totalHealth = GetVitalAdjValue(static_cast<uint8>(Vitals::Health));
+   const float healthPer = (totalHealth - currentHealth) / totalHealth;
 
    //Calculate score based on how many debuffs we have
-   FGameplayEffectQuery debuffTagQuery  = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff")));
-   int                  debuffNum       = GetAbilitySystemComponent()->GetActiveEffects(debuffTagQuery).Num();
+   FGameplayEffectQuery debuffTagQuery = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff")));
+   int                  debuffNum = GetAbilitySystemComponent()->GetActiveEffects(debuffTagQuery).Num();
    const float          debuffRiskValue = FMath::Clamp(diminishFunc(debuffNum), 0.f, 1.f);
 
    //Calculate score based on how many units are targetting us
@@ -393,8 +433,8 @@ float AUnit::CalculateThreat()
    }
 
    //Calculate score based on how many buffs we have
-   FGameplayEffectQuery buffTagQuery    = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff")));
-   int                  buffNum         = GetAbilitySystemComponent()->GetActiveEffects(buffTagQuery).Num();
+   FGameplayEffectQuery buffTagQuery = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff")));
+   int                  buffNum = GetAbilitySystemComponent()->GetActiveEffects(buffTagQuery).Num();
    const float          buffThreatValue = FMath::Clamp(diminishFunc(buffNum), 0.f, 1.f);
 
    //Calculate score based on how many castable spells we have left (we might not have the mana to cast them though...)
@@ -422,7 +462,7 @@ FBox2D AUnit::FindBoundary()
    TArray<FVector2D> corners; // get 8 corners of box
 
    for (int i = 0; i < 8; ++i) {
-      controllerRef->ProjectWorldLocationToScreen(origin + extent * ResourceManager::BoundsPointMapping[i], screenLocation, true);
+      controllerRef->ProjectWorldLocationToScreen(origin + extent * UpResourceManager::BoundsPointMapping[i], screenLocation, true);
       corners.Add(screenLocation);
       // GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White, corners[i].ToString() + " " + boundary.GetExtent().ToString());
       boundary += corners[i];
@@ -444,13 +484,16 @@ void AUnit::ApplyBonuses(int category, int value)
 {
    if (category < CombatInfo::AttCount) {
       baseC->GetAttribute(category)->SetCurrentValue(GetAttributeAdjValue(category) + value);
-   } else if (category >= CombatInfo::AttCount && category < CombatInfo::AttCount + CombatInfo::StatCount) {
+   }
+   else if (category >= CombatInfo::AttCount && category < CombatInfo::AttCount + CombatInfo::StatCount) {
       int index = category - CombatInfo::AttCount;
       baseC->GetSkill(index)->SetBuffValue(GetSkillAdjValue(index) + value);
-   } else if (category >= CombatInfo::AttCount + CombatInfo::StatCount && category < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount) {
+   }
+   else if (category >= CombatInfo::AttCount + CombatInfo::StatCount && category < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount) {
       int index = category - CombatInfo::AttCount - CombatInfo::StatCount;
       baseC->GetVital(index)->SetBuffValue(GetVitalAdjValue(index) + value);
-   } else {
+   }
+   else {
       int index = category - CombatInfo::AttCount - CombatInfo::StatCount - CombatInfo::VitalCount;
       baseC->GetMechanic(index)->SetCurrentValue(GetMechanicAdjValue(index) + value);
    }

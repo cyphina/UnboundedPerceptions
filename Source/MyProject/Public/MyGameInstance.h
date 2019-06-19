@@ -32,6 +32,9 @@ class MYPROJECT_API UMyGameInstance : public UGameInstance
    /**List of all the details about the map that need to be saved across changing levels*/
    TMap<FName, FMapSaveInfo> mapInfo;
 
+   /**Cache what levels have been saved so when we save the information to disk, we don't have to save information about every level*/
+   TSet<FName> savedLevels;
+
    void Init() override;
    void Shutdown() override;
 
@@ -48,4 +51,6 @@ class MYPROJECT_API UMyGameInstance : public UGameInstance
    /**Call this after the level is loaded*/
    UFUNCTION(BlueprintCallable, Category = "Level Save/Load")
    void LoadLevelData(FName levelName);
+
+   bool playerQuickCast = false;
 };

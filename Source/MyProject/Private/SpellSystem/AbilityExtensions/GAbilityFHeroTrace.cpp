@@ -13,7 +13,6 @@ FHitResult AGAbilityFHeroTrace::PerformTrace(AActor* InSourceActor)
    // GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Emerald, TEXT("Hit From Hero Trace!"));
    FCollisionQueryParams Params(LineTraceSingleName, bTraceComplex);
    Params.bReturnPhysicalMaterial = true;
-   Params.bTraceAsyncScene        = true;
    Params.AddIgnoredActors(ActorsToIgnore);
 
    FVector TraceStart = StartLocation.GetTargetingTransform().GetLocation(); // InSourceActor->GetActorLocation();

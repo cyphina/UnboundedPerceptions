@@ -19,6 +19,8 @@ struct Damage {
 USTRUCT(BlueprintType, NoExport)
 struct FDamageScalarStruct {
    UPROPERTY(BlueprintReadWrite)
+   int hitpoints;
+   UPROPERTY(BlueprintReadWrite)
    int strength;
    UPROPERTY(BlueprintReadWrite)
    int intelligence;

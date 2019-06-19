@@ -2,6 +2,7 @@
 
 #include "MyProject.h"
 #include "MyAnim.h"
+#include "WorldObjects/Unit.h"
 
 void UMyAnim::UpdateAnimationProperties()
 {
@@ -14,7 +15,22 @@ void UMyAnim::UpdateAnimationProperties()
    }
 }
 
+void UMyAnim::NativeBeginPlay()
+{
+   APawn* pawn = TryGetPawnOwner();
+   if (pawn) {
+      unitRef = Cast<AUnit>(pawn);
+   }
+}
+
 void UMyAnim::NativeUpdateAnimation(float deltaSeconds)
 {
    UpdateAnimationProperties();
+}
+
+EUnitState UMyAnim::GetCurrentState()
+{
+   if(unitRef)
+      return unitRef->GetState();
+   return EUnitState::STATE_IDLE;
 }

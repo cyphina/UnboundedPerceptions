@@ -2,13 +2,13 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "RTSPawn.generated.h"
 
 UENUM(BlueprintType)
-enum class ECursorStateEnum : uint8 { Select UMETA(DisplayName = "Select"), Moving, Attack, PanUp, PanDown, PanLeft, PanRight, Interact, Talking, Item, Magic, UI };
+enum class ECursorStateEnum : uint8 { Select UMETA(DisplayName = "Select"), Moving, Attack, PanUp, PanDown, PanLeft, PanRight, Interact, Talking, Item, Magic, UI, AttackMove };
 
+class AUnit;
 class AUserInput;
 
 /**Pawn that is associated with the main RPG/RTS gameplay input*/
@@ -42,6 +42,7 @@ class MYPROJECT_API ARTSPawn : public APawn
    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
    virtual void PossessedBy(AController* newController) override;
    virtual void UnPossessed() override;
+   virtual void DisableInput(APlayerController* PlayerController) override; //Null hitActor so it recalculates when renabled else hover won't activate 
 
  private:
    UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true"))
@@ -62,9 +63,10 @@ class MYPROJECT_API ARTSPawn : public APawn
    TArray<TEnumAsByte<EObjectTypeQuery>> rightClickQueryObjects;
 
    /**Similar to change cursor but used for changing to secondary cursors.  If cursorType is not a secondary cursor, toggles off secondary cursors*/
-   void SetSecondaryCursor(ECursorStateEnum cursorType);
+   void SetSecondaryCursor(ECursorStateEnum cursorType = ECursorStateEnum::Select);
 
    // Changes cursor to be a different picture.  Called when hovering over different objects.  Changes hardware cursor and cursorState
+   UFUNCTION(BlueprintCallable, Category = "Cursor")
    void ChangeCursor(ECursorStateEnum newCursorState);
 
    // Show spell cursor
@@ -81,7 +83,11 @@ class MYPROJECT_API ARTSPawn : public APawn
 
  private:
    // These references store information about hit in member so we don't have to reconstruct every tick
+
+   /**Stores last actor hit by the cursor hover trace.  Used so we don't retrace if we hit the same actor, but sometimes canceling actions like clicking the ground should
+    *reset this*/
    AActor*    hitActor;
+
    FHitResult hitResult;
 
    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
@@ -156,24 +162,33 @@ class MYPROJECT_API ARTSPawn : public APawn
 
 #pragma region commands
  public:
-   // Stop all selected unit actions and hides the spell circle!
+   /** Stop all selected unit actions, stops AI behavior, and hides the spell circle!*/
    UFUNCTION(BlueprintCallable, Category = "Action")
    void StopSelectedAllyCommands();
 
+   /** Cancels automation of selected units*/
+   UFUNCTION(BlueprintCallable, Category = "Action")
+   void StopSelectedAllyAuto();
+
  private:
-   // Spline Flight Path Controls
+   /** Spline Flight Path Controls */
    void PrevFlight();
    void NextFlight();
 
-   void Inventory();
-   void QuestJournal();
-   void QuestList();
-   void Character();
-   void Equipment();
-   void Spellbook();
+   void ToggleInventory();
+   void ToggleQuestJournal();
+   void ToggleQuestList();
+   void ToggleCharacterMenu();
+   void ToggleEquipmentMenu();
+   void ToggleSpellbookMenu();
    void RightClick();
    void TabNextAlly();
    void UseAbility(int abilityIndex);
+
+   void AttackMoveInitiate();
+
+   UFUNCTION(BlueprintCallable)
+   void AttackMoveConfirm(FVector moveLocation);
 
    /**Helper function when all selected ally units are cleared */
    UFUNCTION(BlueprintCallable, Category = "Helper")

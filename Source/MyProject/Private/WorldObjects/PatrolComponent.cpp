@@ -3,10 +3,13 @@
 #include "MyProject.h"
 #include "PatrolComponent.h"
 #include "AIController.h"
+#include "BehaviorTree/BehaviorTree.h"
 
 UPatrolComponent::UPatrolComponent()
 {
    PrimaryComponentTick.bCanEverTick = false;
+   ConstructorHelpers::FObjectFinder<UBehaviorTree> patrolTreeRef(TEXT("/Game/RTS_Tutorial/Blueprints/AI/Patrol/PatrolBT"));
+   if (patrolTreeRef.Succeeded()) patrolTree = patrolTreeRef.Object;
 }
 
 void UPatrolComponent::BeginPlay()

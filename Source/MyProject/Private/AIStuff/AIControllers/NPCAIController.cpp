@@ -13,9 +13,9 @@ ANPCAIController::ANPCAIController()
 
 }
 
-void ANPCAIController::Possess(APawn* inPawn)
+void ANPCAIController::OnPossess(APawn* inPawn)
 {
-	Super::Possess(inPawn);
+	Super::OnPossess(inPawn);
 }
 
 void ANPCAIController::BeginPlay()

@@ -17,6 +17,7 @@ ChannelingState::~ChannelingState()
 void ChannelingState::Enter(AUnit& unit)
 {
    //todo: Add channel UI bar to the screen
+   unit.PlayAnimMontage(unit.castAnimation, 1/unit.unitSpellData.channelTime);
 }
 
 void ChannelingState::Exit(AUnit& unit)

@@ -11,7 +11,7 @@ struct FItemLookupRow : public FTableRowBase {
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
    FText name = FText::GetEmpty();
 
-   UPROPERTY(EditAnywhere, Transient, BlueprintReadWrite)
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
    UTexture2D* image;
 
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
