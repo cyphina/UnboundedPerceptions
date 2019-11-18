@@ -65,6 +65,12 @@ class MYPROJECT_API AAllyAIController : public AUnitController
 
    AAlly*               allyRef;
 
+   /** Unlike the curent spell, this is the one selected by the player, but it may not be the one being channeled */
+   TSubclassOf<UMySpell> currentlySelectedSpell;
+
+   /** Index of the spell that is selected by the player */
+   int currentlySelectedSpellIndex;
+
    UFUNCTION()
    void OnPerceptionUpdated(TArray<AActor*> UpdatedActors);
 
@@ -76,6 +82,10 @@ class MYPROJECT_API AAllyAIController : public AUnitController
    virtual void Tick(float deltaTime) override;
    virtual void OnPossess(APawn* InPawn) override;
 
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spells")
+   FORCEINLINE TSubclassOf<UMySpell>  GetCurrentlySelectedSpell() { return currentlySelectedSpell; }
+
+   /** Gets spell that has been selected, but may not be channeled*/
    UFUNCTION(BlueprintCallable, Category = "AI Mode")
    void SwitchAIModes(AllyBehavioralMode newMode);
 

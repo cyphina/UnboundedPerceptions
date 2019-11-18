@@ -6,6 +6,7 @@
 UENUM(BlueprintType)
 enum class EMinigameType : uint8 {
    DrawingMiniGame, /**game parameter is a filepath to the texture to be loaded and drawn*/
+   TankBattle, /**game parameter will be some struct with enemy information*/
    Nurikabe         /**game parameter is a matrix with the game setup*/
 };
 

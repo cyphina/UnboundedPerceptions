@@ -19,10 +19,19 @@
 #include "Items/ItemManager.h"
 #include "Runtime/AssetRegistry/Public/AssetRegistryModule.h"
 
-void UQuestManager::PostInitProperties()
+#if WITH_EDITOR
+void UQuestManager::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
 {
-   Super::PostInitProperties();
-   //Updates the questclasslist automatically (or whenever this class is recompiled after changes I believe)
+   Super::PostEditChangeProperty(PropertyChangedEvent);
+   UpdateQuestClassList();
+}
+#endif 
+
+void UQuestManager::UpdateQuestClassList()
+{
+   UE_LOG(LogTemp, Display, TEXT("Quest Class Map Updated"));
+
+   // Updates the questclasslist automatically (or whenever this class is recompiled after changes I believe)
    FAssetRegistryModule& assetReg        = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
    IAssetRegistry&       assetRegistry   = assetReg.Get();
    FString               questFolderPath = TEXT("/Game/RTS_Tutorial/Blueprints/Quest/Blueprints/Quests");
@@ -30,12 +39,14 @@ void UQuestManager::PostInitProperties()
    assetRegistry.ScanPathsSynchronous({questFolderPath});
    TArray<FAssetData> questAssets;
    assetRegistry.GetAssetsByPath(*questFolderPath, questAssets, true);
-   for (FAssetData&     asset : questAssets) {
+   for (FAssetData& asset : questAssets) {
       const UBlueprint* questBP = Cast<UBlueprint>(asset.GetAsset());
       if (questBP) {
-         AQuest*             quest      = Cast<AQuest>(questBP->GeneratedClass->GetDefaultObject());
-         TSubclassOf<AQuest> questClass = questBP->GeneratedClass.Get();
-         if (quest) questClassList.Add(quest->questInfo.id, questClass);
+         AQuest* quest = Cast<AQuest>(questBP->GeneratedClass->GetDefaultObject(false));
+         if (quest) {
+            TSubclassOf<AQuest> questClass = questBP->GeneratedClass.Get();
+            questClassList.Add(quest->questInfo.id, questClass);
+         }
       }
    }
 }

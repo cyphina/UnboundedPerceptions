@@ -44,6 +44,7 @@ public:
 
 private:
 
+	void StartTankGame(const FMinigameData& minigameData);
 	void StartDrawingGame(const FMinigameData& minigameData);
 
 	/**Most minigames end in a similar manner.  If the player beat the minigame, then activate some triggers.  If the player fails, activate

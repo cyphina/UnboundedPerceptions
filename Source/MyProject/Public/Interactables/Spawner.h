@@ -6,7 +6,7 @@
 #include "Spawner.generated.h"
 
 /**
- *
+ * Spawns enemy units when walked into
  */
 UCLASS()
 class MYPROJECT_API ASpawner : public ATriggerBox
@@ -20,11 +20,11 @@ class MYPROJECT_API ASpawner : public ATriggerBox
 
    /* Spawn location.  If not set, no enemies spawn. */
    UPROPERTY(EditAnywhere, Category = "Spawner")
-   class ATargetPoint* SpawnLocation;
+   FVector SpawnLocation;
 
    /*Number of copies of each type of character to spawn*/
    UPROPERTY(EditAnywhere, Category = "Spawner")
-   int32 Count;
+   TArray<int32> Counts;
 
    /*This value indicates the max number of times the spawner will trigger enemies.  If zero, the default of 1 is assumed*/
    UPROPERTY(EditAnywhere, Category = "Spawner")
@@ -37,6 +37,9 @@ class MYPROJECT_API ASpawner : public ATriggerBox
 
    UFUNCTION()
    void OnEndOverlap(class UPrimitiveComponent* overlappedComp, class AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex);
+
+
+   void OnConstruction(const FTransform& Transform) override;
 
    void BeginPlay();
 };

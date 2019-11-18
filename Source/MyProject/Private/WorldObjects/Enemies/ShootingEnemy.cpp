@@ -2,9 +2,13 @@
 
 #include "MyProject.h"
 #include "ShootingEnemy.h"
+
 #include "RTSProjectile.h"
+
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+
+#include "AIControllers/UnitController.h"
 #include "SpellSystem/GameplayEffects/DamageEffect.h"
 #include "AIModule/Classes/BehaviorTree/BlackboardComponent.h"
 
@@ -42,5 +46,13 @@ void AShootingEnemy::Attack_Implementation()
          projectile->FireAtTarget(targetData.targetUnit);
       else
          projectile->FireInDirection((targetData.targetUnit->GetActorLocation() - FVector(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z)).GetSafeNormal());
+   
+      //Remove invisibility if you attack somebody
+      GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
+
+      //If they die and the targets get canceled out, then targetUnit can be nulled
+      if(IsValid(targetData.targetUnit))
+         if(!targetData.targetUnit->IsVisible())
+            GetUnitController()->Stop();
    }
 }

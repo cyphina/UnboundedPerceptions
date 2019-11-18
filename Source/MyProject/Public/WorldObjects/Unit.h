@@ -25,10 +25,79 @@ class UHealthbarComp;
 
 DECLARE_STATS_GROUP(TEXT("RTSUnits"), STATGROUP_RTSUnits, STATCAT_Advanced);
 
+USTRUCT(BlueprintType)
+struct FUnitInfoRow : public FTableRowBase
+{
+   GENERATED_BODY()
+
+public:
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   FText name;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   UTexture2D* image;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int strength;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int understanding;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int intelligence;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int explosiveness;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int endurance;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int agility;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int luck;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int baseResist;
+
+   /**Ids 19-31*/
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   TMap<int,int> additionalResist;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int baseAffinity;
+
+   /**Ids 6-18*/
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   TMap<int,int> additionalAffinities;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int baseHealth;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int mana;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int movespeed;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int attackrange;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int globalDamageModifier;
+
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   TSubclassOf<AUnit> unitClass;
+};
+
 UCLASS(Abstract)
 class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbilitySystemInterface
 {
    GENERATED_BODY()
+
+   static const int CONFIRM_SPELL_ID = 1003;
+   static const int CONFIRM_SPELL_TARGET_ID = 1004;
 
    friend class AUnitController;
 
@@ -81,9 +150,13 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    UPROPERTY(EditAnywhere)
    UDecalComponent* selectionCircleDecal;
 
-   /** Sphere representing vision radius*/
+   /** Sphere representing vision radius
+    * Issue https://community.gamedev.tv/t/syntax-error-missing-before/66365
+    * and https://stackoverflow.com/questions/28007165/class-keyword-in-variable-definition-in-c/28007230 (inline forward declaration)
+    * depicting why we use class 
+    */
    UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-   USphereComponent* visionSphere;
+   class USphereComponent* visionSphere;
 
 #pragma endregion
 
@@ -273,10 +346,10 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
  public:
 
    UFUNCTION(BlueprintCallable)
-   inline bool IsStunned() const;
+   bool IsStunned() const;
 
    UFUNCTION(BlueprintCallable)
-   inline bool IsSilenced() const;
+   bool IsSilenced() const;
 
    /**Create some text to display the damage dealt*/
    void ShowDamageDealt(Damage& damage);
@@ -327,6 +400,7 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
 
  protected:
 
+   /** Sets the spell currently being channeled */
    inline void SetCurrentSpell(TSubclassOf<UMySpell> newCurrentSpell) { unitSpellData.currentSpell = newCurrentSpell; }
 
    /** Actually activates the ability when we're in range or  and triggers abilities that
@@ -357,6 +431,7 @@ private:
 
    friend void USaveLoadClass::SetupBaseCharacter(AAlly* spawnedAlly, FBaseCharacterSaveInfo& baseCSaveInfo);
 
+   friend class IncantationState;
    friend class ChannelingState;
    friend class CastingState;
    friend class AttackState;

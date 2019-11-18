@@ -24,6 +24,8 @@
 #include "WorldObjects/BaseHero.h"
 #include "WorldObjects/Enemies/Enemy.h"
 
+#include "EventSystem/EventManager.h"
+
 void UMyCheatManager::InitCheatManager()
 {
    Super::InitCheatManager();
@@ -135,5 +137,18 @@ void UMyCheatManager::LearnAllTopics()
       }
       leafNodes = newLeafNodes;
       newLeafNodes.Empty();
+   }
+}
+
+void UMyCheatManager::SetChapterAndSection(int chapter, int section)
+{
+   gameModeRef->eventManager->SkipToEvent(chapter, section);
+}
+
+void UMyCheatManager::SpawnEnemies(FName id, int level, int numberToSpawn, FVector spawnLocation)
+{
+   for(int i = 0; i < numberToSpawn; ++i)
+   {
+      
    }
 }

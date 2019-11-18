@@ -8,7 +8,7 @@
 #include "EnvQueryTest_NumBuffs.generated.h"
 
 /**
- *
+ *Query environment for units with large number of buffs
  */
 UCLASS()
 class MYPROJECT_API UEnvQueryTest_NumBuffs : public UEnvQueryTest
@@ -23,5 +23,6 @@ class MYPROJECT_API UEnvQueryTest_NumBuffs : public UEnvQueryTest
 
    virtual FText GetDescriptionDetails() const override;
 
-   static const FGameplayTag debuffTags;
+public:
+   FGameplayTag debuffTags;
 };

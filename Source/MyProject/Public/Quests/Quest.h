@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "EventSystem/Trigger.h"
 #include "GameFramework/Info.h"
 #include "GameplayTagContainer.h"
@@ -60,7 +59,7 @@ UENUM(BlueprintType)
 enum class EQuestState : uint8 { currentQuests, completedQuests, failedQuests };
 
 ///--Structs---
-/**Information about goals*/
+/**Information about subgoals*/
 USTRUCT(BlueprintType, NoExport)
 struct FGoalInfo {
    static const FVector invalidGoalLocation;
@@ -196,7 +195,7 @@ struct FQuestInfo {
    TArray<FGoalInfo> subgoals;
 };
 
-UCLASS(Blueprintable) // actor info has replication details incase we ever go multiplayer
+UCLASS(Blueprintable, BlueprintType, AutoCollapseCategories=(Actor)) // actor info has replication details incase we ever go multiplayer
 class MYPROJECT_API AQuest : public AInfo
 {
    GENERATED_BODY()
@@ -228,7 +227,6 @@ class MYPROJECT_API AQuest : public AInfo
    /**
     *Reference to quest manager
     */
-   UPROPERTY(BlueprintReadOnly, Category = "Bookkeeping", meta = (AllowPrivateAccess = true, ExposeOnSpawn = true))
    UQuestManager* questManagerRef;
 
    /**

@@ -37,7 +37,7 @@ public:
 	virtual void				BeginPlay() override;
 
 	void 						Interact_Implementation(ABaseHero* hero) override;
-	FVector 					GetInteractableLocation_Implementation() override;
+	FVector 					GetInteractableLocation_Implementation(ABaseHero* hero) override;
 	bool 						CanInteract_Implementation() override;
 
 	/**Set this trigger to something when you want to interact*/

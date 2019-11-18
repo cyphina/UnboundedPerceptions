@@ -10,7 +10,7 @@
 class AAIController;
 class UBehaviorTree;
 
-/**Allows us to easily set patrol points for enemy and npc*/
+/**Allows us to easily set patrol points for enemy and npc's because it is linked to a visualization*/
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class MYPROJECT_API UPatrolComponent : public USceneComponent

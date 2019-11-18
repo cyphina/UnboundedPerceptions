@@ -16,9 +16,9 @@ void UDialogUI::NativeConstruct()
 void UDialogUI::SetMainView()
 {
    switch (socialHUDState) {
-      case ESocialHUDState::Conversation: SetConversationView(); break;
-      case ESocialHUDState::Intimate: SetIntimateView(); break;
-      case ESocialHUDState::Shop: SetShopView(); break;
+      case ESocialHUDState::Conversation: SetConversationView(); break; // Show social menu and enable talk buttons
+      case ESocialHUDState::Intimate: SetIntimateView(); break; // Show social menu and enable gift buttons
+      case ESocialHUDState::Shop: SetShopView(); break; //Show social menu and enable shop buttons 
    }
 }
 

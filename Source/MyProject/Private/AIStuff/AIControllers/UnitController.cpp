@@ -294,14 +294,13 @@ bool AUnitController::BeginCastSpell(TSubclassOf<UMySpell> spellToCast, const FG
    if (IsValid(spell))
    {
       if (unitOwner->CanCast(spellToCast)) { //Check to see if we have enough mana and aren't silenced or stunned
-
          Stop();
          unitOwner->SetCurrentSpell(spellToCast); //Keep track of the spell since we may cast it later (like targetted spells casted by an ally)
 
          if (spell->GetTargetting().GetTagName() == "Skill.Targetting.None") //Non targetted?  Then just cast it
          {
             unitOwner->state->ChangeState(EUnitState::STATE_CASTING);
-            PreCastChannelingCheck(unitOwner->GetCurrentSpell());
+            IncantationCheck(unitOwner->GetCurrentSpell());
             return true;
          }
          else {
@@ -320,18 +319,18 @@ bool AUnitController::BeginCastSpell(TSubclassOf<UMySpell> spellToCast, const FG
                //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("%f"), FVector::Dist2D(unitOwner->targetData.targetLocation, unitOwner->GetActorLocation())));
                //If we're self casting or the target location is very close to us (so that move fails)
                if (unitOwner->targetData.targetActor == this || FVector::Dist2D(unitOwner->targetData.targetLocation, unitOwner->GetActorLocation()) < 5.f) {
-                  PreCastChannelingCheck(unitOwner->GetCurrentSpell());
+                  IncantationCheck(unitOwner->GetCurrentSpell());
                   return true;
                }
 
                //If our spell requires us to go through the whole movement process, call the processes here
                unitOwner->state->ChangeState(EUnitState::STATE_CASTING);
                if (!AdjustPosition(spell->GetRange(unitOwner->GetAbilitySystemComponent()), spellTargetLocation)) {
-                  static auto castTurnAction = [this]() {PreCastChannelingCheck(ownerRef->GetCurrentSpell());};
+                  static auto castTurnAction = [this]() {IncantationCheck(ownerRef->GetCurrentSpell());};
                   unitOwner->unitProperties.turnAction.BindLambda(castTurnAction);
                }
                else
-                  PreCastChannelingCheck(ownerRef->GetCurrentSpell());
+                  IncantationCheck(ownerRef->GetCurrentSpell());
                return true;
             }
          }
@@ -362,9 +361,8 @@ bool AUnitController::IsTargetInRange(float range, FVector targetLocation)
 bool AUnitController::IsFacingTarget(FVector targetLocation, float angleErrorCutoff)
 {
    // Lets ensure the vector between our location and the target location is close to the same direction we're facing
-   FVector difference = targetLocation - ownerRef->GetActorLocation();
-   float   dot = FVector::DotProduct(ownerRef->GetActorForwardVector(), FVector(difference.X, difference.Y, ownerRef->GetActorForwardVector().Z).GetSafeNormal());
-   //GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, FString::Printf(TEXT("%f"), 1.f - dot));
+   FVector difference = (targetLocation - ownerRef->GetActorLocation()).GetSafeNormal2D();
+   float   dot = FVector::DotProduct(ownerRef->GetActorForwardVector(), difference);
 
    if (dot > 1.f - angleErrorCutoff) // .05 is 18 degrees lenient by default (only from right side).
       return true;
@@ -483,14 +481,18 @@ bool AUnitController::AdjustPosition(float range, AActor* targetActor)
    return true;
 }
 
-void AUnitController::PreCastChannelingCheck(TSubclassOf<UMySpell> spellToCast)
+void AUnitController::IncantationCheck(TSubclassOf<UMySpell> spellToCast)
 {
    float castTime = spellToCast.GetDefaultObject()->GetCastTime(ownerRef->GetAbilitySystemComponent());
-   if (!castTime) { //If there isn't a cast time
-      ownerRef->CastSpell(spellToCast);
-   }
+   if (!castTime) // If there isn't a cast time
+      ownerRef->CastSpell(spellToCast); 
    else {
       ownerRef->unitSpellData.channelTime = castTime;
-      ownerRef->state->ChangeState(EUnitState::STATE_CHANNELING); //Start channeling
-   }
+      ownerRef->state->ChangeState(EUnitState::STATE_INCANTATION); //Start channeling
+   }     
+}
+
+void AUnitController::SpellChanneling(TSubclassOf<UMySpell> spellToCast)
+{
+   
 }

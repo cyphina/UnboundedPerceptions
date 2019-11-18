@@ -187,8 +187,10 @@ class MYPROJECT_API AUnitController : public AAIController
 
 protected:
 
-   /**Checks to see if spell has a cast time, and if so, it will start channeling process.  Else it will just cast the spell*/
-   virtual void PreCastChannelingCheck(TSubclassOf<UMySpell> spellToCast);
+   /**Checks to see if spell has a cast time, and if so, it will start channeling (incantation) process.  Else it will just cast the spell*/
+   virtual void IncantationCheck(TSubclassOf<UMySpell> spellToCast);
+   /**If the spell has the Skill.Channeling tag then it requires us to channel after the incantation aka unit has to focus energy into the spell*/
+   virtual void SpellChanneling(TSubclassOf<UMySpell> spellToCast);
 
    /** Initiates attack animation after moving into position */
    UFUNCTION()

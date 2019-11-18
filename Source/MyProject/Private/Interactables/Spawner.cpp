@@ -24,19 +24,27 @@ void ASpawner::OnBeginOverlap(class UPrimitiveComponent* overlappingComponent, A
       FActorSpawnParameters parameters;
       parameters.Owner                          = this;
       parameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-      for (int i = 0; i < Count; ++i) {
+      for (int i = 0; i < CharactersToSpawn.Num(); ++i) {
          for (TSubclassOf<class ACharacter> actor : CharactersToSpawn) {
             UE_LOG(LogActor, Warning, TEXT("%s"), *actor->GetClass()->GetName());
-            if (SpawnLocation) { GetWorld()->SpawnActor<class ACharacter>(actor, SpawnLocation->GetTransform(), parameters); }
+            for (int j = 0; j < Counts[i]; ++j)
+               GetWorld()->SpawnActor<ACharacter>(actor->GetClass(), FTransform(SpawnLocation), parameters);
          }
       }
-      MaxTriggers--;
-      /*Player overlapped the NPC spawner, spawn enemies*/
    }
+   MaxTriggers--;
+   /*Player overlapped the NPC spawner, spawn enemies*/
 }
 
 void ASpawner::OnEndOverlap(class UPrimitiveComponent* OtherComp, class AActor* OtherActor, UPrimitiveComponent* otherComp, int32 OtherBodyIndex)
 {
    ACharacter* pc = Cast<ACharacter>(OtherActor);
    if (pc && triggered) { triggered = false; }
+}
+
+void ASpawner::OnConstruction(const FTransform& Transform)
+{
+   if (CharactersToSpawn.Num() != Counts.Num())
+      while (Counts.Num() < CharactersToSpawn.Num())
+         Counts.Add(1);
 }

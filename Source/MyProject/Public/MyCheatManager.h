@@ -100,4 +100,12 @@ class MYPROJECT_API UMyCheatManager : public UCheatManager
    /**Learn all the possible dialog topics*/
    UFUNCTION(exec, Category = "Cheats")
    virtual void LearnAllTopics();
+
+   /**Learn all the possible dialog topics*/
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void SetChapterAndSection(int chapter, int section);
+
+   /**Spawn enemy from ID list*/
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void SpawnEnemies(FName id, int level, int numberToSpawn, FVector spawnLocation);
 };

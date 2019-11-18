@@ -28,6 +28,11 @@ struct FSpellDefaults {
 
 /* FIRST ABILITY TAG SHOULD BE CD TAG
  * Abilities should start at level 1 not 0
+ * Remember when creating spells in blueprints we must do a few things
+ * 1. Ensure the ID matches the entry in the table (and create an entry in the table if there is not any)
+ * 2. Call parent ActivateAbility
+ * 3. Create matching gameplay tag and set it in the spell default properties
+ * 4. Call Commit ability and EndAbility
  */
 UCLASS()
 class MYPROJECT_API UMySpell : public UGameplayAbility
@@ -115,6 +120,9 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    float GetCastTime(UAbilitySystemComponent* abilityComponent) const;
+
+   UFUNCTION(BlueprintCallable, Category = "Spell")
+   float GetSecondaryTime(UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    float GetAOE(UAbilitySystemComponent* abilityComponent) const;

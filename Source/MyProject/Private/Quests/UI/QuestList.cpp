@@ -4,12 +4,14 @@
 #include "QuestList.h"
 #include "QuestListSlot.h"
 #include "RTSGameMode.h"
+#include "UserInput.h"
 #include "../QuestManager.h"
 
 void UQuestList::NativeConstruct()
 {
-   if (gameModeRef->GetQuestManager()) gameModeRef->GetQuestManager()->questListRef = this;
    Super::NativeConstruct();
+   gameModeRef = CPC->GetGameMode();
+   if (gameModeRef->GetQuestManager()) gameModeRef->GetQuestManager()->questListRef = this;
 }
 
 bool UQuestList::OnWidgetAddToViewport_Implementation()

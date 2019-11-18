@@ -12,13 +12,11 @@ USpellManager* USpellManager::SingletonManager = nullptr;
 USpellManager::USpellManager()
 {
    static ConstructorHelpers::FObjectFinder<UDataTable> SpellLookupTableFinder(TEXT("/Game/RTS_Tutorial/Tables/SpellList"));
-   if (SpellLookupTableFinder.Object) spellLookupTable = SpellLookupTableFinder.Object;
-
    // Caching the data table information can be problematic if we reimport
-   SetupSpells();
+   if (SpellLookupTableFinder.Object) SetupSpells(SpellLookupTableFinder.Object);
 }
 
-void USpellManager::SetupSpells()
+void USpellManager::SetupSpells(UDataTable* spellLookupTable)
 {
    static const FString ContextString(TEXT("GENERAL"));
    if (spellLookupTable) {
@@ -36,6 +34,7 @@ void USpellManager::SetupSpells()
             spellInfo.elem       = table[i]->Elem;
             spellInfo.desc       = table[i]->Desc;
             spellInfo.casttime   = table[i]->Casttime;
+            spellInfo.secondaryTime = table[i]->SecondaryTime;
             spellInfo.cdDuration = table[i]->Cooldown;
             spellInfo.maxLevel   = table[i]->MaxLevel;
             spellInfo.range      = table[i]->Range;
@@ -48,8 +47,6 @@ void USpellManager::SetupSpells()
             spellInfo.AOE        = table[i]->AOE;
             spellInfo.preReqs    = table[i]->PreReqs;
 
-            /*ConstructorHelpers::FClassFinder<UMySpell> spellClassFinder(*(FString("/Game/RTS_Tutorial/Blueprints/SpellSystem/Spells/") + table[i]->FilePath));
-            if (spellClassFinder.Class)*/
             spellClasses.Add(rowName, table[i]->spellClass);
             spells.Add(rowName, spellInfo);
          }

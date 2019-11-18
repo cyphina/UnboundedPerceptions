@@ -107,5 +107,11 @@ class MYPROJECT_API AUserInput : public APlayerController
 #pragma region input
  private:
    void ToggleBreakMenu();
+   void ToggleInventory();
+   void ToggleQuestJournal();
+   void ToggleQuestList();
+   void ToggleCharacterMenu();
+   void ToggleEquipmentMenu();
+   void ToggleSpellbookMenu();
 #pragma endregion
 };

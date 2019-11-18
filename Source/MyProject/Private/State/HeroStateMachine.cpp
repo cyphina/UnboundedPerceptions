@@ -34,6 +34,7 @@ IUnitState* HeroStateMachine::getStateFromEnum(EUnitState enumVal)
       case EUnitState::STATE_INTERACTING: return &Interacting;
       case EUnitState::STATE_ITEM: return &UsingItem;
       case EUnitState::STATE_CHANNELING: return &Channeling;
+      case EUnitState::STATE_INCANTATION: return &Incanting;
       case EUnitState::STATE_MOVING: return &Moving;
       case EUnitState::STATE_CHASING: return &Chasing;
       default: return nullptr;

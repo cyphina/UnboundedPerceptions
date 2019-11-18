@@ -145,12 +145,12 @@ bool UBackpack::RemoveItems(const TArray<FMyItem> itemsToRemove)
    return success;
 }
 
-FORCEINLINE void UBackpack::EmptySlot(int slot)
+void UBackpack::EmptySlot(int slot)
 {
    items.RemoveAtUninitialized(slot);
 }
 
-FORCEINLINE void UBackpack::EmptyAll()
+void UBackpack::EmptyAll()
 {
    items.Empty(itemMax);
 }
@@ -238,7 +238,7 @@ bool UBackpack::IsEmptySlot(int slotIndex) const
    return !items.IsAllocated(slotIndex) ? true : false;
 }
 
-FORCEINLINE void UBackpack::SetItemMax(int newMax)
+void UBackpack::SetItemMax(int newMax)
 {
    itemMax = newMax;
    items.Reserve(itemMax);

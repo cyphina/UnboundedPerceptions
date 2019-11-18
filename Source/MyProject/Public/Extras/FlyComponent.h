@@ -22,7 +22,7 @@ class MYPROJECT_API UFlyComponent : public UActorComponent
    // Called every frame
    virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-   // executes when we're presing then nextflightpath keybind
+   // executes when we're pressing then nextflightpath keybind
    void NextFlightPathSelected();
 
    void PreviousFlightPathSelected();

@@ -25,7 +25,7 @@ void ATriggerInteractable::Interact_Implementation(ABaseHero* hero)
 	gameModeRef->GetTriggerManager()->ActivateTrigger(triggerActivatedOnInteract);
 }
 
-FVector ATriggerInteractable::GetInteractableLocation_Implementation()
+FVector ATriggerInteractable::GetInteractableLocation_Implementation(ABaseHero* hero)
 {
 	return GetActorLocation();
 }

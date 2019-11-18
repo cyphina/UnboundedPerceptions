@@ -87,8 +87,3 @@ class MYPROJECT_API USaveLoadClass : public UObject
    void SetupLoad();
 #pragma endregion
 };
-
-/**Used so we can serialize objects and prefix binary data with a string so it won't become corrupted if fields are added or removed*/
-struct FSaveGameArchive : public FObjectAndNameAsStringProxyArchive {
-   FSaveGameArchive(FArchive& inInnerArchive) : FObjectAndNameAsStringProxyArchive(inInnerArchive, true) { ArIsSaveGame = true; }
-};

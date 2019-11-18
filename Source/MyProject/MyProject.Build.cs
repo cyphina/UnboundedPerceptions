@@ -9,6 +9,7 @@ public class MyProject : ModuleRules
 		//MinFilesUsingPrecompiledHeaderOverride = 1;
 		// bFasterWithoutUnity = true;
 		bUseRTTI = true;
+		//bEnforceIWYU = true;
 		//PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 		PrivatePCHHeaderFile = "Public/MyProject.h";
 
@@ -21,7 +22,6 @@ public class MyProject : ModuleRules
 			"GameplayTags",
 			"GameplayAbilities",
 			"AIModule",
-			"MyProjectEditor",
 			"ProceduralMeshComponent",
 			"MovieScene",
 			"LevelSequence"

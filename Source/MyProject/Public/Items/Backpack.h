@@ -118,7 +118,7 @@ class MYPROJECT_API UBackpack : public UObject
     * @param slotIndex - Slot to check
     */
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Read Inventory Info")
-   FORCEINLINE bool IsEmptySlot(int slotIndex) const;
+   bool IsEmptySlot(int slotIndex) const;
 
    /**Refers to constant denoting how large a stack of items can go to so we can use it in BP*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Information")
@@ -126,7 +126,7 @@ class MYPROJECT_API UBackpack : public UObject
 
    /**Max capacity of backpack*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Information")
-   FORCEINLINE int GetItemMax() const { return itemMax; }
+   int GetItemMax() const { return itemMax; }
 
    /**Change max capacity of backpack*/
    UFUNCTION(BlueprintCallable, Category = "Inventory Information")
@@ -134,7 +134,7 @@ class MYPROJECT_API UBackpack : public UObject
 
    /**Returns how many items in inventory*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Information")
-   FORCEINLINE int Count() const;
+   int Count() const;
 
    FMyItem& operator[](int backpackIndex) { return items[backpackIndex]; }
 

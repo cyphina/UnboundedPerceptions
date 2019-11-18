@@ -60,7 +60,7 @@ enum class HUDs : uint8 {
    HS_Dialog,
    /**Minimap*/
    HS_Minimap,
-   /**More interaction options for socialble NPCs*/
+   /**More interaction options for sociable NPCs*/
    HS_Social,
    /**Menu that leads to Save/Load/Options menu*/
    HS_Break,
@@ -95,18 +95,20 @@ class MYPROJECT_API AHUDManager : public AInfo
    AUserInput*                          playerControllerRef;
    TBitArray<FDefaultBitArrayAllocator> currentlyDisplayedWidgetsBitSet = TBitArray<FDefaultBitArrayAllocator>(false, HUDCount); // widgets that are on screen
 
-   int showMouseCursorCount   = 0; // Counter to keep track of how many huds are on screen that want us to show the special hud cursor
-   int enableClickEventsCount = 0; // Counter to keep track of how mnay huds are on screen that disable click events
+   int  showMouseCursorCount   = 0;     // Counter to keep track of how many huds are on screen that want us to show the special hud cursor
+   int  enableClickEventsCount = 0;     // Counter to keep track of how mnay huds are on screen that disable click events
+   bool bBlocked               = false; // Can we open any other widgets right now or are we blocked?
 
    /**Applies a hud to the screen: returns true if successful, false otherwise.
     *Flip flops, that is, if we have HUD already applied, we turn off
     *@param newState - The EHUD value corresponding to this HUD.
-    *@param bShowMouseCursor - Should we show the mouse cursor with this hud open?
-    *@param enableClickEvents - Can we click whith this hud open?
+    *@param bShowMouseCursor - Should we show the UI mouse cursor (overriding other action cursors) with this hud open?
+    *@param enableClickEvents - Can we click with this hud open? (includes clicking in HUD itself)
     *@param canOpenCombat - Can this HUD be opened during combat?  If not, then don't let the player perform regular actions when it's open.
+    *@param bBlocking - Can other MyUserWidgets be opened while this one is open?
     *@param hasAnim - Does this HUD have an anim that should be played when we add it to the screen.
     */
-   bool ApplyHUD(uint8 newState, bool bShowMouseCursor, bool enableClickEvents, bool canOpenCombat, bool hasAnim);
+   bool ApplyHUD(uint8 newState, bool bShowMouseCursor, bool enableClickEvents, bool canOpenCombat, bool hasAnim, bool bBlocking = false);
    void UpdateWidgetTracking(int removeIndex, bool showMouseCursor, bool enableClickEvents, bool canOpenCombat); // helper function to update tracking of widgets on screen or widgets blocking actions
 
  public:
@@ -155,7 +157,7 @@ class MYPROJECT_API AHUDManager : public AInfo
     */
    void AddHUD(AShopNPC* shopNPC);
 
-   /**Allows us to add the HUD which shows a detailed view of an item.  Didn't overlaod AddHUD because parameter prevents implcit uint8 conversion
+   /**Allows us to add the HUD which shows a detailed view of an item.  Didn't overload AddHUD because parameter prevents implcit uint8 conversion
     * @param itemID - ID of the item to show a detailed view of
     */
    void AddItemExamineHUD(int itemID);
@@ -206,55 +208,55 @@ class MYPROJECT_API AHUDManager : public AInfo
 
    ///--Accessors--///
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UMainWidget* GetMainHUD();
+   UMainWidget* GetMainHUD();
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UCharacterMenu* GetCharacterHUD();
+   UCharacterMenu* GetCharacterHUD();
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UEquipmentMenu* GetEquipHUD() const;
+   UEquipmentMenu* GetEquipHUD() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UHeroInventory* GetInventoryHUD() const;
+   UHeroInventory* GetInventoryHUD() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UStoreInventory* GetShopHUD() const;
+   UStoreInventory* GetShopHUD() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UInventory* GetStorageHUD() const;
+   UInventory* GetStorageHUD() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UActionbarInterface* GetActionHUD() const;
+   UActionbarInterface* GetActionHUD() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UQuestList* GetQuestList() const;
+   UQuestList* GetQuestList() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UQuestJournal* GetQuestJournal() const;
+   UQuestJournal* GetQuestJournal() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UMinimap* GetMinimap() const;
+   UMinimap* GetMinimap() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UDialogBox* GetDialogBox() const;
+   UDialogBox* GetDialogBox() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UDialogUI* GetSocialWindow() const;
+   UDialogUI* GetSocialWindow() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UBreakMenu* GetBreakMenu() const;
+   UBreakMenu* GetBreakMenu() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE USettingsMenu* GetSettingsMenu() const;
+   USettingsMenu* GetSettingsMenu() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UItemExamineWidget* GetExamineMenu() const;
+   UItemExamineWidget* GetExamineMenu() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE UConfirmationBox* GetConfirmationBox() const;
+   UConfirmationBox* GetConfirmationBox() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   FORCEINLINE URTSInputBox* GetInputBox() const;
+   URTSInputBox* GetInputBox() const;
 
 #pragma endregion
 };

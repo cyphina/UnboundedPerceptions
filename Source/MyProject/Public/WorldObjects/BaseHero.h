@@ -36,6 +36,7 @@ class MYPROJECT_API ABaseHero : public AAlly
    void Tick(float deltaSeconds) override;
    void EndPlay(const EEndPlayReason::Type epr) override;
    void PossessedBy(AController* newController) override;
+   void SetEnabled(bool bEnabled) override;
    void Die_Implementation() override;
 
 #pragma endregion
@@ -75,10 +76,10 @@ class MYPROJECT_API ABaseHero : public AAlly
    void SetSelected(bool value) override;
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Stats")
-   FORCEINLINE int GetCurrentExp() const;
+   int GetCurrentExp() const;
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Stats")
-   FORCEINLINE int GetExpToLevel() const;
+   int GetExpToLevel() const;
 
    UFUNCTION(BlueprintCallable, Category = "Stats")
    void SetCurrentExp(int amount);
@@ -93,14 +94,14 @@ class MYPROJECT_API ABaseHero : public AAlly
 
    /**Get the interactable this hero is targetted to interact with*/
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Interactable")
-   FORCEINLINE AActor* GetCurrentInteractable() const;
+   AActor* GetCurrentInteractable() const;
 
    /**Get a copy of our spellbook which holdls all the spells in our skilltree*/
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
    FORCEINLINE USpellBook* GetSpellBook() const { return spellbook; }
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-   FORCEINLINE TArray<int> GetEquipment() const;
+   TArray<int> GetEquipment() const;
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
    FORCEINLINE AHeroAIController* GetHeroController() const { return heroController; }

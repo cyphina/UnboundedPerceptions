@@ -22,11 +22,11 @@ struct FSpellInfo {
    FText name = FText();
 
    // spell required level
-   UPROPERTY(BlueprintReadOnly, Category = "Spell")
+   UPROPERTY(BlueprintReadOnly, Category = "Spellbook")
    TArray<int> reqLevel;
 
    // max level of ability
-   UPROPERTY(BlueprintReadOnly, Category = "Spell")
+   UPROPERTY(BlueprintReadOnly, Category = "Spellbook")
    int maxLevel;
 
    // Cooldown duration
@@ -37,12 +37,16 @@ struct FSpellInfo {
    UPROPERTY(BlueprintReadOnly, Category = "Spell")
    float casttime = 0;
 
+   // extra time parameter for various usage
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spell")
+   float secondaryTime = 0;
+
    // Mana cost
    UPROPERTY(BlueprintReadOnly, Category = "Spell")
    TArray<int> cost;
 
    // spell description
-   UPROPERTY(BlueprintReadOnly, Category = "Spell")
+   UPROPERTY(BlueprintReadOnly, Category = "Spellbook")
    FText desc = FText();
 
    // element
@@ -51,29 +55,29 @@ struct FSpellInfo {
 
    // targetting rules
    UPROPERTY(BlueprintReadOnly, Category = "Spell", meta = (Categories = "Skill.Targetting"))
-   FGameplayTag targetting = UGameplayTagsManager::Get().RequestGameplayTag("Skill.Targetting.Enemy");
+   FGameplayTag targetting = UGameplayTagsManager::Get().RequestGameplayTag("Skill.Targetting.Single.Enemy");
 
    // spell range
    UPROPERTY(BlueprintReadOnly, Category = "Spell")
    TArray<int> range;
 
    // id of required spells needed to have learned before learning this one
-   UPROPERTY(BlueprintReadWrite, Category = "Spell")
+   UPROPERTY(BlueprintReadWrite, Category = "Spellbook")
    TArray<int> preReqs;
 
    // duration effect lasts for if there is one
-   UPROPERTY(BlueprintReadWrite, Category = "Spellbook")
+   UPROPERTY(BlueprintReadWrite, Category = "Spell")
    TArray<float> duration;
 
    // damage scaling of this spell.  Comes in array of 4-tuples (str,int,agl,und)
-   UPROPERTY(BlueprintReadWrite, Category = "Spellbook")
+   UPROPERTY(BlueprintReadWrite, Category = "Spell")
    TArray<int> damage;
 
    // period of this spell if it has a periodic effect
-   UPROPERTY(BlueprintReadWrite, Category = "Spellbook")
+   UPROPERTY(BlueprintReadWrite, Category = "Spell")
    TArray<float> period;
 
-   UPROPERTY(BlueprintReadWrite, Category = "Spellbook")
+   UPROPERTY(BlueprintReadWrite, Category = "Spell")
    TArray<int> AOE;
 
    FSpellInfo() = default;
@@ -84,7 +88,7 @@ USTRUCT(Blueprintable)
 struct FSpellbookLookupRow : public FTableRowBase {
    GENERATED_USTRUCT_BODY()
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spell")
    FText Name = FText();
 
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
@@ -93,44 +97,55 @@ struct FSpellbookLookupRow : public FTableRowBase {
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
    int MaxLevel = 0;
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spell")
    TArray<float> Cooldown = TArray<float>();
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
+   // How long it takes to cast the spell (IncantationState)
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spell")
    float Casttime = 0;
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
+   /* Used for various other timings a spell may need.  Most commonly it is used for confirmation spells,
+   which require the user to press a button in a certain amount of time */
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spell")
+   float SecondaryTime = 0;
+
+   // Mana cost of the skill
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spell")
    TArray<int> Cost = TArray<int>();
 
-   // here we interpret the row as a string so we can use string manipulations then convert it to a text
+   // Here we interpret the row as a string so we can use string manipulations then convert it to a text
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
    FText Desc = FText();
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
+   /* Determines elemental properties of the damage dealt, however the spell may have different elemental affects or may use additional elements
+   in the actual implementation*/
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spell")
    FGameplayTag Elem = FGameplayTag();
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spell")
    FGameplayTag Targetting = FGameplayTag();
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spell")
    TArray<int> Range = TArray<int>();
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
+   // IDs of the spells that must be learned before this spell can be learned
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spell")
    TArray<int> PreReqs = TArray<int>();
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spell")
    TArray<float> Duration = TArray<float>();
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spell")
    TArray<int> Damage = TArray<int>();
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
+   // Some effects apply themselves at regular periods, which is described in this field
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spell")
    TArray<float> Period = TArray<float>();
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spell")
    TArray<int> AOE = TArray<int>();
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spellbook")
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Misc")
    TSubclassOf<UMySpell> spellClass;
 };
 
@@ -162,9 +177,8 @@ class MYPROJECT_API USpellManager : public UObject
  private:
    static USpellManager* SingletonManager; // Our single spellmanager
 
-   UDataTable*           spellLookupTable; // Data table with the spell information
    TMap<int, FSpellInfo> spells;           // Map of spells by their id so we can always reference a spell given its id
 
    static void InitializeManager(); // Initializes spellmanager if none exists
-   void        SetupSpells();
+   void        SetupSpells(UDataTable* spellLookupTable);
 };

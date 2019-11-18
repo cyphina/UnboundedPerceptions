@@ -35,9 +35,7 @@ AEnemy::AEnemy(const FObjectInitializer& oI) : AUnit(oI)
    GetCapsuleComponent()->AreaClass = UNavArea_EnemySpot::StaticClass(); //Custom area class so navigation filter for defensive movement will avoid this
    GetCapsuleComponent()->SetCollisionProfileName("Enemy");
 
-   visionSphere->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel9);
-   visionSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::OnVisionSphereOverlap);
-   visionSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemy::OnVisionSphereEndOverlap);
+   visionSphere->SetCollisionProfileName("FriendlyVision");
    visionSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel9, ECollisionResponse::ECR_Overlap); //Friendly
    visionSphere->SetCanEverAffectNavigation(true);
    visionSphere->AreaClass = UNavArea_EnemySpot::StaticClass();
@@ -100,7 +98,7 @@ void AEnemy::Destroyed()
 void AEnemy::Attack_Implementation()
 {
    Super::Attack_Implementation();
-   //If they die and the targets get canceled out, then targetUnit can be nulled
+   //If they die (when this current attack kills them) and the targets get canceled out, then targetUnit can be nulled
    if(IsValid(targetData.targetUnit))
       if(!targetData.targetUnit->IsVisible())
          GetUnitController()->Stop();

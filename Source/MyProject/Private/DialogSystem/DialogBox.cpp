@@ -81,14 +81,8 @@ const FDialogData& UDialogBox::GetNextLine()
 
 const FDialogData& UDialogBox::PickChoice(int choice)
 {
-   if (choice == -1) {
-      // If there are no dialogNodes connected to this one, this is the end of the conversation so return some ending marker
-      ResetDialog();
-      return defaultDialog;
-   }
-
    // Not the end of the dialog, so we'll get a valid choice from clicking on a choice button
-   currentNodeNum = choice;
+   currentNodeNum = dialogLines[currentNodeNum].nextDialogs[choice];
 
    ///---Dialog node lookahead to check what kind of node is next ---
    // if the choice we picked leads to a dialogNode with more than one connection
@@ -101,8 +95,8 @@ const FDialogData& UDialogBox::PickChoice(int choice)
       // if the choice we picks leads to a trigger
       if (dialogLines[currentNodeNum].actorName == "Trigger") { return HandleTriggers(); }
 
-      // return the node the choice leads to
-      return dialogLines[choice];
+      // else just return the node the choice leads to
+      return dialogLines[currentNodeNum];
    }
 }
 
@@ -155,7 +149,7 @@ const FDialogData& UDialogBox::HandleConditions()
       // If this conditition is true, we move onto the first node
 
       if (dialogLines[currentNodeNum].nextDialogs.Num() > 1)
-         return gameModeRef->GetConditionalManager()->GetCondition(conditionData) ? PickChoice(dialogLines[currentNodeNum].nextDialogs[0]) : PickChoice(dialogLines[currentNodeNum].nextDialogs[1]);
+         return gameModeRef->GetConditionalManager()->GetCondition(conditionData) ? PickChoice(0) : PickChoice(1);
       else if (dialogLines[currentNodeNum].nextDialogs.Num() == 1)
          return gameModeRef->GetConditionalManager()->GetCondition(conditionData) ? GetNextLine() : defaultDialog;
       else
@@ -172,7 +166,7 @@ void UDialogBox::ResetDialog()
          break;
       case EDialogSource::conversation: controllerRef->GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_Social)); break;
       case EDialogSource::trigger: break;
-	  case EDialogSource::none: controllerRef->GetBasePlayer()->interactedHero = nullptr; break;
+	   case EDialogSource::none: controllerRef->GetBasePlayer()->interactedHero = nullptr; break;
       default: break;
    }
 

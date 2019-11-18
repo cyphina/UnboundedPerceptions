@@ -10,6 +10,20 @@ UEventManager::UEventManager()
    if (SpellLookupTableFinder.Object) storybook = SpellLookupTableFinder.Object;
 }
 
+void UEventManager::SkipToEvent(int chapter, int section)
+{
+   if (chapter <= UEventManager::NUM_CHAPTERS) {
+      currentChapter = chapter;
+
+      if (section < storybook->chapters[currentChapter - 1].sections.Num()) {
+         currentSection = section;
+         for (FTriggerData trigger : storybook->chapters[currentChapter - 1].sections[currentSection - 1].triggers) {
+            gameModeRef->GetTriggerManager()->ActivateTrigger(trigger);
+         }
+      }
+   }
+}
+
 void UEventManager::Init()
 {
    gameModeRef = Cast<ARTSGameMode>(GetOuter());
@@ -21,7 +35,7 @@ void UEventManager::MoveToNextSection()
       ++currentChapter;
       currentSection = 1;
       OnChapterCompletedDelegate.Broadcast(GetCurrentChapter());
-      checkf(currentChapter <= 10, TEXT("Why are you past the last chapter hacker!"));
+      checkf(currentChapter <= UEventManager::NUM_CHAPTERS, TEXT("Why are you past the last chapter hacker!"));
    } else {
       ++currentSection;
    }

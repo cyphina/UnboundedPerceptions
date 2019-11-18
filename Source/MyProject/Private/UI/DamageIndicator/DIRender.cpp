@@ -21,7 +21,7 @@ UDIRender::UDIRender()
       tL.SetTimelineFinishedFunc(e);
    }
 
-   static ConstructorHelpers::FObjectFinder<UMaterialInstance> materialFinder(TEXT("/Game/RTS_Tutorial/Materials/GlowText_Inst"));
+   static ConstructorHelpers::FObjectFinder<UMaterialInstance> materialFinder(TEXT("/Game/RTS_Tutorial/Materials/Text/MAT_UnlitText_Inst"));
    if (materialFinder.Succeeded()) SetTextMaterial(materialFinder.Object);
 
    PrimaryComponentTick.bCanEverTick = true;

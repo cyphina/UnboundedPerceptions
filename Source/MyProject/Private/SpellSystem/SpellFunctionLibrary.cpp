@@ -1,10 +1,21 @@
 #include "MyProject.h"
 #include "SpellFunctionLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "GameplayAbility.h"
 #include "GameplayTagContainer.h"
 #include "GameplayEffect.h"
 #include "RTSProjectile.h"
+#include "MySpell.h"
+#include "ConfirmSpell.h"
+
 #include "WorldObjects/Unit.h"
+
+#include "AIControllers/UnitController.h"
+#include "UserInput.h"
+#include "HUDManager.h"
+#include "ActionbarInterface.h"
+#include "ESkillContainer.h"
+#include "SkillSlot.h"
 
 USpellFunctionLibrary::USpellFunctionLibrary(const FObjectInitializer& o) : Super(o)
 {
@@ -22,7 +33,7 @@ FGameplayEffectSpecHandle USpellFunctionLibrary::MakeGameplayEffect(UGameplayAbi
       effect.Data->Period = Period;
       effect.Data->SetDuration(Duration, true); // if we don't lock the duration, the duration will be recalcuated somewhere in active effect creation ...
    }
-   return effect;
+   return effect; 
 }
 
 FGameplayEffectSpecHandle USpellFunctionLibrary::MakeDamageEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration, float Period, FGameplayTag Elem,
@@ -60,7 +71,7 @@ ARTSProjectile* USpellFunctionLibrary::SetupBulletTargetting(TSubclassOf<ARTSPro
    spawnTransform.SetLocation(spawnLocation);
 
    if (unitRef->GetIsEnemy()) {
-      projectile = unitRef->GetWorld()->SpawnActorDeferred<ARTSProjectile>(bulletClass, spawnTransform);
+      projectile             = unitRef->GetWorld()->SpawnActorDeferred<ARTSProjectile>(bulletClass, spawnTransform);
       projectile->targetting = EBulletTargettingScheme::Bullet_Ally;
    } else {
       projectile             = unitRef->GetWorld()->SpawnActorDeferred<ARTSProjectile>(bulletClass, spawnTransform);
@@ -70,4 +81,60 @@ ARTSProjectile* USpellFunctionLibrary::SetupBulletTargetting(TSubclassOf<ARTSPro
    projectile->canGoThroughWalls = canGoThroughWalls;
    projectile->FinishSpawning(spawnTransform);
    return projectile;
+}
+
+FText USpellFunctionLibrary::ParseDesc(FText inputText, UAbilitySystemComponent* compRef, UMySpell* spell, TMap<FString, FString> args = TMap<FString, FString>())
+{
+   static const TCHAR* strKey      = TEXT("{str}");
+   static const TCHAR* intKey      = TEXT("{int}");
+   static const TCHAR* agiKey      = TEXT("{agi}");
+   static const TCHAR* undKey      = TEXT("{und}");
+   static const TCHAR* hpKey       = TEXT("{hp}");
+   static const TCHAR* aoekey      = TEXT("{aoe}");
+   static const TCHAR* durationkey = TEXT("{duration}");
+   static const TCHAR* rangekey    = TEXT("{range}");
+
+   FString parsedString = inputText.ToString();
+
+   parsedString.Replace(strKey, *FString::FromInt(spell->GetDamage(compRef).strength));
+   parsedString.Replace(intKey, *FString::FromInt(spell->GetDamage(compRef).intelligence));
+   parsedString.Replace(agiKey, *FString::FromInt(spell->GetDamage(compRef).agility));
+   parsedString.Replace(undKey, *FString::FromInt(spell->GetDamage(compRef).understanding));
+   parsedString.Replace(hpKey, *FString::FromInt(spell->GetDamage(compRef).hitpoints));
+
+   parsedString.Replace(aoekey, *FString::FromInt(spell->GetAOE(compRef)));
+   parsedString.Replace(durationkey, *FString::SanitizeFloat(spell->GetSpellDuration(compRef)));
+   parsedString.Replace(rangekey, *FString::FromInt(spell->GetRange(compRef)));
+
+   return FText::FromString(parsedString);
+}
+
+void USpellFunctionLibrary::SpellSwap(TSubclassOf<UMySpell> originalSpell, TSubclassOf<UMySpell> newSpell,
+   AUnit* ownerRef)
+{
+   int slot = 0;
+   for (auto equippedSkills : ownerRef->abilities) {
+      if (equippedSkills == originalSpell) {
+         break;
+      }
+      ++slot;
+   }
+   if(slot != ownerRef->abilities.Num())
+      ownerRef->GetUnitController()->GetCPCRef()->GetHUDManager()->GetActionHUD()->skillContainerRef->GetSkillSlot(slot)->UpdateSkillSlot(newSpell);
+   else
+      UE_LOG(LogTemp, Warning, TEXT("Cannot find original spell to swap with"));
+}
+
+void USpellFunctionLibrary::SpellConfirmSwap(TSubclassOf<UMySpell> confirmSpell, TSubclassOf<UMySpell> originalSpell, AUnit* ownerRef, bool bSwapInConfirm)
+{
+   TSubclassOf<UMySpell> spellToReplace, replacementSpell;
+   if (bSwapInConfirm) {
+      spellToReplace   = originalSpell;
+      replacementSpell = confirmSpell;
+   } else {
+      spellToReplace   = confirmSpell;
+      replacementSpell = originalSpell;
+   }
+
+   SpellSwap(spellToReplace, replacementSpell, ownerRef);
 }

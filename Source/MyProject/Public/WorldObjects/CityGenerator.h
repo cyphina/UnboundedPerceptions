@@ -79,8 +79,10 @@ class MYPROJECT_API ACityGenerator : public AActor
    bool collision;
 
  protected:
-   void         OnConstruction(const FTransform& Transform) override;
-   void         PostEditChangeProperty(FPropertyChangedEvent& propertyChanged) override;
+   void OnConstruction(const FTransform& Transform) override;
+#if WITH_EDITOR
+   void PostEditChangeProperty(FPropertyChangedEvent& propertyChanged) override;
+#endif
    virtual void BeginPlay() override;
 
    UPROPERTY(VisibleAnywhere)

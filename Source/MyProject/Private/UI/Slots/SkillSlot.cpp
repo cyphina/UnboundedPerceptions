@@ -33,7 +33,7 @@ void USkillSlot::NativeConstruct()
 void USkillSlot::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
    Super::NativeTick(MyGeometry, InDeltaTime);
-   cdTimeline.TickTimeline(InDeltaTime); 
+   cdTimeline.TickTimeline(InDeltaTime);
 }
 
 // void USkillSlot::PerformAction()
@@ -80,9 +80,11 @@ void USkillSlot::UpdateSkillSlot(TSubclassOf<UMySpell> spellClass)
       UMySpell* spellObject                                              = spellClass.GetDefaultObject();
       SetImage(spellObject->spellDefaults.image); // update the image
 
+      //Set back to 0 or a tick will be played
+      cdTimeline.SetPlaybackPosition(0, false, false);
       UpdateTimelineCD(spellObject->GetCDDuration(eSkillContainer->GetAllyRef()->GetAbilitySystemComponent())); // update timeline duration if someone plays it
 
-      if (spellObject->GetCooldownTimeRemaining(eSkillContainer->GetAllyRef()->GetAbilitySystemComponent()->AbilityActorInfo.Get()) > 0) // if on cd
+      if (spellObject->GetCooldownTimeRemaining(eSkillContainer->GetAllyRef()->GetAbilitySystemComponent()->AbilityActorInfo.Get()) > 0.001) // if not on cd
       {
          // GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("Skill off CD!"));
          PlayTimeline(

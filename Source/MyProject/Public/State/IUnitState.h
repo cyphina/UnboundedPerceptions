@@ -15,7 +15,8 @@ enum class EUnitState : uint8 {
    STATE_INTERACTING, // Moving to interacting position
    STATE_CASTING,     // Moving to spell position
    STATE_ITEM,        // Moving to item position
-   STATE_CHANNELING   // Channeling time for spell/item
+   STATE_INCANTATION, // Startup time for spell/item
+   STATE_CHANNELING // Channeling time for spells  
 };
 
 class AUnit;

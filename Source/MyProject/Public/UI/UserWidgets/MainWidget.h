@@ -93,9 +93,5 @@ class MYPROJECT_API UMainWidget : public UMyUserWidget
    UFUNCTION(BlueprintImplementableEvent, BlueprintPure, Category = "Accessor")
    UUserWidget* GetDescriptionBox();
 
-   /**Change color of unit text when selected -- Not used anymore*/
-   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Accessor")
-   void ChangeSelectionColors();
-
 #pragma endregion
 };

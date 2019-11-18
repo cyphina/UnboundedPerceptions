@@ -13,8 +13,11 @@ DEFINE_LOG_CATEGORY(MyProjectEditorVisualizations);
 void FMyProjectEditorVisualizationsModule::StartupModule()
 {
 	UE_LOG(MyProjectEditorVisualizations, Warning, TEXT("MyProjectEditorVisualizations: Log Started"));
-	GUnrealEd->RegisterComponentVisualizer(UPatrolComponent::StaticClass()->GetFName(),
-	                                       MakeShareable(new FPatrolVisualizer));
+	if (GUnrealEd != NULL)
+	{
+	   GUnrealEd->RegisterComponentVisualizer(UPatrolComponent::StaticClass()->GetFName(),
+						  MakeShareable(new FPatrolVisualizer));
+	}
 }
 
 void FMyProjectEditorVisualizationsModule::ShutdownModule()

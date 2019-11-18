@@ -9,6 +9,7 @@
 class UGameplayAbility;
 class UGameplayEffect;
 class ARTSProjectile;
+class UMySpell;
 class AUnit;
 
 /**A class that holds a blueprint library, that is it can be used anywhere inside blueprints so we can get our spellInfo via the manager in our blueprints
@@ -19,6 +20,8 @@ UCLASS(MinimalAPI)
 class USpellFunctionLibrary : public UBlueprintFunctionLibrary
 {
    GENERATED_UCLASS_BODY()
+
+   static const int CONFIRM_SPELL_ID = 1003;
 
  public:
    /**Function with custom BPNode which wraps around make gameplay effect to provide it with more functionality*/
@@ -39,4 +42,16 @@ class USpellFunctionLibrary : public UBlueprintFunctionLibrary
    /**Sets up targetting for spells with bullets that can be casted by ally or enemy units but requires different targetting for either*/
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Setup Bullet Targetting"), Category = "EffectFactory")
    static ARTSProjectile* SetupBulletTargetting(TSubclassOf<ARTSProjectile> bulletClass, AUnit* unitRef, UPARAM(ref) FGameplayEffectSpecHandle& specHandle, bool canGoThroughWalls);
+
+   /**Parses strings*/
+   UFUNCTION(BlueprintCallable, meta = (DisplayName = "Parse Descrption"), Category = "Spell Description Helper")
+   static FText ParseDesc(FText inputText, UAbilitySystemComponent* compRef, UMySpell* spell, TMap<FString, FString> args);
+
+   /**If a spell requires another press for confirmation like telekinesis and ice pillar, we can use this function to swap out a unit's spell temporarily*/
+   UFUNCTION(BlueprintCallable, meta = (DisplayName = "Spell Swap"), Category = "Spell Functionality Extender")
+   static void SpellSwap(TSubclassOf<UMySpell> originalSpell, TSubclassOf<UMySpell>  newSpell, AUnit* ownerRef);
+
+   /**If a spell requires another press for confirmation like telekinesis and ice pillar, we can use this function to swap out a unit's spell temporarily*/
+   UFUNCTION(BlueprintCallable, meta = (DisplayName = "Spell Confirm Swap"), Category = "Spell Functionality Extender")
+   static void SpellConfirmSwap(TSubclassOf<UMySpell> confirmSpell, TSubclassOf<UMySpell>  originalSpell, AUnit* ownerRef, bool bSwapInConfirm);
 };

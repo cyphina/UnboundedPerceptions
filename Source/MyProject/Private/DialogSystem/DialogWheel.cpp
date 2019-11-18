@@ -21,8 +21,6 @@ void UDialogWheel::SelectNextConversationTopics(int selectedIndex)
    previouslySelectedTopicNode = currentlySelectedTopicNode;
    currentlySelectedTopicNode  = conversationTopicTagNodes[selectedIndex];
 
-   GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, FString::FromInt(currentlySelectedTopicNode->GetChildTagNodes().Num()));
-
    //If this is a root node in our tree of dialog options (gameplaytag tree) then we talk about this topic
    if (currentlySelectedTopicNode->GetChildTagNodes().Num() == 0) {
       //Close the social menu, and add the textbox withh the conversation loaded up

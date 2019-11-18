@@ -62,17 +62,20 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) : Super(objectInitiali
    unitSpellData.abilitySystem = CreateDefaultSubobject<UMyAbilitySystemComponent>(TEXT("AbilitySystem"));
    selectionCircleDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));
    selectionCircleDecal->SetupAttachment(RootComponent);
-   healthBar = CreateDefaultSubobject<UHealthbarComp>(FName("Healthbar"));
-   healthBar->SetRelativeLocation(FVector(0, 0, 45));
-   healthBar->SetupAttachment(RootComponent);
 
-   // Mesh needs an offset because it isn't aligned with capsule component at the beginning.  Offset by the mesh size
-   GetMesh()->SetRelativeLocation(FVector(0, 0, -GetMesh()->Bounds.BoxExtent.Z));
-   GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
+   healthBar = CreateDefaultSubobject<UHealthbarComp>(FName("Healthbar"));
+   healthBar->SetRelativeLocation(FVector(0, 0, 180));
+   healthBar->SetPivot(FVector2D(0.5,1));
+   healthBar->SetupAttachment(RootComponent);
+   healthBar->SetDrawAtDesiredSize(true);
 
    //--Find healthbar widget to set it as our default healthbar's widget class
    ConstructorHelpers::FClassFinder<UUserWidget> healthBarWig(TEXT("/Game/RTS_Tutorial/HUDs/Hitpoints/HealthbarWidget"));
    if (healthBarWig.Succeeded()) { healthBar->SetWidgetClass(healthBarWig.Class); }
+
+   // Mesh needs an offset because it isn't aligned with capsule component at the beginning.  Offset by the mesh size
+   GetMesh()->SetRelativeLocation(FVector(0, 0, -GetMesh()->Bounds.BoxExtent.Z));
+   GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
 
    visionSphere = CreateDefaultSubobject<USphereComponent>(FName("VisionRadius"));
    visionSphere->SetupAttachment(RootComponent);
@@ -127,6 +130,10 @@ void AUnit::BeginPlay()
          }
       }
    }
+
+   //Every unit should have the confirm abilities
+   GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(USpellManager::Get().GetSpellClass(CONFIRM_SPELL_ID)));
+   GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(USpellManager::Get().GetSpellClass(CONFIRM_SPELL_TARGET_ID)));
 
    // Setup vision parameters
    visionSphere->SetSphereRadius(unitProperties.visionRadius);
@@ -219,13 +226,14 @@ void AUnit::SetEnabled(bool bEnabled)
       bCanAffectNavigationGeneration = true;
    }
    else {
-      SetCanTarget(false);
+      SetCanTarget(false);     
       GetCapsuleComponent()->SetVisibility(false, true);
       SetActorEnableCollision(false);
       SetActorTickEnabled(false);
       GetCapsuleComponent()->SetEnableGravity(false);
       GetCharacterMovement()->GravityScale = 0;
       GetCapsuleComponent()->SetSimulatePhysics(true); // but will drop if physics isn't set to true
+      GetCapsuleComponent()->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
       bCanAffectNavigationGeneration = false;
    }
 }
@@ -297,7 +305,13 @@ bool AUnit::CastSpell(TSubclassOf<UMySpell> spellToCast)
    if (GetAbilitySystemComponent()->TryActivateAbilityByClass(spellToCast)) {
       FAIMessage msg(AUnit::AIMessage_SpellCasted, this);
       FAIMessage::Send(unitController, msg);
-      unitController->Stop();
+      //If this spell has a channeling component after it is casted, change the state to channeling
+      if(!spellToCast.Get()->GetDefaultObject<UMySpell>()->AbilityTags.HasTag(FGameplayTag::RequestGameplayTag("Skill.Channeled")))
+         unitController->Stop();
+      else {
+         unitSpellData.channelTime = spellToCast.GetDefaultObject()->GetSecondaryTime(GetAbilitySystemComponent());
+         state->ChangeState(EUnitState::STATE_CHANNELING);
+      }
       return true;
    }
    return false;

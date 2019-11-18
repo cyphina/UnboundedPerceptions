@@ -44,6 +44,7 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    TArray<ABaseHero*> selectedHeroes;
 
    /**List of every hero in the game *discovered currently* that may not be in the party currently*/
+   UPROPERTY(BlueprintReadOnly, Category = "Party")
    TArray<ABaseHero*> allHeroes;
 
    /**If there's any hero that is interacting currently with something blocking (preventing other actions).  Also needed in the case of storage because we need to know

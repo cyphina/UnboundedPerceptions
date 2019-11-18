@@ -122,7 +122,7 @@ float UMySpell::GetCDDuration(UAbilitySystemComponent* abilityComponent) const
    // GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, GetName().ToString());
    // checkf(abilitySpec != nullptr, TEXT("Ability hasn't been registered to unit"));
    if (!abilitySpec) {
-      UE_LOG(LogTemp, Warning, TEXT("%s"), *(FString("No ability systme component found") + FString::FromInt(abilityComponent->GetActivatableAbilities().Num()) + GetName().ToString()));
+      UE_LOG(LogTemp, Warning, TEXT("%s"), *(FString("No ability system component found") + FString::FromInt(abilityComponent->GetActivatableAbilities().Num()) + GetName().ToString()));
       return -1;
    }
 
@@ -195,6 +195,13 @@ float UMySpell::GetCastTime(UAbilitySystemComponent* abilityComponent) const
    FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
    checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
    return USpellManager::Get().GetSpellInfo(spellDefaults.id)->casttime;
+}
+
+float UMySpell::GetSecondaryTime(UAbilitySystemComponent* abilityComponent) const
+{
+   FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
+   checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
+   return USpellManager::Get().GetSpellInfo(spellDefaults.id)->secondaryTime;
 }
 
 float UMySpell::GetAOE(UAbilitySystemComponent* abilityComponent) const

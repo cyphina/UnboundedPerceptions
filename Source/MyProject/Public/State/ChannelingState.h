@@ -4,7 +4,7 @@
 #include "IUnitState.h"
 
 /**
- * Represents when a unit is channeling an ability
+ * Represents when a unit is saying the mystical words to cast a spell.
  */
 
 class MYPROJECT_API ChannelingState : public IUnitState

@@ -5,6 +5,7 @@
 #include "IdleState.h"
 #include "MovingState.h"
 #include "CastingState.h"
+#include "IncantationState.h"
 #include "ChannelingState.h"
 #include "InteractState.h"
 #include "ItemState.h"
@@ -28,6 +29,7 @@ public:
    static MovingState     Moving;
    static AttackState     Attacking;
    static CastingState    Casting;
+   static IncantationState Incanting;
    static ChannelingState Channeling;
    static ChasingState    Chasing;
 

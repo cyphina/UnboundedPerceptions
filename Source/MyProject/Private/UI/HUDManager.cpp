@@ -54,28 +54,30 @@ void AHUDManager::SetWidget(uint8 newState, UMyUserWidget* widgetRef)
 
 void AHUDManager::AddHUD(uint8 newState)
 {
-   switch (newState) {
-      case HUDs::HS_Ingame: ApplyHUD(newState, true, true, true, false); break;
-      case HUDs::HS_Inventory: ApplyHUD(newState, true, true, true, false); break;
-      case HUDs::HS_Equipment: ApplyHUD(newState, true, true, true, false); break;
-      case HUDs::HS_Character: ApplyHUD(newState, true, true, true, false); break;
-      case HUDs::HS_QuestJournal: ApplyHUD(newState, true, true, false, false); break;
-      case HUDs::HS_QuestList: ApplyHUD(newState, true, true, true, true); break;
-      case HUDs::HS_Spellbook: ApplyHUD(newState, true, true, true, false); break;
-      case HUDs::HS_Dialog:
-      case HUDs::HS_Storage:
-      case HUDs::HS_Shop_General:
+   if (!bBlocked || currentlyDisplayedWidgetsBitSet[newState] == true) {
+      switch (newState) {
+         case HUDs::HS_Ingame: ApplyHUD(newState, true, true, true, false); break;
+         case HUDs::HS_Inventory: ApplyHUD(newState, true, true, true, false); break;
+         case HUDs::HS_Equipment: ApplyHUD(newState, true, true, true, false); break;
+         case HUDs::HS_Character: ApplyHUD(newState, true, true, true, false); break;
+         case HUDs::HS_QuestJournal: ApplyHUD(newState, true, true, false, false, true); break;
+         case HUDs::HS_QuestList: ApplyHUD(newState, true, true, true, true); break;
+         case HUDs::HS_Spellbook: ApplyHUD(newState, true, true, true, false); break;
+         case HUDs::HS_Dialog:
+         case HUDs::HS_Storage:
+         case HUDs::HS_Shop_General:
 #if UE_EDITOR
-         UE_LOG(LogTemp, Warning, TEXT("Don't call AddHUD(uint8) for widgets with parameters.  Call their respective AddHUD"));
-         GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("Don't call AddHUD(uint8) for widgets with parameters.  Call their respective AddHUD"));
+            UE_LOG(LogTemp, Warning, TEXT("Don't call AddHUD(uint8) for widgets with parameters.  Call their respective AddHUD"));
+            GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("Don't call AddHUD(uint8) for widgets with parameters.  Call their respective AddHUD"));
 #endif
-         break;
-      case HUDs::HS_Social: ApplyHUD(newState, true, true, false, false); break;    
-      case HUDs::HS_Break: ApplyHUD(newState, true, true, true, false); break;
-      case HUDs::HS_Settings: ApplyHUD(newState, true, true, false, false); break;
-      case HUDs::HS_SaveLoad: ApplyHUD(newState, true, true, false, false); break;
-      case HUDs::HS_ChatBox: ApplyHUD(newState, true, true, true, false); break;
-      default: break;
+            break;
+         case HUDs::HS_Social: ApplyHUD(newState, true, true, false, false); break;
+         case HUDs::HS_Break: ApplyHUD(newState, true, true, true, false); break;
+         case HUDs::HS_Settings: ApplyHUD(newState, true, true, false, false); break;
+         case HUDs::HS_SaveLoad: ApplyHUD(newState, true, true, false, false); break;
+         case HUDs::HS_ChatBox: ApplyHUD(newState, true, true, true, false); break;
+         default: break;
+      }
    }
 }
 
@@ -85,10 +87,15 @@ void AHUDManager::AddHUD(FName conversationName, EDialogSource dialogSource)
    {
       GetDialogBox()->SetConversation(conversationName);
       GetDialogBox()->SetDialogSource(dialogSource);
-      ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
+
+      //Social window hides main hud so reopen it
+      if(dialogSource == EDialogSource::conversation)
+         AddHUD(static_cast<uint8>(HUDs::HS_Ingame));
+      ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, true, false);
+
    } else // if on screen (from being added by a trigger w/o a hero)
    {
-      ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
+      ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, true, false);
    }
 }
 
@@ -98,10 +105,10 @@ void AHUDManager::AddHUD(TArray<FDialogData> linesToDisplay, EDialogSource dialo
    {
       GetDialogBox()->SetDialogLines(linesToDisplay);
       GetDialogBox()->SetDialogSource(dialogSource);
-      ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
+      ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, true, false);
    } else { // If on screen
 
-      ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false, false);
+      ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, true, false);
    }
 }
 
@@ -122,9 +129,9 @@ void AHUDManager::AddHUD(AShopNPC* shopNPC)
    {
       GetShopHUD()->SetBackPack(shopNPC->itemsToSellBackpack);
       GetShopHUD()->shopkeeper = shopNPC;
-      ApplyHUD(static_cast<int>(HUDs::HS_Shop_General), true, true, false, false);
+      ApplyHUD(static_cast<int>(HUDs::HS_Shop_General), true, true, true, false);
    } else { // if on screen
-      ApplyHUD(static_cast<int>(HUDs::HS_Shop_General), true, true, false, false);
+      ApplyHUD(static_cast<int>(HUDs::HS_Shop_General), true, true, true, false);
    }
 }
 
@@ -134,10 +141,10 @@ void AHUDManager::AddItemExamineHUD(int itemID)
    {
       if (itemID > 0) {
          GetExamineMenu()->itemToDisplayID = itemID;
-         ApplyHUD(static_cast<int>(HUDs::HS_ExamineMenu), true, true, true, false);
+         ApplyHUD(static_cast<int>(HUDs::HS_ExamineMenu), true, true, true, false, true);
       }
    } else {
-      ApplyHUD(static_cast<int>(HUDs::HS_ExamineMenu), true, true, false, false);
+      ApplyHUD(static_cast<int>(HUDs::HS_ExamineMenu), true, true, true, false, true);
    }
 }
 
@@ -148,10 +155,10 @@ void AHUDManager::AddHUDConfirm(FName funcName, UObject* funcObject, FText newTi
          GetConfirmationBox()->onConfirmationMade.BindUFunction(funcObject, funcName);
          GetConfirmationBox()->SetTitle(newTitle);
          GetConfirmationBox()->SetDesc(newDesc);
-         ApplyHUD(static_cast<int>(HUDs::HS_Confirmation), true, true, true, false);
+         ApplyHUD(static_cast<int>(HUDs::HS_Confirmation), true, true, true, false, true);
       }
    } else {
-      ApplyHUD(static_cast<int>(HUDs::HS_Confirmation), true, true, true, false);
+      ApplyHUD(static_cast<int>(HUDs::HS_Confirmation), true, true, true, false, true);
    }
 }
 
@@ -162,14 +169,15 @@ void AHUDManager::AddHUDInput(FName funcName, UObject* funcObject, FText newTitl
          GetInputBox()->onInputConfirmed.BindUFunction(funcObject, funcName);
          GetInputBox()->SetTitle(newTitle);
          GetInputBox()->SetDesc(newDesc);
-         ApplyHUD(static_cast<int>(HUDs::HS_InputBox), true, true, true, false);
+         GetInputBox()->AddToViewport(2);
+         ApplyHUD(static_cast<int>(HUDs::HS_InputBox), true, true, true, false, true);
       }
    } else {
-      ApplyHUD(static_cast<int>(HUDs::HS_InputBox), true, true, true, false);
+      ApplyHUD(static_cast<int>(HUDs::HS_InputBox), true, true, false, false, true);
    }
 }
 
-bool AHUDManager::ApplyHUD(uint8 newState, bool bShowMouseCursor, bool bEnableClickEvents, bool canOpenCombat, bool hasAnim)
+bool AHUDManager::ApplyHUD(uint8 newState, bool bShowMouseCursor, bool bEnableClickEvents, bool canOpenCombat, bool hasAnim, bool bBlocking)
 {
    check(newState >= 0 && newState < widgetReferences.Num());
    UMyUserWidget* widgetToApply = widgetReferences[newState];
@@ -220,6 +228,10 @@ bool AHUDManager::ApplyHUD(uint8 newState, bool bShowMouseCursor, bool bEnableCl
          widgetToApply->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
       }
    }
+
+   if(bBlocking)
+      bBlocked = !bBlocked;
+
    UpdateWidgetTracking(newState, bShowMouseCursor, bEnableClickEvents, canOpenCombat);
    return true;
 }
@@ -254,87 +266,87 @@ void AHUDManager::UpdateWidgetTracking(int updateIndex, bool showMouseCursor, bo
    }
 }
 
-UMainWidget* AHUDManager::GetMainHUD()
+ UMainWidget* AHUDManager::GetMainHUD()
 {
    return Cast<UMainWidget>(widgetReferences[static_cast<int>(HUDs::HS_Ingame)]);
 }
 
-UCharacterMenu* AHUDManager::GetCharacterHUD()
+ UCharacterMenu* AHUDManager::GetCharacterHUD()
 {
    return Cast<UCharacterMenu>(widgetReferences[static_cast<int>(HUDs::HS_Character)]);
 }
 
-UEquipmentMenu* AHUDManager::GetEquipHUD() const
+ UEquipmentMenu* AHUDManager::GetEquipHUD() const
 {
    return Cast<UEquipmentMenu>(widgetReferences[static_cast<int>(HUDs::HS_Equipment)]);
 }
 
-UHeroInventory* AHUDManager::GetInventoryHUD() const
+ UHeroInventory* AHUDManager::GetInventoryHUD() const
 {
    return Cast<UHeroInventory>(widgetReferences[static_cast<int>(HUDs::HS_Inventory)]);
 }
 
-UStoreInventory* AHUDManager::GetShopHUD() const
+ UStoreInventory* AHUDManager::GetShopHUD() const
 {
    return Cast<UStoreInventory>(widgetReferences[static_cast<int>(HUDs::HS_Shop_General)]);
 }
 
-UInventory* AHUDManager::GetStorageHUD() const
+ UInventory* AHUDManager::GetStorageHUD() const
 {
    return Cast<UInventory>(widgetReferences[static_cast<int>(HUDs::HS_Storage)]);
 }
 
-UActionbarInterface* AHUDManager::GetActionHUD() const
+ UActionbarInterface* AHUDManager::GetActionHUD() const
 {
    return Cast<UActionbarInterface>(widgetReferences[static_cast<int>(HUDs::HS_Actionbar)]);
 }
 
-UQuestList* AHUDManager::GetQuestList() const
+ UQuestList* AHUDManager::GetQuestList() const
 {
    return Cast<UQuestList>(widgetReferences[static_cast<int>(HUDs::HS_QuestList)]);
 }
 
-UQuestJournal* AHUDManager::GetQuestJournal() const
+ UQuestJournal* AHUDManager::GetQuestJournal() const
 {
    return Cast<UQuestJournal>(widgetReferences[static_cast<int>(HUDs::HS_QuestJournal)]);
 }
 
-UMinimap* AHUDManager::GetMinimap() const
+ UMinimap* AHUDManager::GetMinimap() const
 {
    return Cast<UMinimap>(widgetReferences[static_cast<int>(HUDs::HS_Minimap)]);
 }
 
-UDialogBox* AHUDManager::GetDialogBox() const
+ UDialogBox* AHUDManager::GetDialogBox() const
 {
    return Cast<UDialogBox>(widgetReferences[static_cast<int>(HUDs::HS_Dialog)]);
 }
 
-UDialogUI* AHUDManager::GetSocialWindow() const
+ UDialogUI* AHUDManager::GetSocialWindow() const
 {
    return Cast<UDialogUI>(widgetReferences[static_cast<int>(HUDs::HS_Social)]);
 }
 
-UBreakMenu* AHUDManager::GetBreakMenu() const
+ UBreakMenu* AHUDManager::GetBreakMenu() const
 {
    return Cast<UBreakMenu>(widgetReferences[static_cast<int>(HUDs::HS_Break)]);
 }
 
-USettingsMenu* AHUDManager::GetSettingsMenu() const
+ USettingsMenu* AHUDManager::GetSettingsMenu() const
 {
    return Cast<USettingsMenu>(widgetReferences[static_cast<int>(HUDs::HS_Settings)]);
 }
 
-UItemExamineWidget* AHUDManager::GetExamineMenu() const
+ UItemExamineWidget* AHUDManager::GetExamineMenu() const
 {
    return Cast<UItemExamineWidget>(widgetReferences[static_cast<int>(HUDs::HS_ExamineMenu)]);
 }
 
-UConfirmationBox* AHUDManager::GetConfirmationBox() const
+ UConfirmationBox* AHUDManager::GetConfirmationBox() const
 {
    return Cast<UConfirmationBox>(widgetReferences[static_cast<int>(HUDs::HS_Confirmation)]);
 }
 
-URTSInputBox* AHUDManager::GetInputBox() const
+ URTSInputBox* AHUDManager::GetInputBox() const
 {
    return Cast<URTSInputBox>(widgetReferences[static_cast<int>(HUDs::HS_InputBox)]);
 }

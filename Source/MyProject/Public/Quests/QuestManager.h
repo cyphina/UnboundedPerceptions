@@ -39,7 +39,12 @@ class MYPROJECT_API UQuestManager : public UObject
    GENERATED_BODY()
 
  public:
-   void PostInitProperties() override;
+ #if WITH_EDITOR
+   void PostEditChangeProperty( struct FPropertyChangedEvent& PropertyChangedEvent) override;
+ #endif
+
+   /**Updates map that maps quest classes to quest gameplaytags*/
+   void UpdateQuestClassList();
 
    UPROPERTY(BlueprintReadWrite, Category = "References")
    AUserInput* controllerRef;

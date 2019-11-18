@@ -55,5 +55,5 @@ class MYPROJECT_API AShopNPC : public AIntimateNPC
     *Accessor to gets an item's price
     */
    UFUNCTION(BlueprintCallable, BlueprintPure)
-   FORCEINLINE FItemPrice& GetItemPrice(int itemID);
+   FItemPrice& GetItemPrice(int itemID);
 };

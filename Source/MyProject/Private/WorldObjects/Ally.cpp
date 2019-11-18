@@ -31,16 +31,13 @@ AAlly::AAlly(const FObjectInitializer& oI) : AUnit(oI)
 
    combatParams.isEnemy = false;
 
-   abilities.SetNum(MAX_NUM_SPELLS); //Size of abilities that can be used on actionbar
-  
-   //Set collision to friendly type and block traces made on the AllyTrace channel
-   GetCapsuleComponent()->SetCollisionProfileName("Ally");
+   abilities.SetNum(MAX_NUM_SPELLS); // Size of abilities that can be used on actionbar
 
-   visionSphere->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel9);
+   // Set collision to friendly type and block traces made on the AllyTrace channel
+   GetCapsuleComponent()->SetCollisionProfileName("Ally");
+   visionSphere->SetCollisionProfileName("FriendlyVision");
    visionSphere->OnComponentBeginOverlap.AddDynamic(this, &AAlly::OnVisionSphereOverlap);
    visionSphere->OnComponentEndOverlap.AddDynamic(this, &AAlly::OnVisionSphereEndOverlap);
-   visionSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Overlap); // Enemy
-   visionSphere->SetCollisionResponseToChannel(ECC_GameTraceChannel6, ECollisionResponse::ECR_Overlap);
 
    GetMesh()->CustomDepthStencilValue = 254;
 
@@ -55,8 +52,6 @@ void AAlly::BeginPlay()
 {
    Super::BeginPlay();
 
-   Cast<ABasePlayer>(controllerRef->PlayerState)->allies.Add(this);
-   Cast<ARTSGameState>(GetWorld()->GetGameState())->allyList.Add(this);
    queryParamVision.AddObjectTypesToQuery(ECC_GameTraceChannel6); // VisionBlockers
    fadeChannel = ECollisionChannel::ECC_GameTraceChannel12;       // FadeTrace
 }
@@ -77,7 +72,7 @@ void AAlly::Tick(float deltaSeconds)
 void AAlly::EndPlay(const EEndPlayReason::Type eReason)
 {
    Super::EndPlay(eReason);
-   //Errors when we stop play in editor since the vision check keeps going on even after these actors are destroyed
+   // Errors when we stop play in editor since the vision check keeps going on even after these actors are destroyed
 }
 
 void AAlly::PossessedBy(AController* newAllyControllerRef)
@@ -89,26 +84,29 @@ void AAlly::PossessedBy(AController* newAllyControllerRef)
 void AAlly::SetEnabled(bool bEnabled)
 {
    Super::SetEnabled(bEnabled);
-   if(bEnabled)
+   if (bEnabled) {
+      controllerRef->GetBasePlayer()->allies.Add(this);
       controllerRef->GetGameState()->allyList.Add(this);
-   else
+   } else {
+      controllerRef->GetBasePlayer()->allies.Remove(this);
       controllerRef->GetGameState()->allyList.Remove(this);
+   }
 }
 
 void AAlly::Die_Implementation()
 {
-   //Allies that aren't heroes can get destroyed when they die 
+   // Allies that aren't heroes can get destroyed when they die
    Super::Die_Implementation();
-   controllerRef->GetBasePlayer()->allies.Remove(this);  
+   controllerRef->GetBasePlayer()->allies.Remove(this);
    Destroy();
 }
 
 void AAlly::Attack_Implementation()
 {
    Super::Attack_Implementation();
-   if(IsValid(targetData.targetUnit))
-      if(!targetData.targetUnit->IsVisible())
-         GetAllyAIController()->Stop();
+   // If they die (when this current attack kills them) and the targets get canceled out, then targetUnit can be nulled
+   if (IsValid(targetData.targetUnit))
+      if (!targetData.targetUnit->IsVisible()) GetAllyAIController()->Stop();
 }
 
 void AAlly::SetSelected(bool value)
@@ -126,7 +124,7 @@ void AAlly::SetSpellIndex(int index)
 #if UE_EDITOR
    check(index >= 0 && index < MAX_NUM_SPELLS)
 #endif
-   spellIndex = index;
+       spellIndex = index;
 }
 
 UGameplayAbility* AAlly::GetSpellInstance(TSubclassOf<UMySpell> spellClass) const
@@ -143,12 +141,10 @@ bool AAlly::CastSpell(TSubclassOf<UMySpell> spellToCast)
    if (Super::CastSpell(spellToCast)) {
       if (controllerRef->GetBasePlayer()->focusedUnit == this) {
          controllerRef->GetHUDManager()->GetActionHUD()->ShowSkillVisualCD(spellIndex);
-         //Cancel AI targetting if enemy turns invisible
-         if (IsValid(targetData.targetUnit) && !gameState->visibleEnemies.Contains(targetData.targetUnit))
-            GetAllyAIController()->Stop();
-         //Reveal self if invisile when spell casted.  If we don't check this before spell casted, we could just end up canceling an invisibility spell being cast
-         if(invis)
-            GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
+         // Cancel AI targetting if enemy turns invisible
+         if (IsValid(targetData.targetUnit) && !gameState->visibleEnemies.Contains(targetData.targetUnit)) GetAllyAIController()->Stop();
+         // Reveal self if invisile when spell casted.  If we don't check this before spell casted, we could just end up canceling an invisibility spell being cast
+         if (invis) GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
          return true;
       }
    }
@@ -157,7 +153,7 @@ bool AAlly::CastSpell(TSubclassOf<UMySpell> spellToCast)
 
 float AAlly::CalculateTargetRisk()
 {
-   int          targetNum = 0;
+   int targetNum = 0;
    for (AUnit* e : controllerRef->GetGameState()->visibleEnemies) {
       if (e->GetTarget() == this) ++targetNum;
    }
@@ -227,6 +223,7 @@ void AAlly::OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, A
          enemy->DecVisionCount();
          if (!enemy->GetVisionCount()) {
             enemy->GetCapsuleComponent()->SetVisibility(false, true);
+            enemy->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel7, ECollisionResponse::ECR_Ignore);
             gameState->visibleEnemies.Remove(enemy);
          }
          break;
@@ -241,8 +238,8 @@ void AAlly::GetCornersInRange(AActor* overlapActor)
    FVector extent = FVector();
    overlapActor->GetActorBounds(true, origin, extent);
    for (FVector v : UpResourceManager::BoundsPointMapping2D) {
-      FVector   corner     = origin + extent * v;
-      FVector   cornerDist = corner - GetActorLocation();
+      FVector corner     = origin + extent * v;
+      FVector cornerDist = corner - GetActorLocation();
       visionBlockerCorners.Add(corner);
    }
 }
@@ -253,8 +250,8 @@ void AAlly::RemoveCornersInRange(AActor* overlapEndActor)
    FVector extent = FVector();
    overlapEndActor->GetActorBounds(true, origin, extent);
    for (FVector v : UpResourceManager::BoundsPointMapping2D) {
-      FVector   corner     = origin + extent * v;
-      FVector   cornerDist = corner - GetActorLocation();
+      FVector corner     = origin + extent * v;
+      FVector cornerDist = corner - GetActorLocation();
       visionBlockerCorners.Remove(corner);
    }
 }
@@ -263,10 +260,7 @@ void AAlly::FindVisibilityPoints()
 {
    SCOPE_CYCLE_COUNTER(STAT_AllyVision)
    {
-      auto pred = [this](const FVector& a, const FVector& b)
-      {
-         return UpResourceManager::FindOrientation(a - GetActorLocation()) > UpResourceManager::FindOrientation(b - GetActorLocation());
-      };
+      auto pred = [this](const FVector& a, const FVector& b) { return UpResourceManager::FindOrientation(a - GetActorLocation()) > UpResourceManager::FindOrientation(b - GetActorLocation()); };
       static const float root2Over2 = .70710f;
 
       visionPolygonVertices.Empty();
@@ -287,7 +281,7 @@ void AAlly::FindVisibilityPoints()
       visionPolygonVertices.Add(GetActorLocation());
 
       for (FVector c : calculationCorners) {
-         FVector   dist = c - GetActorLocation();
+         FVector dist = c - GetActorLocation();
          if (dist.SizeSquared2D() < GetVisionRadius() * GetVisionRadius() + 1) {
             // traceHandlers.Add(GetWorld()->AsyncLineTraceByObjectType(EAsyncTraceType::Single,GetActorLocation(), c, gameState->queryParamVision));
             FHitResult r;

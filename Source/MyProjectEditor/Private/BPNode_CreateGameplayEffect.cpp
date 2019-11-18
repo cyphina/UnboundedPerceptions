@@ -1,5 +1,7 @@
 #include "MyProjectEditor.h"
 
+#include "TextProperty.h"
+
 #include "SpellSystem/MySpell.h"
 #include "SpellSystem/SpellFunctionLibrary.h"
 #include "GameplayEffect.h"

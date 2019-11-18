@@ -128,7 +128,7 @@ class MYPROJECT_API UDialogBox : public UMyUserWidget
    void ShowChoices(const TArray<FDialogData>& choiceLines);
 
    /**Picks a response option and returns next dialog node to display after a choice is picked and triggers/conditions associated with that choice are activated
-    * @param choice - Index of the node that the picked node leads to
+    * @param choice - Index of the choice that is picked (0,1,2,...up to num choices)
     */
    UFUNCTION(BlueprintCallable, Category = "Choices")
    const FDialogData& PickChoice(int choice);

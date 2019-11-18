@@ -21,8 +21,9 @@ float UChannelingBar::GetSpellChannelProgress()
 {
    // The unit could die while we have the channelbar visible so we need a nullcheck
    AUnit* channelingUnit = controllerRef->GetBasePlayer()->focusedUnit;
-   if (IsValid(channelingUnit)) return channelingUnit->GetCurrentChannelTime() / channelingUnit->GetChannelTime();
-
+   if (IsValid(channelingUnit)) {  
+      return channelingUnit->GetCurrentChannelTime() / channelingUnit->GetChannelTime();
+   }
    SetVisibility(ESlateVisibility::Hidden);
    return 0;
 }
@@ -30,7 +31,8 @@ float UChannelingBar::GetSpellChannelProgress()
 ESlateVisibility UChannelingBar::IsFocusedUnitChanneling()
 {
    AUnit* channelingUnit = controllerRef->GetBasePlayer()->focusedUnit;
-   if (IsValid(channelingUnit) && channelingUnit->GetState() == EUnitState::STATE_CHANNELING) return ESlateVisibility::SelfHitTestInvisible;
+   if (IsValid(channelingUnit) && (channelingUnit->GetState() == EUnitState::STATE_CHANNELING || channelingUnit->GetState() == EUnitState::STATE_INCANTATION)) 
+      return ESlateVisibility::SelfHitTestInvisible;
 
    return ESlateVisibility::Hidden;
 }

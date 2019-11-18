@@ -6,12 +6,11 @@
 #include "WorldObjects/Unit.h"
 #include "AbilitySystemComponent.h"
 
-const FGameplayTag UEnvQueryTest_NumBuffs::debuffTags = FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff");
-
 UEnvQueryTest_NumBuffs::UEnvQueryTest_NumBuffs()
 {
    Cost          = EEnvTestCost::Low;
    ValidItemType = UEnvQueryItemType_ActorBase::StaticClass();
+   debuffTags = FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff");
 }
 
 void UEnvQueryTest_NumBuffs::RunTest(FEnvQueryInstance& QueryInstance) const

@@ -1,32 +1,29 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-#include "MyProject.h"
 #include "ChannelingState.h"
 #include "Unit.h"
-#include "AIStuff/AIControllers/UnitController.h"
-#include "MySpell.h"
+#include "GameplayAbilityTypes.h"
+#include "AbilitySystemComponent.h"
+#include "UnitController.h"
 
 ChannelingState::ChannelingState()
 {
 }
 
-ChannelingState::~ChannelingState()
-{
-}
-
 void ChannelingState::Enter(AUnit& unit)
 {
-   //todo: Add channel UI bar to the screen
-   unit.PlayAnimMontage(unit.castAnimation, 1/unit.unitSpellData.channelTime);
+   //TODO: Incantation animation
 }
 
 void ChannelingState::Exit(AUnit& unit)
 {
-   // If we leave casting state before the spell can finish being casted, we've been interrupted so tell the AI system that
-   if (unit.unitSpellData.currentChannelTime < unit.unitSpellData.channelTime) {
-      FAIMessage msg(AUnit::AIMessage_SpellInterrupt, &unit);
-      FAIMessage::Send(unit.GetUnitController(), msg);
-   }
+   FGameplayEventData eD = FGameplayEventData();
+   eD.EventTag = FGameplayTag::RequestGameplayTag("Skill.Confirm");
+
+   //Moves targetData so now unit.targetData will be null.  Must get targetData from the event handler, and regular confirm has no targetData since its a None type target.
+   eD.TargetData = unit.targetData.spellTargetData;
+
+   //Handle the end of channeling in the spell itself by having some action taken when the event is heard.
+   //Chanelled spell should call stop when it finishes or activated early.
+   unit.GetAbilitySystemComponent()->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("Skill.Confirm"), &eD);
    unit.unitSpellData.currentChannelTime = 0;
 }
 
@@ -34,6 +31,8 @@ void ChannelingState::Update(AUnit& unit, float deltaSeconds)
 {
    if (unit.unitSpellData.currentChannelTime < unit.unitSpellData.channelTime)
       unit.unitSpellData.currentChannelTime += deltaSeconds;
-   else
-      unit.CastSpell(unit.GetCurrentSpell());
+}
+
+ChannelingState::~ChannelingState()
+{
 }

@@ -52,7 +52,7 @@ class MYPROJECT_API UQuestListSlot : public UUserWidget
    FORCEINLINE AQuest* GetAssignedQuest() const { return assignedQuest; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-   FORCEINLINE UQuestManager* GetQuestManagerRef() const;
+   UQuestManager* GetQuestManagerRef() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    FORCEINLINE int GetSelectedGoalIndex() const { return selectedGoalIndex; }

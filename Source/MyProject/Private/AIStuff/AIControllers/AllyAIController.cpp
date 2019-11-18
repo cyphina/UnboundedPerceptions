@@ -58,6 +58,7 @@ void AAllyAIController::SwitchAIModes(AllyBehavioralMode newMode)
 void AAllyAIController::Stop()
 {
    Super::Stop();
+   currentlySelectedSpell = nullptr;
 }
 
 void AAllyAIController::BeginAttack(AUnit* target)
@@ -93,13 +94,13 @@ bool AAllyAIController::BeginCastSpell(TSubclassOf<UMySpell> spellToCast, const 
 bool AAllyAIController::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
 {
    UMySpell* spell = spellToCast.GetDefaultObject();
-   if (IsValid(spell) && allyRef->GetState() != EUnitState::STATE_CHANNELING) //Check for valid spell class and make sure not channeling anything currently
+   if (IsValid(spell)) //Check for valid spell class
    {
       if (!spell->isOnCD(allyRef->GetAbilitySystemComponent())) {
          if (spell->GetCost(allyRef->GetAbilitySystemComponent()) <= allyRef->GetVitalCurValue(static_cast<int>(Vitals::Mana))) {
-            if (allyRef->GetCurrentSpell() == spellToCast) //If already selected
+            if (currentlySelectedSpell == spellToCast) //If already selected
             {
-               allyRef->SetCurrentSpell(nullptr); //Deselect the spell
+               currentlySelectedSpell = nullptr; //Deselect the spell
                GetCPCRef()->GetCameraPawn()->HideSpellCircle();
                GetCPCRef()->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Select);
                return false;
@@ -109,14 +110,15 @@ bool AAllyAIController::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
             {
                Stop();
                allyRef->SetCurrentSpell(spellToCast);
-               PreCastChannelingCheck(spellToCast);
+               allyRef->SetSpellIndex(currentlySelectedSpellIndex);
+               IncantationCheck(spellToCast);
             }
             else {
                GetCPCRef()->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Magic); //Set wand targetting cursor
             }
 
             //Set our current spell to spellToCast for recording purposes
-            allyRef->SetCurrentSpell(spellToCast);
+            currentlySelectedSpell = spellToCast;
 
             if (spell->GetTargetting().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))) {
                // TODO: depending on the spell area targetting, use different indicators
@@ -147,8 +149,8 @@ bool AAllyAIController::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
 
 bool AAllyAIController::PressedCastSpell(int spellCastingIndex)
 {
+   currentlySelectedSpellIndex = spellCastingIndex;
    bool spellSelected = PressedCastSpell(allyRef->abilities[spellCastingIndex]);
-   if (spellSelected) allyRef->SetSpellIndex(spellCastingIndex);
    return spellSelected;
 }
 
@@ -169,7 +171,7 @@ bool AAllyAIController::SetupSpellTargetting(FHitResult result, TSubclassOf<UMyS
 
             FinalizeSpellTargetting(spellClass);
             if (allyRef->targetData.targetUnit == allyRef || AdjustPosition(spell->GetRange(allyRef->GetAbilitySystemComponent()), allyRef->targetData.targetActor))
-               PreCastChannelingCheck(spellClass);
+               IncantationCheck(spellClass);
             GetCPCRef()->GetCameraPawn()->HideSpellCircle();
             return true;
          }
@@ -178,7 +180,7 @@ bool AAllyAIController::SetupSpellTargetting(FHitResult result, TSubclassOf<UMyS
             allyRef->targetData.targetLocation = result.Location;
             FinalizeSpellTargetting(spellClass);
             if (AdjustPosition(spell->GetRange(allyRef->GetAbilitySystemComponent()), allyRef->targetData.targetLocation))
-               PreCastChannelingCheck(spellClass);
+               IncantationCheck(spellClass);
             GetCPCRef()->GetCameraPawn()->HideSpellCircle();
             return true;
          }
@@ -214,7 +216,8 @@ bool AAllyAIController::SetupSpellTargetting(FHitResult result, TSubclassOf<UMyS
                      //If casting on ourselves, then we can just instantly cast
                      if (allyRef->targetData.targetUnit == allyRef) {
                         allyRef->SetCurrentSpell(spellClass); //Set it again for now since we had to stop
-                        PreCastChannelingCheck(spellClass);
+                        allyRef->SetSpellIndex(currentlySelectedSpellIndex);
+                        IncantationCheck(spellClass);
                         GetCPCRef()->GetCameraPawn()->SetSecondaryCursor();
                         return true;
                      }
@@ -252,7 +255,7 @@ bool AAllyAIController::SetupSpellTargetting(FHitResult result, TSubclassOf<UMyS
 
          FinalizeSpellTargetting(spellClass);
          if (AdjustPosition(spell->GetRange(allyRef->GetAbilitySystemComponent()), allyRef->targetData.targetActor))
-            PreCastChannelingCheck(spellClass);
+            IncantationCheck(spellClass);
          return true;
       }
    }
@@ -262,8 +265,9 @@ bool AAllyAIController::SetupSpellTargetting(FHitResult result, TSubclassOf<UMyS
 void AAllyAIController::FinalizeSpellTargetting(TSubclassOf<UMySpell> spellClass)
 {
    GetCPCRef()->GetCameraPawn()->SetSecondaryCursor();//Just set cursor to to select so the loop will quickly change the cursor back to normal
-   auto castTurnAction = [this, spellClass]() { PreCastChannelingCheck(spellClass);};
+   auto castTurnAction = [this, spellClass]() { IncantationCheck(spellClass);};
    allyRef->unitProperties.turnAction.BindLambda(castTurnAction);
    allyRef->SetCurrentSpell(spellClass); //Set it again for now since we had to stop
+   allyRef->SetSpellIndex(currentlySelectedSpellIndex);
    allyRef->state->ChangeState(EUnitState::STATE_CASTING);
 }

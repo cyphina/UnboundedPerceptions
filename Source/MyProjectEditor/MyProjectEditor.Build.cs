@@ -6,18 +6,27 @@ public class MyProjectEditor : ModuleRules
 {
 	public MyProjectEditor(ReadOnlyTargetRules Target) : base(Target)
 	{
+		bEnforceIWYU = true;
 		PrivatePCHHeaderFile = "Public/MyProjectEditor.h";
 		PublicIncludePaths.AddRange(new string[] { "MyProjectEditor/Public" });
 		PrivateIncludePaths.AddRange(new string[] { "MyProjectEditor/Private" });
-		PublicDependencyModuleNames.AddRange(new string[] { });
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
+			"BlueprintGraph"
+		});
+		
 		PrivateDependencyModuleNames.AddRange(new string[]{
 			"MyProject",
+			"BlueprintGraph"
+		});
+		
+		if(Target.Type == TargetRules.TargetType.Editor) {
+		PrivateDependencyModuleNames.AddRange(new string[]{		
 			"Core",
 			"InputCore",
 			"Engine",
 			"CoreUObject",
-			"UnrealEd",
-			"BlueprintGraph",
+			"UnrealEd",		
 			"GraphEditor",
 			"PropertyEditor",
 			"SlateCore",
@@ -28,6 +37,7 @@ public class MyProjectEditor : ModuleRules
 			"GameplayAbilities",
 			"GameplayTags"
 		});
+		}
 	}
 }
 

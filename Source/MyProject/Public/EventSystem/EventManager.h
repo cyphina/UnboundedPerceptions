@@ -16,6 +16,8 @@ class MYPROJECT_API UEventManager : public UObject
 {
    GENERATED_BODY()
 
+   friend class UMyCheatManager;
+
    UEventManager();
 
 #define GETTAG(tagName) FGameplayTag::RequestGameplayTag("Storyboard.Chapter." tagName)
@@ -23,16 +25,21 @@ class MYPROJECT_API UEventManager : public UObject
                                  GETTAG("You be you, I'll be me"),       GETTAG("Remember Elaine"),
                                  GETTAG("To Live means I must die"),     GETTAG("Bleeding Time"),
                                  GETTAG("New Years Sacrifice"),          GETTAG("Starry Transcendence"),
-                                 GETTAG("Death is not the End"),         GETTAG("Memory's Fragment")};
+                                 GETTAG("Death is not the End"),         GETTAG("Fragment of Memories")};
    TArray<FGameplayTag> sections;
 #undef GETTAG
 
    int currentChapter = 1;
    int currentSection = 1;
 
+   UFUNCTION(BlueprintCallable, Category = "Progress")
+   void SkipToEvent(int chapter, int section);
+
  public:
    void Init();
 
+   const static int NUM_CHAPTERS = 10;
+  
    UPROPERTY(BlueprintReadOnly)
    ARTSGameMode* gameModeRef = nullptr;
 

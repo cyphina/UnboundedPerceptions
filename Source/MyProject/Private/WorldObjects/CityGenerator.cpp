@@ -26,11 +26,24 @@ void ACityGenerator::OnConstruction(const FTransform& transform)
       roadData.RemoveAt(roadData.Num() - 1);
       trackList[roadData.Num() - 1]->DestroyComponent();
    }
+
    while (numSplinePoints > roadData.Num())
       roadData.Add(FRoadData());
 
    if (buildingMeshes.Num() > 0) {
       trackList.SetNum(roadData.Num() - 1);
+
+      for(auto x : leftMeshList)
+         if(IsValid(x))
+            x->DestroyComponent();
+
+      for(auto x : rightMeshList)
+         if(IsValid(x))
+            x->DestroyComponent();
+
+      leftMeshList.Empty();
+      rightMeshList.Empty();
+
       for (int i = 0; i < roadData.Num() - 1; ++i) {
          BuildTrackElement(i);
          BuildSideBuildings(i);
@@ -38,6 +51,7 @@ void ACityGenerator::OnConstruction(const FTransform& transform)
    }
 }
 
+#if WITH_EDITOR
 void ACityGenerator::PostEditChangeProperty(FPropertyChangedEvent& propertyChanged)
 {
    Super::PostEditChangeProperty(propertyChanged);
@@ -50,6 +64,7 @@ void ACityGenerator::PostEditChangeProperty(FPropertyChangedEvent& propertyChang
          roadData.Add(FRoadData());
    }*/
 }
+#endif 
 
 void ACityGenerator::BeginPlay()
 {

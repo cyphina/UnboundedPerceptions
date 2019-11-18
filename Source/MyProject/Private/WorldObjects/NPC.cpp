@@ -27,7 +27,9 @@ ANPC::ANPC()
 
    GetCapsuleComponent()->SetCollisionProfileName("NPC");
    GetMesh()->SetCollisionProfileName("NoCollision");
-   FindComponentByClass<UArrowComponent>()->DestroyComponent();
+   auto arrowComp = FindComponentByClass<UArrowComponent>();
+   if(arrowComp)
+      arrowComp->DestroyComponent();
 
    GetMesh()->SetRenderCustomDepth(false);
    GetMesh()->CustomDepthStencilValue = 255;
@@ -80,7 +82,7 @@ FName ANPC::GetConversationName(FGameplayTag conversationTopic) const
    } else // if no, return some default reply like "I'm not sure what that is sire!"
    {
 	  check(defaultResponseName != "");
-      return defaultResponseName;
+     return defaultResponseName;
    }
 }
 

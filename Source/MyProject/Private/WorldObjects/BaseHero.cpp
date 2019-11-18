@@ -126,6 +126,16 @@ void ABaseHero::PossessedBy(AController* newController)
    heroController = Cast<AHeroAIController>(GetController());
 }
 
+void ABaseHero::SetEnabled(bool bEnabled)
+{
+   Super::SetEnabled(bEnabled);
+   if (bEnabled) {
+      controllerRef->GetBasePlayer()->heroes.Add(this);
+   } else {
+      controllerRef->GetBasePlayer()->heroes.Remove(this);
+   }
+}
+
 void ABaseHero::Die_Implementation()
 {
    //Set typical unit die parameters, deselect unit if it is selected, remove references to it in the vision calculation set, and gameover if all heroes died

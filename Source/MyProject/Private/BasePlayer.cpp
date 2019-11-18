@@ -31,19 +31,15 @@ void ABasePlayer::UpdateParty(TArray<ABaseHero*> newHeroes)
 #endif
 
    //Disable the units in our old party
-   int index = 0;
-   for (ABaseHero* hero : heroes) {
-      hero->SetEnabled(false);
-      allies[allies.Find(hero)] = newHeroes[index];
-      ++index;
+   while(heroes.Num() > 0) {
+      heroes[0]->SetEnabled(false);
    }
-   heroes = newHeroes;
 
    //Enable the units in our new party
-   int i  = -1;
-   for (ABaseHero* hero : heroes) {
-      hero->SetEnabled(true);
-      hero->heroIndex = ++i;    
+   int i = -1;
+   while(++i < newHeroes.Num()) {
+      newHeroes[i]->SetEnabled(true);
+      newHeroes[i]->heroIndex = i;    
    }
 }
 

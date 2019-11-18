@@ -7,9 +7,10 @@
 #include "../QuestManager.h"
 
 void UQuestJournal::NativeConstruct()
-{
-   if (gameModeRef->GetQuestManager()) { gameModeRef->GetQuestManager()->questJournalRef = this; }
+{  
    Super::NativeConstruct();
+   gameModeRef = CPC->GetGameMode();
+   if (gameModeRef->GetQuestManager()) { gameModeRef->GetQuestManager()->questJournalRef = this; }
 }
 
 bool UQuestJournal::OnWidgetAddToViewport_Implementation()

@@ -3,7 +3,9 @@
 #include "MyProject.h"
 #include "PatrolComponent.h"
 #include "AIController.h"
+#include "AIControllers/NPCAIController.h"
 #include "BehaviorTree/BehaviorTree.h"
+#include "UpResourceManager.h"
 
 UPatrolComponent::UPatrolComponent()
 {
@@ -19,6 +21,10 @@ void UPatrolComponent::BeginPlay()
    check(pawnOwner);
 
    ownerControllerRef = Cast<AAIController>(pawnOwner->GetController());
+   if(enabled) {
+      ANPCAIController* aiController = Cast<ANPCAIController>(ownerControllerRef);
+      UpResourceManager::ExecuteFunctionFromWorldObject(aiController, "Patrol", GetWorld()); 
+   }
 }
 
 void UPatrolComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

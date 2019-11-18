@@ -31,9 +31,6 @@ class MYPROJECT_API ARTSPawn : public APawn
    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    USpringArmComponent* mapArm;
 
-   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-   UChildActorComponent* mapCamera;
-
  protected:
    virtual void BeginPlay() override;
 
@@ -129,7 +126,7 @@ class MYPROJECT_API ARTSPawn : public APawn
    void SetCamMoveSpeedMultiplier(float newCamMoveSpeed) { camMoveSpeedMultiplier = FMath::Clamp<float>(newCamMoveSpeed, 0, 3); }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Camera Settings")
-   FORCEINLINE bool IsUnitOnScreen(AUnit* unitToCheck);
+   bool IsUnitOnScreen(AUnit* unitToCheck);
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Camera Settings")
    FORCEINLINE float GetMaxArmLength() const { return maxArmLength; } 
@@ -145,6 +142,7 @@ class MYPROJECT_API ARTSPawn : public APawn
    void ZoomOut();
    void ZoomReset();
    void LockCamera();
+
    void CameraSpeedOn();
    void CameraSpeedOff();
    void MoveX(float axisValue);
@@ -175,12 +173,6 @@ class MYPROJECT_API ARTSPawn : public APawn
    void PrevFlight();
    void NextFlight();
 
-   void ToggleInventory();
-   void ToggleQuestJournal();
-   void ToggleQuestList();
-   void ToggleCharacterMenu();
-   void ToggleEquipmentMenu();
-   void ToggleSpellbookMenu();
    void RightClick();
    void TabNextAlly();
    void UseAbility(int abilityIndex);

@@ -22,6 +22,11 @@ void UMinigameManager::StartMiniGame(EMinigameType minigameType, const FMinigame
    }
 }
 
+void UMinigameManager::StartTankGame(const FMinigameData& minigameData)
+{
+   
+}
+
 void UMinigameManager::StartDrawingGame(const FMinigameData& minigameData)
 {
    minigamePawn        = controllerRef->GetWorld()->SpawnActorDeferred<AMinigamePawn>(drawingPawn.Get(), FTransform::Identity, controllerRef);
