@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
 #include "GameplayTagContainer.h"
 #include "StoryStructs.h"
 #include "EventManager.generated.h"
@@ -40,7 +39,7 @@ class MYPROJECT_API UEventManager : public UObject
 
    const static int NUM_CHAPTERS = 10;
   
-   UPROPERTY(BlueprintReadOnly)
+   UPROPERTY(BlueprintReadOnly, Category = "References")
    ARTSGameMode* gameModeRef = nullptr;
 
    /**List of all the chapters, sections, and triggers when moving to a new section*/

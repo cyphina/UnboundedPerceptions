@@ -19,14 +19,14 @@ class MYPROJECT_API UInventoryView : public UMyUserWidget
 
  public:
    /**Reference to the container that lists the items we have.  The slots need this.*/
-   UPROPERTY(BlueprintReadWrite, Category = "References", Meta = (ExposeOnSpawn = true))
-   UInventory* inventoryRef;
+   UPROPERTY(BlueprintReadWrite, Category = "References")
+   TWeakObjectPtr<UInventory> inventoryRef;
 
    /**Way to return to the default view*/
    UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "InventoryViewFunctions")
    void Reset();
 
-   /**Mapping of visible inventory slots to items in backpack*/
+   /**Mapping of visible inventory slots to items in backpack. Useful for the paged inventory*/
    UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, BlueprintPure, Category = "InventoryViewFunctions")
    int GetCorrespondingBackpackIndex(int slotNum);
 

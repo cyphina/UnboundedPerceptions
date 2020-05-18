@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #include "MyProject.h"
 #include "MovingState.h"
 #include "WorldObjects/Unit.h"
@@ -13,6 +12,4 @@ void MovingState::Exit(AUnit& unit)
    // GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Exiting Move"));
 }
 
-void MovingState::Update(AUnit& unit, float deltaSeconds)
-{
-}
+void MovingState::Update(AUnit& unit, float deltaSeconds) {}

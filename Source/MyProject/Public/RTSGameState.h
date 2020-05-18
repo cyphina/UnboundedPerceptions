@@ -11,7 +11,7 @@
  * Keep track of the state of the game (connected players).  1 Game State has many Player States, while each player states reference the 1 Game State
  */
 
-class UMainWidget;
+class URTSIngameWidget;
 class AEnemy;
 class AAlly;
 class AUnit;
@@ -53,7 +53,7 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase
 
    /**Set by CPC*/
    UPROPERTY(BlueprintReadWrite, Category = "References")
-   UMainWidget* mainWidgetRef;
+   URTSIngameWidget* ingameWidget;
 
    ///---Game Time and Speed---
    UPROPERTY(BlueprintReadWrite, Category = "Speed")
@@ -84,14 +84,16 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase
    void AddGameTime(FDateTime timeToAdd);
 
    ///---Unit Lists and Vision---
-
    FHitResult                  visionHitResult;
    FCollisionObjectQueryParams queryParamVision;
 
    FTimerHandle allyVisionUpdateTimerHandle;
    FTimerHandle enemyVisionUpdateTimerHandle;
 
-   /**Lists all party members that exist between every player (necessary for computing co op vision).  Faster to keep stuff in a set for quick addition and removal
+   FWindowsRWLock   visibleMutex; // Guards visibleEnemies
+   FCriticalSection visiblePlayersMutex;
+
+   /**Lists all party members that exist between every player (necessary for computing co op vision).  Faster to keep stuff in a set for quick removal
     * Also it holds all of the references to allies (across all players) if there ever is multiplayer*/
    UPROPERTY(BlueprintReadWrite, Category = "SharedData")
    TSet<AAlly*> allyList;
@@ -106,7 +108,7 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase
 
    /**Lists what allies are visible so we don't have to keep doing line traces which is an expensive op*/
    UPROPERTY(BlueprintReadOnly, Category = "Vision")
-   TSet<AUnit*> visibleAllies;
+   TSet<AUnit*> visiblePlayerUnits;
 
    UPROPERTY(EditDefaultsOnly, Category = "Vision")
    TSubclassOf<AFogOfWarPlane> FOWplaneClass;
@@ -115,6 +117,7 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase
    AFogOfWarPlane* FOWplane;
 
    /**
+    * *** !!! ALso handles killing of units to prevent data races !!! ***
     * Visiblity of enemies is like a state machine which has six states
     * Enemy enters vision range and we can see it - Add to possible enemies in radius and add to visible units
     * Enemy enters vision range but is behind a wall - Add to possible enemies in radius but not to visible units
@@ -126,7 +129,9 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase
    UFUNCTION()
    void UpdateVisibleEnemies();
 
-   /**For more info look at comments of UpdateVisibleEnemies*/
+   /**For more info look at comments of UpdateVisibleEnemies.  Used to list all the player units (units player controlls) that
+    * are visible to according to enemies.
+    */
    UFUNCTION()
-   void UpdateVisibleAllies();
+   void UpdateVisiblePlayerUnits();
 };

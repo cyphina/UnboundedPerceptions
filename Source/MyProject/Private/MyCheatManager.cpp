@@ -60,6 +60,19 @@ void UMyCheatManager::GodMode(FString objectID, int toggleGodMode)
 #endif
 }
 
+void UMyCheatManager::AddQuest(FString questName)
+{
+   auto questTag = FGameplayTag::RequestGameplayTag(*(FString("QuestName." + questName)));
+   if (gameModeRef->GetQuestManager()->questClassList.Contains(questTag)) {
+      FTriggerData addQuestTrigger;
+      addQuestTrigger.enabled       = true;
+      addQuestTrigger.numCalls      = 1;
+      addQuestTrigger.triggerType   = ETriggerType::AddQuestTrigger;
+      addQuestTrigger.triggerValues = {questName, "1"};
+      gameModeRef->GetTriggerManager()->ActivateTrigger(addQuestTrigger);
+   } else { UE_LOG(LogTemp, Error, TEXT("Quest cheat command passed invalid parameters!")); }
+}
+
 void UMyCheatManager::FinishQuest(FString questName, int isSucessful)
 {
    AQuest* quest = *gameModeRef->GetQuestManager()->quests.FindByPredicate([questName](AQuest* quest) { return quest->questInfo.name.ToString() == questName; });
@@ -74,7 +87,7 @@ void UMyCheatManager::EquipSpell(FString heroName, int spellID, int slot)
    }
 }
 
-void UMyCheatManager::RefreshSpells(FString heroName)
+void UMyCheatManager::RefreshSpells()
 {
    for (AAlly* ally : userInputRef->GetBasePlayer()->allies)
       ally->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Name")));
@@ -84,29 +97,25 @@ void UMyCheatManager::RefreshSpells(FString heroName)
 
 void UMyCheatManager::RefreshHeroSpells(FString heroName)
 {
-   if (ABaseHero* heroRef = *userInputRef->GetBasePlayer()->heroes.FindByPredicate([heroName](ABaseHero* hero) { return hero->GetGameName().ToString() == heroName; })) {
-      heroRef->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Name")));
+   if (!heroName.IsEmpty()) {
+      if (ABaseHero* heroRef = *userInputRef->GetBasePlayer()->heroes.FindByPredicate([heroName](ABaseHero* hero) { return hero->GetGameName().ToString() == heroName; })) {
+         heroRef->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Name")));
+      }
+   } else {
+      for (ABaseHero* hero : userInputRef->GetBasePlayer()->heroes)
+         hero->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Name")));
    }
 }
 
-void UMyCheatManager::PauseGameTimer()
-{
-   gameStateRef->UpdateGameSpeed(0);
-}
+void UMyCheatManager::PauseGameTimer() { gameStateRef->UpdateGameSpeed(0); }
 
-void UMyCheatManager::SetGameTime(int seconds, int minutes, int hours)
-{
-   gameStateRef->UpdateGameTime(seconds, minutes, hours);
-}
+void UMyCheatManager::SetGameTime(int seconds, int minutes, int hours) { gameStateRef->UpdateGameTime(seconds, minutes, hours); }
 
-void UMyCheatManager::SetGameDay(int day, int month, int year)
-{
-   gameStateRef->UpdateGameDay(day, month, year);
-}
+void UMyCheatManager::SetGameDay(int day, int month, int year) { gameStateRef->UpdateGameDay(day, month, year); }
 
 void UMyCheatManager::SetUnitCurHP(FString unitName, int hpVal)
 {
-   if (AUnit* unit = UpResourceManager::FindTriggerObjectInWorld<AUnit>(unitName, GetWorld())) { unit->SetVitalCurValue(static_cast<uint8>(Vitals::Health), hpVal); }
+   if (AUnit* unit = UpResourceManager::FindTriggerObjectInWorld<AUnit>(unitName, GetWorld())) { unit->SetVitalCurValue(static_cast<uint8>(EVitals::Health), hpVal); }
 }
 
 void UMyCheatManager::SeeAll()
@@ -129,26 +138,23 @@ void UMyCheatManager::LearnAllTopics()
    while (leafNodes.Num() > 0) {
       for (TSharedPtr<FGameplayTagNode> node : leafNodes) {
          childNodes = node->GetChildTagNodes();
-         if (childNodes.Num() > 0) {
-            newLeafNodes.Append(childNodes);
-         } else {
-            userInputRef->GetBasePlayer()->LearnDialogTopic(node->GetCompleteTag());
-         }
+         if (childNodes.Num() > 0) { newLeafNodes.Append(childNodes); } else { userInputRef->GetBasePlayer()->LearnDialogTopic(node->GetCompleteTag()); }
       }
       leafNodes = newLeafNodes;
       newLeafNodes.Empty();
    }
 }
 
-void UMyCheatManager::SetChapterAndSection(int chapter, int section)
-{
-   gameModeRef->eventManager->SkipToEvent(chapter, section);
-}
+void UMyCheatManager::SetChapterAndSection(int chapter, int section) { gameModeRef->eventManager->SkipToEvent(chapter, section); }
 
-void UMyCheatManager::SpawnEnemies(FName id, int level, int numberToSpawn, FVector spawnLocation)
+void UMyCheatManager::SpawnEnemies(FName id, int level, int numberToSpawn, FVector spawnLocation) { for (int i = 0; i < numberToSpawn; ++i) { } }
+
+void UMyCheatManager::EnableCSVCategories(FString csvCategories)
 {
-   for(int i = 0; i < numberToSpawn; ++i)
-   {
-      
+   TArray<FString> CsvCategories;
+   csvCategories.ParseIntoArray(CsvCategories, TEXT(","), true);
+   for (auto x : CsvCategories) {
+      if (!FCsvProfiler::Get()->EnableCategoryByString(x))
+      UE_LOG(LogTemp, Error, TEXT("Category %s was unsucessfully enabled!"), *x);
    }
 }

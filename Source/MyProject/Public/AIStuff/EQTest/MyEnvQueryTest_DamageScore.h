@@ -6,12 +6,11 @@
 #include "EnvironmentQuery/EnvQueryTest.h"
 #include "MyEnvQueryTest_DamageScore.generated.h"
 
-/**
- * I use overlap because it
- */
-
 class AUnit;
 
+/**
+ * Used to score how dangerous the enemies around ups are (based on stats, damage dealt recently, etc).
+ */
 UCLASS()
 class MYPROJECT_API UMyEnvQueryTest_DamageScore : public UEnvQueryTest
 {

@@ -29,7 +29,7 @@ class MYPROJECT_API UMyGameInstance : public UGameInstance
     *GameInstance::Init is only called once, not per level loaded.  Called when play button is pressed.
     */
 
-   /**List of all the details about the map that need to be saved across changing levels*/
+   /**List of all the details about the map that need to be saved across changing levels, including levels not even on the screen*/
    TMap<FName, FMapSaveInfo> mapInfo;
 
    /**Cache what levels have been saved so when we save the information to disk, we don't have to save information about every level*/

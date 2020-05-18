@@ -10,28 +10,28 @@ UEquipment::UEquipment()
 {
 }
 
-int UEquipment::Equip(int equipItem)
+int UEquipment::Equip(int equipItemID)
 {
-   FEquipLookupRow* e        = UItemManager::Get().GetEquipInfo(equipItem);
-   FGameplayTag     itemType = UItemManager::Get().GetItemInfo(equipItem)->itemType;
+   FEquipLookupRow* e        = UItemManager::Get().GetEquipInfo(equipItemID);
+   FGameplayTag     itemType = UItemManager::Get().GetItemInfo(equipItemID)->itemType;
 
    // Depending on what kind of equip we have, swap item into different slots allocated for that equip
    if (itemType.GetTagName() == "Item.Equippable.Armor.Helmet") {
-      return SwapEquipsFromInventory(equipItem, 0);
+      return SwapEquipsFromInventory(equipItemID, 0);
    } else if (itemType.GetTagName() == "Item.Equippable.Armor.Body") {
-      return SwapEquipsFromInventory(equipItem, 1);
+      return SwapEquipsFromInventory(equipItemID, 1);
    } else if (itemType.GetTagName() == "Item.Equippable.Armor.Legs") {
-      return SwapEquipsFromInventory(equipItem, 2);
+      return SwapEquipsFromInventory(equipItemID, 2);
    } else if (itemType.GetTagName() == "Item.Equippable.Armor.Accessory") {
       if (equips[3] < 0)
-         return SwapEquipsFromInventory(equipItem, 3);
+         return SwapEquipsFromInventory(equipItemID, 3);
       else
-         return SwapEquipsFromInventory(equipItem, 4);
+         return SwapEquipsFromInventory(equipItemID, 4);
    } else if (itemType.MatchesTag(FGameplayTag::RequestGameplayTag("Item.Equippable.Weapon"))) {
       for (int i = 5; i < 9; i++) {
-         if (equips[i] <= 0) { return SwapEquipsFromInventory(equipItem, i); } // if our equip slots are full, just swap with the last equip
-      } 
-      return SwapEquipsFromInventory(equipItem, 9);
+         if (equips[i] <= 0) { return SwapEquipsFromInventory(equipItemID, i); } // if our equip slots are full, just swap with the last equip
+      }
+      return SwapEquipsFromInventory(equipItemID, 9);
    } else {
       GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, "Error, equipping unknown type of item");
       return 0;
@@ -61,10 +61,18 @@ void UEquipment::SwapEquips(int equipSlot1, int equipSlot2)
 {
    if (equipSlot1 != equipSlot2) {
       if (equips[equipSlot1] > 0) {
-         if (UItemManager::Get().GetItemInfo(equips[equipSlot1])->itemType == UItemManager::Get().GetItemInfo(equips[equipSlot2])->itemType) {
-            int equipInFirstSlot = equips[equipSlot1];
-            equips[equipSlot1]   = equips[equipSlot2];
-            equips[equipSlot2]   = equipInFirstSlot;
+         // Right now we can only swap accessories (used to be able to do weapons but I decided not to use a crazy weapon system)
+         if (UItemManager::Get().GetItemInfo(equips[equipSlot1])->itemType == FGameplayTag::RequestGameplayTag("Item.Equippable.Armor.Acc")) {
+            if (equips[equipSlot2] > 0) {
+               if (UItemManager::Get().GetItemInfo(equips[equipSlot1])->itemType == UItemManager::Get().GetItemInfo(equips[equipSlot2])->itemType) {
+                  int equipInFirstSlot = equips[equipSlot1];
+                  equips[equipSlot1]   = equips[equipSlot2];
+                  equips[equipSlot2]   = equipInFirstSlot;
+               }
+            } else {
+               equips[equipSlot2] = equips[equipSlot1];
+               equips[equipSlot1] = 0;
+            }
          }
       }
    }

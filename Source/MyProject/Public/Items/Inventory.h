@@ -19,7 +19,7 @@ class MYPROJECT_API UInventory : public UMyDraggableWidget
    GENERATED_BODY()
 
  public:
-   virtual void NativeConstruct() override;
+   void NativeConstruct() override;
 
    bool OnWidgetAddToViewport_Implementation() override;
 

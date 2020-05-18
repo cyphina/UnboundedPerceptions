@@ -32,6 +32,4 @@ class MYPROJECT_API UBTTask_Support : public UBTTaskNode
    UBTTask_Support();
    EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) override;
    void                OnMessage(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory, FName message, int32 requestID, bool bSuccess) override;
-
-
 };

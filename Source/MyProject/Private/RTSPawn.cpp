@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyProject.h"
+
 #include "RTSPawn.h"
 #include "MyGameInstance.h"
 #include "UserInput.h"
 #include "BasePlayer.h"
 
-#include "MySceneCapture2D.h"
 #include "Extras/FlyComponent.h"
 
 #include "AIStuff/AIControllers/UnitController.h"
@@ -17,11 +17,14 @@
 #include "WorldObjects/Enemies/Enemy.h"
 
 #include "UI/HUDManager.h"
-#include "UI/UserWidgets/MainWidget.h"
+#include "UI/UserWidgets/RTSIngameWidget.h"
 #include "Quests/QuestManager.h"
 #include "AbilitySystemComponent.h"
 #include "ActionbarInterface.h"
 #include "SceneViewport.h"
+
+#include "Algo/Transform.h"
+#include "GameBaseHelpers/DefaultCursorClickFunctionality.h"
 
 float const ARTSPawn::maxArmLength     = 4000.f;
 float const ARTSPawn::minArmLength     = 250.f;
@@ -46,24 +49,39 @@ ARTSPawn::ARTSPawn()
    mapArm->SetupAttachment(scene);
 
    // ObjectTypeQueries can be seen in enum list ObjectTypeQuery in the blueprints
-   leftClickQueryObjects.Add(EObjectTypeQuery::ObjectTypeQuery1); // WorldStatic
-   leftClickQueryObjects.Add(EObjectTypeQuery::ObjectTypeQuery7); // Enemy
-   leftClickQueryObjects.Add(EObjectTypeQuery::ObjectTypeQuery8); // Interactable
-   leftClickQueryObjects.Add(EObjectTypeQuery::ObjectTypeQuery9); // NPC
-   // leftClickQueryObjects.Add(EObjectTypeQuery::ObjectTypeQuery10); don't hit buildings for these click traces
-   // leftClickQueryObjects.Add(EObjectTypeQuery::ObjectTypeQuery11); //VisionBlocker
-   leftClickQueryObjects.Add(EObjectTypeQuery::ObjectTypeQuery12); // Friendly
+   // We use this to define what kind of objects can be affected by this raycast
+   leftClickQueryObjects.Add(WORLD_STATIC_OBJECT_QUERY);
+   leftClickQueryObjects.Add(ENEMY_OBJECT_QUERY);
+   leftClickQueryObjects.Add(INTERACTABLE_OBJECT_QUERY);
+   leftClickQueryObjects.Add(NPC_OBJECT_QUERY);
+   // Don't hit buildings for these click traces
+   // leftClickQueryObjects.Add(TRIGGER_OBJECT_QUERY);
+   // leftClickQueryObjects.Add(VISION_BLOCKER_OBJECT_QUERY);
+   leftClickQueryObjects.Add(FRIENDLY_OBJECT_QUERY);
 
-   rightClickQueryObjects.Add(EObjectTypeQuery::ObjectTypeQuery1); // WorldStatic
-   rightClickQueryObjects.Add(EObjectTypeQuery::ObjectTypeQuery7); // Enemy
+   rightClickQueryObjects.Add(WORLD_STATIC_OBJECT_QUERY);
+   rightClickQueryObjects.Add(ENEMY_OBJECT_QUERY);
+
+   controlGroups.AddDefaulted(5);
+
+   FCollisionQueryParams collisionQueryParams;
+   collisionQueryParams.bTraceComplex = true;
+}
+
+FORCEINLINE bool ARTSPawn::IsAnyAllySelected() const
+{
+   return controllerRef->GetBasePlayer()->selectedAllies.Num() > 0;
 }
 
 // Called when the game starts or when spawned
 void ARTSPawn::BeginPlay()
 {
-   controllerRef                                        = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+   controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+   // Stores new current viewport size in viewX and viewY if playing window resized
    FViewport::ViewportResizedEvent.AddUObject(this, &ARTSPawn::RecalculateViewportSize);
+   // Stores current viewport size
    controllerRef->GetViewportSize(viewX, viewY);
+   clickFunctionalityClass = MakeUnique<UDefaultCursorClickFunctionality>(this, controllerRef);
    Super::BeginPlay();
 }
 
@@ -85,28 +103,54 @@ void ARTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
    InputComponent->BindAction("PrevFlightPath", IE_Pressed, this, &ARTSPawn::PrevFlight);
    InputComponent->BindAction("NextFlightPath", IE_Pressed, this, &ARTSPawn::NextFlight);
    InputComponent->BindAction("RightClick", IE_Pressed, this, &ARTSPawn::RightClick);
+   InputComponent->BindAction("RightClickShift", IE_Pressed, this, &ARTSPawn::RightClickShift);
+   InputComponent->BindAction("LeftClick", IE_Pressed, this, &ARTSPawn::LeftClick);
+   InputComponent->BindAction("LeftClickShift", IE_Pressed, this, &ARTSPawn::LeftClickShift);
 
    InputComponent->BindAction("SelectNext", IE_Pressed, this, &ARTSPawn::TabNextAlly);
    InputComponent->BindAction("AttackMove", IE_Pressed, this, &ARTSPawn::AttackMoveInitiate);
+
    InputComponent->BindAction<FAbilityUseDelegate>("UseAbility1", IE_Pressed, this, &ARTSPawn::UseAbility, 0);
    InputComponent->BindAction<FAbilityUseDelegate>("UseAbility2", IE_Pressed, this, &ARTSPawn::UseAbility, 1);
    InputComponent->BindAction<FAbilityUseDelegate>("UseAbility3", IE_Pressed, this, &ARTSPawn::UseAbility, 2);
    InputComponent->BindAction<FAbilityUseDelegate>("UseAbility4", IE_Pressed, this, &ARTSPawn::UseAbility, 3);
    InputComponent->BindAction<FAbilityUseDelegate>("UseAbility5", IE_Pressed, this, &ARTSPawn::UseAbility, 4);
    InputComponent->BindAction<FAbilityUseDelegate>("UseAbility6", IE_Pressed, this, &ARTSPawn::UseAbility, 5);
+
    InputComponent->BindAction("CameraSpeedup", IE_Pressed, this, &ARTSPawn::CameraSpeedOn);
    InputComponent->BindAction("CameraSpeedup", IE_Released, this, &ARTSPawn::CameraSpeedOff);
+
    InputComponent->BindAxis("MoveForward", this, &ARTSPawn::MoveX);
    InputComponent->BindAxis("MoveRight", this, &ARTSPawn::MoveY);
+
    InputComponent->BindAxis("EdgeMoveX", this, &ARTSPawn::EdgeMovementX);
    InputComponent->BindAxis("EdgeMoveY", this, &ARTSPawn::EdgeMovementY);
    InputComponent->BindAxis("EdgeMoveX", this, &ARTSPawn::MMBDragX);
    InputComponent->BindAxis("EdgeMoveY", this, &ARTSPawn::MMBDragY);
    InputComponent->BindAxis("EdgeMoveX", this, &ARTSPawn::PanX);
    InputComponent->BindAxis("EdgeMoveY", this, &ARTSPawn::PanY);
+
    InputComponent->BindAction("PanReset", IE_Pressed, this, &ARTSPawn::PanReset);
    InputComponent->BindAction("Zoom In", IE_Pressed, this, &ARTSPawn::ZoomIn);
    InputComponent->BindAction("Zoom Out", IE_Pressed, this, &ARTSPawn::ZoomOut);
+
+   InputComponent->BindAction<FSelectControlGroupDelegate>("Control1", IE_Pressed, this, &ARTSPawn::SelectControlGroup, 1);
+   InputComponent->BindAction<FSelectControlGroupDelegate>("Control2", IE_Pressed, this, &ARTSPawn::SelectControlGroup, 2);
+   InputComponent->BindAction<FSelectControlGroupDelegate>("Control3", IE_Pressed, this, &ARTSPawn::SelectControlGroup, 3);
+   InputComponent->BindAction<FSelectControlGroupDelegate>("Control4", IE_Pressed, this, &ARTSPawn::SelectControlGroup, 4);
+   InputComponent->BindAction<FSelectControlGroupDelegate>("Control5", IE_Pressed, this, &ARTSPawn::SelectControlGroup, 5);
+
+   InputComponent->BindAction<FSelectControlGroupDelegate>("Control1", IE_Released, this, &ARTSPawn::StopContolGroupFollow, 1);
+   InputComponent->BindAction<FSelectControlGroupDelegate>("Control2", IE_Released, this, &ARTSPawn::StopContolGroupFollow, 2);
+   InputComponent->BindAction<FSelectControlGroupDelegate>("Control3", IE_Released, this, &ARTSPawn::StopContolGroupFollow, 3);
+   InputComponent->BindAction<FSelectControlGroupDelegate>("Control4", IE_Released, this, &ARTSPawn::StopContolGroupFollow, 4);
+   InputComponent->BindAction<FSelectControlGroupDelegate>("Control5", IE_Released, this, &ARTSPawn::StopContolGroupFollow, 5);
+
+   InputComponent->BindAction<FMakeControlGroupDelegate>("CreateControl1", IE_Pressed, this, &ARTSPawn::MakeControlGroup, 1);
+   InputComponent->BindAction<FMakeControlGroupDelegate>("CreateControl2", IE_Pressed, this, &ARTSPawn::MakeControlGroup, 2);
+   InputComponent->BindAction<FMakeControlGroupDelegate>("CreateControl3", IE_Pressed, this, &ARTSPawn::MakeControlGroup, 3);
+   InputComponent->BindAction<FMakeControlGroupDelegate>("CreateControl4", IE_Pressed, this, &ARTSPawn::MakeControlGroup, 4);
+   InputComponent->BindAction<FMakeControlGroupDelegate>("CreateControl5", IE_Pressed, this, &ARTSPawn::MakeControlGroup, 5);
 }
 
 void ARTSPawn::PossessedBy(AController* newController)
@@ -129,9 +173,15 @@ void ARTSPawn::DisableInput(APlayerController* PlayerController)
    hitActor = nullptr;
 }
 
+bool ARTSPawn::isSelectionRectActive() const
+{
+   const FVector2D difference = startMousePos - endMousePos;
+   return FMath::Sqrt(FVector2D::DotProduct(difference, difference)) > 10;
+}
+
 void ARTSPawn::SetSecondaryCursor(ECursorStateEnum cursorType)
 {
-   switch (cursorType) {
+   switch(cursorType) {
       case ECursorStateEnum::Magic:
       case ECursorStateEnum::Item:
       case ECursorStateEnum::AttackMove:
@@ -148,51 +198,72 @@ void ARTSPawn::SetSecondaryCursor(ECursorStateEnum cursorType)
 
 void ARTSPawn::ChangeCursor(ECursorStateEnum newCursorState)
 {
-   if (cursorState != newCursorState) {
+   if(cursorState != newCursorState) {
       cursorState                       = newCursorState;
       controllerRef->CurrentMouseCursor = static_cast<EMouseCursor::Type>(newCursorState);
       FSlateApplication::Get().GetPlatformCursor().Get()->SetType(static_cast<EMouseCursor::Type>(newCursorState));
    }
 }
 
+void ARTSPawn::GetHitResultClick(FHitResult& clickHitResult) const
+{
+   FVector worldLocation, worldDirection;
+   if(controllerRef->DeprojectMousePositionToWorld(worldLocation, worldDirection)) {
+      const auto               endPos = worldLocation + worldDirection * GetMaxArmLength() * CLICK_TRACE_LENGTH_MULTIPLIER;
+      FCollisionResponseParams f;
+      GetWorld()->LineTraceSingleByChannel(clickHitResult, worldLocation, endPos, SELECTABLE_BY_CLICK_CHANNEL, clickCollisionQueryParams);
+   }
+}
+
+AActor* ARTSPawn::GetHitActorClick(FHitResult& clickHitResult)
+{
+   GetHitResultClick(clickHitResult);
+   return clickHitResult.GetActor();
+}
+
 void ARTSPawn::CursorHover()
 {
-   if (!hasSecondaryCursor) {
-      if (cursorDirections.Num() > 0 && !isCamNavDisabled) {
+   if(!hasSecondaryCursor) {
+      if(cursorDirections.Num() > 0 && !isCamNavDisabled) {
          ChangeCursor(cursorDirections.Last());
          hitActor = nullptr;
          return;
       }
 
-      controllerRef->GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_GameTraceChannel7), true, hitResult); // Selectable by click trace
+      GetHitResultClick(hitResult);
 
-      if (hitResult.GetActor()) {
-         if (hitResult.GetActor() != hitActor) {
-
-            if (hitActor && hitActor->GetClass()->IsChildOf(ACharacter::StaticClass())) Cast<ACharacter>(hitActor)->GetMesh()->SetRenderCustomDepth(false);
+      if(hitResult.GetActor()) {
+         if(hitResult.GetActor() != hitActor) {
+            // Remove higlights from last actor
+            if(hitActor && hitActor->GetClass()->IsChildOf(ACharacter::StaticClass()))
+               Cast<ACharacter>(hitActor)->GetMesh()->SetRenderCustomDepth(false);
 
             hitActor = hitResult.GetActor();
 
-            if (hitActor && hitActor->GetClass()->IsChildOf(ACharacter::StaticClass())) Cast<ACharacter>(hitActor)->GetMesh()->SetRenderCustomDepth(true);
+            // Add highlight to new actor
+            if(hitActor && hitActor->GetClass()->IsChildOf(ACharacter::StaticClass()))
+               Cast<ACharacter>(hitActor)->GetMesh()->SetRenderCustomDepth(true);
 
-            if (controllerRef->GetBasePlayer() && controllerRef->GetBasePlayer()->selectedAllies.Num() > 0) {
-               switch (hitResult.GetComponent()->GetCollisionObjectType()) {
-                  case ECollisionChannel::ECC_WorldStatic: ChangeCursor(ECursorStateEnum::Moving); break;
-                  case ECollisionChannel::ECC_GameTraceChannel3: ChangeCursor(ECursorStateEnum::Interact); break;
-                  case ECollisionChannel::ECC_GameTraceChannel4: ChangeCursor(ECursorStateEnum::Talking); break;
-                  case ECollisionChannel::ECC_GameTraceChannel2: ChangeCursor(ECursorStateEnum::Attack); break;
-                  default: ChangeCursor(ECursorStateEnum::Select); break;
+            if(controllerRef->GetBasePlayer() && controllerRef->GetBasePlayer()->selectedAllies.Num() > 0) {
+               switch(hitResult.GetComponent()->GetCollisionObjectType()) {
+                  case ECC_WorldStatic: ChangeCursor(ECursorStateEnum::Moving); return;
+                  case INTERACTABLE_CHANNEL: ChangeCursor(ECursorStateEnum::Interact); return;
+                  case NPC_CHANNEL: ChangeCursor(ECursorStateEnum::Talking); return;
+                  case ENEMY_CHANNEL: ChangeCursor(ECursorStateEnum::Attack); return;
+                  default: ChangeCursor(ECursorStateEnum::Select); return;
                }
             } else
                ChangeCursor(ECursorStateEnum::Select);
          }
       }
-   } else {
-      controllerRef->GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_GameTraceChannel7), true, hitResult); // Selectable by click trace
-      if (hitResult.GetActor()) {
-         if (hitResult.GetActor() != hitActor) {
-            if (hitActor && hitActor->GetClass()->IsChildOf(ACharacter::StaticClass())) Cast<ACharacter>(hitActor)->GetMesh()->SetRenderCustomDepth(false);
-            if (hitResult.GetActor()->GetClass()->IsChildOf(ACharacter::StaticClass())) Cast<ACharacter>(hitResult.GetActor())->GetMesh()->SetRenderCustomDepth(true);
+   } else { // If we have a spell or item cursor
+      controllerRef->GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(SELECTABLE_BY_CLICK_CHANNEL), true, hitResult);
+      if(hitResult.GetActor()) {
+         if(hitResult.GetActor() != hitActor) {
+            if(hitActor && hitActor->GetClass()->IsChildOf(ACharacter::StaticClass()))
+               Cast<ACharacter>(hitActor)->GetMesh()->SetRenderCustomDepth(false);
+            if(hitResult.GetActor()->GetClass()->IsChildOf(ACharacter::StaticClass()))
+               Cast<ACharacter>(hitResult.GetActor())->GetMesh()->SetRenderCustomDepth(true);
             hitActor = hitResult.GetActor();
          }
       }
@@ -212,8 +283,8 @@ void ARTSPawn::SetCameraArmLength(float newLength)
 
 void ARTSPawn::RecalculateViewportSize(FViewport* viewport, uint32 newSize)
 {
-   GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("RECALC VIEWPORT"));
    controllerRef->GetViewportSize(viewX, viewY);
+   GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("RECALC VIEWPORT with new size: %d %d"), viewX, viewY));
 }
 
 void ARTSPawn::ZoomIn()
@@ -234,8 +305,8 @@ void ARTSPawn::ZoomReset()
 void ARTSPawn::LockCamera()
 {
    isCamNavDisabled = isCamNavDisabled ? false : true;
-   isCamNavDisabled ? controllerRef->GetHUDManager()->GetMainHUD()->DisplayHelpText(NSLOCTEXT("HelpText", "LockOn", "Camera Lock On"))
-                    : controllerRef->GetHUDManager()->GetMainHUD()->DisplayHelpText(NSLOCTEXT("HelpText", "LockOff", "Camera Lock Off"));
+   isCamNavDisabled ? controllerRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("HelpText", "LockOn", "Camera Lock On"))
+                    : controllerRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("HelpText", "LockOff", "Camera Lock Off"));
 }
 
 void ARTSPawn::CameraSpeedOn()
@@ -250,40 +321,46 @@ void ARTSPawn::CameraSpeedOff()
 
 FORCEINLINE void ARTSPawn::MoveX(float axisValue)
 {
-   if (!isCamNavDisabled) SetActorLocation(GetActorTransform().TransformPosition(FVector(axisValue * baseCameraMoveSpeed * camMoveSpeedMultiplier, 0, 0)));
+   if(!isCamNavDisabled)
+      SetActorLocation(GetActorTransform().TransformPosition(FVector(axisValue * baseCameraMoveSpeed * camMoveSpeedMultiplier, 0, 0)));
 }
 
 FORCEINLINE void ARTSPawn::MoveY(float axisValue)
 {
-   if (!isCamNavDisabled) SetActorLocation(GetActorTransform().TransformPosition(FVector(0, axisValue * baseCameraMoveSpeed * camMoveSpeedMultiplier, 0)));
+   if(!isCamNavDisabled)
+      SetActorLocation(GetActorTransform().TransformPosition(FVector(0, axisValue * baseCameraMoveSpeed * camMoveSpeedMultiplier, 0)));
 }
 
 void ARTSPawn::MMBDragX(float axisValue)
 {
-   if (controllerRef->IsInputKeyDown(FKey("MiddleMouseButton")) && !controllerRef->IsInputKeyDown(FKey("LeftShift")) && !controllerRef->IsInputKeyDown(FKey("RightShift"))) {
+   if(controllerRef->IsInputKeyDown(FKey("MiddleMouseButton")) && !controllerRef->IsInputKeyDown(FKey("LeftShift")) &&
+      !controllerRef->IsInputKeyDown(FKey("RightShift"))) {
       AddActorLocalOffset(FVector(0, axisValue * -1.f * camMoveSpeedMultiplier * baseCameraMoveSpeed, 0));
    }
 }
 
 void ARTSPawn::MMBDragY(float axisValue)
 {
-   if (controllerRef->IsInputKeyDown(FKey("MiddleMouseButton")) && !controllerRef->IsInputKeyDown(FKey("LeftShift")) && !controllerRef->IsInputKeyDown(FKey("RightShift"))) {
+   if(controllerRef->IsInputKeyDown(FKey("MiddleMouseButton")) && !controllerRef->IsInputKeyDown(FKey("LeftShift")) &&
+      !controllerRef->IsInputKeyDown(FKey("RightShift"))) {
       AddActorLocalOffset(FVector(axisValue * -1.f * camMoveSpeedMultiplier * baseCameraMoveSpeed, 0, 0));
    }
 }
 
 void ARTSPawn::PanX(float axisValue)
 {
-   if (controllerRef->IsInputKeyDown(FKey("LeftShift")) || controllerRef->IsInputKeyDown(FKey("RightShift")) && controllerRef->IsInputKeyDown(FKey("MiddleMouseButton"))) {
-      AddActorLocalRotation(FQuat::MakeFromEuler(FVector(0, 0, axisValue * camMoveSpeedMultiplier)));
-   }
+   if(controllerRef->IsInputKeyDown(EKeys::MiddleMouseButton))
+      if(controllerRef->IsInputKeyDown(FKey("LeftShift")) || controllerRef->IsInputKeyDown(FKey("RightShift"))) {
+         AddActorLocalRotation(FQuat::MakeFromEuler(FVector(0, 0, axisValue * camMoveSpeedMultiplier)));
+      }
 }
 
 void ARTSPawn::PanY(float axisValue)
 {
-   if (controllerRef->IsInputKeyDown(FKey("LeftShift")) || controllerRef->IsInputKeyDown(FKey("RightShift")) && controllerRef->IsInputKeyDown(FKey("MiddleMouseButton"))) {
-      AddActorLocalRotation(FQuat::MakeFromEuler(FVector(0, axisValue * camMoveSpeedMultiplier, 0)));
-   }
+   if(controllerRef->IsInputKeyDown(EKeys::MiddleMouseButton))
+      if(controllerRef->IsInputKeyDown(FKey("LeftShift")) || controllerRef->IsInputKeyDown(FKey("RightShift"))) {
+         AddActorLocalRotation(FQuat::MakeFromEuler(FVector(0, axisValue * camMoveSpeedMultiplier, 0)));
+      }
 }
 
 void ARTSPawn::PanReset()
@@ -293,13 +370,13 @@ void ARTSPawn::PanReset()
 
 void ARTSPawn::EdgeMovementX(float axisValue)
 {
-   if (!isCamNavDisabled) {
+   if(!isCamNavDisabled) {
       float mouseX, mouseY;
-      if (controllerRef->GetMousePosition(mouseX, mouseY)) {
-         if (mouseX / viewX < .025) {
+      if(controllerRef->GetMousePosition(mouseX, mouseY)) {
+         if(mouseX / viewX < .025) {
             AddActorLocalOffset(FVector(0, -1 * baseCameraMoveSpeed * camMoveSpeedMultiplier, 0));
             cursorDirections.AddUnique(ECursorStateEnum::PanLeft);
-         } else if (mouseX / viewX > .975) {
+         } else if(mouseX / viewX > .975) {
             AddActorLocalOffset(FVector(0, baseCameraMoveSpeed * camMoveSpeedMultiplier, 0));
             cursorDirections.AddUnique(ECursorStateEnum::PanRight);
          } else {
@@ -312,13 +389,13 @@ void ARTSPawn::EdgeMovementX(float axisValue)
 
 void ARTSPawn::EdgeMovementY(float axisValue)
 {
-   if (!isCamNavDisabled) {
+   if(!isCamNavDisabled) {
       float mouseX, mouseY;
-      if (controllerRef->GetMousePosition(mouseX, mouseY)) {
-         if (mouseY / viewY < .025) {
+      if(controllerRef->GetMousePosition(mouseX, mouseY)) {
+         if(mouseY / viewY < .025) {
             AddActorLocalOffset(FVector(baseCameraMoveSpeed * camMoveSpeedMultiplier, 0, 0));
             cursorDirections.AddUnique(ECursorStateEnum::PanUp);
-         } else if (mouseY / viewY > .975) {
+         } else if(mouseY / viewY > .975) {
             AddActorLocalOffset(FVector(-1 * baseCameraMoveSpeed * camMoveSpeedMultiplier, 0, 0));
             cursorDirections.AddUnique(ECursorStateEnum::PanDown);
          } else {
@@ -331,118 +408,85 @@ void ARTSPawn::EdgeMovementY(float axisValue)
 
 void ARTSPawn::StopSelectedAllyCommands()
 {
-   for (int i = 0; i < controllerRef->GetBasePlayer()->selectedAllies.Num(); i++) {
+   for(int i = 0; i < controllerRef->GetBasePlayer()->selectedAllies.Num(); i++) {
       controllerRef->GetBasePlayer()->selectedAllies[i]->GetUnitController()->Stop();
       controllerRef->GetBasePlayer()->selectedAllies[i]->ClearCommandQueue();
    }
 
+   // Cancel whatever secondary cursors we have since we're stopping our action and set hitActor to null to make cursor hover proc
    hasSecondaryCursor = false;
    hitActor           = nullptr;
 
-   StopSelectedAllyAuto();
-   HideSpellCircle();
-}
+   for(auto ally : controllerRef->GetBasePlayer()->selectedAllies)
+      ally->GetAllyAIController()->StopAutomation();
 
-void ARTSPawn::StopSelectedAllyAuto()
-{
-   for (int i = 0; i < controllerRef->GetBasePlayer()->selectedAllies.Num(); i++) {
-      if (controllerRef->GetBasePlayer()->selectedAllies[i]->GetAllyAIController()->behaviorTreeComp->IsRunning())
-         controllerRef->GetBasePlayer()->selectedAllies[i]->GetAllyAIController()->behaviorTreeComp->StopTree();
-   }
+   HideSpellCircle();
 }
 
 void ARTSPawn::PrevFlight()
 {
-   for (int i = 0; i < controllerRef->GetBasePlayer()->selectedAllies.Num(); i++) {
+   for(int i = 0; i < controllerRef->GetBasePlayer()->selectedAllies.Num(); i++) {
       Cast<UFlyComponent>(controllerRef->GetBasePlayer()->heroes[i]->GetComponentByClass(UFlyComponent::StaticClass()))->PreviousFlightPathSelected();
    }
 }
 
 void ARTSPawn::NextFlight()
 {
-   for (int i = 0; i < controllerRef->GetBasePlayer()->selectedAllies.Num(); i++) {
+   for(int i = 0; i < controllerRef->GetBasePlayer()->selectedAllies.Num(); i++) {
       Cast<UFlyComponent>(controllerRef->GetBasePlayer()->heroes[i]->GetComponentByClass(UFlyComponent::StaticClass()))->NextFlightPathSelected();
    }
 }
 
 void ARTSPawn::RightClick()
 {
-   if (cursorState == ECursorStateEnum::Magic) {
-      StopSelectedAllyCommands();
-      return;
-   }
+   clickFunctionalityClass->HandleRightClick();
+}
 
-   if (cursorState != ECursorStateEnum::UI) {
-      if (cursorState != ECursorStateEnum::Attack) {
-         // Trace ground if we're right clicking on something that's not an enemy
-         if (controllerRef->GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_GameTraceChannel1), false, hitResult)) {
-            // Last time when I didn't make this temporary, we tried making our lambda automatically capture location and it failed miserably
-            FVector location = hitResult.Location;
+void ARTSPawn::RightClickShift()
+{
+   clickFunctionalityClass->HandleShiftRightClick();
+}
 
-            // Create a little decal where we clicked
-            CreateClickVisual(location);
+void ARTSPawn::LeftClick()
+{
+   clickFunctionalityClass->HandleLeftClick();
+}
 
-            if (controllerRef->IsInputKeyDown(EKeys::LeftShift)) {
-               GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::White, hitResult.Location.ToString());
-               for (AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
-                  ally->QueueAction(TFunction<void()>([ally, location]() { ally->GetUnitController()->Move(location); }));
-               }
-            } else {
-               StopSelectedAllyCommands();
-               for (AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
-                  ally->GetUnitController()->Move(FVector(location));
-               }
-            }
-         }
-      } else {
-         // Trace channel selectableByClickTrace
-         if (controllerRef->GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECollisionChannel::ECC_GameTraceChannel7), false, hitResult)) {
-            AEnemy* enemy = Cast<AEnemy>(hitResult.GetActor());
-            if (controllerRef->IsInputKeyDown(EKeys::LeftShift)) {
-               for (AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
-                  ally->QueueAction(TFunction<void()>([ally, enemy]() { ally->GetUnitController()->BeginAttack(enemy); }));
-               }
-            } else {
-               StopSelectedAllyCommands();
-               for (AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
-                  ally->GetUnitController()->BeginAttack(enemy);
-               }
-            }
-         }
-      }
-   }
+void ARTSPawn::LeftClickShift()
+{
+   clickFunctionalityClass->HandleShiftLeftClick();
 }
 
 void ARTSPawn::TabNextAlly()
 {
    int selectedHeroIndex = 0;
-   if (controllerRef->GetBasePlayer()->selectedAllies.Num() > 1) {
+   // If more than one ally is selected, tab through the selection
+   if(controllerRef->GetBasePlayer()->selectedAllies.Num() > 1) {
       controllerRef->GetBasePlayer()->unitIndex = (controllerRef->GetBasePlayer()->unitIndex + 1) % controllerRef->GetBasePlayer()->selectedAllies.Num();
       // Make sure any other selected heroes are actually in hero array.  If a hero is on the map, it better be in our party else spawn the NPC version of it
       controllerRef->GetHUDManager()->GetActionHUD()->SingleAllyViewIndexFree(controllerRef->GetBasePlayer()->selectedAllies[controllerRef->GetBasePlayer()->unitIndex]);
    } else {
-      // tab through heroes if one/zero allies are selected
-      if (controllerRef->GetBasePlayer()->heroes.Num()) {
-
-         if (controllerRef->GetBasePlayer()->selectedHeroes.Num() > 0) {
-            int prevSelectedHeroIndex = controllerRef->GetBasePlayer()->selectedHeroes[0]->heroIndex; 
+      // Tab through heroes if one/zero allies are selected
+      if(controllerRef->GetBasePlayer()->heroes.Num()) {
+         if(controllerRef->GetBasePlayer()->selectedHeroes.Num() > 0) {
+            int prevSelectedHeroIndex = controllerRef->GetBasePlayer()->selectedHeroes[0]->heroIndex;
             controllerRef->GetBasePlayer()->heroes[prevSelectedHeroIndex]->SetSelected(false);
             selectedHeroIndex = (prevSelectedHeroIndex + 1) % controllerRef->GetBasePlayer()->heroes.Num();
             controllerRef->GetBasePlayer()->heroes[selectedHeroIndex]->SetSelected(true);
          }
          controllerRef->GetBasePlayer()->heroes[selectedHeroIndex]->SetSelected(true);
-         controllerRef->OnAllySelectedDelegate.Broadcast();
       }
    }
 }
 
 void ARTSPawn::AttackMoveInitiate()
 {
-   if (!controllerRef->GetMyGameInstance()->playerQuickCast)
+   if(!controllerRef->GetMyGameInstance()->playerQuickCast)
       SetSecondaryCursor(ECursorStateEnum::AttackMove);
    else {
       FHitResult hitRes;
-      if (controllerRef->GetHitResultUnderCursor(ECollisionChannel::ECC_GameTraceChannel7, false, hitRes)) AttackMoveConfirm(hitRes.Location);
+      if(controllerRef->GetHitResultUnderCursor(SELECTABLE_BY_CLICK_CHANNEL, false, hitRes))
+         AttackMoveConfirm(hitRes.Location);
    }
 }
 
@@ -450,10 +494,10 @@ void ARTSPawn::UseAbility(int abilityIndex)
 {
    controllerRef->GetHUDManager()->GetActionHUD()->UseSkill(abilityIndex);
    //Quick cast enabled
-   if (controllerRef->GetMyGameInstance()->playerQuickCast) {
+   if(controllerRef->GetMyGameInstance()->playerQuickCast) {
       FHitResult hitRes;
-      if (controllerRef->GetHitResultUnderCursor(ECollisionChannel::ECC_GameTraceChannel7, false, hitRes))
-         for (AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
+      if(controllerRef->GetHitResultUnderCursor(SELECTABLE_BY_CLICK_CHANNEL, false, hitRes))
+         for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
             ally->GetAllyAIController()->SetupSpellTargetting(hitRes, ally->abilities[abilityIndex]);
          }
    }
@@ -461,12 +505,12 @@ void ARTSPawn::UseAbility(int abilityIndex)
 
 void ARTSPawn::AttackMoveConfirm(FVector moveLocation)
 {
-   if (controllerRef->IsInputKeyDown(EKeys::LeftShift)) {
-      for (AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
+   if(controllerRef->IsInputKeyDown(EKeys::LeftShift)) {
+      for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
          ally->QueueAction(TFunction<void()>([ally, moveLocation]() { ally->GetUnitController()->AttackMove(moveLocation); }));
       }
    } else {
-      for (AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
+      for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
          ally->GetUnitController()->AttackMove(moveLocation);
       }
    }
@@ -474,11 +518,64 @@ void ARTSPawn::AttackMoveConfirm(FVector moveLocation)
    SetSecondaryCursor();
 }
 
-void ARTSPawn::ClearSelectedAllies()
+void ARTSPawn::SelectControlGroup(int controlIndex)
 {
-   while (controllerRef->GetBasePlayer()->selectedAllies.Num() > 0)
-      controllerRef->GetBasePlayer()->selectedAllies[0]->SetSelected(false);
+   // If we're holding down a unit to follow don't let us select another group
+   if(controlBeingHeldIndex == 0) {
+      // If we are double tapping a control selection
+      if(lastControlTappedIndex == controlIndex) {
+         // Then pan over to the lead unit of the control group and continue to follow it with the camera as long as we hold down the button
+         if(controlGroups[lastControlTappedIndex].Num() > 0) {
+            controlBeingHeldIndex = lastControlTappedIndex;
+            GetWorld()->GetTimerManager().SetTimer(controlDoubleTapHoldHandle, this, &ARTSPawn::ControlGroupDoubleTapHoldFollow, 0.01f, true, 0);
+         }
+      }
 
-   controllerRef->GetBasePlayer()->focusedUnit = nullptr;
-   controllerRef->OnAllyDeselectedDelegate.Broadcast();
+      // Clear whatever units we have selected and select the ones in the control group
+      controllerRef->GetBasePlayer()->ClearSelectedAllies();
+
+      for(auto ally : controlGroups[controlIndex]) {
+         if(ally.IsValid())
+            ally->SetSelected(true);
+      }
+   }
+
+   // Mark the last control tapped for the double tap check
+   lastControlTappedIndex = controlIndex;
+}
+
+void ARTSPawn::ControlGroupDoubleTapTimer()
+{
+   lastControlTappedIndex = 0;
+}
+
+void ARTSPawn::ControlGroupDoubleTapHoldFollow()
+{
+   // Follow the leader of the control group for whatever control group key we're pressing down
+   auto allyRef = controlGroups[controlBeingHeldIndex][0];
+   if(allyRef.IsValid()) {
+      SetActorRotation(FRotator(0, 180, 0));
+      const auto [x, y, z]       = allyRef->GetActorLocation();
+      cameraArm->TargetArmLength = defaultArmLength + z;
+      SetActorLocation(FVector(x + FMath::Tan(FMath::DegreesToRadians(40)) * cameraArm->TargetArmLength, y, z));
+   }
+}
+
+void ARTSPawn::StopContolGroupFollow(int releaseIndex)
+{
+   // Stop the camera follow only if we released the right key
+   if(releaseIndex == controlBeingHeldIndex) {
+      GetWorld()->GetTimerManager().ClearTimer(controlDoubleTapHoldHandle);
+      controlBeingHeldIndex = 0;
+   }
+   // Time limit for the double tap starts after we release the control button
+   GetWorld()->GetTimerManager().SetTimer(ControlGroupDoupleTapHandle, this, &ARTSPawn::ControlGroupDoubleTapTimer, 0.15f, false, -1.f);
+}
+
+void ARTSPawn::MakeControlGroup(int controlGroupIndex)
+{
+   auto& allies = controllerRef->GetBasePlayer()->selectedAllies;
+   auto& cgroup = controlGroups[controlGroupIndex];
+
+   Algo::Transform(allies, cgroup, [](AAlly* ally) { return MakeWeakObjectPtr(ally); });
 }

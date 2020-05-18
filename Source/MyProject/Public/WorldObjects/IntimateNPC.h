@@ -20,9 +20,11 @@ class MYPROJECT_API AIntimateNPC : public ANPC
 {
    GENERATED_BODY()
 
-   int           relationshipPoints            = 0;
-   int           currentRelationshipEventIndex = 0;
-   ARTSGameMode* gameModeRef                   = nullptr;
+   int relationshipPoints            = 0;
+   int currentRelationshipEventIndex = 0;
+
+   UPROPERTY()
+   ARTSGameMode* gameModeRef = nullptr;
 
    /** Point values at which events occur*/
    UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
@@ -49,9 +51,8 @@ class MYPROJECT_API AIntimateNPC : public ANPC
    /**
     *Sets up the dialogue UI to the proper state (conversation/intimate view) after interacting with this NPC
     */
-   void            SetupAppropriateView() override;
-   virtual FVector GetInteractableLocation_Implementation(ABaseHero* hero) override { return Super::GetInteractableLocation_Implementation(hero); }
+   void SetupAppropriateView() override;
 
-   void SaveNPCData(FMapSaveInfo& mapInfo) override;
-   void LoadNPCData(FNPCIntimateSaveInfo& npcSaveInfo);
+   void SaveNPCData(FMapSaveInfo& mapInfo) override final;
+   void LoadNPCData(FMapSaveInfo& mapInfo) override final;
 };

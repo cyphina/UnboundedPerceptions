@@ -9,16 +9,16 @@
 
 class ABaseHero;
 
-class MYPROJECT_API InteractState : public IUnitState
-{
+class MYPROJECT_API InteractState : public IUnitState {
    ABaseHero* heroRef;
 
- public:
+public:
    InteractState(ABaseHero* newHeroRef);
    ~InteractState();
 
-   virtual void       Enter(AUnit& unit) override;
-   virtual void       Exit(AUnit& unit) override;
-   virtual void       Update(AUnit& unit, float deltaSeconds) override;
+   virtual void Enter(AUnit& unit) override;
+   virtual void Exit(AUnit& unit) override;
+   virtual void Update(AUnit& unit, float deltaSeconds) override;
+
    virtual EUnitState GetName() const override { return EUnitState::STATE_INTERACTING; }
 };

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UI/UserWidgetExtensions/MyUserWidget.h"
+#include "UI/UserWidgetExtensions/AnimHudWidget.h"
 #include "CharacterMenu.generated.h"
 
 /**
@@ -13,7 +13,7 @@
 class ABaseHero;
 
 UCLASS()
-class MYPROJECT_API UCharacterMenu : public UMyUserWidget
+class MYPROJECT_API UCharacterMenu : public UAnimHudWidget
 {
    GENERATED_BODY()
 

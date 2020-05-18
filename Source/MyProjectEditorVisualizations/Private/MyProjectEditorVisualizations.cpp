@@ -1,5 +1,5 @@
 #include "MyProjectEditorVisualizations.h"
-#include "WorldObjects/PatrolComponent.h"
+#include "WorldObjects/Components/PatrolComponent.h"
 #include "Visualizations/PatrolPoints.h"
 #include "UnrealEd/Classes/Editor/UnrealEdEngine.h"
 #include "UnrealEd.h"
@@ -12,7 +12,7 @@ DEFINE_LOG_CATEGORY(MyProjectEditorVisualizations);
 
 void FMyProjectEditorVisualizationsModule::StartupModule()
 {
-	UE_LOG(MyProjectEditorVisualizations, Warning, TEXT("MyProjectEditorVisualizations: Log Started"));
+	UE_LOG(MyProjectEditorVisualizations, Display, TEXT("MyProjectEditorVisualizations: Log Started"));
 	if (GUnrealEd != NULL)
 	{
 	   GUnrealEd->RegisterComponentVisualizer(UPatrolComponent::StaticClass()->GetFName(),
@@ -24,7 +24,7 @@ void FMyProjectEditorVisualizationsModule::ShutdownModule()
 {
 	if (GUnrealEd != NULL)
 	{
-		UE_LOG(MyProjectEditorVisualizations, Warning, TEXT("MyProjectEditorVisualizations: Log Ended"));
+		UE_LOG(MyProjectEditorVisualizations, Display, TEXT("MyProjectEditorVisualizations: Log Ended"));
 		GUnrealEd->UnregisterComponentVisualizer(UPatrolComponent::StaticClass()->GetFName());
 	}
 }

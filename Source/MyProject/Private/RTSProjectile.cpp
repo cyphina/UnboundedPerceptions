@@ -32,23 +32,23 @@ void ARTSProjectile::BeginPlay()
    Super::BeginPlay();
    switch (targetting) {
       case EBulletTargettingScheme::Bullet_Ally:
-         collisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel9, ECollisionResponse::ECR_Block); // Friendly
+         collisionComponent->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Block);
          break;
       case EBulletTargettingScheme::Bullet_Enemy:
-         collisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Block); // Enemy
+         collisionComponent->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Block); 
          break;
       case EBulletTargettingScheme::Bullet_Either:
-         collisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Block); // Enemy
-         collisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel9, ECollisionResponse::ECR_Block); // Friendly
+         collisionComponent->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Block); 
+         collisionComponent->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Block); 
          break;
    }
 
    if (canGoThroughWalls) {
-      collisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel6, ECollisionResponse::ECR_Ignore); // vision blocker
-      collisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Ignore);       // static mesh
+      collisionComponent->SetCollisionResponseToChannel(VISION_BLOCKER_CHANNEL, ECR_Ignore); 
+      collisionComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);       
    } else {
-      collisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel6, ECollisionResponse::ECR_Block); // vision blocker
-      collisionComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);       // static mesh
+      collisionComponent->SetCollisionResponseToChannel(VISION_BLOCKER_CHANNEL, ECR_Block); 
+      collisionComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);       
    }
 
    collisionComponent->IgnoreActorWhenMoving(Cast<AActor>(GetOwner()), true);

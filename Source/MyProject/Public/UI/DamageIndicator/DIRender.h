@@ -12,7 +12,7 @@ class AUserInput;
  * Text render component displays text somewhere relative to its parent actor.  This subclass is specifically used to show texts that represent damage amounts and combat
  * occurences.
  */
-UCLASS()
+UCLASS(BlueprintType)
 class MYPROJECT_API UDIRender : public UTextRenderComponent
 {
    GENERATED_BODY()
@@ -21,11 +21,12 @@ class MYPROJECT_API UDIRender : public UTextRenderComponent
 
  public:
    FVector            start, end;
-   static AUserInput* controllerRef;
+
+   TWeakObjectPtr<APawn> cameraPawnRef;
 
    UDIRender();
-   void BeginPlay() override;
-   void TickComponent(float deltaSeconds, ELevelTick tickType, FActorComponentTickFunction* thisTickFunction) override;
+   void BeginPlay() override final;
+   void TickComponent(float deltaSeconds, ELevelTick tickType, FActorComponentTickFunction* thisTickFunction) override final;
 
    // Function called from the timeline on a tick
    UFUNCTION()
@@ -34,7 +35,4 @@ class MYPROJECT_API UDIRender : public UTextRenderComponent
    // Function called when timeline ends
    UFUNCTION()
    void OnTimelineFinished();
-
-   UPROPERTY(BlueprintReadWrite, Category = "Target")
-   AUnit* target;
 };

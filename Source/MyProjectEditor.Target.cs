@@ -7,7 +7,7 @@ public class MyProjectEditorTarget : TargetRules
 {
 	public MyProjectEditorTarget(TargetInfo Target) : base(Target)
 	{
-		this.Type = TargetType.Editor;
-		ExtraModuleNames.AddRange(new string[] { "MyProject", "MyProjectEditorVisualizations" });
+		Type = TargetType.Editor;
+		ExtraModuleNames.AddRange(new string[] { "MyProjectEditor", "MyProjectEditorVisualizations" });
 	}
 }

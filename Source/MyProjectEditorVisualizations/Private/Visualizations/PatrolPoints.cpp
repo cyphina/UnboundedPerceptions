@@ -3,7 +3,7 @@
 #include "MyProjectEditorVisualizations.h"
 #include "Visualizations/PatrolPoints.h"
 #include "SceneManagement.h"
-#include "WorldObjects/PatrolComponent.h"
+#include "WorldObjects/Components/PatrolComponent.h"
 #include "RTSHitProxy.h"
 #include "Commands.h"
 #include "EditorStyle.h"
@@ -78,9 +78,8 @@ bool FPatrolVisualizer::VisProxyHandleClick(FEditorViewportClient* inViewportCli
 	{
 		bEditing = true;
 		const UPatrolComponent* patrolComponentRef = CastChecked<UPatrolComponent>(visProxy->Component.Get());
-		patrolComponentPropName = GetComponentPropertyName(patrolComponentRef);
-		patrolComponentOwner = patrolComponentRef->GetOwner();
-
+		propertyPath = FComponentPropertyPath(patrolComponentRef);
+		
 		if (visProxy->IsA(HPatrolProxy::StaticGetType()))
 		{
 			HPatrolProxy* proxy = (HPatrolProxy*)visProxy;
@@ -148,7 +147,7 @@ TSharedPtr<SWidget> FPatrolVisualizer::GenerateContextMenu() const
 
 UPatrolComponent* FPatrolVisualizer::GetEditedPatrolComponent() const
 {
-	return Cast<UPatrolComponent>(GetComponentFromPropertyName(patrolComponentOwner, patrolComponentPropName));
+	return Cast<UPatrolComponent>(propertyPath.GetComponent());
 }
 
 void FPatrolVisualizer::OnDuplicateItem()

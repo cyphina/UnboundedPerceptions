@@ -8,7 +8,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnNamedInteractableInteracted);
 
 /**
- * Base clase for interactables that are actors placed in the world for the sole purpose of being interacted with
+ * Decorator that allows us to give a name property to an interactable
  */
 
 UCLASS()
@@ -29,7 +29,7 @@ class MYPROJECT_API UNamedInteractableDecorator : public UInteractableActorDecor
    bool Interact() override;
 
    UFUNCTION(BlueprintCallable, BlueprintPure)
-   FORCEINLINE FText GetName() override { return name; }
+   FORCEINLINE FText GetName() const override { return name; }
 
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnNamedInteractableInteracted OnInteracted;

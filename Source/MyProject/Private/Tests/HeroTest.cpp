@@ -30,15 +30,15 @@ bool FHeroAttTest::RunTest(const FString& params)
       TestNotNull(TEXT("GEngine is not null"), GEngine);
 
       int        initialHeroAttPoints = testHero->attPoints;
-      Attributes attToTest            = Attributes::Agility;
-      int        initialAttValue      = testHero->GetAttributeAdjValue(static_cast<uint8>(attToTest));
+      EAttributes attToTest            = EAttributes::Agility;
+      int        initialAttValue      = testHero->GetAttributeAdjValue(attToTest);
 
-      testHero->ChangeAttribute(Attributes::Agility, true);
+      testHero->ChangeAttribute(EAttributes::Agility, true);
       TestEqual("AttributePoints", testHero->attPoints, initialHeroAttPoints - 1);
-      TestEqual("AttributeValue", testHero->GetAttributeAdjValue(static_cast<uint8>(attToTest)), initialAttValue + 1);
-      testHero->ChangeAttribute(Attributes::Agility, false);
+      TestEqual("AttributeValue", testHero->GetAttributeAdjValue(attToTest), initialAttValue + 1);
+      testHero->ChangeAttribute(EAttributes::Agility, false);
       TestEqual("AttributePoints", testHero->attPoints, initialHeroAttPoints);
-      TestEqual("AttributeValue", testHero->GetAttributeAdjValue(static_cast<uint8>(attToTest)), initialAttValue);
+      TestEqual("AttributeValue", testHero->GetAttributeAdjValue(attToTest), initialAttValue);
       return true;
    }
    return false;

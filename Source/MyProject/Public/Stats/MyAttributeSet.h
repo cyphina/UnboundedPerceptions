@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -18,56 +16,63 @@
       return FGameplayAttribute(Property);                                                                                                     \
    }
 
+// Memory of me trying to create a macro to save code.  But the UHT can't parse it since it relies on the UPROPERTY() text being written, and it thinks the macros are unknown types
+// #define DECLARE_RTS_STAT_PROPERTY(PropertyName, CategoryName) \
+//    UPROPERTY(Category = #CategoryName, EditAnywhere, BlueprintReadWrite) \
+//    FGameplayAttributeData PropertyName##;
+
+// We can use this to see the value of the macro (we need two layers else STR will just stringify the parameter instead of running the macro first)
+//#define XSTR(x) STR(x)
+//#define STR(x) #x
+//
+//   const FName x = XSTR(DECLARE_RTS_STAT_PROPERTY(Strength));
+
+class AUnit;
+
+DECLARE_EVENT_ThreeParams(UMyAttributeSet, FOnStatsUpdated, const FGameplayAttribute&, float&, AUnit*);
+
 UCLASS()
-class MYPROJECT_API UMyAttributeSet : public UAttributeSet
-{
+class MYPROJECT_API UMyAttributeSet : public UAttributeSet {
    GENERATED_BODY()
 
    static TArray<FGameplayAttribute> attList;
    static TSet<FGameplayAttribute>   attSet;
 
- public:
+   UPROPERTY()
+   class AUserInput* cpcRef;
+
+public:
+
    UMyAttributeSet();
    static const float MAX_HEALTH;
 
    ///--Attributes--
    UPROPERTY(Category = "Attributes", EditAnywhere, BlueprintReadWrite)
    FGameplayAttributeData Strength;
-
    UPROPERTY(Category = "Attributes", EditAnywhere, BlueprintReadWrite)
    FGameplayAttributeData Understanding;
-
    UPROPERTY(Category = "Attributes", EditAnywhere, BlueprintReadWrite)
    FGameplayAttributeData Intelligence;
-
    UPROPERTY(Category = "Attributes", EditAnywhere, BlueprintReadWrite)
    FGameplayAttributeData Explosiveness;
-
    UPROPERTY(Category = "Attributes", EditAnywhere, BlueprintReadWrite)
    FGameplayAttributeData Endurance;
-
    UPROPERTY(Category = "Attributes", EditAnywhere, BlueprintReadWrite)
    FGameplayAttributeData Agility;
-
    UPROPERTY(Category = "Attributes", EditAnywhere, BlueprintReadWrite)
    FGameplayAttributeData Luck;
 
    ///--Stats--
    UPROPERTY(Category = "Stats", EditAnywhere, BlueprintReadWrite)
    FGameplayAttributeData Critical_Chance;
-
    UPROPERTY(Category = "Stats", EditAnywhere, BlueprintReadWrite)
    FGameplayAttributeData Critical_Damage;
-
    UPROPERTY(Category = "Stats", EditAnywhere, BlueprintReadWrite)
    FGameplayAttributeData Accuracy;
-
    UPROPERTY(Category = "Stats", EditAnywhere, BlueprintReadWrite)
    FGameplayAttributeData Dodge;
-
    UPROPERTY(Category = "Stats", EditAnywhere, BlueprintReadWrite)
    FGameplayAttributeData Attack_Speed;
-
    UPROPERTY(Category = "Stats", EditAnywhere, BlueprintReadWrite)
    FGameplayAttributeData Cast_Speed;
 
@@ -151,8 +156,6 @@ class MYPROJECT_API UMyAttributeSet : public UAttributeSet
    FGameplayAttributeData GlobalDamageModifier;
 
    void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& data) override;
-   // PreAttributeBaseChange -- called before base value changed
-   // PreAttributeChange -- called before temporary modifiers are changed
 
    DECLARE_ATTRIBUTE_FUNCTION(Strength);
    DECLARE_ATTRIBUTE_FUNCTION(Intelligence);
@@ -203,13 +206,20 @@ class MYPROJECT_API UMyAttributeSet : public UAttributeSet
    DECLARE_ATTRIBUTE_FUNCTION(WeaponPower);
    DECLARE_ATTRIBUTE_FUNCTION(GlobalDamageModifier);
 
-   TSet<FGameplayAttributeData*> GetAtts();
-   TSet<FGameplayAttributeData*> GetSkills();
-   TSet<FGameplayAttributeData*> GetVitals();
-   TSet<FGameplayAttributeData*> GetMechanics();
+   TArray<FGameplayAttribute> GetAtts();
+   TArray<FGameplayAttribute> GetSkills();
+   TArray<FGameplayAttribute> GetVitals();
+   TArray<FGameplayAttribute> GetMechanics();
 
    // Helper so we can upgrade our stats.  Just a temporary fix, we'll find a better way later
    static FGameplayAttribute IndexAtts(int index);
 
-   void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+   // PreAttributeBaseChange -- called before base value changed
+   void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override final;
+   // Called before an attribute changes allowing us to update our stat UI
+   void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override final;
+
+   FOnStatsUpdated statUpdatedEvent;
+   FOnStatsUpdated baseStatUpdatedEvent;
+
 };

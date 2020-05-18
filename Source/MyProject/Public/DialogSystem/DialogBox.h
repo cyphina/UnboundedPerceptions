@@ -8,12 +8,19 @@
 #include "EventSystem/Trigger.h"
 #include "DialogBox.generated.h"
 
-/**The type of event that caused the dialog box to open*/
+/**What to do after the dialog box is closed*/
 UENUM(BlueprintType)
-enum class EDialogSource : uint8 { npc, conversation, trigger, none };
+enum class EDialogBoxCloseCase : uint8 {
+   finishedInitialTalkNPC,     // Finished the initial dialog conversation
+   finishedNPCConvo,           // Cleanup after we finished having a conversation with a NPC
+   finishedInteractableDialog, // Cleanup after dialog box has been popped up from interacting with an interactable
+   finishedTriggerActivation,  // Cleanup after dialog box popup from trigger
+   none                        // Don't do anything when this dialog box is closed
+};
 
 class ANPC;
-class AUserInput;
+class ABasePlayer;
+class AHUDManager;
 class ARTSGameMode;
 
 /*A dialog box that can be used anywhere for conversation... or just displaying thoughts
@@ -25,8 +32,14 @@ class MYPROJECT_API UDialogBox : public UMyUserWidget
 {
    GENERATED_BODY()
 
-   AUserInput*   controllerRef;
+   UPROPERTY()
    ARTSGameMode* gameModeRef;
+
+   UPROPERTY()
+   ABasePlayer* basePlayerRef;
+
+   UPROPERTY()
+   AHUDManager* hudManagerRef;
 
    /**
     * The dialog information gotten from loading the conversation (as denoted by the conversationTag) from the table
@@ -58,7 +71,7 @@ class MYPROJECT_API UDialogBox : public UMyUserWidget
     */
    FName dialogTopic;
 
-   EDialogSource dialogSource = EDialogSource::none;
+   EDialogBoxCloseCase dialogSource = EDialogBoxCloseCase::none;
 
    /**If this node leads to a choice node, then we must do some work to setup the data which goes to our choice buttons.  Keeps nodeNum
     * at the same location since it only changes when a choice button is pressed
@@ -76,7 +89,7 @@ class MYPROJECT_API UDialogBox : public UMyUserWidget
    const FDialogData& HandleConditions();
 
    /**
-    *Call after finishing a conversation
+    *Call after finishing a conversation.  Depending on how the textbox opened up, we need to clear some state possibly so this function handles that
     */
    void ResetDialog();
 
@@ -118,7 +131,7 @@ class MYPROJECT_API UDialogBox : public UMyUserWidget
    void SetDialogLines(TArray<FDialogData> newDialogLines);
 
    /**When this dialogBox is opened, we need to tell it what kind of event opened it so it respond properly when it's closed*/
-   void SetDialogSource(EDialogSource newDialogSource) { dialogSource = newDialogSource; }
+   void SetDialogSource(EDialogBoxCloseCase newDialogSource) { dialogSource = newDialogSource; }
 
    UFUNCTION(BlueprintCallable, Category = "DialogInformation")
    FName GetDialogTopic() const { return dialogTopic; }

@@ -17,6 +17,9 @@ class MYPROJECT_API URTSInputBox : public UPopupWidget
 {
    GENERATED_BODY()
 
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
+
  public:
    UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = "true"))
    FString txtInput;

@@ -17,20 +17,32 @@ void UConditionalInteractableDecorator::Init()
 
 bool UConditionalInteractableDecorator::Interact()
 {
-   for (FConditionData condition : conditions) {
-      if (!gameModeRef->GetConditionalManager()->GetCondition(condition)) {
-         if (customDialogConversation == "") {
+   for(FConditionData condition : conditions) {
+      if(!gameModeRef->GetConditionalManager()->GetCondition(condition)) {
+         FTriggerData triggerData;
+
+         if(customDialogConversation == "") {
             TArray<FDialogData> dialogData;
-            dialogData.Emplace(TArray<int>(), gameModeRef->GetConditionalManager()->GetConditionString(conditions), "");
-            cpcRef->GetHUDManager()->AddHUD(MoveTemp(dialogData), EDialogSource::none);
-         } else {
-            cpcRef->GetHUDManager()->AddHUD(customDialogConversation, EDialogSource::none);
+            triggerData.enabled     = true;
+            triggerData.numCalls    = 1;
+            triggerData.triggerType = ETriggerType::DisplayDialogTrigger;
+            // Create a message formulaically depending on the conditions
+            triggerData.triggerValues[0] = gameModeRef->GetConditionalManager()->GetConditionString(conditions).ToString();
+            gameModeRef->GetTriggerManager()->ActivateTrigger(triggerData);
+         } else { // If we have a custom messagecustom message
+                  // Create a trigger so we don't have to dependency inject the AHUDManager
+            triggerData.enabled          = true;
+            triggerData.numCalls         = 1;
+            triggerData.triggerType      = ETriggerType::DisplayConversationTrigger;
+            triggerData.triggerValues[0] = customDialogConversation.ToString();
+            gameModeRef->GetTriggerManager()->ActivateTrigger(triggerData);
          }
          return false;
       }
    }
 
-   if (decoratedInteractable) decoratedInteractable->Interact();
+   if(decoratedInteractable)
+      decoratedInteractable->Interact();
 
    return true;
 }

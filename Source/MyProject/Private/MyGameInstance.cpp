@@ -3,6 +3,7 @@
 #include "MyProject.h"
 #include "UpResourceManager.h"
 #include "MyGameInstance.h"
+#include "RTSGameState.h"
 #include "WorldObjects/NPC.h"
 #include "WorldObjects/IntimateNPC.h"
 #include "Interactables/InteractableBase.h"
@@ -10,9 +11,9 @@
 #include "Interactables/StorageContainer.h"
 #include "Interactables/Pickup.h"
 
-UMyGameInstance::UMyGameInstance()
-{
-}
+CSV_DECLARE_CATEGORY_EXTERN(UpLevelLoading);
+
+UMyGameInstance::UMyGameInstance() {}
 
 void UMyGameInstance::Init()
 {
@@ -21,24 +22,35 @@ void UMyGameInstance::Init()
    UpResourceManager::InitUpResourceManager();
 }
 
-void UMyGameInstance::Shutdown()
-{
-   Super::Shutdown();
-}
+void UMyGameInstance::Shutdown() { Super::Shutdown(); }
 
 void UMyGameInstance::SaveLevelData(FName levelName)
 {
+   CSV_SCOPED_TIMING_STAT(UpLevelLoading, MapSaveTime);
+
    if (GetWorld()) {
+
+      // Things that need to be called when transitioning levels that can be conveniently called here (remove slack from unit lists)
+      Cast<ARTSGameState>(GetWorld()->GetGameState())->enemyList.Shrink();
+      Cast<ARTSGameState>(GetWorld()->GetGameState())->enemyList.Compact();
+      Cast<ARTSGameState>(GetWorld()->GetGameState())->allyList.Shrink();
+      Cast<ARTSGameState>(GetWorld()->GetGameState())->allyList.Compact();
+
       if (mapInfo.Contains(levelName)) // if we've already been here
       {
          FMapSaveInfo& mapData = mapInfo[levelName];
          mapData.pickupList.Empty();
 
+         // Save NPCs and Interactables via overloaded functions which handles saving Pickups, Doors, and Trigger Decorators on Interactables.  Actor iterator
+         // also iterates over subclasses
+
          for (TActorIterator<ANPC> actItr(GetWorld()); actItr; ++actItr) {
+            CSV_CUSTOM_STAT(UpLevelLoading, NPCSaveCount, 0, ECsvCustomStatOp::Accumulate);
             (*actItr)->SaveNPCData(mapData);
          }
 
          for (TActorIterator<AInteractableBase> actItr(GetWorld()); actItr; ++actItr) {
+            CSV_CUSTOM_STAT(UpLevelLoading, InteractableSaveCount, 0, ECsvCustomStatOp::Accumulate);
             (*actItr)->SaveInteractable(mapData);
          }
 
@@ -49,52 +61,26 @@ void UMyGameInstance::SaveLevelData(FName levelName)
 
 void UMyGameInstance::LoadLevelData(FName levelName)
 {
+   CSV_SCOPED_TIMING_STAT(UpLevelLoading, MapLoadTime);
+
    if (GetWorld()) {
       if (mapInfo.Contains(levelName)) {
          FMapSaveInfo& mapData = mapInfo[levelName];
 
-         for (FDoorInteractableSaveInfo doorInfo : mapData.doorInteractables) {
-            for (TActorIterator<ARTSDoor> actItr(GetWorld()); actItr; ++actItr) {
-               if ((*actItr)->GetTransform().Equals(doorInfo.interactableInfo.transform)) {
-                  (*actItr)->LoadInteractable(doorInfo);
-                  break;
-               }
-            }
+         // Load data for all NPCs including what topics were talked about, the NPCs default dialog, etc.
+         for (TActorIterator<ANPC> actItr(GetWorld(), ANPC::StaticClass()); actItr; ++actItr) {
+            (*actItr)->LoadNPCData(mapData);
+            CSV_CUSTOM_STAT(UpLevelLoading, NPCLoadCount, 0, ECsvCustomStatOp::Accumulate);
          }
 
-         for (FNPCIntimateSaveInfo intimateNPCInfo : mapData.intimateNPCInfo) {
-            for (TActorIterator<AIntimateNPC> actItr(GetWorld()); actItr; ++actItr) {
-               if ((*actItr)->GetGameName().EqualTo(intimateNPCInfo.npcInfo.name)) {
-                  (*actItr)->LoadNPCData(intimateNPCInfo);
-                  break;
-               }
-            }
-         }
-
-         for (FNPCSaveInfo npcInfo : mapData.npcsInfo) {
-            for (TActorIterator<ANPC> actItr(GetWorld()); actItr; ++actItr) {
-               if ((*actItr)->GetGameName().EqualTo(npcInfo.name)) {
-                  (*actItr)->LoadNPCData(npcInfo);
-                  break;
-               }
-            }
-         }
-
-         for (FInteractableSaveInfo interactableInfo : mapData.interactablesInfo) {
-            for (TActorIterator<AInteractableBase> actItr(GetWorld(), interactableInfo.interactableClass); actItr; ++actItr) {
-               if ((*actItr)->GetTransform().Equals(interactableInfo.transform)) {
-                  (*actItr)->LoadInteractable(interactableInfo);
-                  break;
-               }
-            }
-         }
-
-         for (TActorIterator<APickup> actItr(GetWorld()); actItr; ++actItr) {
-            if (!mapData.pickupList.Contains((*actItr)->GetName())) { (*actItr)->Destroy(); }
+         // Load interactable state (iterates through the different saved classes)
+         for (TActorIterator<AInteractableBase> actItr(GetWorld(), AInteractableBase::StaticClass()); actItr; ++actItr) {
+            (*actItr)->LoadInteractable(mapData);
+            CSV_CUSTOM_STAT(UpLevelLoading, InteractableLoadCount, 0, ECsvCustomStatOp::Accumulate);
          }
       } else {
+         // If we haven't traveled to this level yet then create an entry in our table for it so we can store data when we leave 
          mapInfo.Add(levelName, FMapSaveInfo());
-         return;
       }
    }
 }

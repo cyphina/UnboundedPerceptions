@@ -63,7 +63,8 @@ class MYPROJECT_API AAllyAIController : public AUnitController
    /** If this unit was part of a group tactic assignment, then set its tactic mode here */
    AllyGroupTacticsMode tacticsBehavior;
 
-   AAlly*               allyRef;
+   UPROPERTY()
+   AAlly* allyRef;
 
    /** Unlike the curent spell, this is the one selected by the player, but it may not be the one being channeled */
    TSubclassOf<UMySpell> currentlySelectedSpell;
@@ -79,20 +80,20 @@ class MYPROJECT_API AAllyAIController : public AUnitController
 
    AAllyAIController();
 
-   virtual void Tick(float deltaTime) override;
    virtual void OnPossess(APawn* InPawn) override;
 
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spells")
-   FORCEINLINE TSubclassOf<UMySpell>  GetCurrentlySelectedSpell() { return currentlySelectedSpell; }
-
    /** Gets spell that has been selected, but may not be channeled*/
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spells")
+   FORCEINLINE TSubclassOf<UMySpell> GetCurrentlySelectedSpell() { return currentlySelectedSpell; }
+
+   /** Change how an ally should behave by either clicking on the actionbar or group command bar*/
    UFUNCTION(BlueprintCallable, Category = "AI Mode")
    void SwitchAIModes(AllyBehavioralMode newMode);
 
-   /**When spell hotkey is presssed down.  Returns true when spell sucessfully set up or casted.  Used for item usage.*/
+   /** When spell hotkey is presssed down with this ally selected.  Returns true when spell sucessfully set up or casted.  Used for item usage.*/
    bool PressedCastSpell(TSubclassOf<UMySpell> spellToCast);
 
-   /**When spell hotkey is presssed down.  Returns true when spell sucessfully set up or casted.  Exposed to blueprints for actionbar usage.*/
+   /** When spell hotkey is presssed down with this ally selected.  Returns true when spell sucessfully set up or casted.  Exposed to blueprints for actionbar usage.*/
    UFUNCTION(BlueprintCallable, Category = "Spells")
    bool PressedCastSpell(int spellToCastIndex);
 
@@ -101,12 +102,16 @@ class MYPROJECT_API AAllyAIController : public AUnitController
     * @param spellClass - Pass in class because we can technically setup targetting for a new spell while casting a spell (and thus can't use currentSpell)
     */
    UFUNCTION(BlueprintCallable, Category = "Spells")
-   bool SetupSpellTargetting(FHitResult result, TSubclassOf<UMySpell> spellClass);
+   bool SetupSpellTargetting(FHitResult& result, TSubclassOf<UMySpell> spellClass);
 
-private:
+   /** Stop behavior tree from running*/
+   void StopAutomation();
+
+ private:
+   /**Necessary setup to trigger our character to perform the actions to cast a spell*/
    void FinalizeSpellTargetting(TSubclassOf<UMySpell> spellClass);
 
-public:
+ public:
    virtual void Stop() override;
 
    void BeginAttack(AUnit* target) override;

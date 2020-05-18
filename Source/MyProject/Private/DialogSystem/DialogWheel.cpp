@@ -24,12 +24,12 @@ void UDialogWheel::SelectNextConversationTopics(int selectedIndex)
    //If this is a root node in our tree of dialog options (gameplaytag tree) then we talk about this topic
    if (currentlySelectedTopicNode->GetChildTagNodes().Num() == 0) {
       //Close the social menu, and add the textbox withh the conversation loaded up
-      CPC->GetHUDManager()->AddHUD(static_cast<int>(HUDs::HS_Social));
+      hudManagerRef->AddHUD(static_cast<int>(HUDs::HS_Social));
 
       FName conversationName = socialWindowRef->GetNPC()->GetConversationName(currentlySelectedTopicNode->GetCompleteTag());
 
 	  //Setup textbox and update any records that keep track of who we talked to
-      CPC->GetHUDManager()->AddHUD(conversationName, EDialogSource::conversation);
+      hudManagerRef->ShowDialogWithSource(conversationName, EDialogBoxCloseCase::finishedNPCConvo);
       CPC->GetGameMode()->GetQuestManager()->OnTalkNPC(socialWindowRef->GetNPC(), currentlySelectedTopicNode->GetCompleteTag());
       socialWindowRef->GetNPC()->AddConversedDialog(conversationName);
       return;
@@ -53,6 +53,7 @@ void UDialogWheel::SelectPreviousConversationTopics()
       else
          previouslySelectedTopicNode = nullptr;
    } else {
+      // If these are the root topics, bring the social window back
       socialWindowRef->SetMainView();
       return;
    }

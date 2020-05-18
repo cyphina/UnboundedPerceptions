@@ -48,5 +48,5 @@ class MYPROJECT_API UInteractableActorDecoratorBase : public UObject
     *activated (if there are any in the decorator chain*/
    virtual bool Interact() PURE_VIRTUAL(UInteractableActor::Interact, return true;);
 
-   virtual FText GetName() { return decoratedInteractable->GetName(); }
+   virtual FText GetName() const { return decoratedInteractable->GetName(); }
 };

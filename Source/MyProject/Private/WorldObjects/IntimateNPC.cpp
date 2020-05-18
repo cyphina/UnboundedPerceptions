@@ -37,16 +37,19 @@ void AIntimateNPC::SetupAppropriateView()
 void AIntimateNPC::SaveNPCData(FMapSaveInfo& mapInfo)
 {
    FNPCIntimateSaveInfo intimateNPCSaveInfo;
-   MakeNPCData(intimateNPCSaveInfo.npcInfo);
+   MakeNPCData(intimateNPCSaveInfo);
    intimateNPCSaveInfo.currentRelationshipEventIndex = currentRelationshipEventIndex;
    intimateNPCSaveInfo.relationshipPoints            = relationshipPoints;
 
-   mapInfo.intimateNPCInfo.Add(intimateNPCSaveInfo);
+   mapInfo.npcsInfo.Add(intimateNPCSaveInfo);
 }
 
-void AIntimateNPC::LoadNPCData(FNPCIntimateSaveInfo& npcSaveInfo)
+void AIntimateNPC::LoadNPCData(FMapSaveInfo& mapInfo)
 {
-   ANPC::LoadNPCData(npcSaveInfo.npcInfo);
-   relationshipPoints            = npcSaveInfo.relationshipPoints;
-   currentRelationshipEventIndex = npcSaveInfo.currentRelationshipEventIndex;
+   FNPCIntimateSaveInfo* npcSaveInfo = static_cast<FNPCIntimateSaveInfo*>(mapInfo.npcsInfo.FindByHash<AIntimateNPC*>(GetTypeHash(*this), this));
+   if (npcSaveInfo) {
+      ReloadNPCData(*npcSaveInfo);
+      relationshipPoints            = npcSaveInfo->relationshipPoints;
+      currentRelationshipEventIndex = npcSaveInfo->currentRelationshipEventIndex;
+   }
 }

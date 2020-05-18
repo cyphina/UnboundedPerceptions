@@ -1,89 +1,149 @@
-Big Change: Added several test sublevels and a main test level
-Fixed collision for enemy and ally vision spheres (somehow messed that up)
-Fixed EQSContextClosestAlly initial minDistance being really small (screwed that up too)
-Fixed chatbox and text classifier
-Fixed dialog PickChoice() currentNodeNum not being set to the new index relative to all those in the conversation
-On ally  end overlap we now remember to set the ClickTrace to ignore for enemies
-Changed enemy interface mana bar to actually bind to mana instead of moxie 
-Invisibility now stops ShootingEnemies from attacking (already had stopped regular enemies)
-Added widgets that can block others from coming up
-Moved some widgets from pawn to controller so we can disableInput and still press the button to retract the widget that is disabling the input
-Ensure blocking confirmation box stops blocking when x or o is pressed.
-Confirmationbox will remove itself when a choice is made even if a callback is not bound when confirmed.
-Fixed choice numbering inside BPDialogTextbox (picks index relative to num options in choice rather than index of the nodes the choices lead to)
-SetEnabled() now removes all linear velocity from capsule (after stopping it).
-Modified TabNextAlly() so it does not crash with an empty party or party size of 1.
-Fixed NextLevelWidget widget from clipping during its animation.
-Created Unlit text font
-Added occlusion culling
-Added occlusion culling toggling to RTSPawn
-Modified fade component so it handles click traces based on the objects existing settings rather than setting an object to block click traces when it unfades
-Modified fade component to handle all types of Actors with static meshes, not just static mesh actors.
-Removed MaterialInstance cast in FadeComponent
-Next level zone now does not block clicktraces
-Seperate social window from main UI
-Social window now hides main UI when opened, and reshows main UI when closed
-Fixed dialog wheel not showing textbox due to above changes (added reshowing of main hud before adding dialogbox when source is a conversation)
-Removed some debug messages in social window and dialogwheel
-Removed NavModifier from NPC causing weird blocking
-TODO: Fix bugs tracing (causing move cursor to still be active when no hero selected due to SameActor hit check)
-Split up huds between MainHUD (can be seen from anywhere even when not in main game state) and InGameHud (seen only when playing main RTS style game)
-This solves the problem of store not being seen in social window ever since it hides main UI.
-Repositioned all the huds and changed zorder of huds around
-Fixed level transition widget clickability when changing to new hud style.  Kept visibility same but now level transition widget blocks ingame and main widget.
-Removed QuestJournal and QuestList having a delay in their creation so QuestManager could reference them.  Now when the widgets are created, they set the reference in QuestManager.
-Fixed up widget drag (requires canvas visibility)
-Changed minigame table to have static rather than moveable components
-OnAllySelected function registered to the delegate of the same name now checks to see if there is at least one ally selected in response to control groups firing it off
-Fixed CityGen side buildings
-Subdivided road mesh to make it have less sharp conrners when creating spline meshes
-Added channeledSpell property to AllyControllers and now currentSpell only holds spells that are being channeled
-Added cancel spell that replaces a spell when it requires the same button press twice
-Fixed SkillSlot so it shows channeled spell on CD not selected spell if the channeled spell is casted
-Added ice block generating spell
-Fixed bug with heroes being added to ally array even if they are not in the party when we call updateparty
-Fixed bug with removing heroes from updateParty
-Removed channeling requirement from CastSpell in BP_RTSPawn
-UpdateParty now updates ally array too and performed some refactoring when calculating initial party
-Added a script to sync data from spells and the datatable 
-Spell cursor and item cursor now also highlights units
-UseItem now doesn't rely on looping through selected heroes (we can use an item without selected a hero first)
-Wired up hit result to UseItem (it was missing for some reason)
-Fixed DIRender Material Path 
-UpdateParty for loop changed for while due to modifying container while iterating 
-Added spell systems for modifying spells during casting 
-Added spell systems for confirming spells during casting 
-CD Anim not working when swapped confirm spell runs out of time 
-Added new state IncantationState (replaces old channeling state) and now channeling state is for channeling after spell has been incanted
-Added base classes for spells that require multi button presses (confirms) and a confirmation spell
-Fixed ShowSkillVisualCD being called on classes without a CD which made the cooldown shader for confirmation effects never show up.
-Lavender rain now uses GetTargetLoc instead of GetTargetData
-Created new effect for Ice Pillar
-Fixed all effectname gameplaygtags to use spacing
-Fixed healthbar not updating percentage and gave it a border
-Fix ZOrdering of widgets
-Fixed looping through setting up eskillcontainer skillslot text
-Fixed ordering of skillslots
-Added a border to the actionslot count text to view the text easier
-Aligned chatbot to center and changed its look
-Fixed control group selection
-Fixed gameplay tag warnings (changed invalid tag characters and fixed extra . at the end of some tags)
-Modified editor module MyProjectVisualization to have a null reference check since its still being packaged
-Fixing various build errors like blueprints that need to be recompiled and pins that were removed
-Changed TensorflowPlugin and UnrealEnginePython loadingphase to remove errors when running editor
-Fixed problemes in QuestManager PostInitProperties causing Quest class to generate its CDO while changing its layout.
-Updated Black Mirror Ritual Effects
-Fixed tags in RitualityEffect
-Fixed Bug in spell SummonMK1Bot
-Fixed setting in my buildconfiguration files
-Added compilation conditionals to some editor only functions
-Added missing pragma once statement and added class behind Unit.h USphereComponent
-Removed inline and ForceInline from all functions where inline function was defined in cpp class
-Successfully built game in development mode!
-Removed static keyword from EnvQueryTest_NumBuffs debuffTags
-Fixed and improved minimap
-Removed custom scene capture class from pawn and replaced it with one defined in BP since components were glitching out on me hard today.
-Fixed sprite visibility on enemies and made sprites larger
-Fixed up some old blueprints from the first tutorial I followed (some references in constructoin and building creation).
-Fixed weird duplicate UMG name "Category Name" in some QuestListwidgets.
-Cleand up GoalEntryBP (variables had been renamed around in C++)
+Migrated necessary assets into new UE4 project
+Fixed some actor properties in the test level
+PartyScreen wasn't bugged but UE4 didn't like it when there was a none object added to the list view so had to refactor and add a separate
+clear selection button outside of list.
+Add textures to always be included in packaging to get hardware cursor images
+Removed some old building construction blueprint stuff.  Kept some of it around because I can reimplement it someday for some tower creation spells 
+or something of the sort.
+Added a cheat command for adding quests
+Fixed problems with TutorialQuest
+Hotreloaded struct type mismatch error fix (QuestMap was referring to wrong blueprint too)
+Fixed HeroRefreshSpell cheats
+Removed CPC reference from GhostBuilding (possible circular blueprint reference causing search all blueprints to lag and caught in packaging)
+Swapped navigation filter on party changer which uses GetRandomNavigablePointInRadius to one that doesn't require an AAIController on the querier
+Fixed interactables having turning problems if they are already in range (rotation mechanism fine but the scene locations are off)
+Fixed FadeOn inversion not working in MyGameState
+Moved Textbox HUD to front
+Fixed bugs to migrate to version 4.24
+Changed NextLevelWidget component to Screen and used lookat rotation
+Toggling the level visibility seemed to fix some bugs with the navigation.  Setting tile pool size to not be fixed helped remove these problems since we do not use level streaming.
+Fixed some level design things in the test levels
+Increased possible spawn radius when changing party in wardrobe
+Renamed unit patrolling and NPC patrolling tree
+Seperated patrolling logic from target finding
+Added move request IDs to MoveFinished listeners
+Sprinkling more comments over C++ and Blueprints
+Added final and const modifiers to several spots
+Aligned dialogbox UI
+Fixed missing link in paged inventory view BP enabling turning page backwards
+Fixed NPC loading temporary data in LoadNPCData between levels
+Added logic for handling dialog box closing due to NPC events to NPCs rather than having it in dialogbox
+Added parallelism to vision updates
+Removed comments about unnecessary invisibility checks and refactored invisibility system
+Added some checks to item equipping and using
+Fixed case of casting spell that targets interactable still triggering spell casting repositioning mechanism
+Fixed targetting logic causing unlocking doors and targetting interactables to crash and added some comments on this
+Fixed wrong dialogsource setting on eventbarricade
+Fixed reverse page flip bindings in heroinventory
+Added more checks OnFinishedMoving to ensure we don't perform our actions on null cases.
+Added some fallback cases when moving towards a static interactable and now the unit moving towards the interactable will move completely on the interactablelocation
+Fixed some test level lighting and text component discriptions
+Item pickup quests can now be created without specifying the NPC name as an additional name (implying we return the items back to the original NPC). 
+Fixed quest system so we can complete test quest again in the test level.  This involved manipulating the item pickup trigger.
+Fixed problems when stopping during talking to an NPC (by pressing stop and prevented moving which was somehow renabled).  
+Changed some spell effects (cure) to spawn as a child emitter
+Removed double on drop event for mainhud and ingame hud.
+Updates inventory when dropping items
+Removed equip drag class
+Fixed item drag and drop for equipment slots using only item drags (remembered to capture event for inventory to equipmenu drops).
+Added help messages for spellbook events asnd modified spellbook look.
+Created base class for ally blueprints and set ally to have correct AIController
+Fixed wardrobe normals
+Fixed Black Mirror Ritual Buff
+Fixed chatbox not clearing after removing of ML system
+Fix null projectile on rangedenemy
+TODO: Change dialog system to use one chatbox to better suit the RTS?  Then I can use the current dialog boxes to be used during cutscenes possibly.
+TODO: Threaded item pickup check
+Added a damage component to move code for dealing damage to a component which can be attached to sources besides units.  This code also decouples damage from abilities.
+Fixed healingDealt and healingReceived being mixed up within damage calculation
+Removed extra absolute damage type check in ApplyEffects (there's already one in ReceiveEffects).
+Commented out useless code in LoadInteractableData()
+Retargetted various yin animation clips, combined them in a montage, and added notifies to animation clips to trigger attack damage.
+Finish setting up delegate in animation for attack damage triggering
+Added Damage Handling for Ward type Units
+Decoupled code from hero and interactable get location
+Cleaned up a lot of map saving code and optimized that code to use sets with custom KeyFuncs 
+Fixed some warnings given from moving the transform of a non moveable object in map save load
+Added some macros to define collision channels to make more readable code
+Small PreConstruct refactor in BPScrollbarInventoryView
+Fixed several comements throughout the code
+Added some CSV logging
+Added some console variables for damage logging
+Moved door to doorhinge socket instead of manually repositoning it
+Added a sword to Cyphina
+Fixed Kitty's animation but made her face look weird
+Fixed missing parent call in RangedMiku enemy
+Ensured ally interaction does not work (as intended)
+Deleted summons on new level transition and refactored that blueprint logic
+Turned off nativization settings on widgets since it is not supported currently
+Fixed some collision console settings around removing warnings about Trigger Profile
+Removed inline specifications in UItemManager since they were causing linker errors when building in DebugGame Editor
+Added outer object to SetupBulletTargetting()
+Changed visualization log type
+Cleared selected allies between levels
+Fixed ally vision sphere (as part of adding summmoned ally to allies).  Removed use of Ally in blueprints, now we use Summons or Heroes.
+Testing out some different data structures in the code in the unit type classes
+Refactored ally class moving some logic to summon class
+Removed ally from selectedAlly list when they are destroyed
+Fixed SetEnable method in Enemy
+Show damage number even after enemy dies
+Added Icon for "Dying to Eat" Enrage spell effect
+DamageModifier in DOT base is now overriden and set explicitly in every spell that scales off health as damage as opposed to set by caller
+Somehow reached a state where I intiated an attack as the enemy was destroyed crashing the editor so I added some checks in the initiation logic
+Fixed using two buffs with same GameplayCue by moving effects to OnActive function
+Added in a custom console command to print our own categories to the CSV profiler
+Removed BurntOut debuff and replaced it with ABlaze which has fixed damage logic
+Fixed missing settings in IronMaiden spell
+Fixed BlackMirrorRitual buffs not resetting due to having a period
+Add ability for camera to focus on a unit by double tapping the control group and refactored control group and unit selection logic
+Fixed up system that holds default values for enemies and weapons
+Huge refactor to names of stats, the accessor functions, and used some new metaprogramming skills to make accessing them uniform
+Finally deleted the old sidebar items
+Fixed INTERACTABLE positoning when interactable point out of reach
+Added 5 control groups
+Removed random OnKeyDown event in our Level Transition Widget
+Fix this ? UBluEye::TextureUpdate() [C:\MyProject\Plugins\BLUI\Source\Blu\Private\BluEye.cpp:146]
+Massive refactor to  health UI system and fixed not being able to select enemies
+Upgraded character menu UI with some animations!
+Refactored a little code in HudManager
+Fixed missing uproperty modifiers on many objects causing them to possibly leak
+Fixed some code in multithreaded vision and added missing oncomponent checks for enemy
+Fixed incorrect vision settings on unit
+Refactored access to some game "global" classes in Unit and its Child classes
+Finally fixed the tasks that were making enemy AI fail (mainly due to new visibility system and some corrupt in game unit)
+Huge UI refactor which includes dependency injecting HUDManager all over as well as moving a lot of blueprint code to C++ which fixed the memory leak with slots (but introduced a new one with tooltip?)
+Rewrote all the slot code in C++
+Replaced the old tooltip system for a new one
+Fixed issue with not being able to deselect the enemy interface
+Added some new cursors
+Finally deleted my ActionBar Manager which was obsolete (all that hard work in the past...)
+Fixed another threading issue with the vision system (used set.compact() when ally dies)
+Fixed being able to click past browser ui
+Fixed unlocked quest goals not being marked as unlocked.
+Added base class in C++ for browser widgets
+Fixted text binding in stats
+Another massive refactor done to optimize calls to the browser (moved selection broadcast events out of the setter and onto the actual cases of user interaction leading to selection to prevent having to send so many
+Fixed fallback case when navigating to interactables with a interactLocation that is unreachable
+updates to the browser)
+Fixed problem with being able to rotate the camera using LMB instead of MMB
+Another large refactor to the stat system to remove coupling and optimize code by using event driven updates as opposed to constant checking for stat changes
+Added in stat graph browser widget
+Fixed various missing foward declarations and removed depreciated code with enums and component visualizers
+Added asynchronous tasks for some of the longer loop checks
+Added a widget that displays all the keyboard controls as part of the ingame widget
+Fixed scaling of browser widgets and attribute widget
+Couple other changes I forgot to list
+
+TODO: Set enemy unselectable by click trace initially (works when they get out of vision)
+TODO: Set interactables unselectable by click trace unless we've overlapped them in the visionSphere once
+TODO: Fix Attack Moves and Chasing
+TODO: Fix spell casting attempt after another spell finishes (fix with queue system)
+TODO: Fix Storage Inventory and Drag and Drop for slots
+TODO: Finish Testing Level
+TODO: Multiplayer AND LOTSA MULTIPLAYER REFACTORING
+TODO: Tank Game 
+TODO: Puzzles
+TODO: Implement spell description parsing
+TODO: Add spell requirements (overloads and combos)
+TODO: Implement firebase to record some data?
+TODO: Manual enemy debug controls to test some combat cases

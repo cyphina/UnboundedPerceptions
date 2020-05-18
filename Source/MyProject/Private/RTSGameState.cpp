@@ -2,8 +2,8 @@
 
 #include "MyProject.h"
 #include "RTSGameState.h"
-#include "UserInput.h"
-#include "MainWidget.h"
+#include "ParallelFor.h"
+#include "RTSIngameWidget.h"
 #include "WorldObjects/Ally.h"
 #include "WorldObjects/Enemies/Enemy.h"
 #include "FogOfWar/FogOfWarPlane.h"
@@ -44,7 +44,7 @@ void ARTSGameState::BeginPlay()
 
    // Server should check the vision of all friendlies and replicate the vision data accordintly
    GetWorld()->GetTimerManager().SetTimer(allyVisionUpdateTimerHandle, this, &ARTSGameState::UpdateVisibleEnemies, .1, true);
-   GetWorld()->GetTimerManager().SetTimer(enemyVisionUpdateTimerHandle, this, &ARTSGameState::UpdateVisibleAllies, .1, true);
+   GetWorld()->GetTimerManager().SetTimer(enemyVisionUpdateTimerHandle, this, &ARTSGameState::UpdateVisiblePlayerUnits, .1, true);
 
    FOWplane = GetWorld()->SpawnActor<AFogOfWarPlane>(FOWplaneClass, FVector(0, 0, 0), FRotator());
 }
@@ -54,21 +54,15 @@ void ARTSGameState::Tick(float deltaSeconds)
    Super::Tick(deltaSeconds);
    clockwork += deltaSeconds * timeUnit;
    Clock();
-
-   // if(floor(fmod(clockwork,SECONDS_IN_DAY) < SMALL_NUMBER))
-   //{
-   //	++days;
-   //	Calendar();
-   //}
 }
 
 void ARTSGameState::Clock()
 {
    seconds = floor(fmod(clockwork, 60));
    minutes = floor(fmod(clockwork / 60, 60));
-   if (hours == 24) {
+   if(UNLIKELY(hours == 24)) {
       hours = floor(fmod(clockwork / 3600, 24)) + 1;
-      if (hours == 0) // branching conditional faster than modulo?
+      if(UNLIKELY(hours == 0)) // branching conditional faster than modulo?
       {
          ++days;
          Calendar();
@@ -80,15 +74,15 @@ void ARTSGameState::Clock()
    gameTime[1] = minutes;
    gameTime[2] = hours;
 
-   mainWidgetRef->SetClock(gameTime);
+   ingameWidget->SetClock(gameTime);
 }
 
 void ARTSGameState::Calendar()
 {
-   if (days > UKismetMathLibrary::DaysInMonth(years, months)) {
+   if(UNLIKELY(days > UKismetMathLibrary::DaysInMonth(years, months))) {
       days = 1;
       ++months;
-      if (months > 12) {
+      if(months > 12) {
          months = 1;
          ++years;
       }
@@ -100,7 +94,7 @@ void ARTSGameState::Calendar()
    gameDate[1] = months;
    gameDate[2] = years;
 
-   mainWidgetRef->SetDate(gameDate);
+   ingameWidget->SetDate(gameDate);
 }
 
 void ARTSGameState::UpdateGameSpeed(float speedMultiplier)
@@ -136,58 +130,99 @@ void ARTSGameState::UpdateVisibleEnemies()
    SCOPE_CYCLE_COUNTER(STAT_UnitVision)
    {
       TSet<AUnit*> lastVisibleEnemies;
-      Swap(lastVisibleEnemies, visibleEnemies);
 
-      for (AAlly* ally : allyList) {
-         for (AUnit* enemy : ally->possibleEnemiesInRadius) {
-            // if enemy hasn't been checked yet so we don't do it twice
-            if (!visibleEnemies.Contains(enemy)) {
-               // If we can trace a line and hit the enemy without hitting a wall (unitVisionTrace channel)
-               if (!GetWorld()->LineTraceSingleByChannel(visionHitResult, ally->GetActorLocation(), enemy->GetActorLocation(), ECollisionChannel::ECC_GameTraceChannel13)) {
-                  //If the enemy isn't invisible
-                  if (!enemy->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")) ||
-                     ally->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.TrueSight"))) {
-                     //Make it visible
-                     if (!enemy->GetCapsuleComponent()->bVisible)
-                     {
-                        enemy->GetCapsuleComponent()->SetVisibility(true, true);
-                        enemy->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel7, ECollisionResponse::ECR_Block); //not selectable by clicks
-                     }
-                     visibleEnemies.Add(enemy);
-                  }
-               }
-            }
+      // By reference capture according to this https://en.cppreference.com/w/cpp/language/lambda in Lambda Capture section
+      // A thread is launched for each number from {0:Num)
+      // Each thread tries to get a pointer to an allied unit inside allyList (accessing the set by order using FSetElementId::FromInteger
+      // If a unit dies while we are trying to access it, the unit won't be instantly GC'd so the pointer should be ok
+      // But it will update the allyList so that we don't iterate it again
+      // Then after some kind of delay (hopefully the delay is long enough) the unit will actually be GC'd. But the thread referencing it should be long gone
+      // This won't work if the thread referencing the unit is still running after it is GC'd. This means we have way too many enemies to loop through
+      // Or too many ally threads were spawned
+      ParallelForWithPreWork(
+          allyList.Num(),
+          [this](int32 curIndx) {
+             AAlly* ally = allyList[FSetElementId::FromInteger(curIndx)];
+             ally->visionMutex.ReadLock();
+             for(AUnit* enemy : ally->possibleEnemiesInRadius) {
+                enemy->visionMutex.ReadLock();
+                // If enemy hasn't been checked yet so we don't do it twice.  Also make sure we weren't waiting for enemy destruction with the IsValid check.
+                // Once the writer mutex has been freed, the enemy should no longer be valid
+                visibleMutex.ReadLock();
+                if(IsValid(enemy) && !visibleEnemies.Contains(enemy)) {
+                   visibleMutex.ReadUnlock();
+                   // If we can trace a line and hit the enemy without hitting a wall (unitVisionTrace channel)
+                   if(!GetWorld()->LineTraceSingleByChannel(visionHitResult, ally->GetActorLocation(), enemy->GetActorLocation(), UNIT_VISION_CHANNEL)) {
+                      // If the enemy isn't invisible
+                      if(UNLIKELY(!enemy->IsInvisible())) {
+                         // Make it visible
+
+                         visibleMutex.WriteLock();
+                         visibleEnemies.Add(enemy);
+                         visibleMutex.WriteUnlock();
+                      }
+                   }
+                } else
+                   visibleMutex.ReadUnlock();
+                enemy->visionMutex.ReadUnlock();
+             }
+             ally->visionMutex.ReadUnlock();
+          },
+          [this, &lastVisibleEnemies]() {
+             // Code ran before the threads are created
+             visibleMutex.WriteLock();
+             // Save the enemies we saw last and then we'll update what we see 
+             Swap(lastVisibleEnemies, visibleEnemies);
+             visibleMutex.WriteUnlock();
+          });
+
+      /// --Non multi-threaded code below--
+
+      visibleMutex.ReadLock();
+      for(auto enemy : visibleEnemies) {
+         if(!enemy->GetCapsuleComponent()->IsVisible()) {
+            // Can't change flags like visibility in threads
+            enemy->GetCapsuleComponent()->SetVisibility(true, true);
+            enemy->GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECollisionResponse::ECR_Block); // not selectable by clicks
          }
       }
+      visibleMutex.ReadUnlock();
 
-      //If there's an ally that is not visible this time, but was last time, make sure he's now invisible
-      for (AUnit* visibleEnemy : lastVisibleEnemies) {
-         if (!visibleEnemies.Contains(visibleEnemy))
-         {
+      // If there's an ally that is not visible this time, but was last time, make sure he's now invisible
+      // Even if due to timing issues visibleEnemies doesn't have the right units inside it, it doesn't matter because the timing is so narrow and this will be rerun
+      for(AUnit* visibleEnemy : lastVisibleEnemies) {
+         if(!visibleEnemies.Contains(visibleEnemy)) {
             visibleEnemy->GetCapsuleComponent()->SetVisibility(false, true);
-            visibleEnemy->GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel7, ECollisionResponse::ECR_Ignore);
+            visibleEnemy->GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECollisionResponse::ECR_Ignore);
          }
       }
    }
 }
 
-void ARTSGameState::UpdateVisibleAllies()
+void ARTSGameState::UpdateVisiblePlayerUnits()
 {
-   visibleAllies.Empty(visibleAllies.Num());
+   visiblePlayerUnits.Empty(visiblePlayerUnits.Num());
 
-   for (AEnemy* enemy : enemyList) {
-      for (AUnit* ally : enemy->possibleEnemiesInRadius) {
+   ParallelFor(enemyList.Num(), [this](int32 curIndx) {
+      AEnemy* enemy = enemyList[FSetElementId::FromInteger(curIndx)];
+      enemy->visionMutex.ReadLock();
+
+      for(AUnit* ally : enemy->possibleEnemiesInRadius) {
+         ally->visionMutex.ReadLock();
          // if ally hasn't been checked yet so we don't do it twice
-         if (!visibleAllies.Contains(ally)) {
+         if(!visiblePlayerUnits.Contains(ally)) {
             // If we can trace a line and hit the ally without hitting a wall
-            if (!GetWorld()->LineTraceSingleByChannel(visionHitResult, enemy->GetActorLocation(), ally->GetActorLocation(), ECollisionChannel::ECC_GameTraceChannel13)) {
-               if (!ally->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")) ||
-                  enemy->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.TrueSight"))) {
+            if(!GetWorld()->LineTraceSingleByChannel(visionHitResult, enemy->GetActorLocation(), ally->GetActorLocation(), UNIT_VISION_CHANNEL)) {
+               if(UNLIKELY(!ally->IsInvisible())) {
                   // make it visible
-                  visibleAllies.Add(ally);
+                  visiblePlayersMutex.Lock();
+                  visiblePlayerUnits.Add(ally);
+                  visiblePlayersMutex.Unlock();
                }
             }
          }
+         ally->visionMutex.ReadUnlock();
       }
-   }
+      enemy->visionMutex.ReadUnlock();
+   });
 }

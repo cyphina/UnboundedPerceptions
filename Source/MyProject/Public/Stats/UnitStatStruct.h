@@ -3,20 +3,55 @@
 #include "BaseCharacter.h"
 #include "GameplayTags.h"
 
-/**Used to setup initial stats for a unit*/
+// Having these seperate structs make these properties easier to set in the editor, but causes a bit more ocde duplication
+// TODO: Use variant with these enums?
+
 USTRUCT(BlueprintType, NoExport)
-struct FUnitStatStruct {
+struct FUnitAttributeStruct {
    UPROPERTY(BlueprintReadWrite, EditAnywhere)
-   TArray<Attributes> defaultAttributes;
+   EAttributes att;
    UPROPERTY(BlueprintReadWrite, EditAnywhere)
-   TArray<UnitStats> defaultUnitStats;
-   /**Shooting range*/
+   int defaultValue;
+};
+
+USTRUCT(BlueprintType, NoExport)
+struct FUnitScalingStatsStruct {
+   UPROPERTY(BlueprintReadWrite, EditAnywhere)
+   EUnitScalingStats stat;
+   UPROPERTY(BlueprintReadWrite, EditAnywhere)
+   int defaultValue;
+};
+
+USTRUCT(BlueprintType, NoExport)
+struct FUnitVitalStruct {
+   UPROPERTY(BlueprintReadWrite, EditAnywhere)
+   EVitals vit;
+   UPROPERTY(BlueprintReadWrite, EditAnywhere)
+   int defaultValue;
+};
+
+USTRUCT(BlueprintType, NoExport)
+struct FUnitMechanicStruct {
+   UPROPERTY(BlueprintReadWrite, EditAnywhere)
+   EMechanics mech;
+   UPROPERTY(BlueprintReadWrite, EditAnywhere)
+   int defaultValue;
+};
+
+/**Used to setup initial stats for a unit or equipment*/
+USTRUCT(BlueprintType, NoExport)
+struct FDefaultStats {
+   UPROPERTY(BlueprintReadWrite, EditAnywhere)
+   TArray<FUnitAttributeStruct> defaultAttributes;
+
+   UPROPERTY(BlueprintReadWrite, EditAnywhere)
+   TArray<FUnitScalingStatsStruct> defaultUnitScalingStats;
+
    UPROPERTY(EditAnywhere, Category = "ShootingStats")
-   TArray<Vitals> defaultVitals;
+   TArray<FUnitVitalStruct> defaultVitals;
+
    UPROPERTY(EditAnywhere, Category = "ShootingStats")
-   TArray<Mechanics> defaultMechanics;
-   UPROPERTY(EditAnywhere, Category = "ShootingStats")
-   TArray<int> defaultValues;
+   TArray<FUnitMechanicStruct> defaultMechanics;
 
    /**Element of standard attacks (Defaults to "None" aka nonelemental)*/
    UPROPERTY(EditAnywhere, Category = "ShootingStats")

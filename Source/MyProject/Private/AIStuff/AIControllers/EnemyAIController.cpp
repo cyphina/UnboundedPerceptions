@@ -8,7 +8,6 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 
-
 void AEnemyAIController::OnPerceptionUpdated(const TArray<AActor*>& updatedActors)
 {
    ////No stimuli around
@@ -92,12 +91,13 @@ void AEnemyAIController::BeginPlay()
 void AEnemyAIController::OnPossess(APawn* InPawn)
 {
    Super::OnPossess(InPawn);
-   if (behaviorTree) {
+   if(behaviorTree) {
       // Initialize blackboard and start attached behavior tree
       UseBlackboard(behaviorTree->BlackboardAsset, blackboardComp);
       behaviorTreeComp->StartTree(*behaviorTree);
    }
-   // register onperceptionupdated to fire whenever aiperception gets updated
+
+   // Register onperceptionupdated to fire whenever aiperception gets updated
    AIPerceptionComponent->OnPerceptionUpdated.AddDynamic(this, &AEnemyAIController::OnPerceptionUpdated);
 
    GetAIPerceptionComponent()->GetActorsPerception(GetPawn(), info);

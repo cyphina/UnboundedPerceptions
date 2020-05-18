@@ -4,7 +4,8 @@
 #include "IUnitState.h"
 
 /**
- * Represents when a unit is saying the mystical words to cast a spell.
+ * Some spells can be channeled after it has been initially cast (like Snowstorm which continually creates snow in an area after the incantation until
+ * the player cancels the command or the channeling duration is over).  Uses similar variables to incantation state but serves a completely different purpose.  
  */
 
 class MYPROJECT_API ChannelingState : public IUnitState

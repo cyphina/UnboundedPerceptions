@@ -20,6 +20,9 @@ class MYPROJECT_API UConditionalInteractableDecorator : public UInteractableActo
    ARTSGameMode* gameModeRef;
    AUserInput*   cpcRef;
 
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
+
  public:
    UPROPERTY(EditAnywhere, BlueprintReadOnly)
    TArray<FConditionData> conditions;

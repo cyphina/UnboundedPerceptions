@@ -3,9 +3,8 @@
 #include "MyProject.h"
 #include "DIRender.h"
 #include "UserInput.h"
+#include "Unit.h"
 #include "RTSPawn.h"
-
-AUserInput* UDIRender::controllerRef = nullptr;
 
 UDIRender::UDIRender()
 {
@@ -25,13 +24,15 @@ UDIRender::UDIRender()
    if (materialFinder.Succeeded()) SetTextMaterial(materialFinder.Object);
 
    PrimaryComponentTick.bCanEverTick = true;
+   bAllowConcurrentTick = true;
+   bCanEverAffectNavigation = false;
 }
 
 void UDIRender::BeginPlay()
 {
    Super::BeginPlay();
-   controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
-   start         = RelativeLocation;
+   cameraPawnRef = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+   start         = GetRelativeLocation();
    end           = start + FVector(0, 0, 100);
    tL.PlayFromStart();
 }
@@ -40,7 +41,7 @@ void UDIRender::TickComponent(float deltaSeconds, ELevelTick tickType, FActorCom
 {
    Super::TickComponent(deltaSeconds, tickType, thisTickFunction);
    // Ensure damage values always facing camera even when camera is rotated
-   SetWorldRotation(FRotator(0, -180, 0) + controllerRef->GetCameraPawn()->GetActorRotation());
+   SetWorldRotation(FRotator(0, -180, 0) + cameraPawnRef->GetActorRotation());
    tL.TickTimeline(deltaSeconds);
 }
 

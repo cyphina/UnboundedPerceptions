@@ -13,7 +13,7 @@
 #include "UI/QuestJournal.h"
 #include "UI/QuestList.h"
 #include "UI/QuestListSlot.h"
-#include "UI/UserWidgets/MainWidget.h"
+#include "UI/UserWidgets/RTSIngameWidget.h"
 
 #include "Items/ItemManager.h"
 #include "WorldObjects/BaseHero.h"
@@ -23,11 +23,20 @@ FVector const FGoalInfo::invalidGoalLocation = FVector(-66666, -66666, -66666);
 
 void AQuest::BeginPlay()
 {
+   SetupGoalAmounts();
+}
+
+void AQuest::SetupGoalAmounts()
+{
+   // Here we setup goal specific data. We setup any count tracking information and information about what things we've already interacted with so we don't complete that goal more than once and
+   // then we store that information so that we can look it up by goal index
    int num = 0;
-   for (FGoalInfo goal : questInfo.subgoals) {
-      if (goal.amount > 1) {
+   for(FGoalInfo goal : questInfo.subgoals) {
+      if(goal.amount > 1) {
          currentAmounts.Add(num, 0);
-         if (goal.goalType == EGoalType::Interact) interactedActors.Add(num, TArray<UNamedInteractableDecorator*>());
+         if(goal.goalType == EGoalType::Interact)
+            // Used when the goal requires us to interact with multiple copies of the same named object. We use the address of the decorator to check for uniqueness
+            interactedActors.Add(num, TArray<const UNamedInteractableDecorator*>());
       }
       ++num;
    }
@@ -69,7 +78,7 @@ void AQuest::CompleteSubGoal(int goalIndex, bool fail)
       FGoalInfo&      completedGoal = questInfo.subgoals[goalIndex];
       UQuestListSlot* questListSlot = questManagerRef->questListRef->GetQuestListSlot(this);
 
-      // remove traces of this goal in our goal bookkeeping (REMOVE IT BEFORE YOU CAHNGE THE GOALSTATE SINCE EQUALITY OPERATOR RELIES ON IT and currentGoals are only copies of subgoal's content)
+      // Remove traces of this goal in our goal bookkeeping (REMOVE IT BEFORE YOU CAHNGE THE GOALSTATE SINCE EQUALITY OPERATOR RELIES ON IT and currentGoals are only copies of subgoal's content)
       currentGoals.RemoveSingle(completedGoal);
       questListSlot->RemoveSubGoalWidget(goalIndex);
       currentGoalIndices.Remove(goalIndex);
@@ -79,34 +88,38 @@ void AQuest::CompleteSubGoal(int goalIndex, bool fail)
          if (completedGoals[completedGoals.Add(completedGoal)].shouldUpdateQuestDescription) {
             // Add on the extra description at the end.
             currentDescription = FText::Format(NSLOCTEXT("Quest", "Description", "{0}\n\n{1}"), currentDescription, completedGoal.updatedDescription);
+            // If this quest is the one selected in the quest journal, update the journal
             if (questManagerRef->questJournalRef->GetSelectedQuest() == this) questManagerRef->questJournalRef->UpdateDetailWindow();
-            questManagerRef->controllerRef->GetHUDManager()->GetMainHUD()->DisplayHelpText(NSLOCTEXT("Quest", "DetailsUpdated", "Quest Journal Updated!"));
+            questManagerRef->controllerRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Quest", "DetailsUpdated", "Quest Journal Updated!"));
          } else {
-            questManagerRef->controllerRef->GetHUDManager()->GetMainHUD()->DisplayHelpText(NSLOCTEXT("Quest", "GoalCompleted", "Quest Goal Completed!"));
+            questManagerRef->controllerRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Quest", "GoalCompleted", "Quest Goal Completed!"));
          }
          completedGoal.goalState = EGoalState::completedGoal;
       } else
          completedGoal.goalState = EGoalState::failedGoal;
 
-      for (FTriggerData& trigger : completedGoal.afterGoalTriggers) {
-         questManagerRef->controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(trigger);
+      for (FTriggerData& finishedTriggerActivation : completedGoal.afterGoalTriggers) {
+         questManagerRef->controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
       }
 
-      // Add any subgoals which don't have any requiredSubGoals
+      // Add any subgoals that require us to have completed this goal
       int index = 0;
 
       for (FGoalInfo& goal : questInfo.subgoals) {
          if (goal.goalState == EGoalState::lockedGoal) {
+            // Attempt to remove this goal from any goals that required this goal as a prereq.  
             int numRemoved = goal.requiredSubGoalIndices.Remove(goalIndex);
-            if (numRemoved && !goal.requiredSubGoalIndices.Num()) {
+            // If a goal was removed and there are no more required goals, then this is OUR NEW GOAL~!
+            if (numRemoved && !goal.requiredSubGoalIndices.Num()) { 
                currentGoals.Add(goal);
                currentGoalIndices.Add(index);
+               goal.goalState = EGoalState::currentGoal;
                questManagerRef->questListRef->GetQuestListSlot(this)->AddSubGoalWidget(this, index);
 
                if (goal.goalType == EGoalType::Find) FindInitialItemAmount(index);
 
-               for (FTriggerData& trigger : goal.prevGoalTriggers) {
-                  questManagerRef->controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(trigger);
+               for (FTriggerData& finishedTriggerActivation : goal.prevGoalTriggers) {
+                  questManagerRef->controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
                }
             }
          }
@@ -142,8 +155,8 @@ void AQuest::SetupStartingGoals()
 
          if (goal.goalType == EGoalType::Find) FindInitialItemAmount(i);
 
-         for (FTriggerData& trigger : questInfo.subgoals[i].prevGoalTriggers) {
-            questManagerRef->controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(trigger);
+         for (FTriggerData& finishedTriggerActivation : questInfo.subgoals[i].prevGoalTriggers) {
+            questManagerRef->controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
          }
       } else
          goal.goalState = EGoalState::lockedGoal;
@@ -162,8 +175,8 @@ FText AQuest::MakeGoalText(AQuest* assignedQuest, FGoalInfo goalInfo, int goalIn
 {
    if (!goalInfo.isCustomGoal) {
       FFormatOrderedArguments args;
-      checkf(goalInfo.additionalNames.Num() > 0, TEXT("%s"), *goalInfo.goalText.ToString()) switch (goalInfo.goalType)
-      {
+      checkf(goalInfo.additionalNames.Num() > 0, TEXT("%s"), *goalInfo.goalText.ToString());
+      switch (goalInfo.goalType) {
          case EGoalType::Hunt:
             args.Add(goalInfo.additionalNames[0]);
             if (goalInfo.amount > 1) {
@@ -175,15 +188,22 @@ FText AQuest::MakeGoalText(AQuest* assignedQuest, FGoalInfo goalInfo, int goalIn
             return FText::Format(NSLOCTEXT("Quests", "SubGoalWidget", "Hunt a {0}"), args);
          case EGoalType::Find:
             args.Add(UItemManager::Get().GetItemInfo(FCString::Atoi(*goalInfo.additionalNames[0].ToString()))->name);
-            if (goalInfo.amount > 1) {
-               args.Add(NSLOCTEXT("Quests", "Suffix", "s"));
-               args.Add(assignedQuest->currentAmounts[goalIndex]);
-               args.Add(goalInfo.amount);
+            if (goalInfo.additionalNames.Num() > 1) {
+               if (goalInfo.amount > 1) {
+                  args.Add(NSLOCTEXT("Quests", "Suffix", "s"));
+                  args.Add(assignedQuest->currentAmounts[goalIndex]);
+                  args.Add(goalInfo.amount);
+
+                  args.Add(goalInfo.additionalNames[1]);
+                  return FText::Format(NSLOCTEXT("Quests", "SubGoalWidget", "Bring: {0}{1} {2}/{3} to {4}!"), args);
+               }
                args.Add(goalInfo.additionalNames[1]);
-               return FText::Format(NSLOCTEXT("Quests", "SubGoalWidget", "Bring: {0}{1} {2}/{3} to {4}!"), args);
+               return FText::Format(NSLOCTEXT("Quests", "SubGoalWidget", "Bring a {0} to {1}"), args);
             }
-            args.Add(goalInfo.additionalNames[1]);
-            return FText::Format(NSLOCTEXT("Quests", "SubGoalWidget", "Bring a {0} to {1}"), args);
+
+            args.Add(goalInfo.amount - assignedQuest->currentAmounts[goalIndex]);
+            return FText::Format(NSLOCTEXT("Quests", "SubGoalWidget", "Bring {1} {0}(s)"), args);
+
          case EGoalType::Talk:
             args.Add(goalInfo.additionalNames[0]);
             if (goalInfo.additionalNames.Num() > 1) {

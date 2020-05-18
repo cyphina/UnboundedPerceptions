@@ -7,6 +7,8 @@
 #include "DialogUI.generated.h"
 
 class ANPC;
+class AHUDManager;
+class UButton;
 
 /**
  * Dialog widget for talking to NPCs, and IntimateNPCs,
@@ -31,36 +33,67 @@ class MYPROJECT_API UDialogUI : public UMyUserWidget
    UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (AllowPrivateAccess = true))
    ANPC* npcRef = nullptr;
 
+   UPROPERTY()
+   AHUDManager* hudManagerRef;
+
    /**Storage of the current view since after we press talk, we hide the view and eventually will need to get back to it.*/
    ESocialHUDState socialHUDState;
 
+   /** Collapses (bHide == true) or shows all butttons*/
+   void HideOrShowAllButtons(bool bHide=true) const;
+
+ protected:
+   static const int NUM_BUTTONS = 5;
+
+   UPROPERTY(BlueprintReadWrite, Category = "SocialOptions", Meta = (BindWidget))
+   UButton* btnTalk;
+   UPROPERTY(BlueprintReadWrite, Category = "SocialOptions", Meta = (BindWidget))
+   UButton* btnGift;
+   UPROPERTY(BlueprintReadWrite, Category = "SocialOptions", Meta = (BindWidget))
+   UButton* btnSharedPsychosis;
+   UPROPERTY(BlueprintReadWrite, Category = "SocialOptions", Meta = (BindWidget))
+   UButton* btnShop;
+   UPROPERTY(BlueprintReadWrite, Category = "SocialOptions", Meta = (BindWidget))
+   UButton* btnLeave;
+
+   UFUNCTION()
+   void Talk();
+
+   UFUNCTION()
+   void Gift();
+
+   UFUNCTION()
+   void Psychosis();
+
+   UFUNCTION()
+   void Shop();
+
+   UFUNCTION()
+   void Leave();
+
  public:
    void NativeConstruct() override;
+
+   UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true, BindWidget))
+   class UDialogWheel* dialogWheel;
 
    /** Called after greeting the IntimateNPC */
    UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Callbacks")
    void PostGreeting();
 
    /** View for NPCs which you can't gain friends from, but you can ask about topics from */
-   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Callbacks")
    void SetConversationView();
-   void SetConversationView_Implementation() { socialHUDState = ESocialHUDState::Conversation; }
 
-   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Callbacks")
+   /** View for NPCs which we can gain affinity with*/
    void SetIntimateView();
-   void SetIntimateView_Implementation() { socialHUDState = ESocialHUDState::Intimate; };
 
-   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Callbacks")
+   /** View for salespeople NPC*/
    void SetShopView();
-   void SetShopView_Implementation() { socialHUDState = ESocialHUDState::Shop; };
 
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
    void SetMainView();
 
-   UFUNCTION(BlueprintCallable, Category = "Functionality")
-   void Leave();
-
-   bool  OnWidgetAddToViewport_Implementation() override;
+   bool  OnWidgetAddToViewport_Implementation() override final;
    void  SetNPC(ANPC* newNpcRef) { this->npcRef = newNpcRef; }
-   ANPC* GetNPC() { return npcRef; }
+   ANPC* GetNPC() const { return npcRef; }
 };

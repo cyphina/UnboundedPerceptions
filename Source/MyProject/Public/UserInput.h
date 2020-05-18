@@ -22,11 +22,6 @@ class ARTSGameState;
 class ARTSPawn;
 class UQuestManager;
 
-// Callback delegates
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllySelected);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAllyDeselected);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);
-
 UCLASS()
 class MYPROJECT_API AUserInput : public APlayerController
 {
@@ -55,21 +50,29 @@ class MYPROJECT_API AUserInput : public APlayerController
 
    /**HUDManager ref.  Set this in userinput because it depends on userinput being created first.  Also client-side HUD manipulation doesn't do very much,
     *since we don't store any important data in the huds */
-   AHUDManager* hudManager;
+   UPROPERTY()
+   AHUDManager* hudManagerRef;
 
+   UPROPERTY()
    ARTSGameMode* gameMode;
 
+   UPROPERTY()
    ARTSGameState* gameState;
 
+   UPROPERTY()
    ARTSPawn* cameraPawn;
 
+   UPROPERTY(EditDefaultsOnly, Meta=(AllowPrivateAccess="true"))
+   TSubclassOf<AHUDManager> hudManagerClass;
+
  public:
-   /**offset used for widgets when dragging around*/
+   /**Offset used for widgets when dragging around*/
    UPROPERTY(BlueprintReadWrite)
    FVector2D offset;
 
+  /**Won't exist until after widgets created*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-   FORCEINLINE AHUDManager* GetHUDManager() const { return hudManager; }
+   FORCEINLINE AHUDManager* GetHUDManager() const { return hudManagerRef; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    FORCEINLINE ARTSGameState* GetGameState() const { return gameState; }
@@ -89,23 +92,8 @@ class MYPROJECT_API AUserInput : public APlayerController
  private:
 #pragma endregion
 
- public:
-#pragma region selection
-
-   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnAllySelected OnAllySelectedDelegate;
-
-   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnAllyDeselected OnAllyDeselectedDelegate;
-
-   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnUnitSelected OnUnitSelectedDelegate;
-
-#pragma endregion
-
 /**Input stored in the controller can be called despite whatever pawn is possessed*/
 #pragma region input
- private:
    void ToggleBreakMenu();
    void ToggleInventory();
    void ToggleQuestJournal();

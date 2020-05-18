@@ -16,6 +16,8 @@ class UItemFunctionLibrary : public UBlueprintFunctionLibrary
 {
    GENERATED_BODY()
 
+   static void DescriptionBuilder(FString& bonusDescription, uint8 stat, int statVal);
+
  public:
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item Data Accessor", meta = (DisplayName = "Get Item Info"))
    static FItemLookupRow& GetItemInfo(int itemID);
@@ -26,9 +28,13 @@ class UItemFunctionLibrary : public UBlueprintFunctionLibrary
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item Data Accessor", meta = (DisplayName = "Get Consumable Info"))
    static FConsumableLookupRow& GetConsumableInfo(int consumableID);
 
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "DescriptionHeler")
+   // Lists all the bonuses a piece of equipment gives us
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "DescriptionHelper")
    static FText GetBonusDescription(int equipID);
 
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "DescriptionHeler")
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "DescriptionHelper")
+   static FText GetRarityText(ERarity rarity);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "DescriptionHelper")
    static FText BonusToName(int bonusValue);
 };

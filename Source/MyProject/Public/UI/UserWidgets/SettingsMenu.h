@@ -7,7 +7,7 @@
 #include "SettingsMenu.generated.h"
 
 /**
- *
+ * Menu for changing in game settings
  */
 UCLASS()
 class MYPROJECT_API USettingsMenu : public UMyUserWidget

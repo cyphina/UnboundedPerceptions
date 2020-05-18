@@ -3,13 +3,13 @@
 #pragma once
 
 #include "AIController.h"
-#include "BehaviorTree/BehaviorTreeComponent.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
 
 #include "UnitTargetData.h"
 
 #include "UnitController.generated.h"
 
+struct FAIMessage;
 class AUnit;
 class AUserInput;
 class UEnvQuery;
@@ -25,9 +25,12 @@ class MYPROJECT_API AUnitController : public AAIController
 {
    GENERATED_BODY()
 
-   AUnit*        ownerRef = nullptr;
-   AUserInput*   CPCRef   = nullptr;
-   TSet<AUnit*>* groupRef;         // Denotes is unit is part of a group (group AI)
+   UPROPERTY()
+   AUnit* ownerRef = nullptr;
+   UPROPERTY()
+   AUserInput* CPCRef = nullptr;
+   UPROPERTY()
+   TSet<AUnit*>  groupRef;         // Denotes is unit is part of a group (group AI)
    int           spellToCastIndex; // Spell to cast after target is found using EQS
 
  protected:
@@ -39,8 +42,9 @@ class MYPROJECT_API AUnitController : public AAIController
 
    static const FName AIMessage_Help; // sent when a unit needs some help defensively
 
+   AUserInput* GetCPCRef() const { return CPCRef; }
+
  public:
-   
    static const int CHASE_RANGE = 100;
 
    AUnitController();
@@ -53,7 +57,7 @@ class MYPROJECT_API AUnitController : public AAIController
    bool canProtect = false;
 
    /** Behaviortreecomponent used to start/stop behavior trees */
-   UBehaviorTreeComponent* behaviorTreeComp;
+   class UBehaviorTreeComponent* behaviorTreeComp;
 
    /** Blackboardcomponent used to initialize blackboard values and
     * set/get values from a blackboard asset */
@@ -63,14 +67,14 @@ class MYPROJECT_API AUnitController : public AAIController
     * on how they use their blackboards as well as starting the tree*/
    void OnPossess(APawn* InPawn) override;
    void BeginPlay() override;
-   void Tick(float deltaSeconds) override;
+   void Tick(float deltaSeconds) override final;
 
-   inline AUnit*      GetUnitOwner() const { return ownerRef; }
-   inline AUserInput* GetCPCRef() const { return CPCRef; }
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   AUnit*      GetUnitOwner() const { return ownerRef; }
 
  private:
-
-   FAIMessageObserverHandle protectListener;
+   typedef TSharedPtr<struct FAIMessageObserver, ESPMode::Fast> FAIMessageObserverHandle;
+   FAIMessageObserverHandle                                     protectListener;
 
 /** Used to search for an actor/vector that matches certain criteria */
 #pragma region EnvironmentQuery
@@ -183,10 +187,9 @@ class MYPROJECT_API AUnitController : public AAIController
 
    /**Function to see if unit is facing the direction*/
    UFUNCTION(BlueprintCallable, Category = "Positioning")
-   bool IsFacingTarget(FVector targetLocation, float errorAngleCutoff = .02f); 
+   bool IsFacingTarget(FVector targetLocation, float errorAngleCutoff = .02f);
 
-protected:
-
+ protected:
    /**Checks to see if spell has a cast time, and if so, it will start channeling (incantation) process.  Else it will just cast the spell*/
    virtual void IncantationCheck(TSubclassOf<UMySpell> spellToCast);
    /**If the spell has the Skill.Channeling tag then it requires us to channel after the incantation aka unit has to focus energy into the spell*/
@@ -201,8 +204,7 @@ protected:
 /** Not actions, but functions used to get the character in the right position */
 #pragma region MoveAdjustments
 
-public:
-
+ public:
    FQuat FindLookRotation(FVector targetPoint);
 
    /**Function to turn self towards a direction*/
@@ -229,7 +231,6 @@ public:
    float rotationRate = 0.03f;
 
  private:
-
    UCurveFloat* turnCurve;
    FQuat        turnRotator;
    FQuat        startRotation;

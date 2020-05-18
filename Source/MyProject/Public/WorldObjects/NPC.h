@@ -11,18 +11,24 @@
 
 class ABaseHero;
 class AUserInput;
+class ANPCAIController;
 
 struct FMapSaveInfo;
 struct FNPCSaveInfo;
 
 // NPC Base Class for people we might be able to talk to
-UCLASS()
+UCLASS(HideCategories = (Rendering, Replication, Clothing, "Character Movement", Physics))
 class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInteractable
 {
    GENERATED_BODY()
 
    UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
    FText name;
+
+   static class AHUDManager* hudManagerRef;
+
+   UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true))
+   ANPCAIController* npcAIController;
 
    /** Exposed name of default conversation to be quickly set in object properties.  This conversation is whatever they NPC will tell you before your
     * conversation digresses, so it may change when new events occur.  Rather than caching dialog, loading it form our table is fine
@@ -80,18 +86,21 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
  protected:
    AUserInput* controllerRef;
    void        MakeNPCData(FNPCSaveInfo& npcSaveInfo);
+   void        ReloadNPCData(const FNPCSaveInfo& npcSaveInfo);
 
  public:
    ANPC();
 
    void         BeginPlay() override;
-   virtual void Tick(float DeltaTime) override;
+   virtual void Tick(float DeltaTime) override final;
+
+   static void SetHUDManagerRef(AHUDManager* newHudManager) { hudManagerRef = newHudManager; }
 
    /**
-    *Is this NPC already talking to a hero?
+    *Removed since we store this as the interactedHero in BasePlayer settings
     */
-   UPROPERTY(BlueprintReadWrite, Category = "NPCConversationSettings")
-   ABaseHero* currentlyTalkingHero = false;
+   // UPROPERTY(BlueprintReadWrite, Category = "NPCConversationSettings")
+   // ABaseHero* currentlyTalkingHero = false;
 
    /**
     * Does this NPC allow us to have a conversation (open up social menu) or does he/she just say something then walk away
@@ -103,6 +112,8 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
 
    UFUNCTION(BlueprintCallable, Category = "Accessors")
    virtual void SetGameName(FText value) override { name = value; };
+
+   /** Returns the name displayed when this character is talking*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    virtual FText GetGameName() const override { return name; };
 
@@ -146,6 +157,7 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
     */
    UFUNCTION(BlueprintCallable, Category = "Accessors")
    FName GetStartingConversationName() const { return conversationStarterName; }
+
    /**
     *Accessor to see if NPC wants to have a conversation
     */
@@ -172,19 +184,34 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
 
 #pragma endregion
 
+   /**
+    * Logic to handle once the intro dialog with an NPC is finished
+    */
+   virtual void OnDoneInitialTalk();
+
+   /**
+    * Logic to handle once a dialog with an NPC is finished
+    */
+   virtual void OnDoneTalking();
+
    virtual void Interact_Implementation(ABaseHero* hero) override;
 
    /**
-    *Sets up the dialogue UI to the proper state (conversation/intimate view) after interacting with this NPC
+    * Sets up the dialogue UI to the proper state (conversation/intimate view) after interacting with this NPC
     */
    virtual void SetupAppropriateView();
 
-   virtual FVector GetInteractableLocation_Implementation(ABaseHero* hero) override;
+   FVector GetInteractableLocation_Implementation() const override final;
    /**
     *NPCs can always be interacted with.  To create an NPC that doesn't interact at all, just create some blank humanoid static mesh (Persona Like)
     */
-   bool CanInteract_Implementation() override;
+   bool CanInteract_Implementation() const override;
 
    virtual void SaveNPCData(FMapSaveInfo& mapInfo);
-   void         LoadNPCData(FNPCSaveInfo& npcSaveInfo);
+   virtual void LoadNPCData(FMapSaveInfo& mapInfo);
 };
+
+FORCEINLINE uint8 GetTypeHash(const ANPC& npc)
+{
+   return GetTypeHash(npc.GetActorLocation() + GetTypeHash(npc.GetGameName().ToString()));
+}

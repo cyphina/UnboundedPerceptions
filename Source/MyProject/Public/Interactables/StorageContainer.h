@@ -24,8 +24,12 @@ class MYPROJECT_API AStorageContainer : public AInteractableBase
    UPROPERTY()
    UBackpack* backpack = nullptr;
 
+   static class AHUDManager* hudManagerRef;
+
  public:
    AStorageContainer();
+
+   static void SetHUDManagerRef(AHUDManager* newManager) { hudManagerRef = newManager; }
 
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
    TArray<FMyItem> initialItems;
@@ -37,11 +41,12 @@ class MYPROJECT_API AStorageContainer : public AInteractableBase
    void BeginPlay() override;
 
    void    Interact_Implementation(ABaseHero* hero) override;
-   bool    CanInteract_Implementation() override;
-   FVector GetInteractableLocation_Implementation(ABaseHero* hero) override;
+   bool    CanInteract_Implementation() const override;
+   FVector GetInteractableLocation_Implementation() const override;
 
    UFUNCTION()
    void OnLeaveRange(UPrimitiveComponent* overlappedComp, AActor* otherActor, UPrimitiveComponent* otherComp, int otherBodyIndex);
 
-   void SaveInteractable(FMapSaveInfo& mapData) override;
+   void SaveInteractable(FMapSaveInfo& mapData) override final;
+   void LoadInteractable(FMapSaveInfo& mapData) override final;
 };

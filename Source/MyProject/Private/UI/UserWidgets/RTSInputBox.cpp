@@ -7,5 +7,6 @@
 
 void URTSInputBox::Confirm()
 {
-   if (onInputConfirmed.Execute(txtInput)) CPC->GetHUDManager()->AddHUDInput();
+   if(onInputConfirmed.Execute(txtInput))
+      hudManagerRef->ShowInputBox();
 }

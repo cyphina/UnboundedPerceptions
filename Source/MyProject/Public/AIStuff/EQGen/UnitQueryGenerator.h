@@ -6,13 +6,12 @@
 #include "EnvironmentQuery/EnvQueryGenerator.h"
 #include "UnitQueryGenerator.generated.h"
 
+class AUnit;
+
 /**
  * Generator that returns all the visible units that should be checked.  Not really relevant... yet.  Probably more efficient to test the items manually at
  * this point
  */
-
-class AUnit;
-
 UCLASS()
 class MYPROJECT_API UUnitQueryGenerator : public UEnvQueryGenerator
 {

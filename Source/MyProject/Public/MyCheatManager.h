@@ -49,6 +49,12 @@ class MYPROJECT_API UMyCheatManager : public UCheatManager
    UFUNCTION(exec, Category = "Cheats")
    virtual void GodMode(FString objectID, int toggleGodMode);
 
+    /** Adds a quest
+    * @param questName - Name of the quest to be completed that maps to a tag in BPQuestMap
+    */
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void AddQuest(FString questName);
+
    /** Completes a quest that is accepted
     * @param questName - Name of the quest to be completed
     * @param isSucessful - Complete the quest sucesssfully? or fail quest?
@@ -66,10 +72,10 @@ class MYPROJECT_API UMyCheatManager : public UCheatManager
 
    /** Refreshes the spells of all units (puts them off CD) */
    UFUNCTION(exec, Category = "Cheats")
-   virtual void RefreshSpells(FString heroName);
+   virtual void RefreshSpells();
 
-   /** Refreshes the spells of a certain hero
-    * @param heroName - Hero who should have all their spell cooldowns reset.  If unspecificed, resets cds of every unit
+   /** Refreshes the spells of a certain hero.  If no heroname is specified refreshes spells of all heroes in party
+    * @param heroName - Hero who should have all their spell cooldowns reset.  If unspecified, resets cds of every unit
     */
    UFUNCTION(exec, Category = "Cheats")
    virtual void RefreshHeroSpells(FString heroName);
@@ -108,4 +114,8 @@ class MYPROJECT_API UMyCheatManager : public UCheatManager
    /**Spawn enemy from ID list*/
    UFUNCTION(exec, Category = "Cheats")
    virtual void SpawnEnemies(FName id, int level, int numberToSpawn, FVector spawnLocation);
+
+   /**Allows us to toggle on categories for CSV profiling*/
+   UFUNCTION(exec, Category = "Debugging")
+   void EnableCSVCategories(FString csvCategories);
 };

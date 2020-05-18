@@ -8,7 +8,7 @@
 class UMySpell;
 
 /**
- * Spell casting task where the spell and target is chosen.  The spell is a property where the target is the blackboard key
+ * Spell casting task where the spell and target is chosen by the designer.  The spell is a property where the target is the blackboard key
  */
 UCLASS()
 class MYPROJECT_API UBTTask_CastSpell : public UBTTask_BlackboardBase

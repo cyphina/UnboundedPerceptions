@@ -6,42 +6,26 @@
 
 ATriggerInteractable::ATriggerInteractable()
 {
-	PrimaryActorTick.bCanEverTick = false;
-	scene = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
-	SetRootComponent(scene);
-	staticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DoorMesh"));
-	staticMesh->SetupAttachment(RootComponent);
-	staticMesh->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel3); //Interactable
+   PrimaryActorTick.bCanEverTick = false;
+   scene                         = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
+   SetRootComponent(scene);
+   staticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DoorMesh"));
+   staticMesh->SetupAttachment(RootComponent);
+   staticMesh->SetCollisionObjectType(INTERACTABLE_CHANNEL); 
 }
 
 void ATriggerInteractable::BeginPlay()
 {
-	Super::BeginPlay();
-	gameModeRef = Cast<ARTSGameMode>(GetGameInstance());
+   Super::BeginPlay();
+   gameModeRef = Cast<ARTSGameMode>(GetGameInstance());
 }
 
 void ATriggerInteractable::Interact_Implementation(ABaseHero* hero)
 {
-	gameModeRef->GetTriggerManager()->ActivateTrigger(triggerActivatedOnInteract);
+   gameModeRef->GetTriggerManager()->ActivateTrigger(triggerActivatedOnInteract);
 }
 
-FVector ATriggerInteractable::GetInteractableLocation_Implementation(ABaseHero* hero)
+FVector ATriggerInteractable::GetInteractableLocation_Implementation() const
 {
-	return GetActorLocation();
+   return GetActorLocation();
 }
-
-bool ATriggerInteractable::CanInteract_Implementation()
-{
-	for(FConditionData condition : useConditions)
-	{
-		if(!gameModeRef->GetConditionalManager()->GetCondition(condition))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-
-
-

@@ -61,7 +61,7 @@ int UBackpack::AddItemToSlot(FMyItem newItem, int slot) //<--FIX HERE
    check(newID > 0)
 #endif
 
-       check(slot >= 0 && slot <= itemMax); // is this a valid slot
+   check(slot >= 0 && slot <= itemMax); // is this a valid slot
    bool isSlotAllocated = items.IsAllocated(slot);
 
    if (isSlotAllocated && items[slot].id == newID && UItemManager::Get().GetItemInfo(items[slot].id)->isStackable) // if we have an item in our slot already
@@ -106,7 +106,7 @@ bool UBackpack::RemoveItem(const FMyItem& itemToRemove)
    check(newID > 0)
 #endif
 
-       if (items.Num() > 0)
+   if (items.Num() > 0)
    {
       int index = FindItem(newID);
 
@@ -153,6 +153,7 @@ void UBackpack::EmptySlot(int slot)
 void UBackpack::EmptyAll()
 {
    items.Empty(itemMax);
+   items.Reserve(itemMax);
 }
 
 void UBackpack::TransferItems(UBackpack* otherPack, int transferSlot)
@@ -273,5 +274,12 @@ void UBackpack::SaveBackpack(FBackpackSaveInfo& backpackInfo)
 
    for (int itemSlot : itemIndices) {
       backpackInfo.itemSlots.Add(itemSlot);
+   }
+}
+
+void UBackpack::LoadBackpack(FBackpackSaveInfo& backpackInfo)
+{
+   for (int i = 0; i < backpackInfo.itemIDs.Num(); ++i) {
+      AddItemToSlot(FMyItem(backpackInfo.itemIDs[i], backpackInfo.itemCounts[i]), backpackInfo.itemSlots[i]);
    }
 }

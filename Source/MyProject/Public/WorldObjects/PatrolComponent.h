@@ -38,7 +38,7 @@ class MYPROJECT_API UPatrolComponent : public USceneComponent
    UPROPERTY(EditAnywhere)
    UBehaviorTree* patrolTree;
 
-   int currentPatrolIndex = 0;
+   int currentPatrolIndex = -1;
 
    FLinearColor editorUnselectedColor = FLinearColor::Black;
    FLinearColor editorSelectedColor   = FLinearColor::Blue;

@@ -19,24 +19,48 @@ namespace UpResourceManager
    extern TMap<FGameplayTag, FColor> elementalMap;
 
    // Used to get bounds of some object with collision (represents the corners of a cube)
-   const FVector BoundsPointMapping[8] = {FVector(1.f, 1.f, 1.f),  FVector(1.f, 1.f, -1.f),  FVector(1.f, -1.f, 1.f),  FVector(1.f, -1.f, -1.f),
-                                          FVector(-1.f, 1.f, 1.f), FVector(-1.f, 1.f, -1.f), FVector(-1.f, -1.f, 1.f), FVector(-1.f, -1.f, -1.f)};
+   const FVector BoundsPointMapping[8] = { FVector(1.f, 1.f, 1.f), FVector(1.f, 1.f, -1.f), FVector(1.f, -1.f, 1.f), FVector(1.f, -1.f, -1.f),
+                                          FVector(-1.f, 1.f, 1.f), FVector(-1.f, 1.f, -1.f), FVector(-1.f, -1.f, 1.f), FVector(-1.f, -1.f, -1.f) };
 
    const FVector BoundsPointMapping2D[4] = {
-       FVector(1.f, 1.f, 0.f),
-       FVector(1.f, -1.f, 0.f),
-       FVector(-1.f, -1.f, 0.f),
-       FVector(-1.f, 1.f, -1.f),
+   FVector(1.f, 1.f, 0.f),
+   FVector(1.f, -1.f, 0.f),
+   FVector(-1.f, -1.f, 0.f),
+   FVector(-1.f, 1.f, -1.f),
    };
+
+   struct StatKeyFunc : TDefaultMapHashableKeyFuncs<uint8, uint8, false> {
+
+      /** Maps 0-NumAtts to 0, NumAtts-NumScalingStats to 1, and so forth */
+      static FORCEINLINE uint32 GetKeyHash(uint8 Key)
+      {
+         checkf((unsigned)Key < (unsigned)(CombatInfo::TotalStatCount), TEXT("Don't map any values out of the number of stats %d"), Key);
+         if (Key < CombatInfo::AttCount) {
+            return 0;
+         }
+         if (Key < CombatInfo::AttCount + CombatInfo::StatCount) {
+            return 1;
+         }
+         if (Key < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::MechanicCount) {
+            return 2;
+         }
+         return 3;
+      }
+   };
+
+   // Maps stat num ( 0- Total Num Stats ) to enum ( 0 - Attributes, 1 - Stats, 2 - Vitals, 3 - Mechanics)
+   const TMap<uint8, uint8, FDefaultSetAllocator, StatKeyFunc> statMapper = { {0, 0}, {CombatInfo::AttCount, 1},
+      {CombatInfo::AttCount + CombatInfo::StatCount, 2},
+      {CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount, 3} };
 
    /**Returns the Simpson quadrature's coefficient*/
    static const TFunction<float(float)> SimpsonSpacing = [](float space) { return 1.f / 3 * space; };
    /**Function used to get diminishing return values 1/(x+1)^n.*/
-   const TFunction<float(float, float)> DiminishFunc = [](float x, float n) { return (FMath::Pow(x + 1.f, 1.f-n) - 1.f) / (1.f - n); };
+   const TFunction<float(float, float)> DiminishFunc = [](float x, float n) { return (FMath::Pow(x + 1.f, 1.f - n) - 1.f) / (1.f - n); };
    /**Simple numerical integration from 0 to x, primarily used to estimate integral of the diminishing function*/
    const TFunction<float(float, TFunction<float(float)>)> SimpsonApprox = [](float x, TFunction<float(float)> f)
    {
-      GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Function values: %f, %f, %f"), f(0), f(x/2), x));
+      GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Function values: %f, %f, %f"), f(0), f(x / 2), x));
       return SimpsonSpacing(x / 2) * (f(0) + 4 * f(x / 2) + f(x));
    };
 
@@ -63,9 +87,7 @@ namespace UpResourceManager
       static_assert(std::is_base_of<IWorldObject, T>::value, "Template parameter should derive from IWorldObject");
 #endif
 
-      for (TActorIterator<T> actItr(worldRef); actItr; ++actItr) {
-         if ((*actItr)->GetGameName().ToString() == nameToMatch) { return *actItr; }
-      }
+      for (TActorIterator<T> actItr(worldRef); actItr; ++actItr) { if ((*actItr)->GetGameName().ToString() == nameToMatch) { return *actItr; } }
 
 #if UE_EDITOR
       UE_LOG(LogTemp, Warning, TEXT("Could not find object named %s"), *nameToMatch);
@@ -77,7 +99,7 @@ namespace UpResourceManager
    ABaseHero* FindTriggerObjectInWorld<ABaseHero>(FString nameToMatch, UWorld* worldRef);
 
    /**Executes a function inside an arbitrary UObject using UObject Reflection (granted T is a subclass of UObject)*/
-   void ExecuteFunctionFromWorldObject(UObject* objectRef, FName functionToExecute, UWorld* worldRef);
+   void ExecuteFunctionFromWorldObject(UObject* objectRef, FName functionToExecute);
 
    template <typename T>
    struct GetPropertyFromType;
@@ -92,14 +114,13 @@ namespace UpResourceManager
       using value = UIntProperty;
    };
 
-   /**Executes a function inside an arbitrary UObject using UObject Reflection (granted T is a subclass of UObject)*/
+   /**Gets a property from a UObject given that the property is a UObject itself*/
    template <typename T>
    bool GetObjectVariable(UObject* objectRef, FName propertyToRead, T& outValue, UWorld* worldRef)
    {
       if (objectRef) {
-         T foundVar;
          using Property = GetPropertyFromType<T>::value;
-         Property p     = FindField<Property>(wo->GetClass(), propertyToRead);
+         Property p = FindField<Property>(wo->GetClass(), propertyToRead);
          if (p) {
             outValue = p->GetPropertyValue_InContainer(objectRef);
             return true;
@@ -112,9 +133,8 @@ namespace UpResourceManager
    bool SetObjectVariable(UObject* objectRef, FName propertyToRead, T newValue, UWorld* worldRef)
    {
       if (objectRef) {
-         T foundVar;
          using Property = GetPropertyFromType<T>::value;
-         Property p     = FindField<Property>(wo->GetClass(), propertyToRead);
+         Property p = FindField<Property>(wo->GetClass(), propertyToRead);
          if (p) {
             outValue = p->SetPropertyValue_InContainer(objectRef, newValue);
             return true;

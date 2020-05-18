@@ -7,34 +7,63 @@
 #include "ActionSlot.generated.h"
 
 /**
- * Designed for composition
+ * Slot a use can press to trigger some kind of effect
  */
 
 class AUserInput;
-
-UCLASS()
+class UButton;
+class UTextBlock;
+class UImage;
+class UToolTipWidget;
+     
+UCLASS(Abstract)
 class MYPROJECT_API UActionSlot : public UUserWidget
 {
    GENERATED_BODY()
 
- public:
+   static TSubclassOf<UToolTipWidget> toolTipWidgetClass;
+
+ protected:
+   UPROPERTY(BlueprintReadWrite, Category = "Action", Meta = (BindWidget))
+   UButton* btnAction;
+
+   UPROPERTY(BlueprintReadWrite, Category = "Action", Meta = (BindWidget))
+   UImage* actionImage;
+
+   UPROPERTY(BlueprintReadWrite, Category = "Action", Meta = (BindWidget))
+   UTextBlock* infoText;
+
    UPROPERTY(BlueprintReadOnly)
    AUserInput* CPCRef;
 
-   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Action")
-   UTexture2D* actionImage;
+   UFUNCTION() void NativeConstruct() override;
+
+   UFUNCTION()
+   virtual void OnBtnClick() PURE_VIRTUAL(UActionSlot::OnBtnClick, );
+
+   /** Sets up the text to be displayed for a tooltip*/
+   UFUNCTION()
+   void OnBtnHover();
+
+   /** Setup information on the tooltip widget*/
+   UFUNCTION()
+   virtual void ShowDesc(UToolTipWidget* tooltip) PURE_VIRTUAL(UActionSlot::ShowDesc, );
+
+ public:
+   UActionSlot(const FObjectInitializer& o);
 
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Action", Meta = (ExposeOnSpawn = true))
    int slotIndex;
 
-   UPROPERTY(BlueprintReadWrite, Category = "Action")
-   FText info;
+   UFUNCTION(BlueprintCallable, Category = "Action")
+   virtual void SetImage(UTexture2D* image);
 
-   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Action")
-   void SetImage(UTexture2D* image);
+   UFUNCTION(BlueprintCallable, Category = "Action")
+   void SetInfo(FText newInfo);
 
-   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Action")
+   UFUNCTION(BlueprintCallable, Category = "Action")
    void SetImageFromMaterial(UMaterialInstanceDynamic* image);
 
-   void NativeConstruct() override;
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Action")
+   UTexture2D* GetImage() const;
 };

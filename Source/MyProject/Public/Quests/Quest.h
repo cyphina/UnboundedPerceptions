@@ -42,7 +42,7 @@ enum class EGoalType : uint8 {
    Custom,
    /**Kill some enemies to complete it*/
    Hunt,
-   /**Obtain a certain number of items to complete*/
+   /**Obtain a certain number of items to complete.  May require an NPC to turn items into (*/
    Find,
    /**Talk to an NPC about a certain topic to complete*/
    Talk,
@@ -65,15 +65,17 @@ struct FGoalInfo {
    static const FVector invalidGoalLocation;
 
    FGoalInfo() :
-       goalType(EGoalType::Custom), goalState(EGoalState::lockedGoal), isCustomGoal(false), goalText(FText()), additionalNames(TArray<FText>()), amount(0), shouldUpdateQuestDescription(false),
-       updatedDescription(FText()), requiredSubGoalIndices(TArray<int>()), shouldUseRadius(false), radius(0), circleColor(FLinearColor::Black), canFailQuest(false), canCompleteQuest(false),
-       goalLocation(FVector())
+       goalType(EGoalType::Custom), goalState(EGoalState::lockedGoal), isCustomGoal(false), goalText(FText()), additionalNames(TArray<FText>()), amount(0),
+       shouldUpdateQuestDescription(false), updatedDescription(FText()), requiredSubGoalIndices(TArray<int>()), shouldUseRadius(false), radius(0),
+       circleColor(FLinearColor::Black), canFailQuest(false), canCompleteQuest(false), goalLocation(FVector())
    {
    }
 
-   FGoalInfo(EGoalType gT, EGoalState gS, bool isC, FText gText, TArray<FText> aN, int aTH, bool sUQD, FText uD, TArray<int> fSGI, bool sUR, float r, FLinearColor cC, bool cFQ, bool cCQ, FVector gL) :
-       goalType(gT), goalState(gS), isCustomGoal(isC), goalText(gText), additionalNames(aN), amount(aTH), shouldUpdateQuestDescription(sUQD), updatedDescription(uD), requiredSubGoalIndices(fSGI),
-       shouldUseRadius(sUR), radius(r), circleColor(cC), canFailQuest(cFQ), canCompleteQuest(cCQ), goalLocation(gL)
+   FGoalInfo(EGoalType gT, EGoalState gS, bool isC, FText gText, TArray<FText> aN, int aTH, bool sUQD, FText uD, TArray<int> fSGI, bool sUR, float r, FLinearColor cC,
+             bool cFQ, bool cCQ, FVector gL) :
+       goalType(gT),
+       goalState(gS), isCustomGoal(isC), goalText(gText), additionalNames(aN), amount(aTH), shouldUpdateQuestDescription(sUQD), updatedDescription(uD),
+       requiredSubGoalIndices(fSGI), shouldUseRadius(sUR), radius(r), circleColor(cC), canFailQuest(cFQ), canCompleteQuest(cCQ), goalLocation(gL)
    {
    }
 
@@ -123,7 +125,7 @@ struct FGoalInfo {
    /**What's the color of the location tracker*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Minimap")
    FLinearColor circleColor;
-      /**If we fail this goal the quest will fail*/
+   /**If we fail this goal the quest will fail*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
    bool canFailQuest;
    /**If we finish this goal the quest will be done*/
@@ -150,10 +152,10 @@ struct FQuestReward {
 /**Struct representing when quest expires*/
 USTRUCT(BlueprintType, NoExport)
 struct FQuestExpiration {
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int chapter = 0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int section = 0; 
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int chapter = 0;
+   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   int section = 0;
 };
 
 // Struct for quest properties (that may be replicated?)
@@ -195,7 +197,7 @@ struct FQuestInfo {
    TArray<FGoalInfo> subgoals;
 };
 
-UCLASS(Blueprintable, BlueprintType, AutoCollapseCategories=(Actor)) // actor info has replication details incase we ever go multiplayer
+UCLASS(Blueprintable, BlueprintType, AutoCollapseCategories = (Actor)) // actor info has replication details incase we ever go multiplayer
 class MYPROJECT_API AQuest : public AInfo
 {
    GENERATED_BODY()
@@ -239,6 +241,12 @@ class MYPROJECT_API AQuest : public AInfo
     */
    void FindInitialItemAmount(int goalIndex);
 
+   /**
+    *Setup data structures used to record progress of each goal. The data structure uses the goal index as its key and the value is the amount of progress made for that goal so we
+    *can look it up.
+    */
+   void SetupGoalAmounts();
+
  public:
    /**
     *Goals currently in progress
@@ -255,7 +263,7 @@ class MYPROJECT_API AQuest : public AInfo
    /**
     *Map that links a goal to the actors that have been interacted with so we don't interact with the same actors twice... granted the quest asks to interact with multiple actors
     */
-   TMap<int, TArray<UNamedInteractableDecorator*>> interactedActors;
+   TMap<int, TArray<const UNamedInteractableDecorator*>> interactedActors;
 
    /**
     *Struct with information about quest
@@ -313,7 +321,8 @@ class MYPROJECT_API AQuest : public AInfo
    /**we need this for our deferred spawn in QuestManager::AddNewQuest()*/
    void SetQuestManagerRef(UQuestManager* managerRef)
    {
-      if (!questManagerRef) questManagerRef = managerRef;
+      if(!questManagerRef)
+         questManagerRef = managerRef;
    }
 
    /**Returns the text of what the goal should be based on the goal's type and information from the quest*/

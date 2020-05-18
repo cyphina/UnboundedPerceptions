@@ -5,15 +5,31 @@
 /**This header is so we can just include information about these structs without having to include other parts of a class had we put the structs in those headers*/
 
 /**Damage struct contains relevant information when calculating the amount of damage dealt*/
-struct Damage {
-   Damage() {}
-   Damage(int p, int d, int a, FGameplayTag e, FGameplayTag t, bool c) : piercing(p), damage(d), accuracy(a), element(e), type(t), crit(c) {}
-   int          piercing = 0;
-   int          damage   = 0; // how much damage dealt
-   int          accuracy = 0;
-   FGameplayTag element  = FGameplayTag(); // element of damage
-   FGameplayTag type     = FGameplayTag(); // type - physical, magical
-   bool         crit     = false;
+
+class AUnit;
+
+USTRUCT(BlueprintType, NoExport)
+struct FUpDamage {
+   FUpDamage() {}
+   FUpDamage(AUnit* sourceUnit, AUnit* targetUnit, int p, int d, int a, FGameplayTag e, FGameplayTag t, bool c) :
+       sourceUnit{sourceUnit}, targetUnit{targetUnit}, piercing(p), damage(d), accuracy(a), element{e}, type{t}, crit(c) {}
+
+   UPROPERTY(BlueprintReadWrite)
+   AUnit* sourceUnit = nullptr;
+   UPROPERTY(BlueprintReadWrite)
+   AUnit* targetUnit = nullptr;
+   UPROPERTY(BlueprintReadWrite)
+   int piercing = 0;
+   UPROPERTY(BlueprintReadWrite)
+   int damage = 0; // how much damage dealt
+   UPROPERTY(BlueprintReadWrite)
+   int accuracy = 0;
+   UPROPERTY(BlueprintReadWrite)
+   FGameplayTag element = FGameplayTag(); // element of damage
+   UPROPERTY(BlueprintReadWrite)
+   FGameplayTag type = FGameplayTag(); // type - physical, magical
+   UPROPERTY(BlueprintReadOnly)
+   bool crit = false;
 };
 
 USTRUCT(BlueprintType, NoExport)

@@ -15,7 +15,8 @@ const float UMyAttributeSet::MAX_HEALTH = TNumericLimits<int>().Max();
 
 UMyAttributeSet::UMyAttributeSet()
 {
-   attList = {StrengthAttribute(), UnderstandingAttribute(), IntelligenceAttribute(), ExplosivenessAttribute(), EnduranceAttribute(), AgilityAttribute(), LuckAttribute()};
+   attList = {StrengthAttribute(),  UnderstandingAttribute(), IntelligenceAttribute(), ExplosivenessAttribute(),
+              EnduranceAttribute(), AgilityAttribute(),       LuckAttribute()};
    attSet  = TSet<FGameplayAttribute>(attList);
 }
 
@@ -24,7 +25,8 @@ void UMyAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 {
    UAbilitySystemComponent* source = data.EffectSpec.GetContext().GetOriginalInstigatorAbilitySystemComponent();
 
-   if (HealthAttribute() == data.EvaluatedData.Attribute) {
+   // This logic is laready handled by the damage component
+   /*if (HealthAttribute() == data.EvaluatedData.Attribute) {
       AActor*      damagedActor      = nullptr;
       AController* damagedController = nullptr;
       if (data.Target.AbilityActorInfo.IsValid() && data.Target.AbilityActorInfo->AvatarActor.IsValid()) { damagedActor = data.Target.AbilityActorInfo->AvatarActor.Get(); }
@@ -36,7 +38,7 @@ void UMyAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
          AUnit* unit = Cast<AUnit>(damagedActor);
          unit->Die();
       }
-   }
+   }*/
 }
 
 DEFINE_ATTRIBUTE_FUNCTION(Strength, UMyAttributeSet);
@@ -88,30 +90,32 @@ DEFINE_ATTRIBUTE_FUNCTION(AttackRange, UMyAttributeSet);
 DEFINE_ATTRIBUTE_FUNCTION(WeaponPower, UMyAttributeSet);
 DEFINE_ATTRIBUTE_FUNCTION(GlobalDamageModifier, UMyAttributeSet);
 
-TSet<FGameplayAttributeData*> UMyAttributeSet::GetAtts()
+TArray<FGameplayAttribute> UMyAttributeSet::GetAtts()
 {
-   TSet<FGameplayAttributeData*> atts = {&Strength, &Understanding, &Intelligence, &Explosiveness, &Endurance, &Agility, &Luck};
+   TArray<FGameplayAttribute> atts = {StrengthAttribute(), UnderstandingAttribute(), IntelligenceAttribute(), ExplosivenessAttribute(),
+                                     EnduranceAttribute(),  AgilityAttribute(),       LuckAttribute()};
    return atts;
 }
 
-TSet<FGameplayAttributeData*> UMyAttributeSet::GetSkills()
+TArray<FGameplayAttribute> UMyAttributeSet::GetSkills()
 {
-   TSet<FGameplayAttributeData*> skills = {&Critical_Chance, &Critical_Damage, &Accuracy,     &Dodge,           &Attack_Speed, &Cast_Speed,    &Physical_Aff, &Fire_Aff,
-                                           &Water_Aff,       &Wind_Aff,        &Earth_Aff,    &Electric_Aff,    &Darkness_Aff, &Light_Aff,     &Arcane_Aff,   &Chaos_Aff,
-                                           &Poison_Aff,      &Blood_Aff,       &Ethereal_Aff, &Physical_Resist, &Fire_Resist,  &Water_Resist,  &Wind_Resist,  &Earth_Resist,
-                                           &Electric_Resist, &Darkness_Resist, &Light_Resist, &Arcane_Resist,   &Chaos_Resist, &Poison_Resist, &Blood_Resist, &Ethereal_Resist};
+   TArray<FGameplayAttribute> skills = {Critical_ChanceAttribute(), Critical_DamageAttribute(), AccuracyAttribute(),     DodgeAttribute(),           Attack_SpeedAttribute(),    Cast_SpeedAttribute(),      Physical_AffAttribute(),
+                                       Fire_AffAttribute(),        Water_AffAttribute(),       Wind_AffAttribute(),     Earth_AffAttribute(),       Electric_AffAttribute(),    Darkness_AffAttribute(),    Light_AffAttribute(),
+                                       Arcane_AffAttribute(),      Chaos_AffAttribute(),       Poison_AffAttribute(),   Blood_AffAttribute(),       Ethereal_AffAttribute(),    Physical_ResistAttribute(), Fire_ResistAttribute(),
+                                       Water_ResistAttribute(),    Wind_ResistAttribute(),     Earth_ResistAttribute(), Electric_ResistAttribute(), Darkness_ResistAttribute(), Light_ResistAttribute(),    Arcane_ResistAttribute(),
+                                       Chaos_ResistAttribute(),    Poison_ResistAttribute(),   Blood_ResistAttribute(), Ethereal_ResistAttribute()};
    return skills;
 }
 
-TSet<FGameplayAttributeData*> UMyAttributeSet::GetVitals()
+TArray<FGameplayAttribute> UMyAttributeSet::GetVitals()
 {
-   TSet<FGameplayAttributeData*> vits = {&Health, &Mana, &Psyche, &Moxie, &Shield};
+   TArray<FGameplayAttribute> vits = {HealthAttribute(), ManaAttribute(), PsycheAttribute(), MoxieAttribute(), ShieldAttribute()};
    return vits;
 }
 
-TSet<FGameplayAttributeData*> UMyAttributeSet::GetMechanics()
+TArray<FGameplayAttribute> UMyAttributeSet::GetMechanics()
 {
-   TSet<FGameplayAttributeData*> mechs = {&MovementSpeed, &AttackRange, &WeaponPower, &GlobalDamageModifier};
+   TArray<FGameplayAttribute> mechs = {MovementSpeedAttribute(), AttackRangeAttribute(), WeaponPowerAttribute(), GlobalDamageModifierAttribute()};
    return mechs;
 }
 
@@ -120,15 +124,26 @@ FGameplayAttribute UMyAttributeSet::IndexAtts(int index)
    return attList[index];
 }
 
+void UMyAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
+{
+   AUnit* unit = Cast<AUnit>(GetOwningActor());
+   if(attSet.Contains(Attribute)) {
+      unit->UpdateStats(Attribute);
+   }
+   baseStatUpdatedEvent.Broadcast(Attribute, NewValue, unit);
+}
+
 void UMyAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
-   if (Attribute == HealthAttribute()) {
+   // Clamp values and update walk speed if we get movement speed changes
+   AUnit* unit = Cast<AUnit>(GetOwningActor());
+   if(Attribute == HealthAttribute()) {
       Health.SetCurrentValue(FMath::Clamp(Health.GetCurrentValue(), 0.0f, Health.GetBaseValue()));
-   } else if (Attribute == MovementSpeedAttribute()) {
-      AUnit* unit                                = Cast<AUnit>(GetOwningActor());
+   } else if(Attribute == MovementSpeedAttribute()) {
       unit->GetCharacterMovement()->MaxWalkSpeed = NewValue;
-   } else if (attSet.Contains(Attribute)) {
-      AUnit* unit = Cast<AUnit>(GetOwningActor());
-      unit->UpdateStats();
+   } else if(attSet.Contains(Attribute)) {
+      unit->UpdateStats(Attribute);
    }
+
+   statUpdatedEvent.Broadcast(Attribute, NewValue, unit);
 }

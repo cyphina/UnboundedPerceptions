@@ -12,7 +12,7 @@
 class UMyGameInstance;
 class ARTSGameMode;
 
-/** Decorates an InteractableBase to make an object that activates a trigger when interacted with */
+/** Decorates an InteractableBase to make an object that activates trigger(s) when interacted with */
 
 UCLASS()
 class MYPROJECT_API UTriggerInteractableDecorator : public UInteractableActorDecoratorBase

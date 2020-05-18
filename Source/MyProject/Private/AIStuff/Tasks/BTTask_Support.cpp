@@ -12,14 +12,14 @@
 
 UBTTask_Support::UBTTask_Support()
 {
-   NodeName = "Support";
+   NodeName    = "Support";
    bNotifyTick = false;
 }
 
 EBTNodeResult::Type UBTTask_Support::ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory)
 {
    AUnitController* unitControllerRef = Cast<AUnitController>(ownerComp.GetAIOwner());
-   if (unitControllerRef->SearchAndCastSpell(UpResourceManager::supportTags))
+   if(unitControllerRef->SearchAndCastSpell(UpResourceManager::supportTags))
       return EBTNodeResult::InProgress;
    // if there's no spell to be casted
    return EBTNodeResult::Failed;
@@ -28,14 +28,10 @@ EBTNodeResult::Type UBTTask_Support::ExecuteTask(UBehaviorTreeComponent& ownerCo
 void UBTTask_Support::OnMessage(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory, FName message, int32 requestID, bool bSuccess)
 {
    //Finishes task if we get a message representing a successful action or if we get stunned or something
-   if (message == AUnit::AIMessage_SpellCasted) {
+   if(message == AUnit::AIMessage_SpellCasted) {
       Super::OnMessage(ownerComp, nodeMemory, message, requestID, bSuccess);
-   }
-   else { //finishes task if our spell casting gets interrupted
+   } else { //finishes task if our spell casting gets interrupted
       bSuccess &= (message != AUnit::AIMessage_SpellInterrupt);
       Super::OnMessage(ownerComp, nodeMemory, message, requestID, bSuccess);
    }
 }
-
-
-

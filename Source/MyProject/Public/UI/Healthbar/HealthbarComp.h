@@ -1,32 +1,37 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-// Widget Component used to attach our Healthbar widget to our Character
 #pragma once
 #include "Components/WidgetComponent.h"
 #include "HealthbarComp.generated.h"
 
 class UHealthbar;
 class AUnit;
+struct FUpDamage;
 
 /**
- * Class so we can interact with this component in C++
+ * WidgetComponent class containing a healthbar widget.  This component is attached ot our unit to display its health
  */
 UCLASS()
-class MYPROJECT_API UHealthbarComp : public UWidgetComponent
-{
+class MYPROJECT_API UHealthbarComp : public UWidgetComponent {
+
    GENERATED_BODY()
+
+   UPROPERTY()
    AUnit*                   unitRef;
+
    float                    healthPercentage;
+
+   UPROPERTY()
    UHealthbar*              healthBar;
+
    TSubclassOf<UUserWidget> widgetClass;
 
- public:
+   void SetWidgetHealth(const FUpDamage& damage);
+
+public:
    UPROPERTY(BlueprintReadWrite)
    UUserWidget* widgetRef;
 
    UHealthbarComp();
-   void BeginPlay() override;
 
-   virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-   void         EndPlay(const EEndPlayReason::Type EPR) override;
+   void BeginPlay() override final;
+   void EndPlay(const EEndPlayReason::Type EPR) override final;
 };

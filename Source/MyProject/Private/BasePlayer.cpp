@@ -23,11 +23,23 @@ void ABasePlayer::OnConstruction(const FTransform& transform)
    Super::OnConstruction(transform);
 }
 
+void ABasePlayer::ClearSelectedAllies()
+{
+   while(selectedAllies.Num() > 0)
+      selectedAllies[0]->SetSelected(false);
+
+   if(focusedUnit) {
+      focusedUnit->SetSelected(false);
+      focusedUnit = nullptr;
+   }
+}
+
 void ABasePlayer::UpdateParty(TArray<ABaseHero*> newHeroes)
 {
 #if UE_EDITOR
-   if (newHeroes.Num() <= 0 && newHeroes.Num() > MAX_NUM_HEROES) UE_LOG(LogTemp, Warning, TEXT("Inappropriate size (%d) of hero array"), newHeroes.Num());
-   // checkf(newHeroes.Num() > 0 && newHeroes.Num() <= MAX_NUM_HEROES, TEXT("Inappropriate size (%d) of hero array"), newHeroes.Num());
+   if(newHeroes.Num() <= 0 && newHeroes.Num() > MAX_NUM_HEROES)
+      UE_LOG(LogTemp, Warning, TEXT("Inappropriate size (%d) of hero array"), newHeroes.Num());
+      // checkf(newHeroes.Num() > 0 && newHeroes.Num() <= MAX_NUM_HEROES, TEXT("Inappropriate size (%d) of hero array"), newHeroes.Num());
 #endif
 
    //Disable the units in our old party
@@ -39,8 +51,10 @@ void ABasePlayer::UpdateParty(TArray<ABaseHero*> newHeroes)
    int i = -1;
    while(++i < newHeroes.Num()) {
       newHeroes[i]->SetEnabled(true);
-      newHeroes[i]->heroIndex = i;    
+      newHeroes[i]->heroIndex = i;
    }
+
+   partyUpdatedEvent.Broadcast();
 }
 
 void ABasePlayer::JoinParty(ABaseHero* newHero)
@@ -55,8 +69,9 @@ void ABasePlayer::UpdateGold(int32 amount)
 
 void ABasePlayer::UpdateEXP(int32 amount)
 {
-   for (ABaseHero* hero : heroes) {
-      if (IsValid(hero)) hero->SetCurrentExp(amount);
+   for(ABaseHero* hero : heroes) {
+      if(IsValid(hero))
+         hero->SetCurrentExp(amount);
    }
 }
 

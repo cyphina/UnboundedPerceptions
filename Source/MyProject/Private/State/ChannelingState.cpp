@@ -4,9 +4,7 @@
 #include "AbilitySystemComponent.h"
 #include "UnitController.h"
 
-ChannelingState::ChannelingState()
-{
-}
+ChannelingState::ChannelingState() {}
 
 void ChannelingState::Enter(AUnit& unit)
 {
@@ -16,7 +14,7 @@ void ChannelingState::Enter(AUnit& unit)
 void ChannelingState::Exit(AUnit& unit)
 {
    FGameplayEventData eD = FGameplayEventData();
-   eD.EventTag = FGameplayTag::RequestGameplayTag("Skill.Confirm");
+   eD.EventTag           = FGameplayTag::RequestGameplayTag("Skill.Confirm");
 
    //Moves targetData so now unit.targetData will be null.  Must get targetData from the event handler, and regular confirm has no targetData since its a None type target.
    eD.TargetData = unit.targetData.spellTargetData;
@@ -33,6 +31,4 @@ void ChannelingState::Update(AUnit& unit, float deltaSeconds)
       unit.unitSpellData.currentChannelTime += deltaSeconds;
 }
 
-ChannelingState::~ChannelingState()
-{
-}
+ChannelingState::~ChannelingState() {}

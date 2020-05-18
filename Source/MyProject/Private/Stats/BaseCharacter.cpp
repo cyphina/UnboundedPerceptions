@@ -1,6 +1,8 @@
 #include "MyProject.h"
 #include "BaseCharacter.h"
 
+#include "Copy.h"
+
 FBaseCharacter::FBaseCharacter(const UMyAttributeSet* AttSet)
 {
    level  = 1;
@@ -10,11 +12,12 @@ FBaseCharacter::FBaseCharacter(const UMyAttributeSet* AttSet)
    SetupSkills();
    SetupVitals();
    SetupMechanics();
-   StatUpdate();
+   InitializeAttributeBaseValues();
+   InitialStatUpdate();
 
-   // make sure all vitals are full initially
-   for (int i = 0; i < vitals.Num(); i++)
-      vitals[i].SetCurrValue(vitals[i].GetAdjustedValue());
+   // Make sure all vitals are full initially
+   for(int i = 0; i < vitals.Num(); i++)
+      vitals[i].SetAdjustedValue(vitals[i].GetBaseValue(attSet), attSet);
 }
 
 FBaseCharacter::~FBaseCharacter()
@@ -23,42 +26,63 @@ FBaseCharacter::~FBaseCharacter()
 
 void FBaseCharacter::SetupPrimaryAttributes()
 {
-   for (FGameplayAttributeData* attData : attSet->GetAtts()) {
-      attData->SetBaseValue(MIN_STARTING_ATT_VALUE);
-      attData->SetCurrentValue(MIN_STARTING_ATT_VALUE);
-      baseAttributes.Add(attData);
+   float minVal = MIN_STARTING_ATT_VALUE;
+   for(FGameplayAttribute& att : attSet->GetAtts()) {
+      baseAttributes.Add(att);
+   }
+}
+
+void FBaseCharacter::InitialStatUpdate()
+{
+   for(auto& skill : skills)
+      skill.Update(attSet);
+   for(auto& vit : vitals)
+      vit.Update(attSet);
+}
+
+void FBaseCharacter::InitializeAttributeBaseValues()
+{
+   float minVal = MIN_STARTING_ATT_VALUE;
+   for(FGameplayAttribute& att : baseAttributes) {
+      att.GetGameplayAttributeData(attSet)->SetBaseValue(MIN_STARTING_ATT_VALUE);
+      att.SetNumericValueChecked(minVal, attSet);
+   }
+
+   for(auto& vital : vitals) {
+      vital.SetAdjustedValue(vital.GetBaseValue(attSet), attSet);
    }
 }
 
 void FBaseCharacter::SetupSkills()
 {
-   for (FGameplayAttributeData* skillData : attSet->GetSkills()) {
-      skills.Emplace(Stat(*skillData));
+   for(FGameplayAttribute& skillData : attSet->GetSkills()) {
+      skills.Add(RTSUnitStat(skillData));
    }
    SetupSkillModifiers();
 }
 
 void FBaseCharacter::SetupVitals()
 {
-   for (FGameplayAttributeData* vitData : attSet->GetVitals()) {
-      vitals.Emplace(Vital(*vitData));
+   for(FGameplayAttribute& vitData : attSet->GetVitals()) {
+      vitals.Add(Vital(vitData));
    }
    SetupVitalModifiers();
 }
 
 void FBaseCharacter::SetupMechanics()
 {
-   for (FGameplayAttributeData* mechData : attSet->GetMechanics()) {
+   for(FGameplayAttribute& mechData : attSet->GetMechanics()) {
       mechanics.Add(mechData);
    }
-   mechanics[static_cast<int>(mech::AttackRange)]->SetBaseValue(BASE_ATTACK_RANGE);
-   mechanics[static_cast<int>(mech::MovementSpeed)]->SetBaseValue(BASE_MOVEMENT_SPEED);
-   mechanics[static_cast<int>(mech::WeaponPower)]->SetBaseValue(BASE_ATTACK_POWER);
-   mechanics[static_cast<int>(mech::GlobalDamageModifier)]->SetBaseValue(0);
-   mechanics[static_cast<int>(mech::AttackRange)]->SetCurrentValue(BASE_ATTACK_RANGE);
-   mechanics[static_cast<int>(mech::MovementSpeed)]->SetCurrentValue(BASE_MOVEMENT_SPEED);
-   mechanics[static_cast<int>(mech::WeaponPower)]->SetCurrentValue(BASE_ATTACK_POWER);
-   mechanics[static_cast<int>(mech::GlobalDamageModifier)]->SetCurrentValue(0);
+
+   mechanics[static_cast<int>(mech::AttackRange)].GetGameplayAttributeData(attSet)->SetBaseValue(BASE_ATTACK_RANGE);
+   mechanics[static_cast<int>(mech::MovementSpeed)].GetGameplayAttributeData(attSet)->SetBaseValue(BASE_MOVEMENT_SPEED);
+   mechanics[static_cast<int>(mech::WeaponPower)].GetGameplayAttributeData(attSet)->SetBaseValue(BASE_ATTACK_POWER);
+   mechanics[static_cast<int>(mech::GlobalDamageModifier)].GetGameplayAttributeData(attSet)->SetBaseValue(0);
+   mechanics[static_cast<int>(mech::AttackRange)].GetGameplayAttributeData(attSet)->SetCurrentValue(BASE_ATTACK_RANGE);
+   mechanics[static_cast<int>(mech::MovementSpeed)].GetGameplayAttributeData(attSet)->SetCurrentValue(BASE_MOVEMENT_SPEED);
+   mechanics[static_cast<int>(mech::WeaponPower)].GetGameplayAttributeData(attSet)->SetCurrentValue(BASE_ATTACK_POWER);
+   mechanics[static_cast<int>(mech::GlobalDamageModifier)].GetGameplayAttributeData(attSet)->SetCurrentValue(0);
 }
 
 void FBaseCharacter::SetupSkillModifiers()
@@ -117,12 +141,12 @@ void FBaseCharacter::SetupVitalModifiers()
 
 void FBaseCharacter::ChangeModifier(sks skillName, atts att, EFF eff)
 {
-   skills[static_cast<int>(skillName)].ChangeModifier(ModifyingAttribute(baseAttributes[static_cast<int>(att)], eff));
+   skills[static_cast<int>(skillName)].ChangeModifier(ModifyingAttribute(&baseAttributes[static_cast<int>(att)], eff));
 }
 
 void FBaseCharacter::ChangeModifier(vits vitalName, atts att, EFF eff)
 {
-   vitals[static_cast<int>(vitalName)].ChangeModifier(ModifyingAttribute(baseAttributes[static_cast<int>(att)], eff));
+   vitals[static_cast<int>(vitalName)].ChangeModifier(ModifyingAttribute(&baseAttributes[static_cast<int>(att)], eff));
 }
 
 void FBaseCharacter::LevelUp()
@@ -130,44 +154,91 @@ void FBaseCharacter::LevelUp()
    level++;
 }
 
-void FBaseCharacter::StatUpdate()
+void FBaseCharacter::StatUpdate(const FGameplayAttribute& updatedStat)
 {
-   for (int i = 0; i < vitals.Num(); i++) {
-      vitals[i].Update();
-   }
-   for (int i = 0; i < skills.Num(); i++) {
-      skills[i].Update();
-   }
+   TArray<Vital> updatedVits;
+   Algo::CopyIf(vitals, updatedVits, [&updatedStat](const Vital& vit) { return vit.attMod.attribute->GetName() == updatedStat.GetName(); });
+   for(auto& foundVit : updatedVits)
+      foundVit.Update(attSet);
+
+   TArray<RTSUnitStat> updatedStats;
+   Algo::CopyIf(skills, updatedStats, [&updatedStat](const RTSUnitStat& skill) { return skill.attMod.attribute->GetName() == updatedStat.GetName(); });
+   for(auto& foundSkill : updatedStats)
+      foundSkill.Update(attSet);
 }
 
-FGameplayAttributeData* FBaseCharacter::GetAttribute(int index)
+FGameplayAttributeData* FBaseCharacter::GetAttribute(int index) const
 {
 #if UE_EDITOR
    checkfSlow(index >= 0 && index < baseAttributes.size(), TEXT("ERROR ATT OUT OF RANGE")) // slower check not needed in development or shipping builds
 #endif
-       return baseAttributes[index];
+       return baseAttributes[index]
+           .GetGameplayAttributeData(attSet);
 }
 
-Stat* FBaseCharacter::GetSkill(int index)
+FGameplayAttributeData* FBaseCharacter::GetSkill(int index) const
 {
 #if UE_EDITOR
    checkSlow(index >= 0 && index < skills.size())
 #endif
-       return &skills[index];
+       return skills[index]
+           .attribute.GetGameplayAttributeData(attSet);
 }
 
-Vital* FBaseCharacter::GetVital(int index)
+FGameplayAttributeData* FBaseCharacter::GetVital(int index) const
 {
 #if UE_EDITOR
    checkSlow(index >= 0 && index < vitals.size())
 #endif
-       return &vitals[index];
+       return vitals[index]
+           .attribute.GetGameplayAttributeData(attSet);
 }
 
-FGameplayAttributeData* FBaseCharacter::GetMechanic(int index)
+FGameplayAttributeData* FBaseCharacter::GetMechanic(int index) const
 {
 #if UE_EDITOR
    checkSlow(index >= 0 && index < mechanics.size())
 #endif
-       return mechanics[index];
+       return mechanics[index]
+           .GetGameplayAttributeData(attSet);
+}
+
+void FBaseCharacter::SetAttributeAdj(int skill, float newValue)
+{
+   baseAttributes[skill].SetNumericValueChecked(newValue, attSet);
+}
+
+void FBaseCharacter::SetSkillAdj(int skill, float newValue)
+{
+   skills[skill].SetAdjustedValue(newValue, attSet);
+}
+
+void FBaseCharacter::SetVitalAdj(int skill, float newValue)
+{
+   vitals[skill].SetAdjustedValue(newValue, attSet);
+}
+
+void FBaseCharacter::SetMechanicAdj(int skill, float newValue)
+{
+   mechanics[skill].SetNumericValueChecked(newValue, attSet);
+}
+
+void FBaseCharacter::SetAttributeBase(int skill, float newValue)
+{
+   baseAttributes[skill].GetGameplayAttributeData(attSet)->SetBaseValue(newValue);
+}
+
+void FBaseCharacter::SetSkillBase(int skill, float newValue)
+{
+   skills[skill].SetBaseValue(newValue, attSet);
+}
+
+void FBaseCharacter::SetVitalBase(int skill, float newValue)
+{
+   vitals[skill].SetBaseValue(newValue, attSet);
+}
+
+void FBaseCharacter::SetMechanicBase(int skill, float newValue)
+{
+   mechanics[skill].GetGameplayAttributeData(attSet)->SetBaseValue(newValue);
 }

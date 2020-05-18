@@ -63,20 +63,25 @@ class MYPROJECT_API UItemManager : public UObject
    UFUNCTION(BlueprintCallable, Category = "Item Data Accessor", meta = (DisplayName = "Get Consumable Info"))
    FORCEINLINE FConsumableLookupRow* GetConsumableInfo(int consumableID);*/
 
-   inline FItemLookupRow*       GetItemInfo(int itemID);
-   inline FEquipLookupRow*      GetEquipInfo(int equipID);
-   inline FConsumableLookupRow* GetConsumableInfo(int consumableID);
+   FItemLookupRow*       GetItemInfo(int itemID) const;
+   FEquipLookupRow*      GetEquipInfo(int equipID) const;
+   FConsumableLookupRow* GetConsumableInfo(int consumableID) const;
 
-   inline FItemLookupRow*       GetItemInfo(FName itemID);
-   inline FEquipLookupRow*      GetEquipInfo(FName equipID);
-   inline FConsumableLookupRow* GetConsumableInfo(FName consumableID);
-   TArray<FName>                GetAllConsumableIDs();
+   FItemLookupRow*       GetItemInfo(FName itemID) const;
+   FEquipLookupRow*      GetEquipInfo(FName equipID) const;
+   FConsumableLookupRow* GetConsumableInfo(FName consumableID) const;
+   TArray<FName>         GetAllConsumableIDs() const;
 
  private:
    static UItemManager* SingletonManager; // Our single spellmanager
 
+   UPROPERTY()
    UDataTable* itemLookupTable;       // Data table with the basic item information
+
+   UPROPERTY()
    UDataTable* equipLookupTable;      // Data table with equipment information
+
+   UPROPERTY()
    UDataTable* consumableLookupTable; // Data table with consumable information
 
    static void InitializeManager(); // Initializes ItemManager if none exists

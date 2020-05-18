@@ -9,5 +9,5 @@ void UConfirmationBox::Confirm()
 {
    if(onConfirmationMade.IsBound())
       onConfirmationMade.Execute();
-   CPC->GetHUDManager()->AddHUDConfirm();
+   hudManagerRef->ShowConfirmationBox();
 }

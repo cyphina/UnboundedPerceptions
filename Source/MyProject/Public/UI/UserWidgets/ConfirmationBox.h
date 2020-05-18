@@ -19,6 +19,9 @@ class MYPROJECT_API UConfirmationBox : public UPopupWidget
 {
    GENERATED_BODY()
 
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
+
  public:
    void            Confirm() override;
    FOnConfirmation onConfirmationMade;

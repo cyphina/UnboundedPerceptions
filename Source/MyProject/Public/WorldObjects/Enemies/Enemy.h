@@ -23,10 +23,9 @@ struct FSpellCombination {
 };
 
 USTRUCT(BlueprintType, NoExport)
-struct FItemDrop
-{
+struct FItemDrop {
    FMyItem itemInfo;
-   int dropPerc; //out of 100%
+   int     dropPerc; //out of 100%
 };
 
 UCLASS()
@@ -45,35 +44,36 @@ class MYPROJECT_API AEnemy : public AUnit
 
    /** Lets us set initial stat values for our enemy */
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Enemy Parameters")
-   FUnitStatStruct initialStats;
+   FDefaultStats initialStats;
 
    /**How much money given on death*/
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Enemy Parameters")
    int expGiven;
 
    /**How much exp given on death*/
-   UPROPERTY(BlueprintReadWrite, EditAnywhere,  Category = "Enemy Parameters")
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Enemy Parameters")
    int moneyGiven;
 
    /**List of items that can be dropped on death*/
-   UPROPERTY(BlueprintReadWrite, EditAnywhere,  Category = "Enemy Parameters")
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Enemy Parameters")
    TArray<FItemDrop> itemDrops;
-   
+
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
    TArray<FSpellCombination> combinations; // List of combinations by priority.  Combination 0 will always be an opener
 
    /**What enemies are in our radius determined via sphere overlap events*/
+   UPROPERTY()
    TSet<AUnit*> possibleEnemiesInRadius;
 
    void BeginPlay() override;
    void Tick(float deltaSeconds) override;
    void Die_Implementation() override;
    void EndPlay(EEndPlayReason::Type e) override; /**Called only when deleted during play*/
-   void Destroyed() override; /**Can be called when deleted in editor*/
+   void Destroyed() override;                     /**Can be called when deleted in editor*/
    void Attack_Implementation() override;
    bool CastSpell(TSubclassOf<UMySpell> spellToCast) override;
 
-   void SetSelected(bool value) override;
+   void SetSelected(bool value) override final;
    void SetEnabled(bool bEnabled) override;
 
    /**Sets a target as active/inactive, which tells the game that this enemy's ai is active*/
@@ -83,16 +83,15 @@ class MYPROJECT_API AEnemy : public AUnit
    UFUNCTION(BlueprintCallable, Category = "Combat")
    void SetIsActive(bool value) { isActive = value; }
 
-   bool IsVisible() override;
    TSet<AUnit*>* GetSeenEnemies() override;
 
  private:
-   AUserInput*    controllerRef;
-   ARTSGameMode*  gameModeRef;
-   ARTSGameState* gameStateRef;
+
+   bool IsVisible() override;
 
    UFUNCTION()
-   void OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep, const FHitResult& sweepRes);
+   void OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep,
+                              const FHitResult& sweepRes);
 
    UFUNCTION()
    void OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex);

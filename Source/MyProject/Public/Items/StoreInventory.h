@@ -25,10 +25,15 @@ class MYPROJECT_API UStoreInventory : public UInventory
    static FText ensurePurchaseText;
    static FText confirmTitleText;
 
-   int         itemSlot            = -1;
-   FItemPrice* itemPrice           = nullptr;
-   UBackpack*  interactingHeroPack = nullptr;
-   int         itemToBuy           = -1;
+   int         itemSlot  = -1;
+   FItemPrice* itemPrice = nullptr;
+   int         itemToBuy = -1;
+
+   UPROPERTY()
+   UBackpack* interactingHeroPack = nullptr;
+
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
 
    UFUNCTION()
    bool OnItemPurchased();
@@ -38,9 +43,14 @@ class MYPROJECT_API UStoreInventory : public UInventory
 
    bool EnoughFunds(int numPurchasing);
 
- public:
-   UPROPERTY(BlueprintReadOnly)
+   UPROPERTY()
    AShopNPC* shopkeeper;
+
+   bool OnWidgetAddToViewport_Implementation() override;
+
+ public:
+   UFUNCTION()
+   AShopNPC* GetShopkeeper() const { return shopkeeper; }
 
    void UseItemAtInventorySlot_Implementation(int32 iSlot) override;
 };

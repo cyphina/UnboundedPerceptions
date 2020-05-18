@@ -4,13 +4,10 @@
 #include "State/HeroStateMachine.h"
 #include "WorldObjects/BaseHero.h"
 
-HeroStateMachine::HeroStateMachine(ABaseHero* hero) : StateMachine(hero), Interacting{InteractState(hero)}, UsingItem{ItemState(hero)}
-{
-}
+HeroStateMachine::HeroStateMachine(ABaseHero* hero) :
+   StateMachine(hero), Interacting{InteractState(hero)}, UsingItem{ItemState(hero)} {}
 
-HeroStateMachine::~HeroStateMachine()
-{
-}
+HeroStateMachine::~HeroStateMachine() {}
 
 void HeroStateMachine::ChangeState(EUnitState newState)
 {

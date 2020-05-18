@@ -2,8 +2,8 @@
 #include "UpResourceManager.h"
 #include "BaseCharacter.h"
 
-TMap<FGameplayTag, FColor> UpResourceManager::elementalMap  = TMap<FGameplayTag, FColor>();
-FGameplayTagContainer      UpResourceManager::supportTags   = FGameplayTagContainer();
+TMap<FGameplayTag, FColor> UpResourceManager::elementalMap = TMap<FGameplayTag, FColor>();
+FGameplayTagContainer      UpResourceManager::supportTags = FGameplayTagContainer();
 FGameplayTagContainer      UpResourceManager::offensiveTags = FGameplayTagContainer();
 
 void UpResourceManager::InitUpResourceManager()
@@ -31,25 +31,19 @@ void UpResourceManager::InitElementalMap()
    elementalMap.Add(FGameplayTag::RequestGameplayTag("Combat.Element.Wind"), FColor(51, 255, 153));
 }
 
-void UpResourceManager::InitSupportTags()
-{
-   supportTags.AddTag(FGameplayTag::RequestGameplayTag("Skill.Category.Support"));
-}
+void UpResourceManager::InitSupportTags() { supportTags.AddTag(FGameplayTag::RequestGameplayTag("Skill.Category.Support")); }
 
-void UpResourceManager::InitOffensiveTags()
-{
-   offensiveTags.AddTag(FGameplayTag::RequestGameplayTag("Skill.Category.Offensive"));
-}
+void UpResourceManager::InitOffensiveTags() { offensiveTags.AddTag(FGameplayTag::RequestGameplayTag("Skill.Category.Offensive")); }
 
 float UpResourceManager::FindOrientation(const FVector& v)
 {
-   bool    positiveX     = v.X >= 0;
-   FVector up            = positiveX ? FVector::RightVector : -FVector::RightVector;
+   bool    positiveX = v.X >= 0;
+   FVector up = positiveX ? FVector::RightVector : -FVector::RightVector;
    float   normalizedDot = (up.X * v.X + up.Y * v.Y) / (FMath::Sqrt(v.SizeSquared()));
    return positiveX ? normalizedDot + 2 : normalizedDot;
 }
 
-void UpResourceManager::ExecuteFunctionFromWorldObject(UObject* objectRef, FName functionToExecute, UWorld* worldRef)
+void UpResourceManager::ExecuteFunctionFromWorldObject(UObject* objectRef, FName functionToExecute)
 {
    if (objectRef) {
       UFunction* function = objectRef->FindFunction(functionToExecute);
@@ -57,7 +51,7 @@ void UpResourceManager::ExecuteFunctionFromWorldObject(UObject* objectRef, FName
          // pointer to memory of local variables in stack
          void* locals = nullptr;
          // creates the stack frame for the function
-         TUniquePtr<FFrame> frame = TUniquePtr<FFrame>(new FFrame{objectRef, function, locals});
+         TUniquePtr<FFrame> frame = TUniquePtr<FFrame>(new FFrame{ objectRef, function, locals });
          // call the UFunction
          // processEvent (if it has params)
          objectRef->CallFunction(*frame, locals, function);
@@ -65,12 +59,10 @@ void UpResourceManager::ExecuteFunctionFromWorldObject(UObject* objectRef, FName
    }
 }
 
-template<>
+template <>
 ABaseHero* UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(FString nameToMatch, UWorld* worldRef)
 {
    AUserInput* cpcRef = Cast<AUserInput>(worldRef->GetFirstPlayerController());
-   for (ABaseHero* hero : cpcRef->GetBasePlayer()->allHeroes) {
-      if (hero->GetGameName().ToString() == nameToMatch) { return Cast<ABaseHero>(hero); }
-   }
+   for (ABaseHero* hero : cpcRef->GetBasePlayer()->allHeroes) { if (hero->GetGameName().ToString() == nameToMatch) { return Cast<ABaseHero>(hero); } }
    return nullptr;
 }

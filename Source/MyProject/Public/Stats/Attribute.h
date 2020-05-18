@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 /**
@@ -9,16 +7,14 @@
 
 namespace CombatInfo
 {
+   class RTSUnitStat;
 
-   class Stat;
-
-   class MYPROJECT_API Attribute
-   {
+   class MYPROJECT_API Attribute {
       char* name;
       float baseValue; // base value only increased by leveling up or equipment
       float buffValue; // increased by some effects
 
-    public:
+   public:
       Attribute()
       {
          name      = "";

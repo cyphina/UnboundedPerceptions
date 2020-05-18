@@ -29,13 +29,14 @@ class MYPROJECT_API UEquipment : public UObject
       for (int i = 0; i < 10; ++i) {
          equipsCopy.Add(equips[i]);
       }
-      return MoveTemp(equipsCopy);
+      return equipsCopy;
    }
 
    /**Modifies the storage container to hold the new item with id equipItem as well as swaps in and out the appropriate stats
-    * @param equipItem - ID of the item to equip
+    * @param equipItem - Item ID of the item to equip
+    * @return - Returns Item ID of any previously equipped equipment
     */
-   int Equip(int equipItem);
+   int Equip(int equipItemID);
 
    /**Frees the slot from the container as well as removing stat bonuses.*/
    void Unequip(int slot);

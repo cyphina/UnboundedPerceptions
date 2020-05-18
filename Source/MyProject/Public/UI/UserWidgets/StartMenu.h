@@ -17,6 +17,9 @@ class MYPROJECT_API UStartMenu : public UUserWidget
 {
    GENERATED_BODY()
 
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
+
  public:
    UPROPERTY(BlueprintReadOnly, Category = "References")
    ARTSGameMode* gameModeRef;

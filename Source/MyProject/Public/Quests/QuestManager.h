@@ -49,6 +49,9 @@ class MYPROJECT_API UQuestManager : public UObject
    UPROPERTY(BlueprintReadWrite, Category = "References")
    AUserInput* controllerRef;
 
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
+
    /**
     * UI element that lists all the quests in a sidebar
     */
@@ -128,20 +131,20 @@ class MYPROJECT_API UQuestManager : public UObject
     * Need callbacks here since we specifically need that parameter
     */
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
-   void OnEnemyDie(AEnemy* enemyClass);
+   void OnEnemyDie(const AEnemy* enemyClass);
 
    /**Callback when NPC is talked to to check to see if this quest condition is fufilled
     * @param nPCClass - Class of the NPC that we're talking to
     * @param conversationTopic - Gameplay tag representing conversationTopic.  If conversationTopic is default tag, then it means no conversation topic was used (default conversation)
     */
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
-   void OnTalkNPC(ANPC* talkedToNPC, FGameplayTag conversationTopic);
+   void OnTalkNPC(const ANPC* talkedToNPC, FGameplayTag conversationTopic);
 
    /**Callback when Item is picked up to see if this quest condition is fulfilled*/
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
-   void OnItemPickup(FMyItem newItem);
+   void OnItemPickup(const FMyItem& newItem);
 
    /**Callback when Interactable is sucessfully interacted with*/
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
-   void OnInteracted(UNamedInteractableDecorator* interactable);
+   void OnInteracted(const UNamedInteractableDecorator* finishedInteractableDialog);
 };

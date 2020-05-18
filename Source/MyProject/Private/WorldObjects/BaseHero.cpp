@@ -26,6 +26,8 @@
 #include "Items/Equipment.h"
 
 #include "AbilitySystemComponent.h"
+#include "RTSIngameWidget.h"
+#include "RTSSidebarWidget.h"
 #include "SpellSystem/MySpell.h"
 #include "SpellSystem/Spellbook.h"
 
@@ -38,10 +40,11 @@ const float ABaseHero::nextExpMultiplier = 1.5f;
 #pragma region Fundamentals
 ABaseHero::ABaseHero(const FObjectInitializer& oI) : AAlly(oI)
 {
-   state = TUniquePtr<HeroStateMachine>(new HeroStateMachine(this));
-
+   state = MakeUnique<HeroStateMachine>(this);
    ConstructorHelpers::FObjectFinder<UMaterialParameterCollection> materialPC(TEXT("/Game/RTS_Tutorial/Materials/CelShade/LightSource"));
-   if (materialPC.Object) { lightSource = materialPC.Object; }
+   if(materialPC.Object) {
+      lightSource = materialPC.Object;
+   }
 }
 
 // Called when the game starts or when spawned
@@ -50,23 +53,23 @@ void ABaseHero::BeginPlay()
    Super::BeginPlay();
    // Setup player reference
 
-   player = Cast<ABasePlayer>(controllerRef->PlayerState);
+   player = Cast<ABasePlayer>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController()->PlayerState);
    player->allHeroes.Add(this);
 
    // Setup dynamic material instance and vector parameter references
-   if (GetMesh() != nullptr) {
+   if(GetMesh() != nullptr) {
       material = GetMesh()->GetMaterial(0);
       dMat     = UMaterialInstanceDynamic::Create(material, this);
-      if (material != nullptr) {
+      if(material != nullptr) {
          FLinearColor initDirection;
 #if UE_BUILD_DEBUG
-         if (!material->GetVectorParameterValue("BodyColor", baseColor))
+         if(!material->GetVectorParameterValue("BodyColor", baseColor))
             GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Failed to get material color"));
          else
 #endif
-         currentColor = baseColor;
+            currentColor = baseColor;
 #if UE_BUILD_DEBUG
-         if (!material->GetVectorParameterValue("InstDirectLight", initDirection))
+         if(!material->GetVectorParameterValue("InstDirectLight", initDirection))
             GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Purple, FString::Printf(TEXT("Failed to get light direction for %s"), *name.ToString()));
 #endif
          GetMesh()->SetMaterial(0, dMat);
@@ -88,18 +91,23 @@ void ABaseHero::BeginPlay()
    equipment->OnEquipped.BindDynamic(this, &ABaseHero::OnEquipped);
 
 #if UE_EDITOR
-   for (int i = 0; i < 70; i++) { baseC->LevelUp(); }
+   for(int i = 0; i < 70; i++) {
+      baseC->LevelUp();
+   }
 #endif
 
    // Load up any stored triggers that tried to activate on this object but it wasn't alive
    TArray<FTriggerData> savedTriggers;
    Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode())->GetTriggerManager()->GetTriggerRecords().MultiFind(*GetGameName().ToString(), savedTriggers);
-   for (FTriggerData& trigger : savedTriggers) { controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(trigger); }
+   for(FTriggerData& finishedTriggerActivation : savedTriggers) {
+      controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
+   }
 
    // TODO: Add all the item abilities to the abilitycomponent
-   for (FName               id : UItemManager::Get().GetAllConsumableIDs()) {
+   for(FName& id : UItemManager::Get().GetAllConsumableIDs()) {
       TSubclassOf<UMySpell> itemAbilityClass = UItemManager::Get().GetConsumableInfo(id)->abilityClass;
-      if (IsValid(itemAbilityClass)) GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(itemAbilityClass.GetDefaultObject(), 1));
+      if(IsValid(itemAbilityClass))
+         GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(itemAbilityClass.GetDefaultObject(), 1));
    }
 
    spellbook          = NewObject<USpellBook>(this, spellbookClass.Get());
@@ -129,51 +137,61 @@ void ABaseHero::PossessedBy(AController* newController)
 void ABaseHero::SetEnabled(bool bEnabled)
 {
    Super::SetEnabled(bEnabled);
-   if (bEnabled) {
+   if(bEnabled) {
       controllerRef->GetBasePlayer()->heroes.Add(this);
    } else {
-      controllerRef->GetBasePlayer()->heroes.Remove(this);
+      controllerRef->GetBasePlayer()->heroes.RemoveSingle(this);
    }
 }
 
 void ABaseHero::Die_Implementation()
 {
-   //Set typical unit die parameters, deselect unit if it is selected, remove references to it in the vision calculation set, and gameover if all heroes died
-   AUnit::Die_Implementation();
+   // Set typical unit die parameters, deselect unit if it is selected, remove references to it in the vision calculation set, and gameover if all heroes died
+   Super::Die_Implementation();
 
    bool isAllDead = true;
-   for (ABaseHero* hero : controllerRef->GetBasePlayer()->heroes)
-   {
-      if (!hero->combatParams.isDead)
-      {
+   for(ABaseHero* hero : controllerRef->GetBasePlayer()->heroes) {
+      if(!hero->combatParams.isDead) {
          isAllDead = false;
          break;
       }
    }
-   if (isAllDead)
+   if(isAllDead)
       controllerRef->GetGameMode()->GameOver();
 }
 #pragma endregion
 
 #pragma region Acessors
 
-int ABaseHero::GetCurrentExp() const { return currentExp; }
+int ABaseHero::GetCurrentExp() const
+{
+   return currentExp;
+}
 
-int ABaseHero::GetExpToLevel() const { return expForLevel; }
+int ABaseHero::GetExpToLevel() const
+{
+   return expForLevel;
+}
 
 void ABaseHero::SetCurrentExp(int amount)
 {
    currentExp += amount;
-   while (currentExp >= expForLevel) {
+   while(currentExp >= expForLevel) {
       currentExp = currentExp - expForLevel;
       expForLevel *= nextExpMultiplier; //
       LevelUp();
    }
 }
 
-AActor* ABaseHero::GetCurrentInteractable() const { return Cast<AActor>(currentInteractable); }
+AActor* ABaseHero::GetCurrentInteractable() const
+{
+   return Cast<AActor>(currentInteractable);
+}
 
-TArray<int> ABaseHero::GetEquipment() const { return equipment->GetEquips(); }
+TArray<int> ABaseHero::GetEquipment() const
+{
+   return equipment->GetEquips();
+}
 
 #pragma endregion
 
@@ -184,59 +202,75 @@ void ABaseHero::LevelUp_Implementation()
    attPoints += 5;
    skillPoints += 1;
    baseC->LevelUp();
+   onLevelUp.Broadcast();
 }
 
-void ABaseHero::ChangeAttribute(Attributes att, bool isIncrementing)
+void ABaseHero::ChangeAttribute(EAttributes att, bool isIncrementing)
 {
-   if (isIncrementing) {
-      GetAbilitySystemComponent()->SetNumericAttributeBase(UMyAttributeSet::IndexAtts(static_cast<int>(att)), baseC->GetAttribute(static_cast<int>(att))->GetBaseValue() + 1);
+   if(isIncrementing) {
+      GetAbilitySystemComponent()->SetNumericAttributeBase(UMyAttributeSet::IndexAtts(static_cast<int>(att)), GetAttributeBaseValue(att) + 1);
       --attPoints;
-      baseC->StatUpdate();
+      baseC->StatUpdate(UMyAttributeSet::IndexAtts(static_cast<int>(att)));
    } else {
-      GetAbilitySystemComponent()->SetNumericAttributeBase(UMyAttributeSet::IndexAtts(static_cast<int>(att)), baseC->GetAttribute(static_cast<int>(att))->GetBaseValue() - 1);
+      GetAbilitySystemComponent()->SetNumericAttributeBase(UMyAttributeSet::IndexAtts(static_cast<int>(att)), GetAttributeBaseValue(att) - 1);
       ++attPoints;
-      baseC->StatUpdate();
+      baseC->StatUpdate(UMyAttributeSet::IndexAtts(static_cast<int>(att)));
    }
 }
 #pragma endregion
 
 #pragma region actions
 
-void ABaseHero::Equip(int equipSlot)
+void ABaseHero::Equip(int inventorySlotWeEquip)
 {
-   int prevEquipInSlot = equipment->Equip(backpack->GetItem(equipSlot).id);
-   backpack->RemoveItemAtSlot(equipSlot);
+   int prevEquipInSlot = equipment->Equip(backpack->GetItem(inventorySlotWeEquip).id);
+   backpack->RemoveItemAtSlot(inventorySlotWeEquip);
 
-   if (prevEquipInSlot) backpack->AddItem(FMyItem(prevEquipInSlot));
+   if(prevEquipInSlot)
+      backpack->AddItem(FMyItem(prevEquipInSlot));
 
-   if (controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Equipment)) controllerRef->GetHUDManager()->GetEquipHUD()->Update();
-   if (controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Inventory)) controllerRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
+   if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Equipment))
+      controllerRef->GetHUDManager()->GetEquipHUD()->Update();
+   if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Inventory))
+      controllerRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
 }
 
 void ABaseHero::Unequip(int unequipSlot)
 {
-   if (backpack->Count() < backpack->GetItemMax()) {
-      int itemID = equipment->GetEquips()[unequipSlot];
-      backpack->AddItem(FMyItem(itemID));
-      equipment->Unequip(unequipSlot);
-   }
+   // If we have an item in the slot we're trying to unequip
+   if(equipment->GetEquips()[unequipSlot]) {
+      // If there is space in the bakcpack
+      if(backpack->Count() < backpack->GetItemMax()) {
+         int itemID = equipment->GetEquips()[unequipSlot];
+         backpack->AddItem(FMyItem(itemID));
+         equipment->Unequip(unequipSlot);
+      }
 
-   if (controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Equipment)) controllerRef->GetHUDManager()->GetEquipHUD()->Update();
-   if (controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Inventory)) controllerRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
+      if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Equipment))
+         controllerRef->GetHUDManager()->GetEquipHUD()->Update();
+      if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Inventory))
+         controllerRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
+   }
 }
 
 void ABaseHero::SwapEquip(int equipSlot1, int equipSlot2)
 {
    equipment->SwapEquips(equipSlot1, equipSlot2);
-   if (controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Equipment)) controllerRef->GetHUDManager()->GetEquipHUD()->Update();
+   if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Equipment))
+      controllerRef->GetHUDManager()->GetEquipHUD()->Update();
 }
 
 void ABaseHero::UseItem(int itemID)
 {
    // TODO: removes first instance for now instead of slot clicked
-   if (UItemManager::Get().GetItemInfo(itemID)->itemType.GetTagName() != "Item.Consumeable.Utility.Reusable") backpack->RemoveItem(FMyItem(itemID));
-   // Refresh inventory after to update visual changes
-   if (controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Inventory)) controllerRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
+   // Make sure the user hasn't dropped the item after beginning to use it
+   if(backpack->FindItem(itemID) != INDEX_NONE) {
+      if(UItemManager::Get().GetItemInfo(itemID)->itemType.GetTagName() != "Item.Consumeable.Utility.Reusable")
+         backpack->RemoveItem(FMyItem(itemID));
+      // Refresh inventory after to update visual changes
+      if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Inventory))
+         controllerRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
+   }
 }
 
 #pragma endregion
@@ -246,30 +280,45 @@ void ABaseHero::UseItem(int itemID)
 void ABaseHero::OnEquipped(int equipID, bool isEquip)
 {
    FEquipLookupRow* e = UItemManager::Get().GetEquipInfo(equipID);
-   for (int         i = 0; i < e->bonuses.Num(); ++i) { ApplyBonuses(static_cast<uint8>(e->bonuses[i]), e->bonusValues[i] * (2 * isEquip - 1)); }
+   for(auto& x : e->stats.defaultAttributes)
+      ModifyStats<EAttributes>(GetAttributeBaseValue(x.att) + x.defaultValue * (2 * isEquip - 1), x.att, true);
+
+   for(auto& x : e->stats.defaultUnitScalingStats)
+      ModifyStats<EUnitScalingStats>(GetSkillBaseValue(x.stat) + x.defaultValue * (2 * isEquip - 1), x.stat, true);
+
+   for(auto& x : e->stats.defaultVitals)
+      ModifyStats<EVitals>(GetVitalBaseValue(x.vit) + x.defaultValue * (2 * isEquip - 1), x.vit, true);
+
+   for(auto& x : e->stats.defaultMechanics)
+      ModifyStats<EMechanics>(GetMechanicBaseValue(x.mech) + x.defaultValue * (2 * isEquip - 1), x.mech, true);
 }
 
 bool ABaseHero::CastSpell(TSubclassOf<UMySpell> spellToCast)
 {
-   //Do the same thing as casting a spell
+   // Do the same thing as casting a spell
    bool sucessfulCast = Super::CastSpell(spellToCast);
 
-   //If the itemID is set, then we casted this spell by using an item
-   if (currentItem && sucessfulCast) UseItem(currentItem);
+   // If the itemID is set, then we casted this spell by using an item
+   if(currentItem && sucessfulCast)
+      UseItem(currentItem);
    return sucessfulCast;
 }
 
 void ABaseHero::SetSelected(bool value)
 {
    Super::SetSelected(value);
-   if (value) { controllerRef->GetBasePlayer()->selectedHeroes.AddUnique(this); } else { controllerRef->GetBasePlayer()->selectedHeroes.Remove(this); }
+   if(value) {
+      controllerRef->GetBasePlayer()->selectedHeroes.AddUnique(this);
+   } else {
+      controllerRef->GetBasePlayer()->selectedHeroes.RemoveSingle(this);
+   }
 }
 
 void ABaseHero::CheckShadows()
 {
-   if (IsValid(lightDirectionPV) && IsValid(dMat)) {
+   if(IsValid(lightDirectionPV) && IsValid(dMat)) {
       FLinearColor matParam;
-      if (lightDirectionPV->GetVectorParameterValue("DirectLight", matParam)) {
+      if(lightDirectionPV->GetVectorParameterValue("DirectLight", matParam)) {
          FHitResult            hitResult;
          FCollisionQueryParams CQP;
          // CQP.TraceTag = GetWorld()->DebugDrawTraceTag;
@@ -281,10 +330,10 @@ void ABaseHero::CheckShadows()
          bool inShadow = GetWorld()->LineTraceSingleByChannel(hitResult, GetActorLocation(), GetActorLocation() + lightVector * shadowRange, ECC_Visibility, CQP);
          // DrawDebugLine(GetWorld(), GetActorLocation(), GetActorLocation() + lightVector * shadowRange, FColor::Red);
 
-         FMath::FInterpTo(matParam.A, inShadow, GetWorld()->GetDeltaSeconds(), 5); //Slowly make the material transparent
-         if (dMat->GetVectorParameterValue(FMaterialParameterInfo("InstDirectLight"), matParam))
+         FMath::FInterpTo(matParam.A, inShadow, GetWorld()->GetDeltaSeconds(), 5); // Slowly make the material transparent
+         if(dMat->GetVectorParameterValue(FMaterialParameterInfo("InstDirectLight"), matParam))
             dMat->SetVectorParameterValue("InstDirectLight", FLinearColor(lightVector.X, lightVector.Y, lightVector.Z, inShadow));
-         //LightDirectionPV->SetVectorParameterValue("DirectLight", FLinearColor(lightVector.X, lightVector.Y, lightVector.Z, inShadow))
+         // LightDirectionPV->SetVectorParameterValue("DirectLight", FLinearColor(lightVector.X, lightVector.Y, lightVector.Z, inShadow))
       }
    }
 }

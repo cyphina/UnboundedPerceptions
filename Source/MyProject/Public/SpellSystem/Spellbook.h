@@ -34,6 +34,9 @@ class MYPROJECT_API USpellBook : public UObject
 
    bool isLearnable(SpellNode sNode);
 
+   UPROPERTY()
+   class AUserInput* cpcRef;
+
  public:
    /**List of all the spells learnable in this spellbook.  Edit this to add/remove skills*/
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Spellbook")

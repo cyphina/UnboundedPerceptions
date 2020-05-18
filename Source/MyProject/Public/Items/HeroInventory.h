@@ -7,7 +7,7 @@
 #include "HeroInventory.generated.h"
 
 /**
- *
+ * Base class for inventory that is each hero has
  */
 UCLASS()
 class MYPROJECT_API UHeroInventory : public UInventory
@@ -15,6 +15,7 @@ class MYPROJECT_API UHeroInventory : public UInventory
    GENERATED_BODY()
 
  public:
+   /** Party index of the hero which corresponds to the inventory */
    UPROPERTY(BlueprintReadWrite)
    int hIndex;
 

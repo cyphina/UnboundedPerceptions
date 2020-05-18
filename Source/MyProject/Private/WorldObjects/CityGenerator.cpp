@@ -14,25 +14,28 @@ ACityGenerator::ACityGenerator()
 void ACityGenerator::OnConstruction(const FTransform& transform)
 {
    // Store number of spline points
-   // Build roaddata
-   // Construct track
-   // Draw spline point numbers
 
    Super::OnConstruction(transform);
 
    numSplinePoints = splineComponent->GetNumberOfSplinePoints();
 
+   // Build roaddata
+
+   // Remove excess track if we decrease the number of spline points
    while (numSplinePoints < roadData.Num()) {
       roadData.RemoveAt(roadData.Num() - 1);
       trackList[roadData.Num() - 1]->DestroyComponent();
    }
 
+   // Add extra track if the number of spline points is increased
    while (numSplinePoints > roadData.Num())
       roadData.Add(FRoadData());
 
+   // Set the buildings array to the same length as the tracks
    if (buildingMeshes.Num() > 0) {
       trackList.SetNum(roadData.Num() - 1);
 
+      // Clear out building meshes
       for(auto x : leftMeshList)
          if(IsValid(x))
             x->DestroyComponent();
@@ -44,6 +47,7 @@ void ACityGenerator::OnConstruction(const FTransform& transform)
       leftMeshList.Empty();
       rightMeshList.Empty();
 
+      // Create tracks and buildings
       for (int i = 0; i < roadData.Num() - 1; ++i) {
          BuildTrackElement(i);
          BuildSideBuildings(i);
@@ -84,9 +88,10 @@ void ACityGenerator::BuildTrackElement(int index)
    track->SetStaticMesh(roadMesh);
    collision ? track->SetCollisionProfileName("Scenery") : track->SetCollisionProfileName("NoCollision");
 
+   // Set track direction, curvature, scale, and collision
    track->SetForwardAxis(trackRoadData.meshAxis);
-   track->SetStartRoll(trackRoadData.trackBank);
-   track->SetStartScale(FVector2D(trackRoadData.trackWidth, trackRoadData.trackThickness));
+   track->SetStartRoll(trackRoadData.trackBank); // Track tilt
+   track->SetStartScale(FVector2D(trackRoadData.trackWidth, trackRoadData.trackThickness)); // Scale track's thickness horizontally and vertically
 
    track->SetEndRoll(nextTrackRoadData.trackBank);
    track->SetEndScale(FVector2D(nextTrackRoadData.trackWidth, nextTrackRoadData.trackThickness));
@@ -94,6 +99,7 @@ void ACityGenerator::BuildTrackElement(int index)
 
    trackList[index] = track;
 
+   // Setup track positioning
    ESplineCoordinateSpace::Type e            = ESplineCoordinateSpace::Local;
    FVector                      startLoc     = splineComponent->GetLocationAtSplinePoint(index, e);
    FVector                      startTangent = splineComponent->GetTangentAtSplinePoint(index, e);

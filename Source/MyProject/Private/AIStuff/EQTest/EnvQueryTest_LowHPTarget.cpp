@@ -20,15 +20,15 @@ void UEnvQueryTest_LowHPTarget::RunTest(FEnvQueryInstance& QueryInstance) const
    /*Setup min and max test values allowed.  Values are bound for faster access*/
 
    FloatValueMin.BindData(QueryOwner, QueryInstance.QueryID);
-   float MinThresholdValue = FloatValueMin.GetValue();
+   const float MinThresholdValue = FloatValueMin.GetValue();
 
    FloatValueMax.BindData(QueryOwner, QueryInstance.QueryID);
-   float MaxThresholdValue = FloatValueMax.GetValue();
+   const float MaxThresholdValue = FloatValueMax.GetValue();
 
    for (FEnvQueryInstance::ItemIterator It(this, QueryInstance); It; ++It) {
       const AActor* itemActor = GetItemActor(QueryInstance, It.GetIndex());
       if (const AUnit* unitRef = Cast<AUnit>(itemActor)) {
-         const float health = unitRef->GetVitalCurValue(static_cast<uint8>(Vitals::Health));
+         const float health = unitRef->GetVitalCurValue(EVitals::Health);
          It.SetScore(TestPurpose, FilterType, health, MinThresholdValue, MaxThresholdValue);
       }
    }

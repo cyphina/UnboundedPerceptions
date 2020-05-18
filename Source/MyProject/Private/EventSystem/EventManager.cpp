@@ -1,8 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyProject.h"
-#include "EventManager.h"
+#include "Public/EventSystem/EventManager.h"
 #include "RTSGameMode.h"
+#include "StoryStructs.h"
 
 UEventManager::UEventManager()
 {
@@ -17,8 +18,8 @@ void UEventManager::SkipToEvent(int chapter, int section)
 
       if (section < storybook->chapters[currentChapter - 1].sections.Num()) {
          currentSection = section;
-         for (FTriggerData trigger : storybook->chapters[currentChapter - 1].sections[currentSection - 1].triggers) {
-            gameModeRef->GetTriggerManager()->ActivateTrigger(trigger);
+         for (FTriggerData finishedTriggerActivation : storybook->chapters[currentChapter - 1].sections[currentSection - 1].triggers) {
+            gameModeRef->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
          }
       }
    }
@@ -41,8 +42,8 @@ void UEventManager::MoveToNextSection()
    }
    OnSectionCompletedDelegate.Broadcast(GetCurrentSection());
 
-   for (FTriggerData trigger : storybook->chapters[currentChapter - 1].sections[currentSection - 1].triggers) {
-      gameModeRef->GetTriggerManager()->ActivateTrigger(trigger);
+   for (FTriggerData finishedTriggerActivation : storybook->chapters[currentChapter - 1].sections[currentSection - 1].triggers) {
+      gameModeRef->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
    }
    // currentSection = currentSection % chapters[currentChapter].sections.Num() + 1;
 }

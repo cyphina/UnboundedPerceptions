@@ -17,15 +17,15 @@ class MYPROJECT_API UEquipmentMenu : public UMyDraggableWidget
 {
    GENERATED_BODY()
 
- public:
+ protected:
    UPROPERTY(BlueprintReadWrite, Category = "References")
    ABaseHero* hero;
 
-   bool OnWidgetAddToViewport_Implementation() override;
+ public:
+   UFUNCTION(BlueprintCallable)
+   ABaseHero* GetEquippedHero() const { return hero; }
 
-   // virtual void OnDragDetected_Implementation(FGeometry MyGeometry, const FPointerEvent& PointerEvent, UDragDropOperation*& Operation) { Super::OnDragDetected_Implementation(MyGeometry,
-   // PointerEvent, Operation); } virtual FEventReply OnMouseButtonDown_Implementation(FGeometry MyGeometry, const FPointerEvent& MouseEvent) { return
-   // Super::OnMouseButtonDown_Implementation(MyGeometry, MouseEvent); } //Setup offset and detect drag
+   bool OnWidgetAddToViewport_Implementation() override;
 
    /**Call to redraw what is in equipment*/
    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Equipment")

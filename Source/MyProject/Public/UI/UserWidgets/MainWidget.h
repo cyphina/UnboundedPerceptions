@@ -7,91 +7,32 @@
 #include "MainWidget.generated.h"
 
 /**
- * Class for Main Overlay
+ * Holds all the other widgets including widgets that can be opened from the main menu (settings) or other menus disabled during minigames
  */
 
-class ARTSGameState;
+class URTSIngameWidget;
+class USettingsMenu;
+class UBreakMenu;
 
 UCLASS()
 class MYPROJECT_API UMainWidget : public UMyUserWidget
 {
    GENERATED_BODY()
 
+   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
+   class AHUDManager* hudManagerRef;
+
 #pragma region CallbacksAndReferences
- public:
-   UMainWidget();
-   void NativeConstruct() override;
 
- private:
-   UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true)) //, category = "UIInitialParams", Meta = (ExposeOnSpawn = true))
-   ARTSGameState* gameStateRef;
-#pragma endregion
+ protected:
+   UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
+   URTSIngameWidget* ingameWidget;
 
-#pragma region GameTime
+   UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
+   USettingsMenu* settingsMenu;
 
- private:
-   /**Array with possible speed multipliers the game can run off of*/
-   TArray<float> gamespeeds;
-
- public:
-   UPROPERTY(BlueprintReadWrite)
-   TArray<int> gameTime;
-
-   UPROPERTY(BlueprintReadWrite)
-   TArray<int> gameDate;
-
-   UPROPERTY(BlueprintReadWrite)
-   FText month;
-
-   /**Used to index what speed to go at in our predefined game speeds*/
-   UPROPERTY(BlueprintReadWrite)
-   int speedIndex;
-
-#pragma region TimeAccessors
-   UFUNCTION(BlueprintCallable, BlueprintPure)
-   FText GetHour() const;
-   UFUNCTION(BlueprintCallable, BlueprintPure)
-   FText GetMinute() const;
-   UFUNCTION(BlueprintCallable, BlueprintPure)
-   FText GetAmPm() const;
-   UFUNCTION(BlueprintCallable, BlueprintPure)
-   FText GetMonth() const;
-   UFUNCTION(BlueprintCallable, BlueprintPure)
-   FText GetDay() const;
-   UFUNCTION(BlueprintCallable, BlueprintPure)
-   FText GetYear() const;
-   UFUNCTION(BlueprintCallable, BlueprintPure)
-   FText GetDisplaySpeedText() const;
-   UFUNCTION(BlueprintCallable)
-   void SetGameSpeed();
-
-   UFUNCTION(BlueprintCallable, Category = "Accessors")
-   void SetClock(TArray<int> time) { gameTime = time; };
-
-   UFUNCTION(BlueprintCallable, Category = "Accessors")
-   void SetDate(TArray<int> date) { gameDate = date; }
-#pragma endregion
-
-#pragma endregion
-
-#pragma region UI
-   /**FText must be passed by ref due to localization resource gathering UPARAM(ref) seems to not work*/
-   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Help")
-   void DisplayHelpText(const FText& hText);
-
-   /**tooltip box display -- ttText is description and ttText2 is another box for more situational information
-    * @param name - Title block for the tooltip window
-    * @param ttText - First block for information.  If any ttText's are empty strings, the corresponding blocks will be hidden
-    * @param ttText2 - Second block for information
-    * @param ttText3 - Third block for information
-    * @param ttText4 - Fourth block for information
-    */
-   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Help")
-   void DisplayTTBoxText(const FText& name, const FText& ttText, const FText& ttText2, const FText& ttText3, const FText& ttText4);
-
-   /**Needed to move description box when hovering over action slot*/
-   UFUNCTION(BlueprintImplementableEvent, BlueprintPure, Category = "Accessor")
-   UUserWidget* GetDescriptionBox();
+   UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
+   UBreakMenu* breakMenu;
 
 #pragma endregion
 };

@@ -28,15 +28,19 @@ class UItemExamineWidget;
 class UBackpack;
 class UConfirmationBox;
 class URTSInputBox;
+class UStartMenu;
+class USpellbookHUD;
+class URTSIngameWidget;
 class AShopNPC;
+
 struct FDialogData;
-enum class EDialogSource : uint8;
+enum class EDialogBoxCloseCase : uint8;
 
 /**All the togglable huds/huds that need some callback when added or hidden
 in the game should be listed here.  Modify HUDCount if we add more.  Dont have HUDCount inside since it makes iterating through huds harder*/
 UENUM(BlueprintType)
 enum class HUDs : uint8 {
-   /**Used to be used to display all the hero information simulaneously, but replaced by actionbar*/
+   /**Used to be used to display all the hero information simulaneously, in a sidebar but replaced by actionbar*/
    HS_Ingame,
    /**Inventory for all heroes in party*/
    HS_Inventory,
@@ -75,10 +79,13 @@ enum class HUDs : uint8 {
    /**Shows a box that lets you input a number*/
    HS_InputBox,
    /**Chatbox to type in commands to be processed via NLP and converted to actions*/
-   HS_ChatBox
+   HS_ChatBox,
+   /**Start menu for the beginning of the game*/
+   HS_Start
 };
 
-// The purpose of the HUDManager is for easy swapping in and out widgets.  Not too useful for getting references though
+//! SINGLETON CLASS that is partially Injected
+// The purpose of the HUDManager is for easy swapping in and out widgets.  Not too useful for getting references though.
 /*HOW TO ADD A NEW HUD
  * 1. Set up how we reference it via add HUD by using proper setup in BPMainHUD since all widgets are part of the mainhud
  * 2. Setup when we can add it to screen by modifying ApplyHUD
@@ -89,10 +96,13 @@ class MYPROJECT_API AHUDManager : public AInfo
 {
    GENERATED_BODY()
 
-   static const int HUDCount = 20; // Number of huds we have total.  Change if adding more. Assertion fails if we dont have enough space to remind us to update this size
+   static const int HUDCount = 21; // Number of huds we have total.  Change if adding more. Assertion fails if we dont have enough space to remind us to update this size
 
+   UPROPERTY()
    ARTSGameMode*                        gameMode;
+   UPROPERTY()
    AUserInput*                          playerControllerRef;
+
    TBitArray<FDefaultBitArrayAllocator> currentlyDisplayedWidgetsBitSet = TBitArray<FDefaultBitArrayAllocator>(false, HUDCount); // widgets that are on screen
 
    int  showMouseCursorCount   = 0;     // Counter to keep track of how many huds are on screen that want us to show the special hud cursor
@@ -102,14 +112,18 @@ class MYPROJECT_API AHUDManager : public AInfo
    /**Applies a hud to the screen: returns true if successful, false otherwise.
     *Flip flops, that is, if we have HUD already applied, we turn off
     *@param newState - The EHUD value corresponding to this HUD.
-    *@param bShowMouseCursor - Should we show the UI mouse cursor (overriding other action cursors) with this hud open?
     *@param enableClickEvents - Can we click with this hud open? (includes clicking in HUD itself)
-    *@param canOpenCombat - Can this HUD be opened during combat?  If not, then don't let the player perform regular actions when it's open.
+    *@param canOpenCombat - Can this HUD be opened during combat?  If not, then don't let the player perform regular actions when it's open by switchin to the UI cursor
     *@param bBlocking - Can other MyUserWidgets be opened while this one is open?
-    *@param hasAnim - Does this HUD have an anim that should be played when we add it to the screen.
     */
-   bool ApplyHUD(uint8 newState, bool bShowMouseCursor, bool enableClickEvents, bool canOpenCombat, bool hasAnim, bool bBlocking = false);
-   void UpdateWidgetTracking(int removeIndex, bool showMouseCursor, bool enableClickEvents, bool canOpenCombat); // helper function to update tracking of widgets on screen or widgets blocking actions
+   bool ApplyHUD(uint8 newState, bool enableClickEvents, bool canOpenCombat, bool bBlocking = false);
+   void UpdateWidgetTracking(int removeIndex, bool enableClickEvents, bool canOpenCombat); // helper function to update tracking of widgets on screen or widgets blocking actions
+
+   void InjectDependency(UObject* objectToInject)
+   {
+      UObjectProperty* objectProperty = FindField<UObjectProperty>(objectToInject->GetClass(), "hudManagerRef");
+      objectProperty->SetPropertyValue_InContainer(objectToInject, this);
+   }
 
  public:
    AHUDManager();
@@ -138,36 +152,30 @@ class MYPROJECT_API AHUDManager : public AInfo
     * @param interactingHero - If there's any hero that prompted this dialog, set the reference in basePlayer.  If it was played automatically, no need to set
     * @param dialogSource - What event caused this dialogBox to open?
     */
-   void AddHUD(FName conversationName, EDialogSource dialogSource);
+   void ShowDialogWithSource(FName conversationName, EDialogBoxCloseCase dialogSource);
 
    /**Variant of AddHUDDialog for text that not in the convesrsation table.
     * @param linesToDisplay - DialogInformation to pass in
     * @param interactingHero - If there's any hero that prompted this dialog, set the reference in basePlayer.  If it was played automatically, no need to set
     * @param dialogSource - What event caused this dialogBox to open?
     */
-   void AddHUD(TArray<FDialogData> linesToDisplay, EDialogSource dialogSource);
-
-   /**Allows us to add a HUD that requires a backpack parameter (storageHUD).
-    * @param backpack - The backpack of the storage interactable or NPC
-    */
-   void AddHUD(UBackpack* backpack);
-
-   /**Allows us to add a HUD that requires a NPC seller parameter (shopHUD).
-    * @param shopNPC - The NPC selling us items
-    */
-   void AddHUD(AShopNPC* shopNPC);
+   UFUNCTION(BlueprintCallable)
+   void ShowDialogCustomLines(TArray<FDialogData> linesToDisplay, EDialogBoxCloseCase dialogSource);
 
    /**Allows us to add the HUD which shows a detailed view of an item.  Didn't overload AddHUD because parameter prevents implcit uint8 conversion
     * @param itemID - ID of the item to show a detailed view of
     */
    void AddItemExamineHUD(int itemID);
 
-   /**Adds a comfirmation box that can do something with the input once the confirmation button is pressed
-    * @param functionPointer - Pointer to UObject member function that will be called after the confirmation
+   /**Adds a confirmation box that can do something once the confirmation button is pressed
+    * @param funcObject - Pointer to UObject member function that will be called after the confirmation
     */
-   void AddHUDConfirm(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty());
+   void ShowConfirmationBox(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty());
 
-   void AddHUDInput(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty());
+    /**Adds an input box that can do something with the input once the confirmation button is pressed
+    * @param funcObject - Pointer to UObject member function that will be called after the confirmation
+    */
+   void ShowInputBox(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty());
 
    /**Toggle a hud on the screen on/off.  BP_Version.  Do not call with huds that require open parameters, instead call their respective AddHUD function.*/
    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "HUD Toggle", meta = (DisplayName = "Add HUD"))
@@ -176,39 +184,34 @@ class MYPROJECT_API AHUDManager : public AInfo
 
    /**Add dialog HUD by passing in a conversation name*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Hud Dialog with Topic"))
-   void BP_AddHUDDialog(FName conversationName, EDialogSource dialogSource) { AddHUD(conversationName, dialogSource); }
+   void BP_AddHUDDialog(FName conversationName, EDialogBoxCloseCase dialogSource) { ShowDialogWithSource(conversationName, dialogSource); }
 
    /**Add dialog HUD by passing in dialogLines rather than reading off dialogTable*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Hud Dialog with Dialog Lines"))
-   void BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, EDialogSource dialogSource) { AddHUD(linesToDisplay, dialogSource); }
-
-   UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Item Examine HUD"))
-   void BP_AddHUDItemExamine(int itemID) { AddItemExamineHUD(itemID); }
-
-   /**Add the storage HUD by passing in a backpack with storage items*/
-   UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Storage HUD"))
-   void BP_AddHUDStorage(UBackpack* backpack) { AddHUD(backpack); }
-
-   /**Add the shop HUD by passing in a shopkeeper NPC*/
-   UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Shop HUD"))
-   void BP_AddHUDShop(AShopNPC* shopNPC) { AddHUD(shopNPC); }
+   void BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, EDialogBoxCloseCase dialogSource) { ShowDialogCustomLines(linesToDisplay, dialogSource); }
 
    /**Add the confirmationbox HUD by passing in the callback*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add ConfirmationBox HUD", AutoCreateRefTerm = "newTitle,newDesc"))
-   void BP_AddConfirmationBox(const FText& newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) { AddHUDConfirm(funcName, funcObject, newTitle, newDesc); }
+   void BP_AddConfirmationBox(const FText& newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) { ShowConfirmationBox(funcName, funcObject, newTitle, newDesc); }
 
    /**Add the inputbox HUD by passing in the callback*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add InputBox HUD", AutoCreateRefTerm = "newTitle,newDesc"))
-   void BP_AddInputBox(FText newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) { AddHUDInput(funcName, funcObject, newTitle, newDesc); }
+   void BP_AddInputBox(FText newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) { ShowInputBox(funcName, funcObject, newTitle, newDesc); }
 
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle")
    bool IsWidgetOnScreen(HUDs hudToCheck) const { return currentlyDisplayedWidgetsBitSet[static_cast<int>(hudToCheck)]; }
+
+   UPROPERTY(EditDefaultsOnly)
+   TSubclassOf<UMainWidget> mainMenuClass;
+
+   UPROPERTY(EditDefaultsOnly)
+   TSubclassOf<UMainWidget> startMenuClass;
 
 #pragma region accessors
 
    ///--Accessors--///
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   UMainWidget* GetMainHUD();
+   URTSIngameWidget* GetIngameHUD() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
    UCharacterMenu* GetCharacterHUD();
@@ -258,5 +261,10 @@ class MYPROJECT_API AHUDManager : public AInfo
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
    URTSInputBox* GetInputBox() const;
 
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+   UStartMenu* GetStartMenu() const;
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+   USpellbookHUD* GetSpellBookMenu() const;
 #pragma endregion
 };

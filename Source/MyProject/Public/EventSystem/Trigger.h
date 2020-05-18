@@ -106,16 +106,21 @@ class MYPROJECT_API UTriggerManager : public UObject
     */
    TMultiMap<FName, FTriggerData> triggerRecords;
 
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
  public:
    void Init();
 
+   UPROPERTY()
    AUserInput*   cpcRef;
+
+   UPROPERTY()
    ARTSGameMode* gameModeRef;
 
    TMultiMap<FName, FTriggerData> GetTriggerRecords() const { return triggerRecords; }
 
    UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Records")
-   void AddTriggerToRecords(FName worldObjectName, const FTriggerData& trigger);
+   void AddTriggerToRecords(FName worldObjectName, const FTriggerData& finishedTriggerActivation);
 
    /**Activates a trigger given a trigger data.  If the objects referred to are not loaded, then we must store the trigger somewhere
    and the object will check for any triggers performed on it when it is loaded

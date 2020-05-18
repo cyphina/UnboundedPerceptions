@@ -21,6 +21,6 @@ class MYPROJECT_API AShootingEnemy : public AEnemy
    UPROPERTY(EditAnywhere, Category = "ShootingStats")
    TSubclassOf<ARTSProjectile> projectileType;
 
-   void BeginPlay() override;
-   void Attack_Implementation() override;
+   void BeginPlay() override final;
+   void Attack_Implementation() override final;
 };

@@ -32,7 +32,7 @@ void AUserInput::BeginPlay()
 
    basePlayer = Cast<ABasePlayer>(PlayerState);
 
-   hudManager = GetWorld()->SpawnActor<AHUDManager>(AHUDManager::StaticClass(), FTransform(), FActorSpawnParameters());
+   GetWorld()->SpawnActor<AHUDManager>(hudManagerClass, FTransform(), FActorSpawnParameters());
    Super::BeginPlay();
 }
 
@@ -57,45 +57,50 @@ void AUserInput::SetupInputComponent()
 
 void AUserInput::ToggleBreakMenu()
 {
-   GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_Break));
+   hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Break));
 }
 
 void AUserInput::ToggleInventory()
 {
    int numSelectedHeroes = GetBasePlayer()->selectedHeroes.Num();
-   if (numSelectedHeroes > 0 && GetPawn() == GetCameraPawn()) { GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_Inventory)); }
+   if(numSelectedHeroes > 0 && GetPawn() == GetCameraPawn()) {
+      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Inventory));
+   }
 }
 
 void AUserInput::ToggleQuestJournal()
 {
    if(GetPawn() == GetCameraPawn())
-      GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_QuestJournal));
+      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_QuestJournal));
 }
 
 void AUserInput::ToggleQuestList()
 {
    if(GetPawn() == GetCameraPawn())
-      GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_QuestList));
+      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_QuestList));
 }
 
 void AUserInput::ToggleCharacterMenu()
 {
    int numSelectedHeroes = GetBasePlayer()->selectedHeroes.Num();
-   if (numSelectedHeroes > 0 || GetHUDManager()->widgetReferences[static_cast<uint8>(HUDs::HS_Character)]->IsVisible())
-   {
+   if(numSelectedHeroes > 0 || GetHUDManager()->widgetReferences[static_cast<uint8>(HUDs::HS_Character)]->IsVisible()) {
       if(GetPawn() == GetCameraPawn())
-         GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_Character));
+         hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Character));
    }
 }
 
 void AUserInput::ToggleEquipmentMenu()
 {
    int numSelectedHeroes = GetBasePlayer()->selectedHeroes.Num();
-   if (numSelectedHeroes > 0 && GetPawn() == GetCameraPawn()) { GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_Equipment)); }
+   if(numSelectedHeroes > 0 && GetPawn() == GetCameraPawn()) {
+      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Equipment));
+   }
 }
 
 void AUserInput::ToggleSpellbookMenu()
 {
    int numSelectedHeroes = GetBasePlayer()->selectedHeroes.Num();
-   if (numSelectedHeroes > 0 && GetPawn() == GetCameraPawn()) { GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_Spellbook)); }
+   if(numSelectedHeroes > 0 && GetPawn() == GetCameraPawn()) {
+      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Spellbook));
+   }
 }

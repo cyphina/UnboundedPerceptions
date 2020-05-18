@@ -19,11 +19,11 @@ class MYPROJECT_API APickup : public AInteractableBase
  public:
    APickup();
 
-   virtual void BeginPlay() override;
-   virtual void Tick(float deltaSeconds) override;
+   virtual void BeginPlay() override final;
+   virtual void Tick(float deltaSeconds) override final;
 
-   void    Interact_Implementation(ABaseHero* hero) override;
-   FVector GetInteractableLocation_Implementation(ABaseHero* hero) override;
+   void    Interact_Implementation(ABaseHero* hero) override final;
+   FVector GetInteractableLocation_Implementation() const override final;
 
    UFUNCTION(BlueprintCallable, Category = "Interact")
    void OnPickedUp();
@@ -40,5 +40,6 @@ class MYPROJECT_API APickup : public AInteractableBase
    FPickupDelegate OnPickupDelegate;
 
    void OnComponentBeginOverlap(UPrimitiveComponent* hitComp, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex, bool bFromSweep, const FHitResult& sweepResult);
-   void SaveInteractable(FMapSaveInfo& mapData) override;
+   void SaveInteractable(FMapSaveInfo& mapData) override final; // Just adds the name of this pick up (one editor gives actors by default) to show it hasn't been picked up
+   void LoadInteractable(FMapSaveInfo& mapData) override final; 
 };

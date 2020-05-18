@@ -11,7 +11,7 @@ class UBlackboardComponent;
 class UPatrolComponent;
 
 struct FBTPatrolTaskMemory {
-   AUnitController*  AICon      = nullptr;
+   AAIController*  AICon      = nullptr;
    UPatrolComponent* patrolComp = nullptr;
 };
 
@@ -36,7 +36,4 @@ class MYPROJECT_API UBTTask_Patrol : public UBTTaskNode
    EBTNodeResult::Type PatrolToNextLocation(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory);
    uint16              GetInstanceMemorySize() const override;
    virtual void        OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FName Message, int32 RequestID, bool bSuccess) override;
-
- protected:
-   void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 };

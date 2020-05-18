@@ -12,6 +12,7 @@ public class MyProject : ModuleRules
 		//bEnforceIWYU = true;
 		//PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 		PrivatePCHHeaderFile = "Public/MyProject.h";
+		CppStandard = CppStandardVersion.Cpp17;
 
 		PublicDependencyModuleNames.AddRange(new string[] { "Core",
 			"CoreUObject",
@@ -24,6 +25,7 @@ public class MyProject : ModuleRules
 			"AIModule",
 			"ProceduralMeshComponent",
 			"MovieScene",
+			"BLU",
 			"LevelSequence"
 		});
 
@@ -31,7 +33,9 @@ public class MyProject : ModuleRules
 			"Slate",
 			"SlateCore",
 			"GameplayAbilities",
-			"AIModule"
+			"AIModule",
+			"BLU",
+			"JSON"
 		});
 
 		// Uncomment if you are using online features

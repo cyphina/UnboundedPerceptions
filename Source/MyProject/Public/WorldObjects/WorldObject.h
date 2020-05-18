@@ -4,14 +4,14 @@
 // minimalAPI
 class MYPROJECT_API IWorldObject
 {
- protected:
+protected:
    // bool isSelected = false; //everything can be selected, but selection of non hero worldobjects will do different things like just display information
    // int objectID = 0;
 
- public:
+public:
    /**Get name as referred to by game UI.  May be unique (if I'm lazy it will be, else we can use gameplayTags as another unique ID)*/
    virtual void  SetGameName(FText value) = 0;
-   virtual FText GetGameName() const      = 0;
+   virtual FText GetGameName() const = 0;
 
    ///**Get image that is shown when a WorldObject is selected*/
    // virtual void					SetImage(UTexture2D* value) = 0;

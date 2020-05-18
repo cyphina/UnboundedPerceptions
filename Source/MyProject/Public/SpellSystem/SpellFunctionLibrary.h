@@ -15,6 +15,7 @@ class AUnit;
 /**A class that holds a blueprint library, that is it can be used anywhere inside blueprints so we can get our spellInfo via the manager in our blueprints
  * Recently I've exposed all the information inside UMySpell, so if you can use one of the accesors to get a default instance of the spell, you can get all the data
  * from that.
+ * Also holds some functions used for combat.
  */
 UCLASS(MinimalAPI)
 class USpellFunctionLibrary : public UBlueprintFunctionLibrary
@@ -43,7 +44,7 @@ class USpellFunctionLibrary : public UBlueprintFunctionLibrary
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Setup Bullet Targetting"), Category = "EffectFactory")
    static ARTSProjectile* SetupBulletTargetting(TSubclassOf<ARTSProjectile> bulletClass, AUnit* unitRef, UPARAM(ref) FGameplayEffectSpecHandle& specHandle, bool canGoThroughWalls);
 
-   /**Parses strings*/
+   /**Parses spell descriptions to place keywords with the actual statistic*/
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Parse Descrption"), Category = "Spell Description Helper")
    static FText ParseDesc(FText inputText, UAbilitySystemComponent* compRef, UMySpell* spell, TMap<FString, FString> args);
 

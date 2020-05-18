@@ -7,7 +7,7 @@
 #include "VisibleAlliesQueryGenerator.generated.h"
 
 /**
- *
+ * Generates the player units that are considered visible to all the enemies.
  */
 UCLASS()
 class MYPROJECT_API UVisibleAlliesQueryGenerator : public UEnvQueryGenerator

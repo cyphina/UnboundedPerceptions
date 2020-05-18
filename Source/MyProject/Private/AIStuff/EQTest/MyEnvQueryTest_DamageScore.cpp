@@ -3,6 +3,8 @@
 #include "MyProject.h"
 #include "MyEnvQueryTest_DamageScore.h"
 #include "EnvironmentQuery/Items/EnvQueryItemType_Actor.h"
+#include "Algo/RemoveIf.h"
+#include "UpResourceManager.h"
 #include "EnvironmentQuery/Contexts/EnvQueryContext_Querier.h"
 
 #include "Unit.h"
@@ -52,9 +54,13 @@ FText UMyEnvQueryTest_DamageScore::GetDescriptionDetails() const
 int UMyEnvQueryTest_DamageScore::FindNumOffensiveAbilities(AUnit* unit) const
 {
    int numOffensiveAbilities = 0;
-   for (TSubclassOf<UMySpell> spellClass : unit->abilities) {
-      UMySpell* spell = spellClass.GetDefaultObject();
-      if (!spell->AbilityTags.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Healing"))) {
+   const int offensiveSpellsIndexEnd = Algo::RemoveIf(unit->abilities, [](TSubclassOf<UMySpell> spellClass) {
+      return spellClass.GetDefaultObject()->AbilityTags.HasAny(UpResourceManager::offensiveTags);
+   });
+
+   for (int i = 0; i < offensiveSpellsIndexEnd; ++ i) {
+      UMySpell* spell = unit->abilities[i].GetDefaultObject(); {
+         // Only increase score against damaing spells
          FDamageScalarStruct damageStruct = spell->GetDamage(unit->GetAbilitySystemComponent());
          if (damageStruct.intelligence + damageStruct.agility + damageStruct.strength + damageStruct.understanding > 150) ++numOffensiveAbilities;
       }
@@ -66,14 +72,14 @@ int UMyEnvQueryTest_DamageScore::GetHighestOffensiveAttribute(AUnit* unit) const
 {
    int maxValue = 0;
    // TODO: Maybe check affinity but its costly to loop through all that
-   for (int i = 0; i < CombatInfo::AttCount; ++i) {
-      int attValue = unit->GetAttributeAdjValue(i);
+   for (auto x : TEnumRange<EAttributes>()) {
+      int attValue = unit->GetAttributeAdjValue(x);
       if (attValue > maxValue) maxValue = attValue;
    }
 
-   for (int i = STAT_AFF_START_INDEX; i < STAT_AFF_END_INDEX; ++i) {
-      int attValue = unit->GetAttributeAdjValue(i);
-      if (attValue > maxValue) maxValue = attValue;
+   for (uint8 i = STAT_AFF_START_INDEX; i < STAT_AFF_END_INDEX; ++i) {
+      float skillAffValue = unit->GetSkillAdjValue(static_cast<EUnitScalingStats>(i));
+      if (skillAffValue > maxValue) maxValue = skillAffValue;
    }
 
    return maxValue;

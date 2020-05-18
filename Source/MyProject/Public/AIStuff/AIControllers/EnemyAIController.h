@@ -10,13 +10,12 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "EnemyAIController.generated.h"
 
+class AUnit;
+
 /**
  * Base controller for enemies.  Enemies have sight which they use to react to things, but once they see an enemy (which is a hero to them),
  * they can react as if they know where the whole team is (we don't have to keep track of visible allies hence).
  */
-
-class AUnit;
-
 UCLASS()
 class MYPROJECT_API AEnemyAIController : public AUnitController
 {

@@ -17,7 +17,7 @@ UItemManager::UItemManager()
    if (ConsumableLookupTableFinder.Object) consumableLookupTable = ConsumableLookupTableFinder.Object;
 }
 
-FItemLookupRow* UItemManager::GetItemInfo(int itemID)
+FItemLookupRow* UItemManager::GetItemInfo(int itemID) const
 {
 #if UE_EDITOR
    check(itemID > 0);
@@ -25,7 +25,7 @@ FItemLookupRow* UItemManager::GetItemInfo(int itemID)
    return reinterpret_cast<FItemLookupRow*>(itemLookupTable->FindRowUnchecked(*FString::FromInt(itemID)));
 }
 
-FEquipLookupRow* UItemManager::GetEquipInfo(int equipID)
+FEquipLookupRow* UItemManager::GetEquipInfo(int equipID) const 
 {
 #if UE_EDITOR
    check(equipID > 0);
@@ -33,7 +33,7 @@ FEquipLookupRow* UItemManager::GetEquipInfo(int equipID)
    return reinterpret_cast<FEquipLookupRow*>(equipLookupTable->FindRowUnchecked(*FString::FromInt(equipID)));
 }
 
-FConsumableLookupRow* UItemManager::GetConsumableInfo(int consumableID)
+FConsumableLookupRow* UItemManager::GetConsumableInfo(int consumableID) const
 {
 #if UE_EDITOR
    check(consumableID > 0);
@@ -41,22 +41,22 @@ FConsumableLookupRow* UItemManager::GetConsumableInfo(int consumableID)
    return reinterpret_cast<FConsumableLookupRow*>(consumableLookupTable->FindRowUnchecked(*FString::FromInt(consumableID)));
 }
 
-FItemLookupRow* UItemManager::GetItemInfo(FName itemID)
+FItemLookupRow* UItemManager::GetItemInfo(FName itemID) const
 {
    return reinterpret_cast<FItemLookupRow*>(itemLookupTable->FindRowUnchecked(itemID));
 }
 
-FEquipLookupRow* UItemManager::GetEquipInfo(FName equipID)
+FEquipLookupRow* UItemManager::GetEquipInfo(FName equipID) const
 {
    return reinterpret_cast<FEquipLookupRow*>(equipLookupTable->FindRowUnchecked(equipID));
 }
 
-FConsumableLookupRow* UItemManager::GetConsumableInfo(FName consumableID)
+FConsumableLookupRow* UItemManager::GetConsumableInfo(FName consumableID) const
 {
    return reinterpret_cast<FConsumableLookupRow*>(consumableLookupTable->FindRowUnchecked(consumableID));
 }
 
-TArray<FName> UItemManager::GetAllConsumableIDs()
+TArray<FName> UItemManager::GetAllConsumableIDs() const
 {
    return consumableLookupTable->GetRowNames();
 }

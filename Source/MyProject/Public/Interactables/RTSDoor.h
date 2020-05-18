@@ -33,6 +33,8 @@ class MYPROJECT_API ARTSDoor : public AInteractableBase
    UFUNCTION()
    void HandleProgress(float Value);
 
+   AUserInput* cpcRef;
+
  public:
    /**Curve representing door rotation rate*/
    UPROPERTY(EditAnywhere, Category = "Door Info")
@@ -60,9 +62,9 @@ class MYPROJECT_API ARTSDoor : public AInteractableBase
    void Tick(float DeltaTime) override;
 
    void    Interact_Implementation(ABaseHero* hero) override;
-   FVector GetInteractableLocation_Implementation(ABaseHero* hero) override;
-   bool    CanInteract_Implementation() override;
+   FVector GetInteractableLocation_Implementation() const override;
+   bool    CanInteract_Implementation() const override;
 
    void SaveInteractable(FMapSaveInfo& mapData) override;
-   void LoadInteractable(FDoorInteractableSaveInfo& doorData);
+   void LoadInteractable(FMapSaveInfo& mapData) override;
 };

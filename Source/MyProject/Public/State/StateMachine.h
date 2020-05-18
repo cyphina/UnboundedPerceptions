@@ -13,8 +13,7 @@
 
 DECLARE_STATS_GROUP(TEXT("UnitStateMachine"), STATGROUP_UnitStateMachine, STATCAT_Advanced);
 
-class StateMachine
-{
+class StateMachine {
 public:
    StateMachine(AUnit* unitOwner);
    virtual ~StateMachine();
@@ -25,13 +24,13 @@ public:
    void         Update(float deltaSeconds);
 
    // As long as our states don't actually hold any state, we can keep em static
-   static IdleState       Idle;
-   static MovingState     Moving;
-   static AttackState     Attacking;
-   static CastingState    Casting;
+   static IdleState        Idle;
+   static MovingState      Moving;
+   static AttackState      Attacking;
+   static CastingState     Casting;
    static IncantationState Incanting;
-   static ChannelingState Channeling;
-   static ChasingState    Chasing;
+   static ChannelingState  Channeling;
+   static ChasingState     Chasing;
 
 protected:
    AUnit*      unitOwner = nullptr;

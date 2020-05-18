@@ -6,10 +6,6 @@
 #include "GameplayTagContainer.h"
 #include "BasePlayer.generated.h"
 
-/**
- * 	Class for data specific to the player.  Holds information that is replicated amongst clients about other clients
- */
-
 class AUnit;
 class AAlly;
 class ASummon;
@@ -18,7 +14,12 @@ class APickup;
 class UQuestManager;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogTopicLearned, FGameplayTag, dialogTopic);
+DECLARE_EVENT(ABasePlayer, OnPartyUpdated);
 
+/**
+ * Class for data specific to the player that everyone needs ot know.
+ * Holds information that is replicated amongst clients about other clients
+ */
 UCLASS()
 class MYPROJECT_API ABasePlayer : public APlayerState
 {
@@ -51,12 +52,13 @@ class MYPROJECT_API ABasePlayer : public APlayerState
     * who opened it
     */
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-   ABaseHero* interactedHero;
+   ABaseHero* heroInBlockingInteraction;
 
-   /**Returns list of alive heroes and friendly units.  Heroes should be first in the list*/
+   /**Returns list of ALIVE heroes and friendly units.*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    TArray<AAlly*> allies;
 
+   /**List of all alive selected allies*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    TArray<AAlly*> selectedAllies;
 
@@ -68,8 +70,6 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    TArray<AAlly*> npcs;
 
-   /**List of current AI  ally groups*/
-   TArray<TSet<AUnit*>> allyGroups;
 #pragma endregion
 
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
@@ -87,16 +87,22 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnDialogTopicLearned OnDialogLearned;
 
+   OnPartyUpdated partyUpdatedEvent;
+
    ABasePlayer();
+
+   /** Helper function when all selected ally units are cleared */
+   UFUNCTION(BlueprintCallable, Category = "Player Unit Management")
+   void ClearSelectedAllies();
 
    /**Change a party around
     *@param newparty - This is an array with the new heroes that will be in the party.  Must be of sizes 1-4
     */
-   UFUNCTION(BlueprintCallable, Category = "Player")
+   UFUNCTION(BlueprintCallable, Category = "Player Unit Management")
    void UpdateParty(TArray<ABaseHero*> newHeroes);
 
    /**Called when a new hero joins the team and can be assigned to the 4 man squad*/
-   UFUNCTION(BlueprintCallable, Category = "Player")
+   UFUNCTION(BlueprintCallable, Category = "Player Unit Management")
    void JoinParty(ABaseHero* newHero);
 
    /**Update the coins

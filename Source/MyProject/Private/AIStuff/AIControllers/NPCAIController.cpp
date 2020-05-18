@@ -8,34 +8,22 @@
 
 const FName ANPCAIController::targetKeyName = "target";
 
-ANPCAIController::ANPCAIController()
-{
+ANPCAIController::ANPCAIController() {}
 
-}
-
-void ANPCAIController::OnPossess(APawn* inPawn)
-{
-	Super::OnPossess(inPawn);
-}
+void ANPCAIController::OnPossess(APawn* inPawn) { Super::OnPossess(inPawn); }
 
 void ANPCAIController::BeginPlay()
 {
-	Super::BeginPlay();
-	UseBlackboard(npcBB, blackboardComp);
+   Super::BeginPlay();
+   UseBlackboard(npcBB, blackboardComp);
 }
 
 void ANPCAIController::Follow(ABaseHero* heroToFollow)
 {
-	blackboardComp->SetValueAsObject(targetKeyName, heroToFollow);
-	RunBehaviorTree(followTree);
+   blackboardComp->SetValueAsObject(targetKeyName, heroToFollow);
+   RunBehaviorTree(followTree);
 }
 
-void ANPCAIController::Patrol()
-{
-	RunBehaviorTree(patrolTree);
-}
+void ANPCAIController::Patrol() { RunBehaviorTree(patrolTree); }
 
-void ANPCAIController::Stop()
-{
-    GetBrainComponent()->StopLogic(FString("NPC Stop"));
-}
+void ANPCAIController::Stop() { GetBrainComponent()->StopLogic(FString("NPC Stop")); }

@@ -18,7 +18,7 @@ void UAIParamUpdateService::TickNode(UBehaviorTreeComponent& ownerComp, uint8* n
    int riskValue   = 1;
    int threatValue = 1;
 
-   float unitTotalHealth = myMemory->owner->GetVitalAdjValue(static_cast<int>(Vitals::Health));
+   float unitTotalHealth = myMemory->owner->GetVitalAdjValue(EVitals::Health);
 
    threatValue += myMemory->owner->GetDPS(3);
    // threatValue += p.stunDealt;
@@ -26,7 +26,7 @@ void UAIParamUpdateService::TickNode(UBehaviorTreeComponent& ownerComp, uint8* n
 
    riskValue += myMemory->owner->GetDamageRecievedPerSecond(3);
    riskValue -= myMemory->owner->GetHealingRecievedPerSecond(3);
-   riskValue *= myMemory->owner->GetVitalCurValue(static_cast<int>(Vitals::Health)) / unitTotalHealth;
+   riskValue *= myMemory->owner->GetVitalCurValue(EVitals::Health) / unitTotalHealth;
 
    ownerComp.GetBlackboardComponent()->SetValueAsInt("risk", riskValue);
    ownerComp.GetBlackboardComponent()->SetValueAsInt("risk", threatValue);

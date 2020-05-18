@@ -80,9 +80,12 @@ class MYPROJECT_API ACityGenerator : public AActor
 
  protected:
    void OnConstruction(const FTransform& Transform) override;
+
+   /**Called after property is modified*/
 #if WITH_EDITOR
    void PostEditChangeProperty(FPropertyChangedEvent& propertyChanged) override;
 #endif
+
    virtual void BeginPlay() override;
 
    UPROPERTY(VisibleAnywhere)
@@ -91,9 +94,11 @@ class MYPROJECT_API ACityGenerator : public AActor
  private:
    int numSplinePoints;
 
+   /**Creates tracks along the spline points*/
    UFUNCTION(BlueprintCallable, Category = "Generation")
    void BuildTrackElement(int index);
 
+   /**Creates building static meshes and offsets them to the left and right of the spline control point*/
    UFUNCTION(BlueprintCallable, Category = "Generation")
    void BuildSideBuildings(int index);
 };

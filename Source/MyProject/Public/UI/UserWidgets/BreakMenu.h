@@ -21,6 +21,10 @@ class MYPROJECT_API UBreakMenu : public UMyDraggableWidget
    void NativeConstruct() override;
 
  private:
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
+
+   UPROPERTY()
    ARTSGameMode* gameModeRef;
 
    UFUNCTION(BlueprintCallable, Category = "BreakMenu Functionality")

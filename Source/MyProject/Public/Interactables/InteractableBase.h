@@ -12,6 +12,7 @@ class ABaseHero;
 class UInteractableActorDecoratorBase;
 struct FMapSaveInfo;
 struct FInteractableSaveInfo;
+struct FInteractableSaveInfoWrapper;
 
 /**To name an interactable, add a named decorator to it.  Else there will be no name*/
 
@@ -28,12 +29,12 @@ class MYPROJECT_API AInteractableBase : public AActor, public IInteractable, pub
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (AllowPrivateAccess = "true"))
    UInteractableActorDecoratorBase* decorator;
 
-   virtual void BeginPlay() override;
+   void BeginPlay() override;
 
-   /**Used to save the ncessary data for all interactable actors on the map*/
-   FInteractableSaveInfo SaveInteractableData();
+   /**Used internally to save the necessary data for all interactable actors on the map which has to be done when leaving a level*/
+   FInteractableSaveInfoWrapper SaveInteractableData();
 
-   /**Used to load the necessary data for all interactable actors on the map*/
+   /**Used internally to load the necessary data for all interactable actors on the map.  Used when restoring a level's state*/
    void LoadInteractableData(FInteractableSaveInfo& interactableInfo);
 
  public:
@@ -58,9 +59,14 @@ class MYPROJECT_API AInteractableBase : public AActor, public IInteractable, pub
    void SetGameName(FText value) final override;
 
    void    Interact_Implementation(ABaseHero* hero) override;
-   FVector GetInteractableLocation_Implementation(ABaseHero* hero) override;
-   bool    CanInteract_Implementation() override;
+   FVector GetInteractableLocation_Implementation() const override;
+   bool    CanInteract_Implementation() const override;
 
-   virtual void SaveInteractable(FMapSaveInfo& mapData);
-   void         LoadInteractable(FInteractableSaveInfo& interactableInfo);
+   virtual void SaveInteractable(FMapSaveInfo& mapData); // Saves data about interactable on a map when transitioning to another level or when game is saving
+   virtual void LoadInteractable(FMapSaveInfo& mapData); // Loads data about an interactable when transitioning to the map with the interactable.  Specific implementation in every subclass
 };
+
+FORCEINLINE uint8 GetTypeHash(const AInteractableBase& interactable)
+{
+  return GetTypeHash(interactable.GetActorLocation());
+}

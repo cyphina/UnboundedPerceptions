@@ -10,9 +10,8 @@
 
 class ABaseHero;
 
-class MYPROJECT_API HeroStateMachine : public StateMachine
-{
- public:
+class MYPROJECT_API HeroStateMachine : public StateMachine {
+public:
    HeroStateMachine(ABaseHero* hero);
    virtual ~HeroStateMachine();
 
@@ -21,6 +20,6 @@ class MYPROJECT_API HeroStateMachine : public StateMachine
 
    virtual void ChangeState(EUnitState newState) override;
 
- private:
+private:
    virtual IUnitState* getStateFromEnum(EUnitState enumVal) override;
 };

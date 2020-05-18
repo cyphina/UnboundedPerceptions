@@ -1,14 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "WorldObjects/Unit.h"
 #include "HealthbarComp.h"
 #include "Healthbar.h"
+#include "UpDamageComponent.h"
 
 UHealthbarComp::UHealthbarComp()
 {
    SetWidgetSpace(EWidgetSpace::Screen);
-   // SetRelativeLocation(FVector::ZeroVector);
 }
 
 void UHealthbarComp::BeginPlay()
@@ -17,22 +15,15 @@ void UHealthbarComp::BeginPlay()
    SetCollisionProfileName("NoCollision");
    healthBar = Cast<UHealthbar>(GetUserWidgetObject());
    unitRef   = Cast<AUnit>(GetOwner());
-
-   // if(healthBar && unitRef)
-   // GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, unitRef->GetName() + healthBar->GetName());
+   unitRef->damageComponent->OnDamageTaken.AddUObject(this, &UHealthbarComp::SetWidgetHealth);
 }
 
-void UHealthbarComp::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UHealthbarComp::SetWidgetHealth(const FUpDamage& damage)
 {
-   Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-   if (healthBar && unitRef) {
-      healthPercentage = (unitRef->GetVitalCurValue(static_cast<int>(Vitals::Health)) / unitRef->GetVitalAdjValue(static_cast<int>(Vitals::Health)));
-      healthBar->SetHealth(healthPercentage);
-   }
+   healthBar->UpdateHealthbar(unitRef->GetVitalCurValue(EVitals::Health) / unitRef->GetVitalBaseValue(EVitals::Health));
 }
 
 void UHealthbarComp::EndPlay(const EEndPlayReason::Type EPR)
 {
    Super::EndPlay(EPR);
-   // ReleaseResources();
 }

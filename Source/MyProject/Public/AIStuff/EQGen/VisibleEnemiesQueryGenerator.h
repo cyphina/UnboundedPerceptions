@@ -7,7 +7,7 @@
 #include "VisibleEnemiesQueryGenerator.generated.h"
 
 /**
- *
+ * Generates a list of all the enemies that are visible to all the current player units
  */
 UCLASS()
 class MYPROJECT_API UVisibleEnemiesQueryGenerator : public UEnvQueryGenerator

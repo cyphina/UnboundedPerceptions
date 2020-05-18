@@ -18,12 +18,20 @@ ARTSDoor::ARTSDoor() : AInteractableBase()
 
    doorCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("DoorCollision"));
    doorCollision->SetupAttachment(RootComponent);
-   doorCollision->SetCollisionObjectType(ECollisionChannel::ECC_GameTraceChannel3); // Interactable
+   doorCollision->SetCollisionObjectType(INTERACTABLE_CHANNEL); 
+
+   static ConstructorHelpers::FObjectFinder<UStaticMesh> doorFrameMesh(TEXT("/Game/StarterContent/Props/SM_DoorFrame"));
+   // Caching the data table information can be problematic if we reimport
+   if (doorFrameMesh.Object) interactableMesh->SetStaticMesh(doorFrameMesh.Object);
 
    doorMesh = CreateDefaultSubobject<UStaticMeshComponent>(FName("DoorMesh"));
    doorMesh->SetCollisionProfileName("NoCollision");
    doorMesh->SetMobility(EComponentMobility::Movable);
-   doorMesh->SetupAttachment(RootComponent);
+
+   // Attach door to the hinge
+   static const FName DOOR_SOCKET_NAME = "Door";
+   // Using SetupAttachment did not work when setting up the socket
+   doorMesh->AttachToComponent(interactableMesh, FAttachmentTransformRules::KeepRelativeTransform, DOOR_SOCKET_NAME);
 
    ConstructorHelpers::FObjectFinder<UCurveFloat> curve(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/StandardLinear"));
    if (curve.Succeeded()) progressCurve = curve.Object;
@@ -58,14 +66,15 @@ void ARTSDoor::BeginPlay()
 
    initialRotation = FRotator(0, 0, 0);
    finalRotation   = FRotator(0, 90, 0);
+
+   cpcRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 }
 
 // Called every frame
 void ARTSDoor::Tick(float DeltaTime)
 {
-   //I guess this means the door won't open until it is on the screen so if we try and do any longrange opening...  it's not going to work till we see it
-   if (WasRecentlyRendered())
-   {
+   // I guess this means the door won't open until it is on the screen so if we try and do any longrange opening...  it's not going to work till we see it
+   if (WasRecentlyRendered()) {
       Super::Tick(DeltaTime);
       tL.TickTimeline(DeltaTime);
    }
@@ -76,27 +85,42 @@ void ARTSDoor::Interact_Implementation(ABaseHero* hero)
    // Put code here that places the item in the characters inventory
    if (CanInteract_Implementation()) {
       if (!isOpen) {
+         // Open the Door
          tL.Play();
          // SetActorEnableCollision(false);
-         doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);              // Friendly
-         doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Ignore); // Enemy
-         doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel9, ECollisionResponse::ECR_Ignore); // Friendly
+         doorCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);   
+         doorCollision->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Ignore); 
+         doorCollision->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Ignore); 
       } else {
+         // Close the Door
          tL.Reverse();
-         doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Block);              // Friendly
-         doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Block); // Enemy
-         doorCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel9, ECollisionResponse::ECR_Block); // Friendly
+         doorCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);     
+         doorCollision->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Block);
+         doorCollision->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Block); 
       }
       isOpen = !isOpen;
    }
 }
 
-FVector ARTSDoor::GetInteractableLocation_Implementation(ABaseHero* hero)
+FVector ARTSDoor::GetInteractableLocation_Implementation() const
 {
    // Figure out what side of the door we are on by checking the coordinates of the actor relative to the door
+   ABaseHero* heroRef = nullptr;
+   for (auto hero : cpcRef->GetBasePlayer()->heroes) {
+      if (hero->GetCurrentInteractable() == this) {
+         heroRef = hero;
+         break;
+      }
+   }
+
+   if (!heroRef) {
+      UE_LOG(LogTemp, Error, TEXT("No interactable hero when moving to door named %s"), *GetName());
+      return FVector();
+   }
+
    FMatrix2x2 changeOfBasisM = FMatrix2x2(GetActorRightVector().X, GetActorForwardVector().X, GetActorRightVector().Y, GetActorForwardVector().Y);
    changeOfBasisM.Inverse();
-   FVector2D heroLocation   = FVector2D(hero->GetActorLocation() - GetActorLocation());
+   FVector2D heroLocation   = FVector2D(heroRef->GetActorLocation() - GetActorLocation());
    FVector2D heroDoorCoords = changeOfBasisM.TransformVector(heroLocation);
    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, heroDoorCoords.ToString());
    if (heroDoorCoords.Y > 0)
@@ -105,7 +129,7 @@ FVector ARTSDoor::GetInteractableLocation_Implementation(ABaseHero* hero)
       return GetActorForwardVector() * ABaseHero::interactRange * -1 + GetActorLocation();
 }
 
-bool ARTSDoor::CanInteract_Implementation()
+bool ARTSDoor::CanInteract_Implementation() const
 {
    return Super::CanInteract_Implementation() && !isLocked;
 }
@@ -122,11 +146,15 @@ void ARTSDoor::SaveInteractable(FMapSaveInfo& mapData)
    UInteractableActorDecoratorBase* decor = decorator;
 
    doorSaveInfo.isLocked         = isLocked;
-   doorSaveInfo.interactableInfo = SaveInteractableData();
+   doorSaveInfo.interactableInfo = SaveInteractableData().interactableInfo;
+   mapData.doorInteractables.Add(doorSaveInfo);
 }
 
-void ARTSDoor::LoadInteractable(FDoorInteractableSaveInfo& doorData)
+void ARTSDoor::LoadInteractable(FMapSaveInfo& mapData)
 {
-   AInteractableBase::LoadInteractableData(doorData.interactableInfo);
-   isLocked = doorData.isLocked;
+   FDoorInteractableSaveInfo* doorInteractableInfo = mapData.doorInteractables.FindByHash<ARTSDoor*>(GetTypeHash(*this), this);
+   if (doorInteractableInfo) {
+      LoadInteractableData(doorInteractableInfo->interactableInfo);
+      isLocked = doorInteractableInfo->isLocked;
+   }
 }

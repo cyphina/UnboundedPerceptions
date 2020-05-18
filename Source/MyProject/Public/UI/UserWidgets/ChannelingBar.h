@@ -6,13 +6,12 @@
 #include "Blueprint/UserWidget.h"
 #include "ChannelingBar.generated.h"
 
-/**
- * A channeling bar that is part of the actionbar
- */
-
 class AUnit;
 class AUserInput;
 
+/**
+ * A channeling bar that is part of the actionbar amd comes up when we are channeling spells or using items
+ */
 UCLASS()
 class MYPROJECT_API UChannelingBar : public UUserWidget
 {

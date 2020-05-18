@@ -7,7 +7,7 @@
 #include "AIParamUpdateService.generated.h"
 
 /**
- * Service to continuously update AI as long as it is in combat
+ * Service to continuously update AI parameters as long as it is in combat
  */
 
 class AUserInput;

@@ -7,7 +7,7 @@
 #include "HUDManager.h"
 #include "MyGameInstance.h"
 #include "SettingsMenu.h"
-#include "MainWidget.h"
+#include "RTSIngameWidget.h"
 #include "DialogBox.h"
 #include "EventSystem/EventManager.h"
 #include "EventSystem/Trigger.h"
@@ -25,8 +25,12 @@ bool UStartMenu::CheckIfSaveFileExists(FString saveFileName)
 {
    FString        saveFilesPath = FPaths::ProjectDir().Append("\\SavedGames\\");
    IPlatformFile& platformFile  = FPlatformFileManager::Get().GetPlatformFile();
-   if (!platformFile.DirectoryExists(*saveFilesPath)) { platformFile.CreateDirectory(*saveFilesPath); }
-   if (platformFile.FileExists(*(saveFilesPath + "\\" + saveFileName))) { return true; }
+   if(!platformFile.DirectoryExists(*saveFilesPath)) {
+      platformFile.CreateDirectory(*saveFilesPath);
+   }
+   if(platformFile.FileExists(*(saveFilesPath + "\\" + saveFileName))) {
+      return true;
+   }
    return false;
 }
 
@@ -41,8 +45,9 @@ void UStartMenu::StartGameLevelTransition()
 
    controllerRef->EnableInput(controllerRef);
    controllerRef->GetPawn()->EnableInput(controllerRef);
-   controllerRef->GetHUDManager()->GetMainHUD()->speedIndex = 2;
-   controllerRef->GetHUDManager()->GetMainHUD()->SetGameSpeed();
+   // Change our game speed to default
+   hudManagerRef->GetIngameHUD()->speedIndex = 2;
+   hudManagerRef->GetIngameHUD()->SetGameSpeed();
 
    GameEventStartSetup();
 
@@ -51,7 +56,7 @@ void UStartMenu::StartGameLevelTransition()
 
 void UStartMenu::GameEventStartSetup()
 {
-   controllerRef->GetHUDManager()->AddHUD("SylphiaApartmentIntro", EDialogSource::none);
+   hudManagerRef->ShowDialogWithSource("SylphiaApartmentIntro", EDialogBoxCloseCase::none);
    gameModeRef->GetEventManager()->MoveToNextSection();
    FTriggerData addFirstQuestTrigger;
    addFirstQuestTrigger.enabled       = true;

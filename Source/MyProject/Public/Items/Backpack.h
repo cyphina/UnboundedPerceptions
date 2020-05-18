@@ -138,5 +138,9 @@ class MYPROJECT_API UBackpack : public UObject
 
    FMyItem& operator[](int backpackIndex) { return items[backpackIndex]; }
 
+   /**Copies backpack information into a struct for saving*/
    void SaveBackpack(FBackpackSaveInfo& backpackInfo);
+
+   /**Loads backpack information from a saving struct*/
+   void LoadBackpack(FBackpackSaveInfo& backpackInfo);
 };

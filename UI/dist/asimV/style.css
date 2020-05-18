@@ -1,0 +1,61 @@
+* {
+  margin: 0;
+  padding: 0;
+  font-family: "Barlow Semi Condensed", sans-serif;
+}
+
+.player {
+  color: #FFFFFF;
+  width: 75px;
+  margin: 10px;
+}
+.player .icon {
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  box-shadow: 0px 0px 12px rgba(123, 104, 238, 0.7);
+  overflow: hidden;
+}
+.player .mana .progressbar .bar {
+  background: #00a8c5;
+}
+.player .hp .progressbar .bar {
+  background: #be5869;
+}
+.player .progressbar {
+  position: relative;
+  margin: 4px 0;
+  width: 100%;
+  height: 4px;
+  background: #E1E1E1;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0px 0px 12px rgba(123, 104, 238, 0.7);
+}
+.player .progressbar .bar {
+  height: 100%;
+  background: #212121;
+}
+.player:last-child {
+  width: 300px;
+  height: 100px;
+}
+.player:last-child .icon {
+  float: left;
+  width: 100px;
+  height: 100px;
+}
+.player:last-child .info {
+  margin-left: 110px;
+}
+.player:last-child .info .name > span {
+  font-size: 20px;
+}
+.player:last-child .info .hp > span, .player:last-child .info .mana > span {
+  font-weight: 300;
+  font-size: 14px;
+}
+.player:last-child .info .progressbar {
+  border-radius: 6px;
+  height: 12px;
+}

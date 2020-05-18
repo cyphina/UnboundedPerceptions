@@ -14,7 +14,7 @@ EBTNodeResult::Type UBTTask_RandomMoveAttRange::ExecuteTask(UBehaviorTreeCompone
    if (target && owner) {
       FVector targetLocation = target->GetActorLocation();
 
-      float   attackRange  = owner->GetMechanicAdjValue(static_cast<int>(Mechanics::AttackRange));
+      float   attackRange  = owner->GetMechanicAdjValue(EMechanics::AttackRange);
       FVector pointInRange = FVector(FMath::RandPointInCircle(attackRange), 0);
 
       UNavigationSystemV1* navSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());

@@ -17,30 +17,25 @@ class ARTSGameMode;
 UCLASS()
 class MYPROJECT_API ATriggerInteractable : public AActor, public IInteractable
 {
-	GENERATED_BODY()
-	
-	ARTSGameMode*				gameModeRef;
+   GENERATED_BODY()
 
-public:	
+   ARTSGameMode* gameModeRef;
 
-	ATriggerInteractable();
+ public:
+   ATriggerInteractable();
 
-	UPROPERTY(EditAnywhere)
-	USceneComponent*			scene;
+   UPROPERTY(EditAnywhere)
+   USceneComponent* scene;
 
-	UPROPERTY(EditAnywhere)
-	UStaticMeshComponent*		staticMesh;
+   UPROPERTY(EditAnywhere)
+   UStaticMeshComponent* staticMesh;
 
-	UPROPERTY(EditAnywhere)
-	TArray<FConditionData>		useConditions;
+   virtual void BeginPlay() override;
 
-	virtual void				BeginPlay() override;
+   void    Interact_Implementation(ABaseHero* hero) override;
+   FVector GetInteractableLocation_Implementation() const override;
 
-	void 						Interact_Implementation(ABaseHero* hero) override;
-	FVector 					GetInteractableLocation_Implementation(ABaseHero* hero) override;
-	bool 						CanInteract_Implementation() override;
-
-	/**Set this trigger to something when you want to interact*/
-	UPROPERTY(EditAnywhere, Category = "Trigger")
-	FTriggerData				triggerActivatedOnInteract;
+   /**Set this trigger to something when you want to interact*/
+   UPROPERTY(EditAnywhere, Category = "Trigger")
+   FTriggerData triggerActivatedOnInteract;
 };

@@ -21,9 +21,10 @@ void UPatrolComponent::BeginPlay()
    check(pawnOwner);
 
    ownerControllerRef = Cast<AAIController>(pawnOwner->GetController());
-   if(enabled) {
+   if (enabled) {
       ANPCAIController* aiController = Cast<ANPCAIController>(ownerControllerRef);
-      UpResourceManager::ExecuteFunctionFromWorldObject(aiController, "Patrol", GetWorld()); 
+      aiController->Patrol();
+      //UpResourceManager::ExecuteFunctionFromWorldObject(aiController, "Patrol");
    }
 }
 

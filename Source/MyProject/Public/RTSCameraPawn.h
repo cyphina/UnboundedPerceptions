@@ -1,19 +1,21 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "RTSCameraPawn.generated.h"
 
-UCLASS()
-class MYPROJECT_API ARTSCameraPawn : public APawn
+/**
+ * DEPRECATED - Used for old pawn that controls the camera overlooking the world.  Can probably remove this one day
+ */
+
+UCLASS(Deprecated)
+class MYPROJECT_API ADEPRECATED_RTSCameraPawn : public APawn
 {
    GENERATED_BODY()
 
  public:
    // Sets default values for this pawn's properties
-   ARTSCameraPawn();
+   ADEPRECATED_RTSCameraPawn();
 
  protected:
    // Called when the game starts or when spawned

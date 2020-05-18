@@ -28,8 +28,11 @@ class MYPROJECT_API UDialogWheel : public UMyUserWidget
    FGameplayTagNode* previouslySelectedTopicNode;
 
    /** Reference to NPC when clicking a child node to activate conversation*/
-   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "References")
+   UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "References")
    UDialogUI* socialWindowRef;
+
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
 
    /**Call this to get the next set of conversation topics*/
    UFUNCTION(BlueprintCallable, Category = "Dialog Wheel Functionality")

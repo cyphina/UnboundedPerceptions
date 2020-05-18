@@ -33,7 +33,9 @@ class MYPROJECT_API USaveLoadClass : public UObject
    /**@param filePath: The absolute filepath of the folder we should save the data to*/
    bool LoadFromFilePath(const FString& filePath);
 
+   UPROPERTY()
    AUserInput* controllerRef;    // Used to print message to client log seen with (~) key
+
    bool        currentlyLoading; // Check if a load was initiated so level callback knows to deal with it
 
  private:

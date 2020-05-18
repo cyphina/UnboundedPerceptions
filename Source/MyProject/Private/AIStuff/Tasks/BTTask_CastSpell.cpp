@@ -62,6 +62,7 @@ EBTNodeResult::Type UBTTask_CastSpell::ExecuteTask(UBehaviorTreeComponent& owner
 
 void UBTTask_CastSpell::OnMessage(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory, FName message, int32 requestID, bool bSuccess)
 {
+   //Relies on messaging to complete or abort the task.  If we've been stunned or we lost our target (see TargetLoss AIMessage)
    bSuccess = message != AUnit::AIMessage_Stunned & message != AUnit::AIMessage_TargetLoss;
    Super::OnMessage(ownerComp, nodeMemory, message, requestID, bSuccess);
 }

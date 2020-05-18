@@ -16,22 +16,21 @@ class AAlly;
  */
 
 UCLASS()
-class MYPROJECT_API UESkillContainer : public UUserWidget
-{
+class MYPROJECT_API UESkillContainer : public UUserWidget {
    GENERATED_BODY()
 
    UPROPERTY(BlueprintSetter = SetAllyRef)
    AAlly* allyRef;
 
-   /**Shouldn't take too much space/performance to copy of we just copy the pointer
-    * Represents the container in the unit which the set of skills in this container comes from.  So far only use for this is having two sets of containers
-    * in heroes (skill and class abilities)
-    * May one day replace this with polymorphic SkillContainerSkillSet classes which allow us to get the right skill container polymorphically
-    
-   UPROPERTY(BlueprintReadOnly, Category = "Properties", Meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
-   TArray<TSubclassOf<UMySpell>> skills;*/
+  /**Shouldn't take too much space/performance to copy of we just copy the pointer
+     * Represents the container in the unit which the set of skills in this container comes from.  So far only use for this is having two sets of containers
+     * in heroes (skill and class abilities)
+     * May one day replace this with polymorphic SkillContainerSkillSet classes which allow us to get the right skill container polymorphically
+     
+    UPROPERTY(BlueprintReadOnly, Category = "Properties", Meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
+    TArray<TSubclassOf<UMySpell>> skills;*/
 
- public:
+public:
    void NativeConstruct() override;
 
    FText manaHelpText;
@@ -43,7 +42,8 @@ class MYPROJECT_API UESkillContainer : public UUserWidget
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    USkillSlot* GetSkillSlot(int index) const;
 
-   FORCEINLINE UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors") AAlly* GetAllyRef() const { return allyRef; }
+   FORCEINLINE
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors") AAlly* GetAllyRef() const { return allyRef; }
 
    UFUNCTION(BlueprintSetter, Category = "Accessors")
    void SetAllyRef(AAlly* ally) { allyRef = ally; }

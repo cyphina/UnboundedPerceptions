@@ -8,6 +8,7 @@
 
 bool UCharacterMenu::OnWidgetAddToViewport_Implementation()
 {
+   Super::OnWidgetAddToViewport_Implementation();
    baseHeroRef = CPC->GetBasePlayer()->selectedHeroes[0];
    return baseHeroRef ? true : false;
 }

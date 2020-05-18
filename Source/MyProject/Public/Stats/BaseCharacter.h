@@ -9,10 +9,11 @@
 
 namespace CombatInfo
 {
-   static const int AttCount      = 7;
-   static const int StatCount     = 32;
-   static const int VitalCount    = 5;
-   static const int MechanicCount = 4;
+   static const int     AttCount       = 7;
+   static const int     StatCount      = 32;
+   static const int     VitalCount     = 5;
+   static const int     MechanicCount  = 4;
+   static constexpr int TotalStatCount = AttCount + StatCount + VitalCount + MechanicCount;
 } // namespace CombatInfo
 
 using namespace CombatInfo;
@@ -22,7 +23,7 @@ class UAbilitySystemComponent;
 
 // Quantities used for determining skill power and stats
 UENUM(BlueprintType)
-enum class Attributes : uint8 {
+enum class EAttributes : uint8 {
    // Skill Damage
    Strength = 0,
    // Elemental Affinity, Elemental Resistance, PPC Shield
@@ -41,7 +42,7 @@ enum class Attributes : uint8 {
 
 // Impactful qualities
 UENUM(BlueprintType)
-enum class UnitStats : uint8 {
+enum class EUnitScalingStats : uint8 {
    Critical_Chance,
    Critical_Damage,
    Accuracy,
@@ -49,7 +50,7 @@ enum class UnitStats : uint8 {
    Attack_Speed,
    Cast_Speed,
 
-   // Affinity
+   // Affinity (these suffixes are used in statgraph so be weary of changing them)
    Physical_Aff,
    Fire_Aff,
    Water_Aff,
@@ -64,7 +65,7 @@ enum class UnitStats : uint8 {
    Blood_Aff,
    Ethereal_Aff,
 
-   // Resistances
+   // Resistances (these suffixes are used in statgraph so be weary of changing them)
    Physical_Resist,
    Fire_Resist,
    Water_Resist,
@@ -82,7 +83,7 @@ enum class UnitStats : uint8 {
 
 // Battle resources
 UENUM(BlueprintType)
-enum class Vitals : uint8 {
+enum class EVitals : uint8 {
    Health,
    Mana,
    Psyche,
@@ -92,12 +93,17 @@ enum class Vitals : uint8 {
 
 // Useful game mechanics
 UENUM(BlueprintType)
-enum class Mechanics : uint8 {
+enum class EMechanics : uint8 {
    MovementSpeed, // max walking speed in ue4 is based off of centimeters per second.  Average persom walks 5km in an hour, which is around 138 cm/s which is how max speed is measured
    AttackRange,
    WeaponPower,
    GlobalDamageModifier // damage reduction modifier, 0 = no damage reduction, 100 = no damage recieved
 };
+
+ENUM_RANGE_BY_COUNT(EAttributes, CombatInfo::AttCount);
+ENUM_RANGE_BY_COUNT(EUnitScalingStats, CombatInfo::StatCount);
+ENUM_RANGE_BY_COUNT(EVitals, CombatInfo::VitalCount);
+ENUM_RANGE_BY_COUNT(EMechanics, CombatInfo::MechanicCount);
 
 #pragma endregion
 
@@ -112,35 +118,49 @@ struct FBaseCharacter {
    ~FBaseCharacter();
    FBaseCharacter& operator=(const FBaseCharacter& otherChar) = default;
    int             GetLevel() const { return level; }
+   void            InitializeAttributeBaseValues();
    void            LevelUp();
-   void            StatUpdate(); // Recalculate base values
+   void            StatUpdate(const FGameplayAttribute& updatedStat); // Recalculate base values
 
-   FGameplayAttributeData* GetAttribute(int skill);
-   Stat*                   GetSkill(int skill);
-   Vital*                  GetVital(int skill);
-   FGameplayAttributeData* GetMechanic(int skill);
+   FGameplayAttributeData* GetAttribute(int skill) const;
+   FGameplayAttributeData* GetSkill(int skill) const;
+   FGameplayAttributeData* GetVital(int skill) const;
+   FGameplayAttributeData* GetMechanic(int skill) const;
 
-   TArray<FGameplayAttributeData*> GetAttributes() const { return baseAttributes; }
-   TArray<Stat>                    GetSkills() const { return skills; }
-   TArray<Vital>                   GetVitals() const { return vitals; }
-   TArray<FGameplayAttributeData*> GetMechanics() const { return mechanics; }
+   void SetAttributeAdj(int skill, float newValue);
+   void SetSkillAdj(int skill, float newValue);
+   void SetVitalAdj(int skill, float newValue);
+   void SetMechanicAdj(int skill, float newValue);
+
+   void SetAttributeBase(int skill, float newValue);
+   void SetSkillBase(int skill, float newValue);
+   void SetVitalBase(int skill, float newValue);
+   void SetMechanicBase(int skill, float newValue);
+
+   TArray<FGameplayAttribute> GetAttributes() const { return baseAttributes; }
+   TArray<RTSUnitStat>        GetSkills() const { return skills; }
+   TArray<Vital>              GetVitals() const { return vitals; }
+   TArray<FGameplayAttribute> GetMechanics() const { return mechanics; }
+
+   UMyAttributeSet* GetAttSet() const { return attSet; }
 
  private:
    UMyAttributeSet* attSet;
-   using atts = Attributes;
-   using sks  = UnitStats;
-   using vits = Vitals;
-   using mech = Mechanics;
+   using atts = EAttributes;
+   using sks  = EUnitScalingStats;
+   using vits = EVitals;
+   using mech = EMechanics;
 
    int level                  = 1;
    int MIN_STARTING_ATT_VALUE = 20;
 
-   TArray<FGameplayAttributeData*> baseAttributes;
-   TArray<Stat>                    skills; // called them skills here but stats and skills are interchangeable names
-   TArray<Vital>                   vitals;
-   TArray<FGameplayAttributeData*> mechanics;
+   TArray<FGameplayAttribute> baseAttributes;
+   TArray<RTSUnitStat>        skills; // called them skills here but stats and skills are interchangeable names
+   TArray<Vital>              vitals;
+   TArray<FGameplayAttribute> mechanics;
 
    void SetupPrimaryAttributes();
+   void InitialStatUpdate();
    void SetupSkills();
    void SetupVitals();
    void SetupMechanics();

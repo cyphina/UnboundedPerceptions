@@ -7,6 +7,7 @@
 #include "Quests/QuestManager.h"
 #include "EventSystem/RTSConditional.h"
 #include "Minigames/MinigameManager.h"
+#include "HUDManager.h"
 #include "UserInput.h"
 #include "BasePlayer.h"
 #include "WorldObjects/BaseHero.h"
@@ -32,6 +33,13 @@ void ARTSGameMode::BeginPlay()
    saveLoadManager->Init();
    conditionalManager->Init();
    minigameManager->Init();
+
+   /// HUDManager should get initialized first since the controller is initialized before the rules
+   UObjectProperty* objectProperty = FindField<UObjectProperty>(minigameManager->GetClass(), "hudManagerRef");
+   objectProperty->SetPropertyValue_InContainer(minigameManager, hudManagerRef);
+
+   objectProperty = FindField<UObjectProperty>(questManager->GetClass(), "hudManagerRef");
+   objectProperty->SetPropertyValue_InContainer(questManager, hudManagerRef);
 
    // Call blueprint BeginPlay() afterwards
    Super::BeginPlay();

@@ -7,6 +7,8 @@
  * Interfaces take no memory because of empty base optimization (or so I assume)
  */
 
+class ABaseHero;
+
 /**Use this uobject to expose the interface to blueprints*/
 UINTERFACE(BlueprintType)
 class MYPROJECT_API UInteractable : public UInterface
@@ -25,11 +27,11 @@ class MYPROJECT_API IInteractable
    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
    void Interact(ABaseHero* hero);
 
-   /** classes using this interface must implement this function */
+   /** Classes using this interface must implement this function */
    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
-   FVector GetInteractableLocation(ABaseHero* hero);
+   FVector GetInteractableLocation() const;
 
    /**Can this interactable be used?*/
    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
-   bool CanInteract();
+   bool CanInteract() const;
 };

@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 // RIGHT NOW WE'rE DEALING WITH A PROBLEM IF THEY STOP WIHLE CASTING THEY COULD HAVE A NULL SPELL FIX IT!!!
 
 #pragma once
@@ -8,7 +6,7 @@
 #include "Ally.generated.h"
 
 /*
- * Class for all controlllable allied units
+ * Class for all controlllable allied units.  Can't derive from this in Blueprints, can only derive from Summons or BaseHero
  */
 
 class AUserInput;
@@ -17,12 +15,11 @@ class AEnemy;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSpellCasted); // delegate for reacting to spell casts, including setting cd animations
 
-UCLASS(HideCategories = (Physics, Tags, Cooking, Clothing))
-class MYPROJECT_API AAlly : public AUnit
-{
+UCLASS(HideCategories = (Physics, Tags, Cooking, Clothing), NotBlueprintable)
+class MYPROJECT_API AAlly : public AUnit {
    GENERATED_BODY()
 
-      friend class AAllyAIController;
+   friend class AAllyAIController;
 
    /*---Help Text---*/
    static const FText notEnoughManaText;
@@ -42,8 +39,9 @@ class MYPROJECT_API AAlly : public AUnit
 
    /* SpellIndex to remember what slot was used so we can set the visual indicator to be on CD after casting spell.  Don't make it part of begincast because items don't need it */
    UPROPERTY(BlueprintSetter = SetSpellIndex, BlueprintGetter = GetSpellIndex, Category = "Spells")
-      int spellIndex = -1;
+   int spellIndex = -1;
 
+   UPROPERTY()
    AAllyAIController* allyController;
 
 public:
@@ -67,7 +65,7 @@ public:
 
    /** Get the class of the spell at this slot (CHECKED INDEX ACCESS) */
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-      TSubclassOf<UMySpell> GetSpellAtSlot(int index) const
+   TSubclassOf<UMySpell> GetSpellAtSlot(int index) const
    {
       if (index >= 0 && index < abilities.Num()) return abilities[index];
       return TSubclassOf<UMySpell>();
@@ -75,16 +73,16 @@ public:
 
    /** Sees if there's any active instances of a spell and gets them -- Used to get current spell CD timer */
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-      UGameplayAbility* GetSpellInstance(TSubclassOf<UMySpell> spellClass) const;
+   UGameplayAbility* GetSpellInstance(TSubclassOf<UMySpell> spellClass) const;
 
    UFUNCTION(BlueprintPure, BlueprintGetter, Category = "Spells")
-      int GetSpellIndex() const { return spellIndex; }
+   int GetSpellIndex() const { return spellIndex; }
 
    UFUNCTION(BlueprintSetter, Category = "Spells")
-      void SetSpellIndex(int index);
+   void SetSpellIndex(int index);
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
-      FORCEINLINE AAllyAIController* GetAllyAIController() const { return allyController; }
+   FORCEINLINE AAllyAIController* GetAllyAIController() const { return allyController; }
 
 #pragma endregion
 
@@ -95,7 +93,7 @@ public:
 
    /**Check to see if things are above us so we know to make the roofs transparent as we walk underneath them*/
    UFUNCTION(BlueprintCallable, Category = "Overlap")
-      bool GetOverlappingObjects(TArray<FHitResult>& hits);
+   bool GetOverlappingObjects(TArray<FHitResult>& hits);
 
    void QueueAction(TFunction<void()> actionToQueue); // Queues an action to our action queue
 
@@ -121,7 +119,9 @@ protected:
 public:
 
    /** What enemies are in our radius determined via sphere overlap events */
+   UPROPERTY()
    TSet<AUnit*> possibleEnemiesInRadius;
+
    /** Used by fog of war plane to figure out how to draw itself, and could be used by AI */
    TArray<FVector> visionPolygonVertices;
 
@@ -129,7 +129,7 @@ public:
      * and then orders the trace to find the visibility polygon vertices */
    void FindVisibilityPoints();
 
-   bool IsVisible() override;
+   bool          IsVisible() override;
    TSet<AUnit*>* GetSeenEnemies() override;
 
 private:
@@ -141,12 +141,12 @@ private:
    /** Add units to the visibiilty check if they are in the visibility sphere.
     * Also used to add corners to be taken into account when drawing visibility polygon*/
    UFUNCTION()
-      void OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep, const FHitResult& sweepRes);
+   void OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep, const FHitResult& sweepRes);
 
    /**Remove units from visibility checking if they are not in range.
     * Also used to remove corners of being visibility checked (used to draw visibility polygon)*/
    UFUNCTION()
-      void OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex);
+   void OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex);
 
    /**Adds the corners of the visionblockers that we overlapped to the possible list of corners
     * we have to check for the visibility polygon*/
@@ -158,7 +158,7 @@ private:
 
    /**Reads the Async line trace results of FindVisibilityPoints*/
    UFUNCTION()
-      void GetTraceResults();
+   void GetTraceResults();
 
 #pragma endregion
 

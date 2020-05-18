@@ -6,20 +6,36 @@
 #include "UI/UserWidgetExtensions/MyUserWidget.h"
 #include "ItemExamineWidget.generated.h"
 
+class UButton;
+
 /**
- *
+ * UI that opens when we want to examine an item closely. One day I'll add a 3D model we can examine in addition to just textures like Ace Attorney
  */
 UCLASS()
 class MYPROJECT_API UItemExamineWidget : public UMyUserWidget
 {
    GENERATED_BODY()
 
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
+
  public:
+   void NativeConstruct() override;
+
+   bool OnWidgetAddToViewport_Implementation() override;
+
    /**ID of the item who's picture should be examined when the item is used*/
    UPROPERTY(BlueprintReadWrite)
-   int itemToDisplayID;
+   int itemToDisplayID = -1;
 
    /**Maps item id which is specified when this hud is opened to a corresponding picture*/
    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-   TMap<int, UTexture2D*> itemIDToDetailedPicture;
+   TMap<int, TSoftObjectPtr<UTexture>> itemIDToDetailedPicture;
+
+ protected:
+   UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
+   UButton* btnClose;
+
+   UFUNCTION()
+   void CloseMenu();
 };

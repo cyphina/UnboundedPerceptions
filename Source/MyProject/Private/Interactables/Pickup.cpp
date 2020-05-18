@@ -37,23 +37,22 @@ void APickup::Interact_Implementation(ABaseHero* hero)
    // Put code here that places the item in the characters inventory
    if (CanInteract_Implementation()) {
       if (hero->backpack) {
-         item.count = hero->backpack->AddItem(item);
+         const int initialItemCount = item.count;
+         item.count                 = hero->backpack->AddItem(item);
+         CPCRef->GetGameMode()->GetQuestManager()->OnItemPickup(FMyItem(item.id, initialItemCount));
          OnPickupDelegate.Broadcast();
       }
    }
 }
 
-FVector APickup::GetInteractableLocation_Implementation(ABaseHero* hero)
+FVector APickup::GetInteractableLocation_Implementation() const
 {
    return GetActorLocation();
 }
 
 void APickup::OnPickedUp()
 {
-   if (item.count == 0) {
-      Destroy();
-      CPCRef->GetGameMode()->GetQuestManager()->OnItemPickup(item);
-   }
+   if (item.count == 0) { Destroy(); }
    CPCRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
 }
 
@@ -63,6 +62,16 @@ void APickup::OnComponentBeginOverlap(UPrimitiveComponent* hitComp, AActor* othe
 
 void APickup::SaveInteractable(FMapSaveInfo& mapData)
 {
-   GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("SAVED PICKUP!"));
    mapData.pickupList.Add(GetName());
+}
+
+void APickup::LoadInteractable(FMapSaveInfo& mapData)
+{
+   // If we have already been picked up in our save, delete this
+   if (!mapData.pickupList.Find(GetName())) {
+      GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Pickup named %s was found"), *GetName()));
+      Destroy();
+   } else {
+      GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Pickup named %s not found"), *GetName()));
+   }
 }

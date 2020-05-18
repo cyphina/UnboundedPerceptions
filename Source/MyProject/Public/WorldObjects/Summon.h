@@ -7,19 +7,21 @@
 #include "Summon.generated.h"
 
 /**
- *
+ * Base class for all unit summoned by heroes
  */
-UCLASS()
-class MYPROJECT_API ASummon : public AAlly
-{
+UCLASS(Blueprintable)
+class MYPROJECT_API ASummon : public AAlly {
    GENERATED_BODY()
 
- public:
+public:
    static const int MAX_NUM_SUMMONS = 25; // max number of summons that can act as allies
 
    /**Time until this unit expires*/
    UPROPERTY(EditAnywhere, Category = "Summon Info")
    int timeLeft;
 
-   void BeginPlay() override;
+   void BeginPlay() override final;
+   void EndPlay(const EEndPlayReason::Type EndPlayReason) override final;
+   void SetEnabled(bool bEnabled) override final;
+   void Die_Implementation() override;
 };

@@ -19,8 +19,7 @@ EBTNodeResult::Type UBTTask_Aggresion::ExecuteTask(UBehaviorTreeComponent& owner
 {
    AUnitController* unitControllerRef = Cast<AUnitController>(ownerComp.GetAIOwner());
    if (unitControllerRef->SearchAndCastSpell(UpResourceManager::offensiveTags))
-   {
-      
+   {   
       WaitForMessage(ownerComp, AUnit::AIMessage_SpellCasted);
       WaitForMessage(ownerComp, AUnit::AIMessage_SpellInterrupt);
       WaitForMessage(ownerComp, AUnit::AIMessage_TargetLoss);

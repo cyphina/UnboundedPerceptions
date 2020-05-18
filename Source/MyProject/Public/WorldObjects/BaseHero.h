@@ -14,7 +14,9 @@ class USpellBook;
 class UEquipment;
 class AHeroAIController;
 
-UCLASS(HideCategories=("Clothing", "Mobile", "Replication"))
+DECLARE_EVENT(ABaseHero, FOnLevelUp);
+
+UCLASS(HideCategories = ("Clothing", "Mobile", "Replication"), Blueprintable)
 class MYPROJECT_API ABaseHero : public AAlly
 {
    GENERATED_BODY()
@@ -22,22 +24,24 @@ class MYPROJECT_API ABaseHero : public AAlly
    friend class AHeroAIController;
 
  public:
-   
-   static const int   interactRange = 150; // range of how close we have to be to an object to interact with it.
-   static const int   shadowRange   = 600; // range of how far we cast in front to see if shadows are blocking us along the direction of the directional light parameter set in our shader
-   static const float nextExpMultiplier;   // multiplier to increase amount of xp needed for next level
+   static const int interactRange = 150; // range of how close we have to be to an object to interact with it.
+   static const int shadowRange =
+       600; // range of how far we cast in front to see if shadows are blocking us along the direction of the directional light parameter set in our shader
+   static const float nextExpMultiplier; // multiplier to increase amount of xp needed for next level
 
    /** Constructors set default values for this character's properties */
    ABaseHero(const FObjectInitializer& oI);
 
+   FOnLevelUp      onLevelUp;
+
 #pragma region Callbacks
 
-   void BeginPlay() override;
-   void Tick(float deltaSeconds) override;
-   void EndPlay(const EEndPlayReason::Type epr) override;
-   void PossessedBy(AController* newController) override;
-   void SetEnabled(bool bEnabled) override;
-   void Die_Implementation() override;
+   void BeginPlay() override final;
+   void Tick(float deltaSeconds) override final;
+   void EndPlay(const EEndPlayReason::Type epr) override final;
+   void PossessedBy(AController* newController) override final;
+   void SetEnabled(bool bEnabled) override final;
+   void Die_Implementation() override final;
 
 #pragma endregion
 
@@ -46,7 +50,7 @@ class MYPROJECT_API ABaseHero : public AAlly
    /**Equip an item
     * @param equipItem - ID of the item to equip */
    UFUNCTION(BlueprintCallable, Category = "Interfacing Equipment")
-   void Equip(int equipSlot);
+   void Equip(int inventorySlotWeEquip);
 
    /**Unequip an item
     * @unequipSlot - Equipment slot index of the item to unequip*/
@@ -60,15 +64,15 @@ class MYPROJECT_API ABaseHero : public AAlly
    void SwapEquip(int equipSlot1, int equipSlot2);
 
    /**Levelup functionality mostly scripted in blueprints so we can add some effects*/
-   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Stats") 
+   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Stats")
    void LevelUp();
 
    /**Interface to add points to some category*/
    UFUNCTION(BlueprintCallable)
-   void ChangeAttribute(Attributes att, bool isIncrementing);
+   void ChangeAttribute(EAttributes att, bool isIncrementing);
 
    /**Like CastSpell in Ally, but checks to see if the spell was casted via an item*/
-   bool CastSpell(TSubclassOf<UMySpell> spellToCast) override;
+   bool CastSpell(TSubclassOf<UMySpell> spellToCast) override final;
 #pragma endregion
 
 #pragma region Accessors
@@ -103,6 +107,9 @@ class MYPROJECT_API ABaseHero : public AAlly
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
    TArray<int> GetEquipment() const;
 
+   UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
+   int GetSkillPoints() const { return skillPoints; }
+
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
    FORCEINLINE AHeroAIController* GetHeroController() const { return heroController; }
 
@@ -117,6 +124,7 @@ class MYPROJECT_API ABaseHero : public AAlly
    FLinearColor currentColor;
 
    /**Dynamic material instance reference used to change material's color*/
+   UPROPERTY()
    UMaterialInstanceDynamic* dMat;
 
    /**Index inside party.  -1 means we're not in the party*/
@@ -143,7 +151,6 @@ class MYPROJECT_API ABaseHero : public AAlly
    TSubclassOf<USpellBook> spellbookClass;
 
  private:
-
    /**Function to imitate cheaply effects of shadows on our character.  See if some object is in front of us so we know its casting a shadow upon us*/
    void CheckShadows();
    /**Using some kind of item, consumeable, utility, etc when the item ability is finally activated (spell is cast).  Needs parameter since currentItem is reset on spellcast.*/
@@ -156,13 +163,21 @@ class MYPROJECT_API ABaseHero : public AAlly
    void OnEquipped(int equipID, bool isEquip);
 
    ///References
-   ABasePlayer* player;              // reference to our player class, which has information on our team
-   AActor*      currentInteractable; // reference to the interactable which we are trying to interact with
-   int          currentItem = 0;     // id of the item that is going to be used by this character
+   UPROPERTY()
+   ABasePlayer* player; // reference to our player class, which has information on our team
+
+   UPROPERTY()
+   AActor* currentInteractable; // reference to the interactable which we are trying to interact with
+
+   int     currentItem = 0;     // id of the item that is going to be used by this character
+
+   UPROPERTY()
    AHeroAIController* heroController;
 
    ///Lighting effect
-   UMaterialParameterCollection*         lightSource      = nullptr; // We need this parameter to figure out light direction based on our directional light we made
+   UPROPERTY()
+   UMaterialParameterCollection* lightSource = nullptr; // We need this parameter to figure out light direction based on our directional light we made
+   UPROPERTY()
    UMaterialParameterCollectionInstance* lightDirectionPV = nullptr;
    FVector                               lightVector      = FVector::ZeroVector; // A reference we use in calculating if there's shadows
 
@@ -174,6 +189,7 @@ class MYPROJECT_API ABaseHero : public AAlly
    ///Equipment information
    ///0 - Head, 1 - Body, 2 - Legs, 3 - Acc1, 4 - Codex, 5-9 - Codex Weapons
    ///</summary>
+   UPROPERTY()
    UEquipment* equipment; // a container of what we have equipped
 
    friend void USaveLoadClass::SetupAlliedUnits();

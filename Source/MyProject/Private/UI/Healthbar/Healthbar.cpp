@@ -2,13 +2,3 @@
 
 #include "MyProject.h"
 #include "Healthbar.h"
-
-void UHealthbar::SetHealth(float value)
-{
-   healthPercent = value;
-}
-
-float UHealthbar::GetHealth() const
-{
-   return healthPercent;
-}

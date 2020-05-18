@@ -23,6 +23,8 @@
 #include "RTSGameMode.h"
 #include "MyGameInstance.h"
 
+CSV_DEFINE_CATEGORY(UpLevelLoading, false);
+
 USaveLoadClass::~USaveLoadClass()
 {
 }
@@ -76,18 +78,18 @@ void USaveLoadClass::SetupSavePlayerData()
 
 void USaveLoadClass::SetupSaveBaseCharacterData(const FBaseCharacter& baseChar, FBaseCharacterSaveInfo& saveInfo)
 {
-   for (FGameplayAttributeData* attData : baseChar.GetAttributes()) {
-      saveInfo.attributes.Add(attData->GetBaseValue());
+   for (int i = 0; i < CombatInfo::AttCount; ++i) {
+      saveInfo.attributes.Add(baseChar.GetAttribute(i)->GetBaseValue());
    }
-   for (Stat stat : baseChar.GetSkills()) {
-      saveInfo.skills.Add(stat.GetBaseValue());
+   for (int i = 0; i < CombatInfo::StatCount; ++i) {
+      saveInfo.skills.Add(baseChar.GetSkill(i)->GetBaseValue());
    }
-   for (Vital vital : baseChar.GetVitals()) {
-      saveInfo.currentVitals.Add(vital.GetCurrValue());
-      saveInfo.vitals.Add(vital.GetBaseValue());
+   for (int i = 0; i < CombatInfo::VitalCount; ++i) {
+      saveInfo.currentVitals.Add(baseChar.GetMechanic(i)->GetCurrentValue());
+      saveInfo.vitals.Add(baseChar.GetMechanic(i)->GetBaseValue());
    }
-   for (FGameplayAttributeData* attData : baseChar.GetMechanics()) {
-      saveInfo.mechanics.Add(attData->GetBaseValue());
+   for (int i = 0; i < CombatInfo::MechanicCount; ++i) {
+      saveInfo.mechanics.Add(baseChar.GetMechanic(i)->GetBaseValue());
    }
    saveInfo.level = baseChar.GetLevel();
 }
@@ -191,10 +193,10 @@ void USaveLoadClass::SetupAlliedUnits()
 {
    FActorSpawnParameters spawnParams;
 
-   for (FAllySaveInfo npc : npcsSaveData) {
-      if (AAlly* spawnedNPCAlly = UpResourceManager::FindTriggerObjectInWorld<AAlly>(*npc.name.ToString(), controllerRef->GetWorld())) {
-         spawnedNPCAlly->SetActorTransform(npc.actorTransform);
-         SetupBaseCharacter(spawnedNPCAlly, npc.baseCSaveInfo);
+   for (FAllySaveInfo finishedTalkNPC : npcsSaveData) {
+      if (AAlly* spawnedNPCAlly = UpResourceManager::FindTriggerObjectInWorld<AAlly>(*finishedTalkNPC.name.ToString(), controllerRef->GetWorld())) {
+         spawnedNPCAlly->SetActorTransform(finishedTalkNPC.actorTransform);
+         SetupBaseCharacter(spawnedNPCAlly, finishedTalkNPC.baseCSaveInfo);
          spawnedNPCAlly->GetUnitController()->Stop();
       } else {
          FAssetRegistryModule& assetReg = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
@@ -202,48 +204,48 @@ void USaveLoadClass::SetupAlliedUnits()
          // checkf(assetReg.Get().GetAssetsByPath("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects",allyAssets,false), TEXT("Cannot find ally assets to load, check validity of installation!"));
          // allyAssets.FindByPredicate([&](FAssetData assetData){ return *npc.name.ToString() == assetData.AssetName ;})->GetAsset();
          //!!!---INVARIANT: Names of files of characters must be the same name as their name in the game--!!!
-         FAssetData npcAllyAsset = assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/") + npc.name.ToString()));
-         spawnedNPCAlly          = controllerRef->GetWorld()->SpawnActorDeferred<AAlly>(npcAllyAsset.GetAsset()->GetClass(), npc.actorTransform);
-         SetupBaseCharacter(spawnedNPCAlly, npc.baseCSaveInfo);
-         spawnedNPCAlly->FinishSpawning(npc.actorTransform);
+         FAssetData npcAllyAsset = assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/") + finishedTalkNPC.name.ToString()));
+         spawnedNPCAlly          = controllerRef->GetWorld()->SpawnActorDeferred<AAlly>(npcAllyAsset.GetAsset()->GetClass(), finishedTalkNPC.actorTransform);
+         SetupBaseCharacter(spawnedNPCAlly, finishedTalkNPC.baseCSaveInfo);
+         spawnedNPCAlly->FinishSpawning(finishedTalkNPC.actorTransform);
       }
    }
 
-   for (FHeroSaveInfo hero : heroesSaveData) {
-      if (ABaseHero* spawnedHero = UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(*hero.allyInfo.name.ToString(), controllerRef->GetWorld())) {
-         spawnedHero->SetActorTransform(hero.allyInfo.actorTransform);
-         SetupBaseCharacter(spawnedHero, hero.allyInfo.baseCSaveInfo);
-         for (int i = 0; i < hero.spellIDs.Num(); ++i) {
+   // Load hero specific information
+   for (FHeroSaveInfo& heroSaveData : heroesSaveData) {
+      if (ABaseHero* spawnedHero = UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(*heroSaveData.allyInfo.name.ToString(), controllerRef->GetWorld())) {
+         spawnedHero->SetActorTransform(heroSaveData.allyInfo.actorTransform);
+         SetupBaseCharacter(spawnedHero, heroSaveData.allyInfo.baseCSaveInfo);
+         for (int i = 0; i < heroSaveData.spellIDs.Num(); ++i) {
 #if UE_EDITOR
             // conditionally compiled because in the real game we should make sure these spell classes exist before hand and shouldn't need to check
             // technically indexer checks but it crashes when it can't find key
-            if (USpellManager::Get().spellClasses.Contains(hero.spellIDs[i]))
+            if (USpellManager::Get().spellClasses.Contains(heroSaveData.spellIDs[i]))
 #endif
-               spawnedHero->abilities[i] = USpellManager::Get().spellClasses[hero.spellIDs[i]];
+               spawnedHero->abilities[i] = USpellManager::Get().spellClasses[heroSaveData.spellIDs[i]];
          }
-         spawnedHero->attPoints = hero.attPoints;
-         spawnedHero->SetCurrentExp(hero.currentExp);
-         spawnedHero->expForLevel = hero.expToNextLevel;
+         spawnedHero->attPoints = heroSaveData.attPoints;
+         spawnedHero->SetCurrentExp(heroSaveData.currentExp);
+         spawnedHero->expForLevel = heroSaveData.expToNextLevel;
          spawnedHero->GetUnitController()->Stop();
 
-         for (int i = 0; i < hero.backpackInfo.itemIDs.Num(); ++i) {
-            spawnedHero->backpack->AddItemToSlot(FMyItem(hero.backpackInfo.itemIDs[i], hero.backpackInfo.itemCounts[i]), hero.backpackInfo.itemSlots[i]);
-         }
+         // Load items into backpack
+         spawnedHero->backpack->LoadBackpack(heroSaveData.backpackInfo);
       } else {
          FAssetRegistryModule& assetReg  = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-         FAssetData            heroAsset = assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/Allies") + hero.allyInfo.name.ToString()));
-         spawnedHero                     = controllerRef->GetWorld()->SpawnActorDeferred<ABaseHero>(heroAsset.GetAsset()->GetClass(), hero.allyInfo.actorTransform);
-         SetupBaseCharacter(spawnedHero, hero.allyInfo.baseCSaveInfo);
-         for (int i = 0; i < hero.spellIDs.Num(); ++i) {
-            spawnedHero->abilities[i] = USpellManager::Get().spellClasses[hero.spellIDs[i]];
+         FAssetData            heroAsset = assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/Allies") + heroSaveData.allyInfo.name.ToString()));
+         spawnedHero                     = controllerRef->GetWorld()->SpawnActorDeferred<ABaseHero>(heroAsset.GetAsset()->GetClass(), heroSaveData.allyInfo.actorTransform);
+         SetupBaseCharacter(spawnedHero, heroSaveData.allyInfo.baseCSaveInfo);
+         for (int i = 0; i < heroSaveData.spellIDs.Num(); ++i) {
+            spawnedHero->abilities[i] = USpellManager::Get().spellClasses[heroSaveData.spellIDs[i]];
          }
-         spawnedHero->attPoints = hero.attPoints;
-         spawnedHero->SetCurrentExp(hero.currentExp);
-         spawnedHero->expForLevel = hero.expToNextLevel;
-         spawnedHero->FinishSpawning(hero.allyInfo.actorTransform);
+         spawnedHero->attPoints = heroSaveData.attPoints;
+         spawnedHero->SetCurrentExp(heroSaveData.currentExp);
+         spawnedHero->expForLevel = heroSaveData.expToNextLevel;
+         spawnedHero->FinishSpawning(heroSaveData.allyInfo.actorTransform);
 
-         for (int i = 0; i < hero.backpackInfo.itemIDs.Num(); ++i) {
-            spawnedHero->backpack->AddItemToSlot(FMyItem(hero.backpackInfo.itemIDs[i], hero.backpackInfo.itemCounts[i]), hero.backpackInfo.itemSlots[i]);
+         for (int i = 0; i < heroSaveData.backpackInfo.itemIDs.Num(); ++i) {
+            spawnedHero->backpack->AddItemToSlot(FMyItem(heroSaveData.backpackInfo.itemIDs[i], heroSaveData.backpackInfo.itemCounts[i]), heroSaveData.backpackInfo.itemSlots[i]);
          }
       }
    }

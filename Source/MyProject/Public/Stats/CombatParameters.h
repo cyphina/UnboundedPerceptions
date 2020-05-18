@@ -6,14 +6,14 @@ UENUM(BlueprintType)
 enum class ECombatType : uint8 { Melee, Ranged, Magic };
 
 struct UPAICombatParameters {
-
-   float            currentAttTime = 0.f;   // keeps track of how long we wait between autoattacks
-   bool             readyToAttack  = false; // bool to check if the time alloted to our "attack  animation" finished
-   bool             isDead         = false;
-   bool             isEnemy        = false;  
-   ECombatType      combatStyle; // type of attack we autoattack with
+   float            currentAttTime   = 0.f;   // keeps track of how long we wait between autoattacks
+   float            currentChaseTime = 0.f;   // time the enemy has been attempting to chase us
+   bool             readyToAttack    = false; // True if our target is in range and we're in attack state
+   bool             isDead           = false;
+   bool             isEnemy          = false;
+   ECombatType      combatStyle;               // type of attack we autoattack with
    static const int attackRangeCancel = 350.f; // distance that an attack in progress will cancel since it is out of range
-   
+
    RTSCircularBuffer<TPair<int, float>> damageDealt     = RTSCircularBuffer<TPair<int, float>>(30);
    RTSCircularBuffer<TPair<int, float>> healingDealt    = RTSCircularBuffer<TPair<int, float>>(30);
    RTSCircularBuffer<TPair<int, float>> stunDealt       = RTSCircularBuffer<TPair<int, float>>(30);

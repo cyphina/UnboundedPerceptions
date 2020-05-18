@@ -32,19 +32,20 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
    const FString sylphiaApartment  = "SylphiaApartment";
    const FString roadToWubville    = "RoadToWubville";
    const FString blockadeCity      = "BlockadeCity";
-   const FString factory      = "Factory";
+   const FString factory           = "Factory";
 
    /**Stores the currently loaded level name*/
    UPROPERTY(BlueprintReadWrite, Category = "Levels", Meta = (AllowPrivateAccess = "true"))
    FString currentLevelName;
 
-   /**Stores a list of all the worldobjects for quick access.  For now enemies won't be here since enemies don't have unique names*/
-   TMap<FName, IWorldObject*> worldObjectReferences;
-
    /**Did we just load a new level because we loaded a game load?*/
    bool bLoading;
 
    void BeginPlay() override;
+
+   // Injects this dependency in the classes it spawnss
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
 
  public:
    ARTSGameMode();
