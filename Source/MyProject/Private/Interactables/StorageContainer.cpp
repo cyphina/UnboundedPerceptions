@@ -34,8 +34,11 @@ void AStorageContainer::BeginPlay()
 
    controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
    backpack      = NewObject<UBackpack>(this);
+   backpack->SetItemMax(maxStorage);
 
-   backpack->AddItems(initialItems);
+   if(!backpack->AddItems(initialItems))
+      UE_LOG(LogTemp, Error, TEXT("Problem setting up initial items for storage container %s. Not enough space to add all items."), *GetName());
+
    sphereCollision->OnComponentEndOverlap.AddDynamic(this, &AStorageContainer::OnLeaveRange);
 }
 

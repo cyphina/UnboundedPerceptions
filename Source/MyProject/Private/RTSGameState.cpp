@@ -49,6 +49,20 @@ void ARTSGameState::BeginPlay()
    FOWplane = GetWorld()->SpawnActor<AFogOfWarPlane>(FOWplaneClass, FVector(0, 0, 0), FRotator());
 }
 
+void ARTSGameState::StopUpdate()
+{
+   GetWorld()->GetTimerManager().PauseTimer(allyVisionUpdateTimerHandle);
+   GetWorld()->GetTimerManager().PauseTimer(enemyVisionUpdateTimerHandle);
+   visibleEnemies.Empty();
+   visiblePlayerUnits.Empty();
+}
+
+void ARTSGameState::ResumeUpdate()
+{
+   GetWorld()->GetTimerManager().UnPauseTimer(allyVisionUpdateTimerHandle);
+   GetWorld()->GetTimerManager().UnPauseTimer(enemyVisionUpdateTimerHandle);
+}
+
 void ARTSGameState::Tick(float deltaSeconds)
 {
    Super::Tick(deltaSeconds);
@@ -171,7 +185,7 @@ void ARTSGameState::UpdateVisibleEnemies()
           [this, &lastVisibleEnemies]() {
              // Code ran before the threads are created
              visibleMutex.WriteLock();
-             // Save the enemies we saw last and then we'll update what we see 
+             // Save the enemies we saw last and then we'll update what we see
              Swap(lastVisibleEnemies, visibleEnemies);
              visibleMutex.WriteUnlock();
           });
@@ -205,24 +219,26 @@ void ARTSGameState::UpdateVisiblePlayerUnits()
 
    ParallelFor(enemyList.Num(), [this](int32 curIndx) {
       AEnemy* enemy = enemyList[FSetElementId::FromInteger(curIndx)];
-      enemy->visionMutex.ReadLock();
+      if(IsValid(enemy)) {
+         enemy->visionMutex.ReadLock();
 
-      for(AUnit* ally : enemy->possibleEnemiesInRadius) {
-         ally->visionMutex.ReadLock();
-         // if ally hasn't been checked yet so we don't do it twice
-         if(!visiblePlayerUnits.Contains(ally)) {
-            // If we can trace a line and hit the ally without hitting a wall
-            if(!GetWorld()->LineTraceSingleByChannel(visionHitResult, enemy->GetActorLocation(), ally->GetActorLocation(), UNIT_VISION_CHANNEL)) {
-               if(UNLIKELY(!ally->IsInvisible())) {
-                  // make it visible
-                  visiblePlayersMutex.Lock();
-                  visiblePlayerUnits.Add(ally);
-                  visiblePlayersMutex.Unlock();
+         for(AUnit* ally : enemy->possibleEnemiesInRadius) {
+            ally->visionMutex.ReadLock();
+            // if ally hasn't been checked yet so we don't do it twice
+            if(!visiblePlayerUnits.Contains(ally)) {
+               // If we can trace a line and hit the ally without hitting a wall
+               if(!GetWorld()->LineTraceSingleByChannel(visionHitResult, enemy->GetActorLocation(), ally->GetActorLocation(), UNIT_VISION_CHANNEL)) {
+                  if(UNLIKELY(!ally->IsInvisible())) {
+                     // make it visible
+                     visiblePlayersMutex.Lock();
+                     visiblePlayerUnits.Add(ally);
+                     visiblePlayersMutex.Unlock();
+                  }
                }
             }
+            ally->visionMutex.ReadUnlock();
          }
-         ally->visionMutex.ReadUnlock();
+         enemy->visionMutex.ReadUnlock();
       }
-      enemy->visionMutex.ReadUnlock();
    });
 }

@@ -203,12 +203,6 @@ class MYPROJECT_API AQuest : public AInfo
    GENERATED_BODY()
 
    /**
-    *Index of what goals are currently in progress
-    */
-   UPROPERTY(BlueprintReadOnly, Category = "Bookkeeping", meta = (AllowPrivateAccess = true))
-   TArray<int> currentGoalIndices;
-
-   /**
     *Completed quest goals
     */
    UPROPERTY(BlueprintReadOnly, Category = "Bookkeeping", meta = (AllowPrivateAccess = true))
@@ -232,11 +226,6 @@ class MYPROJECT_API AQuest : public AInfo
    UQuestManager* questManagerRef;
 
    /**
-    *Updates currentGoals to match that of the currentGoalIndices
-    */
-   void UpdateSubGoals();
-
-   /**
     *Called at spawn time to find out how many items already obtained for find type goal
     */
    void FindInitialItemAmount(int goalIndex);
@@ -249,10 +238,13 @@ class MYPROJECT_API AQuest : public AInfo
 
  public:
    /**
-    *Goals currently in progress
+    *Index of what goals are currently in progress
     */
-   UPROPERTY(BlueprintReadOnly, Category = "Bookkeeping")
-   TArray<FGoalInfo> currentGoals;
+   UPROPERTY(BlueprintReadOnly, Category = "Bookkeeping", meta = (AllowPrivateAccess = true))
+   TArray<int> currentGoalIndices;
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Bookkeeping")
+   TArray<FGoalInfo> GetCurrentGoals() const;
 
    /**
     *Map that links a goal (via its index) to the number representing the thing that needs to be kept track (amount to be killed, amount to interact with)
@@ -262,6 +254,7 @@ class MYPROJECT_API AQuest : public AInfo
 
    /**
     *Map that links a goal to the actors that have been interacted with so we don't interact with the same actors twice... granted the quest asks to interact with multiple actors
+    *TODO: Modify this beacuse it will screw up once we change levels since it won't point to a valid named decorator
     */
    TMap<int, TArray<const UNamedInteractableDecorator*>> interactedActors;
 
@@ -316,7 +309,7 @@ class MYPROJECT_API AQuest : public AInfo
 
    /**This function is here since we can't have functions nor static const uproperties in structs=*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Constants")
-   FVector getInvalidVector() const { return FGoalInfo::invalidGoalLocation; }
+   FVector GetInvalidVector() const { return FGoalInfo::invalidGoalLocation; }
 
    /**we need this for our deferred spawn in QuestManager::AddNewQuest()*/
    void SetQuestManagerRef(UQuestManager* managerRef)

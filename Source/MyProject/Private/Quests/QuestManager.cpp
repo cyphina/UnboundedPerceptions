@@ -57,6 +57,11 @@ void UQuestManager::Init()
    /// Quest manager setup is done in PlayerController after huds are made
    // questListRef = controllerRef->GetHUDManager()->GetQuestList();
    // questJournalRef = controllerRef->GetHUDManager()->GetQuestJournal();
+   //
+   //! Triggers and conditionals may want to access this before they are initialized with FindByPredicate so give them some initial values
+   completedQuests.Reserve(4);
+   failedQuests.Reserve(4);
+   quests.Reserve(4);
 }
 
 void UQuestManager::SelectNewQuest(AQuest* quest)
@@ -179,7 +184,7 @@ void UQuestManager::EndQuest(AQuest* questToEnd)
 
 void UQuestManager::CompleteGoals()
 {
-   for(int i : questListRef->currentlySelectedQuest->GetCurrentGoalIndices()) {
+   for(int& i : questListRef->currentlySelectedQuest->GetCurrentGoalIndices()) {
       questListRef->currentlySelectedQuest->CompleteSubGoal(i, false);
    }
 }
@@ -201,25 +206,21 @@ void UQuestManager::OnPartyLeaderMove()
 
 void UQuestManager::OnEnemyDie(const AEnemy* enemy)
 {
-   auto dieFuture = Async(EAsyncExecution::TaskGraph, [this, enemy]() {
-      int currentGoalIndex = 0;
+   auto dieFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, enemy]() {
       for(AQuest* quest : quests) {
-         for(FGoalInfo goal : quest->currentGoals) {
-            if(goal.goalType == EGoalType::Hunt) {
+         for(const int& goalIndex : quest->currentGoalIndices) {
+            if(const FGoalInfo& goal = quest->questInfo.subgoals[goalIndex]; goal.goalType == EGoalType::Hunt) {
                if(enemy->GetGameName().EqualTo(goal.additionalNames[0])) {
-                  if(goal.amount < 2 || quest->currentAmounts[quest->GetCurrentGoalIndices()[currentGoalIndex]] + 1 >= goal.amount) {
-                     quest->CompleteSubGoal(quest->GetCurrentGoalIndices()[currentGoalIndex], false);
+                  if(goal.amount < 2 || quest->currentAmounts[goalIndex] + 1 >= goal.amount) {
+                     quest->CompleteSubGoal(goalIndex, false);
                      return;
                   } else {
-                     ++quest->currentAmounts[quest->GetCurrentGoalIndices()[currentGoalIndex]];
+                     ++quest->currentAmounts[goalIndex];
                      questListRef->GetQuestListSlot(quest)->UpdateQuestEntry();
                   }
                }
             }
-            ++currentGoalIndex;
          }
-
-         currentGoalIndex = 0;
 
          // Regardless if whether this goal finishes the quest or not, update the quest journal
          if(quest == questJournalRef->GetSelectedQuest()) {
@@ -231,30 +232,26 @@ void UQuestManager::OnEnemyDie(const AEnemy* enemy)
 
 void UQuestManager::OnTalkNPC(const ANPC* talkedToNPC, FGameplayTag conversationTopic)
 {
-   auto talkFuture = Async(EAsyncExecution::TaskGraph, [this, talkedToNPC, conversationTopic]() {
-      int currentGoalIndex = 0;
-
+   auto talkFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, talkedToNPC, conversationTopic]() {
       for(AQuest* quest : quests) {
-         for(FGoalInfo goal : quest->currentGoals) {
-            if(goal.goalType == EGoalType::Talk && talkedToNPC->GetGameName().EqualTo(goal.additionalNames[0])) {
+         for(const int& goalIndex : quest->currentGoalIndices) {
+            if(const FGoalInfo& goal = quest->questInfo.subgoals[goalIndex];
+               goal.goalType == EGoalType::Talk && talkedToNPC->GetGameName().EqualTo(goal.additionalNames[0])) {
                if(goal.additionalNames.Num() == 1 || conversationTopic.GetTagName() == *goal.additionalNames[1].ToString()) {
-                  quest->CompleteSubGoal(quest->GetCurrentGoalIndices()[currentGoalIndex], false);
+                  quest->CompleteSubGoal(goalIndex, false);
                   if(quest == questJournalRef->GetSelectedQuest()) {
                      questJournalRef->UpdateDetailWindow();
                   }
                   return;
                }
-            } else if(goal.goalType == EGoalType::Find && quest->currentAmounts[quest->GetCurrentGoalIndices()[currentGoalIndex]] >= goal.amount) {
-               quest->CompleteSubGoal(quest->GetCurrentGoalIndices()[currentGoalIndex], false);
+            } else if(goal.goalType == EGoalType::Find && quest->currentAmounts[goalIndex] >= goal.amount) {
+               quest->CompleteSubGoal(goalIndex, false);
                if(quest == questJournalRef->GetSelectedQuest()) {
                   questJournalRef->UpdateDetailWindow();
                }
                return;
-               ;
             }
-            ++currentGoalIndex;
          }
-         currentGoalIndex = 0;
       }
    });
 }
@@ -263,24 +260,23 @@ void UQuestManager::OnItemPickup(const FMyItem& newItem)
 {
    // TODO: Update this when player drops items
 
-   auto itemPickupFuture = Async(EAsyncExecution::TaskGraph, [this, &newItem]() {
-      int  questIndex       = 0;
-      int  currentGoalIndex = 0;
-      bool changed          = false; // Flag to know if we modified this goal's item or completed this goal so update it in the quest entry
+   auto itemPickupFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, newItem]() {
+      int  questIndex = 0;
+      bool changed    = false; // Flag to know if we modified this goal's item or completed this goal so update it in the quest entry
 
       // Loop through quests and find goals which require picking/adding this type of item
 
       for(AQuest* quest : quests) {
-         for(FGoalInfo& goal : quest->currentGoals) {
-            if(goal.goalType == EGoalType::Find && goal.amount > 1 && newItem.id == FCString::Atoi(*goal.additionalNames[0].ToString())) {
+         for(const int& goalIndex : quest->currentGoalIndices) {
+            if(const FGoalInfo& goal = quest->questInfo.subgoals[goalIndex];
+               goal.goalType == EGoalType::Find && goal.amount > 1 && newItem.id == FCString::Atoi(*goal.additionalNames[0].ToString())) {
                // Store the quest and goal index for now of the relevant quest goal
-               quest->currentAmounts[quest->GetCurrentGoalIndices()[currentGoalIndex]] = FMath::Min(goal.amount, newItem.count);
+               quest->currentAmounts[goalIndex] = FMath::Min(goal.amount, newItem.count);
                if(goal.additionalNames.Num() == 1) // If we don't have to turn in the items
-                  if(quest->currentAmounts[quest->GetCurrentGoalIndices()[currentGoalIndex]] == goal.amount)
-                     quest->CompleteSubGoal(quest->GetCurrentGoalIndices()[currentGoalIndex], false);
+                  if(quest->currentAmounts[goalIndex] == goal.amount)
+                     quest->CompleteSubGoal(goalIndex, false);
                changed = true;
             }
-            ++currentGoalIndex;
          }
 
          if(changed) {
@@ -289,7 +285,6 @@ void UQuestManager::OnItemPickup(const FMyItem& newItem)
             changed = false;
          }
 
-         currentGoalIndex = 0;
          ++questIndex;
       }
    });
@@ -297,39 +292,39 @@ void UQuestManager::OnItemPickup(const FMyItem& newItem)
 
 void UQuestManager::OnInteracted(const UNamedInteractableDecorator* finishedInteractableDialog)
 {
-   auto itemPickupFuture = Async(EAsyncExecution::TaskGraph, [this, finishedInteractableDialog]() {
-      int currentGoalIndex = 0;
+   auto itemPickupFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, finishedInteractableDialog]() {
       for(AQuest* quest : quests) {
-         for(FGoalInfo goal : quest->currentGoals) {
+         for(const int& goalIndex : quest->currentGoalIndices) {
             // If this goal is to interact with something, and the interactable's name matches the name in this goal
-            if(goal.goalType == EGoalType::Interact && finishedInteractableDialog->GetName().EqualTo(goal.additionalNames[0])) {
+            if(const FGoalInfo& goal = quest->questInfo.subgoals[goalIndex];
+               goal.goalType == EGoalType::Interact && finishedInteractableDialog->GetName().EqualTo(goal.additionalNames[0])) {
                // If we have interacted with enough of these objects, complete the goal
                if(goal.amount < 2) {
-                  quest->CompleteSubGoal(quest->GetCurrentGoalIndices()[currentGoalIndex], false);
+                  quest->CompleteSubGoal(goalIndex, false);
+                  if(quest == questJournalRef->GetSelectedQuest()) {
+                     questJournalRef->UpdateDetailWindow();
+                  }
                   return;
                }
                // If we haven't just update the count
                else {
-                  // Check to see if we haven't interacted with this interactable yet by finding the 
-                  if(quest->interactedActors[quest->GetCurrentGoalIndices()[currentGoalIndex]].Find(finishedInteractableDialog) == INDEX_NONE) {
-                     if(quest->currentAmounts[quest->GetCurrentGoalIndices()[currentGoalIndex]] + 1 >= goal.amount) {
-                        quest->CompleteSubGoal(quest->GetCurrentGoalIndices()[currentGoalIndex], false);
+                  // Check to see if we haven't interacted with this interactable yet by finding the
+                  if(quest->interactedActors[goalIndex].Find(finishedInteractableDialog) == INDEX_NONE) {
+                     if(quest->currentAmounts[goalIndex] + 1 >= goal.amount) {
+                        quest->CompleteSubGoal(goalIndex, false);
+                        if(quest == questJournalRef->GetSelectedQuest()) {
+                           questJournalRef->UpdateDetailWindow();
+                        }
                         return;
+                     } else {
+                        ++quest->currentAmounts[goalIndex];
+                        questListRef->GetQuestListSlot(quest)->UpdateQuestEntry();
+                        quest->interactedActors[goalIndex].Add(finishedInteractableDialog);
                      }
-
-                     ++quest->currentAmounts[quest->GetCurrentGoalIndices()[currentGoalIndex]];
-                     questListRef->GetQuestListSlot(quest)->UpdateQuestEntry();
-                     quest->interactedActors[quest->GetCurrentGoalIndices()[currentGoalIndex]].Add(finishedInteractableDialog);
                   }
                }
-
-               if(quest == questJournalRef->GetSelectedQuest()) {
-                  questJournalRef->UpdateDetailWindow();
-               }
             }
-            ++currentGoalIndex;
          }
-         currentGoalIndex = 0;
       }
    });
 }

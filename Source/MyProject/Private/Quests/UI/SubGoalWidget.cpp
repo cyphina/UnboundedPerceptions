@@ -7,5 +7,4 @@ void USubGoalWidget::NativeConstruct()
 {
    Super::NativeConstruct();
    UpdateText();
-   goalIndex = assignedQuest->questInfo.subgoals.Find(goalInfo);
 }

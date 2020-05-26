@@ -21,7 +21,7 @@ void UDialogUI::NativeConstruct()
 
 void UDialogUI::SetConversationView()
 {
-   socialHUDState = ESocialHUDState::Intimate;
+   socialHUDState = ESocialHUDState::Conversation;
    HideOrShowAllButtons();
    btnTalk->SetVisibility(ESlateVisibility::Visible);
    btnLeave->SetVisibility(ESlateVisibility::Visible);
@@ -29,17 +29,16 @@ void UDialogUI::SetConversationView()
 
 void UDialogUI::SetIntimateView()
 {
-   socialHUDState = ESocialHUDState::Conversation;
+   socialHUDState = ESocialHUDState::Intimate;
    HideOrShowAllButtons(false);
    btnShop->SetVisibility(ESlateVisibility::Collapsed);
-   dialogWheel->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UDialogUI::SetShopView()
 {
    socialHUDState = ESocialHUDState::Shop;
    HideOrShowAllButtons(false);
-   dialogWheel->SetVisibility(ESlateVisibility::Collapsed);
+
 }
 
 void UDialogUI::SetMainView()
@@ -49,23 +48,18 @@ void UDialogUI::SetMainView()
       case ESocialHUDState::Intimate: SetIntimateView(); break;         // Show social menu and enable gift buttons
       case ESocialHUDState::Shop: SetShopView(); break;                 //Show social menu and enable shop buttons
    }
+   dialogWheel->SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UDialogUI::HideOrShowAllButtons(bool bHide) const
 {
-   const ESlateVisibility visibilitySettingForButtons = bHide ? ESlateVisibility::Collapsed : ESlateVisibility::Visible;
+   ESlateVisibility visibilitySettingForButtons = bHide ? ESlateVisibility::Collapsed : ESlateVisibility::Visible;
    // Iterate through properties to find buttons
-   TArray<UProperty*, TFixedAllocator<NUM_BUTTONS>> buttons;
-   for(TFieldIterator<UProperty> propIt(GetClass()); propIt; ++propIt) {
-      UProperty* prop = *propIt;
-      if(prop->GetFName().ToString().StartsWith("btn")) {
-         buttons.Emplace(prop);
-      }
-   }
-
-   for(auto& button : buttons) {
-      Cast<UButton>(button)->SetVisibility(visibilitySettingForButtons);
-   }
+   btnGift->SetVisibility(visibilitySettingForButtons);
+   btnLeave->SetVisibility(visibilitySettingForButtons);
+   btnSharedPsychosis->SetVisibility(visibilitySettingForButtons);
+   btnShop->SetVisibility(visibilitySettingForButtons);
+   btnTalk->SetVisibility(visibilitySettingForButtons);
 }
 
 void UDialogUI::Talk()
@@ -95,13 +89,21 @@ bool UDialogUI::OnWidgetAddToViewport_Implementation()
 {
    // change view to whatever it is set to prior
    // SetMainView();
+
+   // Hide the ingame widget so we just see social options
+   if(hudManagerRef->IsWidgetOnScreen(HUDs::HS_Actionbar))
+      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Actionbar));
+
+   dialogWheel->OnWidgetAddToViewport();
+
    return true;
 }
 
 void UDialogUI::Leave()
 {
    hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Social));
-   hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Ingame));
+   if(!hudManagerRef->IsWidgetOnScreen(HUDs::HS_Actionbar))
+      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Actionbar));
    // Reactivate patrolling and remove global reference to current blocking interactable
    npcRef->OnDoneTalking();
 }

@@ -48,10 +48,10 @@ void UUpDamageComponent::DamageTarget(FUpDamage& d, FGameplayTagContainer effect
    // Store timestamp of when damage was taken for informative purposes
    float worldTime = d.targetUnit->GetWorld()->GetTimeSeconds();
    if(!effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Healing"))) {
-      d.targetUnit->ModifyStats<EVitals::Health>(d.targetUnit->GetVitalCurValue(EVitals::Health) - d.damage);
+      d.targetUnit->ModifyStats<false>(d.targetUnit->GetVitalCurValue(EVitals::Health) - d.damage, EVitals::Health);
       d.targetUnit->combatParams.damageRecieved.Insert(TPair<int, float>(d.damage, worldTime));
    } else {
-      d.targetUnit->ModifyStats<EVitals::Health>(d.targetUnit->GetVitalCurValue(EVitals::Health) + d.damage);
+      d.targetUnit->ModifyStats<false>(d.targetUnit->GetVitalCurValue(EVitals::Health) + d.damage, EVitals::Health);
       d.targetUnit->combatParams.healingRecieved.Insert(TPair<int, float>(d.damage, worldTime));
    }
 
@@ -83,17 +83,17 @@ void UUpDamageComponent::UnitDamageTarget(FUpDamage& d, FGameplayTagContainer ef
    // Add lifesteal effects as healing here (since we have to calculate damage reduction first)
    // TODO: Maybe add a stat for lifesteal %
    if(effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Lifesteal")))
-      d.sourceUnit->ModifyStats<EVitals::Health>(d.targetUnit->GetVitalCurValue(EVitals::Health) + d.damage);
+      d.sourceUnit->ModifyStats<false>(d.targetUnit->GetVitalCurValue(EVitals::Health) + d.damage, EVitals::Health);
 
    // Record some statistics about our units which AI can use
    float worldTime = d.sourceUnit->GetWorld()->GetTimeSeconds();
 
    if(LIKELY(!effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Healing")))) {
-      d.targetUnit->ModifyStats<EVitals::Health>(d.targetUnit->GetVitalCurValue(EVitals::Health) - d.damage);
+      d.targetUnit->ModifyStats<false>(d.targetUnit->GetVitalCurValue(EVitals::Health) - d.damage, EVitals::Health);
       d.sourceUnit->combatParams.damageDealt.Insert(TPair<int, float>(d.damage, worldTime));
       d.targetUnit->combatParams.damageRecieved.Insert(TPair<int, float>(d.damage, worldTime));
    } else {
-      d.targetUnit->ModifyStats<EVitals::Health>(d.targetUnit->GetVitalCurValue(EVitals::Health) + d.damage);
+      d.targetUnit->ModifyStats<false>(d.targetUnit->GetVitalCurValue(EVitals::Health) + d.damage, EVitals::Health);
       d.sourceUnit->combatParams.healingDealt.Insert(TPair<int, float>(d.damage, worldTime));
       d.targetUnit->combatParams.healingRecieved.Insert(TPair<int, float>(d.damage, worldTime));
    }

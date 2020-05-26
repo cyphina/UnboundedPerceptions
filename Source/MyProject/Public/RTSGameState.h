@@ -51,6 +51,14 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase
    void Tick(float deltaSeconds) override;
    void BeginPlay() override;
 
+   /** Stops any updates to the game state while level transitioning*/
+   UFUNCTION(BlueprintCallable)
+   void StopUpdate();
+
+   /** Resumes timers that need to be called when a level is being played*/
+   UFUNCTION(BlueprintCallable)
+   void ResumeUpdate();
+
    /**Set by CPC*/
    UPROPERTY(BlueprintReadWrite, Category = "References")
    URTSIngameWidget* ingameWidget;

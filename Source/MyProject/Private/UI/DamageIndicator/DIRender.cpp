@@ -32,9 +32,10 @@ void UDIRender::BeginPlay()
 {
    Super::BeginPlay();
    cameraPawnRef = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-   start         = GetRelativeLocation();
-   end           = start + FVector(0, 0, 100);
    tL.PlayFromStart();
+   start = FVector::UpVector * (GetOwner()->GetSimpleCollisionHalfHeight() - 20) + FVector(FMath::RandRange(-20,20), FMath::RandRange(-20,20), 0);
+   end = start + FVector(0, 0, jumpHeight);
+   SetWorldScale3D(FVector(2.f, 2.f, 2.f));
 }
 
 void UDIRender::TickComponent(float deltaSeconds, ELevelTick tickType, FActorComponentTickFunction* thisTickFunction)

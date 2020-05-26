@@ -399,7 +399,7 @@ void AUnit::OnMoveCompleted(FAIRequestID RequestID, const EPathFollowingResult::
 void AUnit::ShowDamageDealt(const FUpDamage& d)
 {
    // Auto attach makes the new component the root for the sucessive components
-   UDIRender* tRC = NewObject<UDIRender>(this);
+   UDIRender* tRC = NewObject<UDIRender>(this, controllerRef->GetHUDManager()->damageIndicatorClass);
    if(tRC) {
       tRC->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
       tRC->RegisterComponent();
@@ -410,14 +410,13 @@ void AUnit::ShowDamageDealt(const FUpDamage& d)
          tRC->Text = FText::FromString(FString::FromInt(d.damage));
 
       if(d.crit)
-         tRC->SetWorldSize(200.f);
+         tRC->SetWorldSize(tRC->textSize * 2);
       else
-         tRC->SetWorldSize(100.f);
+         tRC->SetWorldSize(tRC->textSize);
 
       tRC->SetTextRenderColor(UpResourceManager::elementalMap[d.element]);
       tRC->SetHorizontalAlignment(EHorizTextAligment::EHTA_Center);
       tRC->SetVerticalAlignment(EVerticalTextAligment::EVRTA_TextBottom);
-      tRC->SetRelativeLocation(FVector(0, 0, FindBoundary().Max.Y - FindBoundary().Min.Y + 100));
    }
 }
 

@@ -19,7 +19,7 @@ void UShopSlot::OnBtnClick()
 
    // Buy the item
    if(itemId > 0) {
-      widgetRef->UseItemAtInventorySlot(itemId);
+      widgetRef->UseItemAtInventorySlot(adjustedSlotIndex);
    }
 }
 
@@ -47,17 +47,25 @@ void UShopSlot::ShowDesc(UToolTipWidget* tooltip)
    }
 }
 
-FText UShopSlot::MakeItemPriceText(FItemPrice& price) const
+FText UShopSlot::MakeItemPriceText(const FItemPrice& price) const
 {
+   if(price.items.Num() == 0 && price.money <= 0) {
+      FText priceText = NSLOCTEXT("Shop", "FreeItemPrice", "IT'S FREE!!!");
+      return priceText;
+   }
+
    FText priceText = NSLOCTEXT("Shop", "ItemPrice", "Price:");
    // List the items we need to trade in for this item
    if(price.items.Num() > 0) {
       for(auto& itemToTrade : price.items) {
          auto itemToTradeInfo = UItemManager::Get().GetItemInfo(itemToTrade.id);
-         priceText            = FText::Format(NSLOCTEXT("Shop", "ItemPrice", "{0} {1} {2}"), priceText, itemToTradeInfo->name, itemToTrade.count);
+         priceText            = FText::Format(NSLOCTEXT("Shop", "ItemPrice2", "{0}\r\n{1} - {2}"), priceText, itemToTrade.count, itemToTradeInfo->name);
       }
    }
    // List any money we need to trade
-   priceText = FText::Format(NSLOCTEXT("Shop", "ItemPrice", "{0} \r\n {1} Squeezies"), priceText, price.money);
+   if(price.money > 0) {
+      priceText = FText::Format(NSLOCTEXT("Shop", "ItemPrice3", "{0}\r\n{1} Squeezies"), priceText, price.money);     
+   }
+
    return priceText;
 }

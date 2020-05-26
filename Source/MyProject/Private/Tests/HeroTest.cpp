@@ -11,13 +11,13 @@ namespace BaseHeroTest
 
    bool Setup()
    {
-      if (GEngine) {
+    /*  if (GEngine) {
          if (AutomationOpenMap("/Game/RTS_Tutorial/Maps/TheIntroduction")) {
             world    = GEngine->GetWorldContextFromPIEInstance(0)->World();
             testHero = world->SpawnActor<ABaseHero>(ABaseHero::StaticClass(), FTransform(), FActorSpawnParameters());
             return true;
          }
-      }
+      }*/
       return false;
    }
 } // namespace BaseHeroTest

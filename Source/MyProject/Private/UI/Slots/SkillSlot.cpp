@@ -55,7 +55,7 @@ void USkillSlot::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
    cdTimeline.TickTimeline(InDeltaTime);
 }
 
-FORCEINLINE void USkillSlot::PerformAction()
+void USkillSlot::PerformAction()
 {
    if(IsValid(eSkillContainer->GetAllyRef())) {
       eSkillContainer->GetAllyRef()->GetAllyAIController()->PressedCastSpell(slotIndex);
@@ -110,6 +110,8 @@ void USkillSlot::SetImage(UTexture2D* image)
    if(IsValid(image)) {
       imageDMatInst->SetTextureParameterValue("RadialTexture", image);
       SetImageFromMaterial(imageDMatInst);
+      cdDMatInst->SetTextureParameterValue("RadialTexture", image); // update the cooldown image
+      imgCD->SetBrushFromMaterial(cdDMatInst);
       SetIsEnabled(true);
    } else {
       imageDMatInst->SetTextureParameterValue("RadialTexture", defaultSlotTexture);
@@ -123,7 +125,9 @@ void USkillSlot::UpdateSkillSlot(TSubclassOf<UMySpell> spellClass)
    if(IsValid(spellClass)) {
       eSkillContainer->GetAllyRef()->abilities[slotIndex] = spellClass;
       UMySpell* spellObject                               = spellClass.GetDefaultObject();
+
       SetImage(spellObject->spellDefaults.image); // update the image
+      
 
       //Set back to 0 or a tick will be played
       cdTimeline.SetPlaybackPosition(0, false, false);

@@ -68,7 +68,7 @@ ARTSPawn::ARTSPawn()
    collisionQueryParams.bTraceComplex = true;
 }
 
-FORCEINLINE bool ARTSPawn::IsAnyAllySelected() const
+bool ARTSPawn::IsAnyAllySelected() const
 {
    return controllerRef->GetBasePlayer()->selectedAllies.Num() > 0;
 }
@@ -221,6 +221,37 @@ AActor* ARTSPawn::GetHitActorClick(FHitResult& clickHitResult)
    return clickHitResult.GetActor();
 }
 
+void ARTSPawn::CreateSelectionRect()
+{
+   if(GetCursorState() != ECursorStateEnum::UI) {
+      float locX, locY;
+      controllerRef->GetMousePosition(locX, locY);
+      endMousePos = FVector2D(locX, locY);
+      if(isSelectionRectActive()) {
+         controllerRef->GetHUD()->DrawRect(GetSelectionRectColor(), startMousePos.X, startMousePos.Y, endMousePos.X - startMousePos.X, endMousePos.Y - startMousePos.Y);
+         TArray<AAlly*> actorsInSelectRect;
+         controllerRef->GetHUD()->GetActorsInSelectionRectangle<AAlly>(startMousePos, endMousePos, actorsInSelectRect, false, false);
+         // Only update if we just overlapped a new actor (not one we already have selected)
+         if(controllerRef->GetBasePlayer()->selectedAllies.Num() != actorsInSelectRect.Num()) {
+            for(AAlly* allyInSelectRect : actorsInSelectRect) {
+               if(!allyInSelectRect->GetSelected()) {
+                  if(allyInSelectRect->GetCanTarget() && IsUnitOnScreen(allyInSelectRect)) {
+                     allyInSelectRect->SetSelected(true);
+                     OnAllySelectedDelegate.Broadcast(true);
+                     break;
+                  }
+               }
+            }
+         }
+      }
+   }
+}
+
+FLinearColor ARTSPawn::GetSelectionRectColor() const
+{
+   return FLinearColor(0.15,0.57,0.78,0.4); // Blue-ish color
+}
+
 void ARTSPawn::CursorHover()
 {
    if(!hasSecondaryCursor) {
@@ -270,13 +301,13 @@ void ARTSPawn::CursorHover()
    }
 }
 
-bool ARTSPawn::IsUnitOnScreen(AUnit* unitToCheck)
+bool ARTSPawn::IsUnitOnScreen(AUnit* unitToCheck) const
 {
    FBox2D unitBoundaryScreenCoords = unitToCheck->FindBoundary();
    return unitBoundaryScreenCoords.Max.X < viewX || unitBoundaryScreenCoords.Max.Y < viewY;
 }
 
-void ARTSPawn::SetCameraArmLength(float newLength)
+void ARTSPawn::SetCameraArmLength(float newLength) const
 {
    cameraArm->TargetArmLength = FMath::Clamp(newLength + cameraArm->TargetArmLength, minArmLength, maxArmLength);
 }
@@ -460,7 +491,7 @@ void ARTSPawn::LeftClickShift()
 void ARTSPawn::TabNextAlly()
 {
    int selectedHeroIndex = 0;
-   // If more than one ally is selected, tab through the selection
+   // If more than one ally is selected, tab through the selection (changing the focused unit and interface but not any selections)
    if(controllerRef->GetBasePlayer()->selectedAllies.Num() > 1) {
       controllerRef->GetBasePlayer()->unitIndex = (controllerRef->GetBasePlayer()->unitIndex + 1) % controllerRef->GetBasePlayer()->selectedAllies.Num();
       // Make sure any other selected heroes are actually in hero array.  If a hero is on the map, it better be in our party else spawn the NPC version of it
@@ -473,8 +504,11 @@ void ARTSPawn::TabNextAlly()
             controllerRef->GetBasePlayer()->heroes[prevSelectedHeroIndex]->SetSelected(false);
             selectedHeroIndex = (prevSelectedHeroIndex + 1) % controllerRef->GetBasePlayer()->heroes.Num();
             controllerRef->GetBasePlayer()->heroes[selectedHeroIndex]->SetSelected(true);
+            OnAllySelectedDelegate.Broadcast(false);
+         } else {
+            controllerRef->GetBasePlayer()->heroes[selectedHeroIndex]->SetSelected(true);
+            OnAllySelectedDelegate.Broadcast(false);
          }
-         controllerRef->GetBasePlayer()->heroes[selectedHeroIndex]->SetSelected(true);
       }
    }
 }

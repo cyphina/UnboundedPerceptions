@@ -106,12 +106,12 @@ namespace UpResourceManager
 
    template <>
    struct GetPropertyFromType<float> {
-      using value = UFloatProperty;
+      using value = FFloatProperty;
    };
 
    template <>
    struct GetPropertyFromType<int> {
-      using value = UIntProperty;
+      using value = FIntProperty;
    };
 
    /**Gets a property from a UObject given that the property is a UObject itself*/

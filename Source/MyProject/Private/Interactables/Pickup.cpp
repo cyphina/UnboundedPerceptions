@@ -9,6 +9,7 @@
 #include "Quests/QuestManager.h"
 #include "Items/HeroInventory.h"
 #include "LevelSaveStructs.h"
+#include "RTSIngameWidget.h"
 
 APickup::APickup()
 {
@@ -38,7 +39,8 @@ void APickup::Interact_Implementation(ABaseHero* hero)
    if (CanInteract_Implementation()) {
       if (hero->backpack) {
          const int initialItemCount = item.count;
-         item.count                 = hero->backpack->AddItem(item);
+         if(!hero->backpack->AddItem(item))
+            CPCRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Pickup", "NoSpaceLeft", "No space in inventory to pickup everything!"));
          CPCRef->GetGameMode()->GetQuestManager()->OnItemPickup(FMyItem(item.id, initialItemCount));
          OnPickupDelegate.Broadcast();
       }

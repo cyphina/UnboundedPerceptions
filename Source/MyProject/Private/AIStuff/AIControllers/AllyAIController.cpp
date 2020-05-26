@@ -146,7 +146,7 @@ bool AAllyAIController::PressedCastSpell(int spellCastingIndex)
    return spellSelected;
 }
 
-bool AAllyAIController::SetupSpellTargetting(FHitResult& result, TSubclassOf<UMySpell> spellClass)
+bool AAllyAIController::SetupSpellTargetting(UPARAM(ref) FHitResult& result, TSubclassOf<UMySpell> spellClass)
 {
    UMySpell* spell           = spellClass.GetDefaultObject();
    FName     spellTargetting = spell->GetTargetting().GetTagName();

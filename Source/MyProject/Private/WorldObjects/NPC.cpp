@@ -118,28 +118,22 @@ void ANPC::Interact_Implementation(ABaseHero* hero)
 
    // If this npc wants to converse, we go to another screen after the initial conversation where we can interact more
    if(Execute_CanInteract(this)) {
-      if(bWantsToConverse) {
-         hudManagerRef->GetSocialWindow()->SetNPC(this);
-         SetupAppropriateView();
-         // If they have a conversation starter, show the text and then show the interaction screen
-         if(conversationStarterName != "")
-            hudManagerRef->ShowDialogWithSource(conversationStarterName, EDialogBoxCloseCase::finishedInitialTalkNPC); // Don't give a dialog source
-         else
-            // we always need a conversation starter if the npc is interested in talking
-            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("FORGOT TO SET A CONVERSATION STARTER!!!"));
+      hudManagerRef->GetSocialWindow()->SetNPC(this);
+      SetupAppropriateView();
+      // If they have a conversation starter
+      if(conversationStarterName != "") {
+         hudManagerRef->ShowDialogWithSource(conversationStarterName, EDialogBoxCloseCase::finishedInitialTalkNPC);
       } else {
-         // if they don't want to converse at the moment, then just remove the dialog box and that's it
-
-         // if there was no entry for conversationStarterName, just display a default one
+         // If there was no entry for conversationStarterName, just display a default one
          hudManagerRef->ShowDialogCustomLines(TArray<FDialogData>{FDialogData({}, NSLOCTEXT("NPCDialog", "Default", "This person is silent..."), FName())},
-                               EDialogBoxCloseCase::finishedInitialTalkNPC);
+                                              EDialogBoxCloseCase::finishedInitialTalkNPC);
       }
-
-      // Check to see if any quests wanted us to talk to this NPC
-      controllerRef->GetGameMode()->GetQuestManager()->OnTalkNPC(this, FGameplayTag());
-      controllerRef->GetBasePlayer()->heroInBlockingInteraction = hero;
-      AddConversedDialog(conversationStarterName);
    }
+
+   // Check to see if any quests wanted us to talk to this NPC
+   controllerRef->GetGameMode()->GetQuestManager()->OnTalkNPC(this, FGameplayTag());
+   controllerRef->GetBasePlayer()->heroInBlockingInteraction = hero;
+   AddConversedDialog(conversationStarterName);
 }
 
 void ANPC::OnDoneInitialTalk()

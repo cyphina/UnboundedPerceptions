@@ -34,12 +34,14 @@ EBTNodeResult::Type UBTTask_Patrol::PatrolToNextLocation(UBehaviorTreeComponent&
 {
    FBTPatrolTaskMemory* myMemory = (FBTPatrolTaskMemory*)nodeMemory;
 
-   EPathFollowingRequestResult::Type result = myMemory->patrolComp->MoveToNextPatrolPoint();
+   auto moveTuple = myMemory->patrolComp->MoveToNextPatrolPoint();
+   auto result    = moveTuple.Key;
+   auto requestId = moveTuple.Value;
+
    myMemory->AICon->GetBlackboardComponent()->SetValueAsVector(locKeyName, myMemory->patrolComp->GetCurrentPatrolPoint());
 
    if(result == EPathFollowingRequestResult::RequestSuccessful) {
       // Without a request ID, the new move request creation will somehow trigger the message instantly, infinitely looping OnMessage and PatrolToNextLocation
-      auto requestId = myMemory->AICon->GetCurrentMoveRequestID();
       WaitForMessage(ownerComp, UBrainComponent::AIMessage_MoveFinished, requestId.GetID());
       WaitForMessage(ownerComp, UBrainComponent::AIMessage_RepathFailed, requestId.GetID());
       WaitForMessage(ownerComp, AUnit::AIMessage_FoundTarget);
@@ -57,20 +59,22 @@ uint16 UBTTask_Patrol::GetInstanceMemorySize() const
 
 void UBTTask_Patrol::OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FName Message, int32 RequestID, bool bSuccess)
 {
-   bSuccess = Message != UBrainComponent::AIMessage_RepathFailed;
+   // Line 84 - BTTaskNoded.cpp shows that bSuccess is the message status
+   if(!bSuccess)
+   {
+      UE_LOG(LogBehaviorTree, Warning, TEXT("Problem patrolling to location"));
+      FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+   }
 
-   if(Message != UBrainComponent::AIMessage_MoveFinished) {
-      // If we do not move to the next point as intended
-      if(!bSuccess)
-         UE_LOG(LogBehaviorTree, Warning, TEXT("Problem patrolling to location"))
-      else {
-         // Found a target so move on from this task
-         Super::OnMessage(OwnerComp, NodeMemory, Message, RequestID, bSuccess);
-         return;
-      }
+   // Found a target so move on from this task
+   if(Message == AUnit::AIMessage_FoundTarget) { // Move finishes on
+      
+      Super::OnMessage(OwnerComp, NodeMemory, Message, RequestID, bSuccess);
+      FinishLatentTask(OwnerComp, EBTNodeResult::Aborted);
+      return;
    }
 
    // Didn't find a target so keep patrolling
-   Super::OnMessage(OwnerComp, NodeMemory, Message, RequestID, bSuccess);
+   //! DO NOT CALL THIS OR IT CALLS PatrolToNextLocation twice => Super::OnMessage(OwnerComp, NodeMemory, Message, RequestID, bSuccess);
    PatrolToNextLocation(OwnerComp, NodeMemory);
 }

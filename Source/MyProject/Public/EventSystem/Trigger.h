@@ -49,7 +49,7 @@ enum class ETriggerType : uint8 {
    DestroyNPCTrigger,
    /** Moves the npc with name (object 1) to location X: (value 1), Y: (value2), Z: (value3)*/
    MoveNPCTrigger,
-   /** Adds an item to hero (object 1) with id (value 1) and count (value 2).  If no hero is specified, then the interacting hero gets the item */
+   /** Adds an item to hero (object 1) with id (value 1) and count (value 2).  If no hero is specified, then the interacting hero gets the item (if there is one) */
    AddItemTrigger,
    /** Adds the fully qualified gameplay tag name (value 1) as a new learned dialog topic*/
    LearnDialogTopic,

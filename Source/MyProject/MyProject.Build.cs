@@ -8,9 +8,8 @@ public class MyProject : ModuleRules
 	{
 		//MinFilesUsingPrecompiledHeaderOverride = 1;
 		// bFasterWithoutUnity = true;
-		bUseRTTI = true;
 		//bEnforceIWYU = true;
-		//PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		PCHUsage = PCHUsageMode.NoSharedPCHs;
 		PrivatePCHHeaderFile = "Public/MyProject.h";
 		CppStandard = CppStandardVersion.Cpp17;
 

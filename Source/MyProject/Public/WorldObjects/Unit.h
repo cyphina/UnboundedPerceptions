@@ -319,30 +319,47 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
     * @param specificStatType - Actual enum value
     * @param bModifyBase - Modify the base stat or the adjusted value
     */
-   template <typename StatType>
-   void ModifyStats(int value, StatType specificStatType, bool bModifyBase = false)
+   template <bool bModifyBase = false, typename StatType>
+   void ModifyStats(int value, StatType specificStatType)
    {
       static_assert(std::is_enum<StatType>::value, "Must pass one of the stat Enums!");
       const int specificStatTypeVal = static_cast<int>(specificStatType);
 
       if constexpr(std::is_same<StatType, EAttributes>::value) {
-         baseC->SetAttributeAdj(specificStatTypeVal, value);
+         if constexpr(!bModifyBase) {
+            baseC->SetAttributeAdj(specificStatTypeVal, value);
+         } else {
+            baseC->SetAttributeBase(specificStatTypeVal, value);
+         }
       } else if constexpr(std::is_same<StatType, EUnitScalingStats>::value) {
-         baseC->SetSkillAdj(specificStatTypeVal, value);
+         if constexpr(!bModifyBase) {
+            baseC->SetSkillAdj(specificStatTypeVal, value);
+         } else {
+            baseC->SetSkillBase(specificStatTypeVal, value);
+         }
       } else if constexpr(std::is_same<StatType, EVitals>::value) {
-         baseC->SetVitalAdj(specificStatTypeVal, value);
+         if constexpr(!bModifyBase) {
+            baseC->SetVitalAdj(specificStatTypeVal, value);
+         } else {
+            baseC->SetVitalBase(specificStatTypeVal, value);
+         }
       } else if constexpr(std::is_same<StatType, EMechanics>::value) {
-         baseC->SetMechanicAdj(specificStatTypeVal, value);
+         if constexpr(!bModifyBase) {
+            baseC->SetMechanicAdj(specificStatTypeVal, value);
+         } else {
+            baseC->SetMechanicBase(specificStatTypeVal, value);
+         }
       } else {
          static_assert(std::is_same_v<StatType*, void>, "Wee");
       }
    }
 
-   template <auto EnumVal>
-   void ModifyStats(int value, bool bModifyBase = false)
-   {
-      ModifyStats<decltype(EnumVal)>(value, EnumVal, bModifyBase);
-   }
+   // Allows us to deduce the type of the enum and call the above function so we can call the above function using an enum template argument if we know it at compile time
+   //template <auto EnumVal, bool bModifyBase = false>
+   //void ModifyStats(int value)
+   //{
+   //   ModifyStats<bModifyBase, decltype(EnumVal)>(value, EnumVal);
+   //}
 
 #pragma endregion
 

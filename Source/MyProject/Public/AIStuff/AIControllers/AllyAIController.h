@@ -102,7 +102,7 @@ class MYPROJECT_API AAllyAIController : public AUnitController
     * @param spellClass - Pass in class because we can technically setup targetting for a new spell while casting a spell (and thus can't use currentSpell)
     */
    UFUNCTION(BlueprintCallable, Category = "Spells")
-   bool SetupSpellTargetting(FHitResult& result, TSubclassOf<UMySpell> spellClass);
+   bool SetupSpellTargetting(UPARAM(ref) FHitResult& result, TSubclassOf<UMySpell> spellClass);
 
    /** Stop behavior tree from running*/
    void StopAutomation();

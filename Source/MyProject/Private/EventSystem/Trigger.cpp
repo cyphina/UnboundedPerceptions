@@ -61,19 +61,19 @@ void UTriggerManager::ModifyStats(const FTriggerData& tdata)
 
          switch (statEnumVal) {
             case 0:
-               unit->ModifyStats<EAttributes>(statValue, static_cast<EAttributes>(statId - offset));
+               unit->ModifyStats<false>(statValue, static_cast<EAttributes>(statId - offset));
                break;
             case 1:
                offset = CombatInfo::AttCount;
-               unit->ModifyStats<EUnitScalingStats>(statValue, static_cast<EUnitScalingStats>(statId - offset));
+               unit->ModifyStats<false>(statValue, static_cast<EUnitScalingStats>(statId - offset));
                break;
             case 2:
               offset = CombatInfo::AttCount + CombatInfo::StatCount;
-               unit->ModifyStats<EVitals>(statValue, static_cast<EVitals>(statId - offset));
+               unit->ModifyStats<false>(statValue, static_cast<EVitals>(statId - offset));
                break;
             case 3:
                offset = CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount;
-               unit->ModifyStats<EMechanics>(statValue, static_cast<EMechanics>(statId - offset));
+               unit->ModifyStats<false>(statValue, static_cast<EMechanics>(statId - offset));
                break;
             default: break;
          }
@@ -170,16 +170,23 @@ void UTriggerManager::DestroyNPC(const FTriggerData& tdata)
 
 void UTriggerManager::MoveNPC(const FTriggerData& tdata)
 {
-   FVector newLocation = FVector(FCString::Atof(*tdata.triggerValues[0]), FCString::Atof(*tdata.triggerValues[1]), FCString::Atof(*tdata.triggerValues[2]));
+   FVector newLocation{FCString::Atof(*tdata.triggerValues[0]), FCString::Atof(*tdata.triggerValues[1]), FCString::Atof(*tdata.triggerValues[2])};
    UpResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld())->SetActorLocation(newLocation);
 }
 
 void UTriggerManager::AddItem(const FTriggerData& tdata)
 {
-   if (tdata.triggerObjects.Num() > 0) {
-      UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(*tdata.triggerObjects[0], cpcRef->GetWorld())
-      ->backpack->AddItem(FMyItem(FCString::Atoi(*tdata.triggerValues[0]), FCString::Atoi(*tdata.triggerValues[1])));
-   } else { cpcRef->GetBasePlayer()->heroInBlockingInteraction->backpack->AddItem(FMyItem(FCString::Atoi(*tdata.triggerValues[0]), FCString::Atoi(*tdata.triggerValues[1]))); }
+   if(ensure(tdata.triggerValues.Num() == 2)) {
+      FMyItem itemToAdd{FCString::Atoi(*tdata.triggerValues[0]), FCString::Atoi(*tdata.triggerValues[1])};
+      //TODO: Handle cases when we don't have inventory space?
+      if(tdata.triggerObjects.Num() > 0) {
+         UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(*tdata.triggerObjects[0], cpcRef->GetWorld())->backpack->AddItem(itemToAdd);
+      } else {
+         // If there's a hero using something, add the item to him/her
+         if(ABaseHero* activeHero =  cpcRef->GetBasePlayer()->heroInBlockingInteraction; activeHero)
+            activeHero->backpack->AddItem(itemToAdd);
+      }
+   }
 }
 
 void UTriggerManager::LearnDialogTopic(const FTriggerData& tdata) { cpcRef->GetBasePlayer()->LearnDialogTopic(FGameplayTag::RequestGameplayTag(*tdata.triggerValues[0])); }

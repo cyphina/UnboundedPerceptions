@@ -34,13 +34,6 @@ void ARTSGameMode::BeginPlay()
    conditionalManager->Init();
    minigameManager->Init();
 
-   /// HUDManager should get initialized first since the controller is initialized before the rules
-   UObjectProperty* objectProperty = FindField<UObjectProperty>(minigameManager->GetClass(), "hudManagerRef");
-   objectProperty->SetPropertyValue_InContainer(minigameManager, hudManagerRef);
-
-   objectProperty = FindField<UObjectProperty>(questManager->GetClass(), "hudManagerRef");
-   objectProperty->SetPropertyValue_InContainer(questManager, hudManagerRef);
-
    // Call blueprint BeginPlay() afterwards
    Super::BeginPlay();
 }

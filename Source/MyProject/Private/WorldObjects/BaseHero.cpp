@@ -227,7 +227,10 @@ void ABaseHero::Equip(int inventorySlotWeEquip)
    backpack->RemoveItemAtSlot(inventorySlotWeEquip);
 
    if(prevEquipInSlot)
-      backpack->AddItem(FMyItem(prevEquipInSlot));
+   {
+      auto item{FMyItem(prevEquipInSlot)};
+      if(!ensure(backpack->AddItem(item))) UE_LOG(LogTemp, Error, TEXT("Impossible case reached no space to swap equipment"));
+   }
 
    if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Equipment))
       controllerRef->GetHUDManager()->GetEquipHUD()->Update();
@@ -239,12 +242,15 @@ void ABaseHero::Unequip(int unequipSlot)
 {
    // If we have an item in the slot we're trying to unequip
    if(equipment->GetEquips()[unequipSlot]) {
-      // If there is space in the bakcpack
+      // If there is space in the backpack
       if(backpack->Count() < backpack->GetItemMax()) {
          int itemID = equipment->GetEquips()[unequipSlot];
-         backpack->AddItem(FMyItem(itemID));
+         auto item{FMyItem(itemID)};
+         backpack->AddItem(item); // Space checked again here
          equipment->Unequip(unequipSlot);
       }
+      else
+         controllerRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Equipment", "NotEnoughSpaceUnequip", "Not enough space to unequip!"));
 
       if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Equipment))
          controllerRef->GetHUDManager()->GetEquipHUD()->Update();
@@ -281,16 +287,16 @@ void ABaseHero::OnEquipped(int equipID, bool isEquip)
 {
    FEquipLookupRow* e = UItemManager::Get().GetEquipInfo(equipID);
    for(auto& x : e->stats.defaultAttributes)
-      ModifyStats<EAttributes>(GetAttributeBaseValue(x.att) + x.defaultValue * (2 * isEquip - 1), x.att, true);
+      ModifyStats<true>(GetAttributeBaseValue(x.att) + x.defaultValue * (2 * isEquip - 1), x.att);
 
    for(auto& x : e->stats.defaultUnitScalingStats)
-      ModifyStats<EUnitScalingStats>(GetSkillBaseValue(x.stat) + x.defaultValue * (2 * isEquip - 1), x.stat, true);
+      ModifyStats<true>(GetSkillBaseValue(x.stat) + x.defaultValue * (2 * isEquip - 1), x.stat);
 
    for(auto& x : e->stats.defaultVitals)
-      ModifyStats<EVitals>(GetVitalBaseValue(x.vit) + x.defaultValue * (2 * isEquip - 1), x.vit, true);
+      ModifyStats<true>(GetVitalBaseValue(x.vit) + x.defaultValue * (2 * isEquip - 1), x.vit);
 
    for(auto& x : e->stats.defaultMechanics)
-      ModifyStats<EMechanics>(GetMechanicBaseValue(x.mech) + x.defaultValue * (2 * isEquip - 1), x.mech, true);
+      ModifyStats<true>(GetMechanicBaseValue(x.mech) + x.defaultValue * (2 * isEquip - 1), x.mech);
 }
 
 bool ABaseHero::CastSpell(TSubclassOf<UMySpell> spellToCast)

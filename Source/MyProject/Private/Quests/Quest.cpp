@@ -8,6 +8,7 @@
 
 #include "UI/HUDManager.h"
 #include "QuestManager.h"
+#include "Transform.h"
 #include "EventSystem/Trigger.h"
 
 #include "UI/QuestJournal.h"
@@ -46,18 +47,16 @@ void AQuest::CompleteQuest_Implementation(bool fail)
 {
    currentGoalIndices.Empty();
    // currentHuntedAmounts.Empty();
-   currentGoals.Empty();
    if (fail) currentState = EQuestState::failedQuests;
    currentState = EQuestState::completedQuests;
    questManagerRef->EndQuest(this);
 }
 
-void AQuest::UpdateSubGoals()
+TArray<FGoalInfo> AQuest::GetCurrentGoals() const
 {
-   currentGoals.Empty();
-   for (int i : currentGoalIndices) {
-      currentGoals.Add(questInfo.subgoals[i]);
-   }
+   TArray<FGoalInfo> currentGoals;
+   Algo::Transform(currentGoalIndices, currentGoals, [this](const int goalIndex) { return questInfo.subgoals[goalIndex]; });
+   return currentGoals;
 }
 
 void AQuest::FindInitialItemAmount(int goalIndex)
@@ -78,8 +77,7 @@ void AQuest::CompleteSubGoal(int goalIndex, bool fail)
       FGoalInfo&      completedGoal = questInfo.subgoals[goalIndex];
       UQuestListSlot* questListSlot = questManagerRef->questListRef->GetQuestListSlot(this);
 
-      // Remove traces of this goal in our goal bookkeeping (REMOVE IT BEFORE YOU CAHNGE THE GOALSTATE SINCE EQUALITY OPERATOR RELIES ON IT and currentGoals are only copies of subgoal's content)
-      currentGoals.RemoveSingle(completedGoal);
+      //! Remove traces of this goal in our goal bookkeeping (REMOVE IT BEFORE YOU CHANGE THE GOALSTATE SINCE EQUALITY OPERATOR RELIES ON IT
       questListSlot->RemoveSubGoalWidget(goalIndex);
       currentGoalIndices.Remove(goalIndex);
 
@@ -111,7 +109,6 @@ void AQuest::CompleteSubGoal(int goalIndex, bool fail)
             int numRemoved = goal.requiredSubGoalIndices.Remove(goalIndex);
             // If a goal was removed and there are no more required goals, then this is OUR NEW GOAL~!
             if (numRemoved && !goal.requiredSubGoalIndices.Num()) { 
-               currentGoals.Add(goal);
                currentGoalIndices.Add(index);
                goal.goalState = EGoalState::currentGoal;
                questManagerRef->questListRef->GetQuestListSlot(this)->AddSubGoalWidget(this, index);
@@ -127,7 +124,7 @@ void AQuest::CompleteSubGoal(int goalIndex, bool fail)
       }
 
       // handle failure or completion
-      if (completedGoal.canFailQuest || completedGoal.canCompleteQuest || currentGoals.Num() == 0) {
+      if (completedGoal.canFailQuest || completedGoal.canCompleteQuest || currentGoalIndices.Num() == 0) {
          CompleteQuest(fail);
          return;
       }
@@ -162,13 +159,12 @@ void AQuest::SetupStartingGoals()
          goal.goalState = EGoalState::lockedGoal;
    }
 
-   UpdateSubGoals();
    currentDescription = questInfo.desc;
 }
 
 FGoalInfo AQuest::GetGoalAtIndex(int goalIndex)
 {
-   return currentGoals[goalIndex];
+   return questInfo.subgoals[goalIndex];
 }
 
 FText AQuest::MakeGoalText(AQuest* assignedQuest, FGoalInfo goalInfo, int goalIndex)

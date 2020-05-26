@@ -67,19 +67,25 @@ bool UConditionalManager::GetGoalsCompletedVal(FConditionData& condData) const
 {
    checkf(condData.conditionalValues.Num() > 1, TEXT("Error with number of quest condition values (%d items)"), condData.conditionalValues.Num());
    auto pred = [&](AQuest* questToFilter) { return questToFilter->questInfo.id.ToString() == "QuestName." + condData.conditionalValues[0]; };
-   if (gameModeRef->GetQuestManager()->completedQuests.FindByPredicate(pred)) return true;
 
-   AQuest* questToCheck = *gameModeRef->GetQuestManager()->quests.FindByPredicate(pred);
-   if (questToCheck) {
-      for (int i = 1; i < condData.conditionalValues.Num(); ++i) {
+   // If we've already completed this quest then of course we already finished whatever goals we are checking
+   if(gameModeRef->GetQuestManager()->completedQuests.FindByPredicate(pred))
+      return true;
+
+   // If we can find this quest in our list of all quests, then
+   if(auto questToCheck = gameModeRef->GetQuestManager()->quests.FindByPredicate(pred); questToCheck) {
+      AQuest* quest = *questToCheck;
+      for(int i = 1; i < condData.conditionalValues.Num(); ++i) {
          int condIndex = FCString::Atoi(*condData.conditionalValues[i]);
-         if (questToCheck->questInfo.subgoals[condIndex].goalState != EGoalState::completedGoal) {
-            GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White, FString("Haven't completed goal with index:") + FString::FromInt(condIndex));
+         if(quest->questInfo.subgoals[condIndex].goalState != EGoalState::completedGoal) {
+            // GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White, FString("Haven't completed goal with index:") + FString::FromInt(condIndex));
             return false;
          }
       }
+      return true;
    }
-   return true;
+   // If this quest isn't one of our current quests then no bueno
+   return false;
 }
 
 bool UConditionalManager::GetOwnedItemConditionVal(FConditionData& condData) const

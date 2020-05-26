@@ -41,7 +41,7 @@ class MYPROJECT_API ABaseHero : public AAlly
    void EndPlay(const EEndPlayReason::Type epr) override final;
    void PossessedBy(AController* newController) override final;
    void SetEnabled(bool bEnabled) override final;
-   void Die_Implementation() override final;
+   void Die_Implementation() override;
 
 #pragma endregion
 

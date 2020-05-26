@@ -52,7 +52,7 @@ class MYPROJECT_API ARTSDoor : public AInteractableBase
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Info")
    bool isLocked = false;
 
-   /**Id of the key to open this door if it is locked*/
+   /**Id of the key to open this door if it is locked. Make sure it is a valid itemID*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Info")
    int keyID = 0;
 

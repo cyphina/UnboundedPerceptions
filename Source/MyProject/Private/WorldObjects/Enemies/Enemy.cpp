@@ -181,23 +181,23 @@ void AEnemy::InitializeStats()
 {
    int index = -1;
    for (auto& x : initialStats.defaultAttributes) {
-      ModifyStats(x.defaultValue, x.att, true);
-      ModifyStats(x.defaultValue, x.att);
+      ModifyStats<true>(x.defaultValue, x.att);
+      ModifyStats<true>(x.defaultValue, x.att);
    }
 
    for (auto& x : initialStats.defaultUnitScalingStats) {
-      ModifyStats(x.defaultValue, x.stat, true);
-      ModifyStats(x.defaultValue, x.stat);
+      ModifyStats<true>(x.defaultValue, x.stat);
+      ModifyStats<true>(x.defaultValue, x.stat);
    }
 
    for (auto& x : initialStats.defaultVitals) {
-      ModifyStats(x.defaultValue, x.vit, true);
-      ModifyStats(x.defaultValue, x.vit);
+      ModifyStats<true>(x.defaultValue, x.vit);
+      ModifyStats<true>(x.defaultValue, x.vit);
    }
 
    for (auto& x : initialStats.defaultMechanics) {
-      ModifyStats(x.defaultValue, x.mech, true);
-      ModifyStats(x.defaultValue, x.mech);
+      ModifyStats<true>(x.defaultValue, x.mech);
+      ModifyStats<true>(x.defaultValue, x.mech);
    }
 }
 

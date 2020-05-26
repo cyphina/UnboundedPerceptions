@@ -32,6 +32,7 @@ class UStartMenu;
 class USpellbookHUD;
 class URTSIngameWidget;
 class AShopNPC;
+class UDIRender;
 
 struct FDialogData;
 enum class EDialogBoxCloseCase : uint8;
@@ -121,8 +122,8 @@ class MYPROJECT_API AHUDManager : public AInfo
 
    void InjectDependency(UObject* objectToInject)
    {
-      UObjectProperty* objectProperty = FindField<UObjectProperty>(objectToInject->GetClass(), "hudManagerRef");
-      objectProperty->SetPropertyValue_InContainer(objectToInject, this);
+      FObjectProperty* objectProperty = FindFProperty<FObjectProperty>(objectToInject->GetClass(), "hudManagerRef"); // Find the property on that object
+      objectProperty->SetPropertyValue_InContainer(objectToInject, this); // Get that property and set its value in the container (actually object) and set it to this 
    }
 
  public:
@@ -136,6 +137,9 @@ class MYPROJECT_API AHUDManager : public AInfo
    UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Widgets")
    int numWidgetsBlocking;
 
+   UPROPERTY(EditDefaultsOnly)
+   TSubclassOf<UDIRender> damageIndicatorClass;
+
    /**Called when the game starts or when spawned*/
    virtual void BeginPlay() override;
 
@@ -146,17 +150,15 @@ class MYPROJECT_API AHUDManager : public AInfo
    /**Toggle a hud on the screen on/off.  C++ version.*/
    void AddHUD(uint8 newState);
 
-   /**Allows us to quickly add dialogBox loaded up with conversation.  Else we would have to set the dialog manually, then call AddHUD.  Plus it allows us to
+   /**Allows us to quickly add dialogBox loaded up with conversation.  Else we would have to set the dialog manually, then call AddHUD.
     * setup a trigger when we finish conversation which may lead to something else.
     * @param conversationName - Name of the conversation.  Leave blank to just close
-    * @param interactingHero - If there's any hero that prompted this dialog, set the reference in basePlayer.  If it was played automatically, no need to set
     * @param dialogSource - What event caused this dialogBox to open?
     */
    void ShowDialogWithSource(FName conversationName, EDialogBoxCloseCase dialogSource);
 
-   /**Variant of AddHUDDialog for text that not in the convesrsation table.
+   /**Variant of AddHUDDialog for text that not in the convesrsation table. Sometimes has an interacting hero associated with it which should be set before the call to this
     * @param linesToDisplay - DialogInformation to pass in
-    * @param interactingHero - If there's any hero that prompted this dialog, set the reference in basePlayer.  If it was played automatically, no need to set
     * @param dialogSource - What event caused this dialogBox to open?
     */
    UFUNCTION(BlueprintCallable)
@@ -168,7 +170,10 @@ class MYPROJECT_API AHUDManager : public AInfo
    void AddItemExamineHUD(int itemID);
 
    /**Adds a confirmation box that can do something once the confirmation button is pressed
+    * @param funcName - UFUNCTION name that is called on the UObject funcObject
     * @param funcObject - Pointer to UObject member function that will be called after the confirmation
+    * @param newTitle - Title of the confirmation box
+    * @param newDesc - Description of the confirmation box
     */
    void ShowConfirmationBox(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty());
 

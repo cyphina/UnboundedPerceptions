@@ -18,5 +18,5 @@ class MYPROJECT_API UShopSlot : public UActionSlot
    void OnBtnClick() override;
    void ShowDesc(UToolTipWidget* tooltip) override;
 
-   FText MakeItemPriceText(FItemPrice& price) const;
+   FText MakeItemPriceText(const FItemPrice& price) const;
 };

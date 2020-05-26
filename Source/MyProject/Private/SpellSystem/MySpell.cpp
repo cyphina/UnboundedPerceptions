@@ -79,7 +79,7 @@ void UMySpell::CommitExecute(const FGameplayAbilitySpecHandle Handle, const FGam
 
    unitRef = Cast<AUnit>(ActorInfo->AvatarActor.Get());
    if (unitRef) {
-      unitRef->ModifyStats<EVitals::Mana>(unitRef->GetVitalCurValue(EVitals::Mana) - GetCost(unitRef->GetAbilitySystemComponent()));
+      unitRef->ModifyStats<false>(unitRef->GetVitalCurValue(EVitals::Mana) - GetCost(unitRef->GetAbilitySystemComponent()), EVitals::Mana);
       // GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, FString("Committing ability for unit:") + unitRef->GetName());
    }
 }

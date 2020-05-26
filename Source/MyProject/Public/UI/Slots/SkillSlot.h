@@ -24,7 +24,7 @@ class MYPROJECT_API USkillSlot : public UActionSlot
    UPROPERTY(BlueprintReadWrite) // Reference to skill container which holds this slot
    UESkillContainer* eSkillContainer;
 
-   UPROPERTY(BlueprintReadWrite) // Default iamge for an empty slot
+   UPROPERTY(EditDefaultsOnly, BlueprintReadWrite) // Default image for an empty slot
    UTexture2D* defaultSlotTexture;
 
    UPROPERTY(BlueprintReadWrite, Category = "Action", Meta = (BindWidget)) // Cooldown radial coloring
@@ -46,7 +46,7 @@ class MYPROJECT_API USkillSlot : public UActionSlot
    void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
    /**Function that is called when this slot is activated*/
-   FORCEINLINE void PerformAction();
+   void PerformAction();
 
    /**Used to create the effect of the skillslot being filled as it goes off cooldown*/
    UFUNCTION(BlueprintCallable)

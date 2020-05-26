@@ -33,8 +33,9 @@ void UPatrolComponent::DeletePatrolPoint(int patrolIndex)
    if (patrolIndex >= 0 && patrolIndex <= patrolPoints.Num()) { patrolPoints.RemoveAt(patrolIndex, 1); }
 }
 
-EPathFollowingRequestResult::Type UPatrolComponent::MoveToNextPatrolPoint()
+TPair<EPathFollowingRequestResult::Type, FAIRequestID> UPatrolComponent::MoveToNextPatrolPoint()
 {
    currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Num();
-   return ownerControllerRef->MoveToLocation(patrolPoints[currentPatrolIndex]);
+   moveRes =  ownerControllerRef->MoveToLocation(patrolPoints[currentPatrolIndex], 10, false);
+   return MakeTuple(moveRes, ownerControllerRef->GetCurrentMoveRequestID());
 }

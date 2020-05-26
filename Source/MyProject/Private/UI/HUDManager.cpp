@@ -78,11 +78,16 @@ void AHUDManager::BeginPlay()
    InjectDependency(playerControllerRef); // Set this here else we can't use this reference during widget construction
    mainMenu->AddToViewport();
 
+   // For some reason the hardware cursor doesn't show in a packaged build, so we need to do what was written here:
+   // https://forums.unrealengine.com/development-discussion/blueprint-visual-scripting/1700190-custom-hardware-cursor-does-odd-thing
+   // In ProjectSettings->Input change Default Viewport Capture Mode to Capture Permanently, and Default Viewport Lock mode to Do not Lock
+   // The cursor starts at the top left of the screen even on windowed mode which can be jank, but it fixes the problem!
    FInputModeGameAndUI inputModeData;
    inputModeData.SetWidgetToFocus(mainMenu->TakeWidget());
    inputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::LockOnCapture);
    inputModeData.SetHideCursorDuringCapture(false); // This game uses the cursor
    playerControllerRef->SetInputMode(inputModeData);
+   playerControllerRef->bShowMouseCursor = true;
 
    GetIngameHUD()->SetClock(playerControllerRef->GetGameState()->GetGameTime());
    GetIngameHUD()->SetDate(playerControllerRef->GetGameState()->GetGameDate());
@@ -102,6 +107,7 @@ void AHUDManager::BeginPlay()
    InjectDependency(gameMode);
    InjectDependency(gameMode->GetMinigameManager());
    InjectDependency(gameMode->GetQuestManager());
+   InjectDependency(gameMode->GetTriggerManager());
    InjectDependency(GetBreakMenu());
    InjectDependency(GetConfirmationBox());
    InjectDependency(GetInputBox());
@@ -169,7 +175,6 @@ void AHUDManager::ShowDialogCustomLines(TArray<FDialogData> linesToDisplay, EDia
    {
       GetDialogBox()->SetDialogLines(linesToDisplay);
       GetDialogBox()->SetDialogSource(dialogSource);
-   } else {
       ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false);
    }
 }
@@ -195,7 +200,6 @@ void AHUDManager::ShowInputBox(FName funcName, UObject* funcObject, FText newTit
          GetInputBox()->onInputConfirmed.BindUFunction(funcObject, funcName);
          GetInputBox()->SetTitle(newTitle);
          GetInputBox()->SetDesc(newDesc);
-         GetInputBox()->AddToViewport(2);
          ApplyHUD(static_cast<int>(HUDs::HS_InputBox), true, false, false);
       }
    } else {

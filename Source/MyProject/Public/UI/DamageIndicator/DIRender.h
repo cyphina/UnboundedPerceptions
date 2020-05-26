@@ -12,7 +12,7 @@ class AUserInput;
  * Text render component displays text somewhere relative to its parent actor.  This subclass is specifically used to show texts that represent damage amounts and combat
  * occurences.
  */
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, Blueprintable)
 class MYPROJECT_API UDIRender : public UTextRenderComponent
 {
    GENERATED_BODY()
@@ -21,8 +21,13 @@ class MYPROJECT_API UDIRender : public UTextRenderComponent
 
  public:
    FVector            start, end;
-
    TWeakObjectPtr<APawn> cameraPawnRef;
+
+   UPROPERTY(EditDefaultsOnly)
+   float jumpHeight = 80.f;
+
+   UPROPERTY(EditDefaultsOnly)
+   float textSize = 35.f;
 
    UDIRender();
    void BeginPlay() override final;

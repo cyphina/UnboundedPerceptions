@@ -31,9 +31,9 @@ class MYPROJECT_API UBTTask_Patrol : public UBTTaskNode
  public:
    UBTTask_Patrol(const FObjectInitializer& ObjectInitializer);
 
-   EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) override;
+   EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) override final;
 
    EBTNodeResult::Type PatrolToNextLocation(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory);
-   uint16              GetInstanceMemorySize() const override;
-   virtual void        OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FName Message, int32 RequestID, bool bSuccess) override;
+   uint16              GetInstanceMemorySize() const override final;
+   virtual void        OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FName Message, int32 RequestID, bool bSuccess) override final;
 };

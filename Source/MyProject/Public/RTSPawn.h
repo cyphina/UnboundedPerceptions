@@ -55,7 +55,8 @@ class MYPROJECT_API ARTSPawn : public APawn
    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    class USpringArmComponent* mapArm;
 
-   FORCEINLINE UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helper") bool IsAnyAllySelected() const;
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helper")
+   bool IsAnyAllySelected() const;
 
  protected:
    virtual void BeginPlay() override;
@@ -123,7 +124,7 @@ class MYPROJECT_API ARTSPawn : public APawn
 
    /** Gets what kind of cursor is currently displaying which can tell us what kind of action a user is performing or what things they are hovering over*/
    UFUNCTION(BlueprintGetter = cursorState, BlueprintPure)
-   ECursorStateEnum GetCursorState() const { return cursorState; }
+   FORCEINLINE ECursorStateEnum GetCursorState() const { return cursorState; }
 
    /** Returns the object hit from a cursor line trace used when the player clicks*/
    UFUNCTION(BlueprintCallable)
@@ -132,6 +133,13 @@ class MYPROJECT_API ARTSPawn : public APawn
    /** Returns an the actor hit from a cursor line trace or nullptr if no actor was hit*/
    UFUNCTION(BlueprintCallable)
    AActor* GetHitActorClick(FHitResult& clickHitResult);
+
+   /** Draws a rectangle on the screen that we can select units with by dragging*/
+   UFUNCTION(BlueprintCallable)
+   void CreateSelectionRect();
+
+   /** Hopefully this gets copy elided to its destination and LTCG inlines it*/
+   FLinearColor GetSelectionRectColor() const;
 
  private:
    // These references store information about hit in member so we don't have to reconstruct every tick
@@ -196,13 +204,13 @@ class MYPROJECT_API ARTSPawn : public APawn
    void SetCamMoveSpeedMultiplier(float newCamMoveSpeed) { camMoveSpeedMultiplier = FMath::Clamp<float>(newCamMoveSpeed, 0, 3); }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Camera Settings")
-   bool IsUnitOnScreen(AUnit* unitToCheck);
+   bool IsUnitOnScreen(AUnit* unitToCheck) const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Camera Settings")
    FORCEINLINE float GetMaxArmLength() const { return maxArmLength; }
 
    UFUNCTION(BlueprintCallable, Category = "Camera Settings")
-   void SetCameraArmLength(float newLength);
+   void SetCameraArmLength(float newLength) const;
 
  private:
    int viewX, viewY;

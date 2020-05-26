@@ -18,7 +18,7 @@
 
 #include "AssetRegistryModule.h"
 
-#include "UpResourceManager.h"
+#include "MyProject/Public/UpResourceManager.h"
 
 #include "RTSGameMode.h"
 #include "MyGameInstance.h"
@@ -245,7 +245,8 @@ void USaveLoadClass::SetupAlliedUnits()
          spawnedHero->FinishSpawning(heroSaveData.allyInfo.actorTransform);
 
          for (int i = 0; i < heroSaveData.backpackInfo.itemIDs.Num(); ++i) {
-            spawnedHero->backpack->AddItemToSlot(FMyItem(heroSaveData.backpackInfo.itemIDs[i], heroSaveData.backpackInfo.itemCounts[i]), heroSaveData.backpackInfo.itemSlots[i]);
+            FMyItem item {heroSaveData.backpackInfo.itemIDs[i], heroSaveData.backpackInfo.itemCounts[i]};
+            spawnedHero->backpack->AddItemToSlot(item, heroSaveData.backpackInfo.itemSlots[i]);
          }
       }
    }

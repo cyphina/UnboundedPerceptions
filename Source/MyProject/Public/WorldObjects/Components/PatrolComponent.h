@@ -29,6 +29,8 @@ class MYPROJECT_API UPatrolComponent : public USceneComponent
 
  public:
 
+   EPathFollowingRequestResult::Type moveRes;
+
    /**Patrolling is a behavior since it can be more complex than a single task.  Used in UnitController*/
    UPROPERTY(EditAnywhere)
    UBehaviorTree* patrolTree;
@@ -50,8 +52,7 @@ class MYPROJECT_API UPatrolComponent : public USceneComponent
    void DeletePatrolPoint(int patrolIndex);
 
    /** Called in Patrol task to move unit to next point*/
-   UFUNCTION(BlueprintCallable)
-   EPathFollowingRequestResult::Type MoveToNextPatrolPoint();
+   TPair<EPathFollowingRequestResult::Type, FAIRequestID> MoveToNextPatrolPoint();
 
    UFUNCTION(BlueprintCallable)
    FORCEINLINE FVector GetCurrentPatrolPoint() { return patrolPoints [ currentPatrolIndex ]; }

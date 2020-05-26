@@ -16,10 +16,10 @@
 #include "WorldObjects/ShopNPC.h"
 #include "ItemManager.h"
 
-FText UStoreInventory::NotEnoughItemsText = NSLOCTEXT("HelpMessages", "Items", "Missing required items for trade");
-FText UStoreInventory::NotEnoughMoneyText = NSLOCTEXT("HelpMessages", "Items", "You don't have enough squeezies...");
+FText UStoreInventory::NotEnoughItemsText = NSLOCTEXT("HelpMessages", "MisisngItems", "Missing required items for trade");
+FText UStoreInventory::NotEnoughMoneyText = NSLOCTEXT("HelpMessages", "NotEnoughSqueezies", "You don't have enough squeezies...");
 FText UStoreInventory::confirmTitleText   = NSLOCTEXT("HelpMessages", "ItemPurchaseConfirmTitle", "Purchase");
-FText UStoreInventory::ensurePurchaseText = NSLOCTEXT("HelpMessages", "ItemPurchaseConfirm", "Are you sure you want to buy this?");
+FText UStoreInventory::ensurePurchaseText = NSLOCTEXT("HelpMessages", "ItemPurchaseConfirm", "How many of these would you like to purchase?");
 
 bool UStoreInventory::OnItemPurchased()
 {
@@ -37,20 +37,30 @@ bool UStoreInventory::OnItemPurchased()
 bool UStoreInventory::OnItemsPurchased(FString howManyItems)
 {
    if(howManyItems != "") {
+      // Reads in number of items purchased from confirmation box
       int num = FCString::Atoi(*howManyItems);
       if(EnoughFunds(num)) {
-         TArray<FMyItem> itemPriceItems = itemPrice->items;
-         for(FMyItem& item : itemPriceItems) {
-            item.count *= num;
-         }
+         // If our backpack is not already full
+         if(interactingHeroPack->FindEmptySlot() != INDEX_NONE) {
+            // Remove the items necessary for the trade
+            TArray<FMyItem> itemPriceItems = itemPrice->items;
+            for(FMyItem& item : itemPriceItems) {
+               item.count *= num;
+            }
+            interactingHeroPack->RemoveItems(itemPriceItems);
 
-         interactingHeroPack->RemoveItems(itemPriceItems);
-         CPC->GetBasePlayer()->money -= itemPrice->money * num;
-         FMyItem newItemPurchased{itemToBuy, num};
-         CPC->GetBasePlayer()->heroInBlockingInteraction->backpack->AddItem(newItemPurchased);
-         CPC->GetHUDManager()->GetInventoryHUD()->LoadItems();
-         CPC->GetGameMode()->GetQuestManager()->OnItemPickup(newItemPurchased);
-         return true;
+            // Remove the money
+            CPC->GetBasePlayer()->money -= itemPrice->money * num;
+            // Add the item to our inventory and reload our inventory. Also notify quests that we obtained a new item
+            FMyItem newItemPurchased{itemToBuy, num};
+            interactingHeroPack->AddItem(newItemPurchased);
+            CPC->GetHUDManager()->GetInventoryHUD()->LoadItems();
+            CPC->GetGameMode()->GetQuestManager()->OnItemPickup(newItemPurchased);
+            return true;
+         }
+         else {
+            CPC->GetHUDManager()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("InventoryFull", "NotEnoughSpaceStore", "Not enough space in inventory to purchase item!"));
+         }
       }
    }
    return false;
@@ -84,7 +94,7 @@ bool UStoreInventory::OnWidgetAddToViewport_Implementation()
    if(shopkeeper)
    {
       SetBackPack(shopkeeper->itemsToSellBackpack);
-      return true;
+      return Super::OnWidgetAddToViewport_Implementation();
    }
    return false;
 }
