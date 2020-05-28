@@ -140,7 +140,12 @@ void ABaseHero::SetEnabled(bool bEnabled)
    if(bEnabled) {
       controllerRef->GetBasePlayer()->heroes.Add(this);
    } else {
-      controllerRef->GetBasePlayer()->heroes.RemoveSingle(this);
+      // Renumber the hero indices, then remove hero. To bring this hero back we need some tracking else the party must be reassigned
+      TArray<ABaseHero*>& heroesArray = controllerRef->GetBasePlayer()->heroes;
+      heroesArray.RemoveSingle(this); 
+      for(int i = heroIndex; i < heroesArray.Num(); ++i) {
+         heroesArray[i]->heroIndex -= 1;
+      }    
    }
 }
 

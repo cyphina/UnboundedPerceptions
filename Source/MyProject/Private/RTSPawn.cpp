@@ -499,13 +499,15 @@ void ARTSPawn::TabNextAlly()
    } else {
       // Tab through heroes if one/zero allies are selected
       if(controllerRef->GetBasePlayer()->heroes.Num()) {
-         if(controllerRef->GetBasePlayer()->selectedHeroes.Num() > 0) {
+         if(controllerRef->GetBasePlayer()->selectedHeroes.Num() == 1) { // If we have a hero already selected
+            // If a unit dies, the hero index is rearranged in hero->SetSelected() so don't worry about out of bounds
             int prevSelectedHeroIndex = controllerRef->GetBasePlayer()->selectedHeroes[0]->heroIndex;
+            // Deselect old unit and get next one in the contiguous hero index vals
             controllerRef->GetBasePlayer()->heroes[prevSelectedHeroIndex]->SetSelected(false);
             selectedHeroIndex = (prevSelectedHeroIndex + 1) % controllerRef->GetBasePlayer()->heroes.Num();
             controllerRef->GetBasePlayer()->heroes[selectedHeroIndex]->SetSelected(true);
             OnAllySelectedDelegate.Broadcast(false);
-         } else {
+         } else { // Don't have any hero selected? Select the first one available
             controllerRef->GetBasePlayer()->heroes[selectedHeroIndex]->SetSelected(true);
             OnAllySelectedDelegate.Broadcast(false);
          }

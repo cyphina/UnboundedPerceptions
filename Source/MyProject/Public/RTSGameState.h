@@ -99,7 +99,7 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase
    FTimerHandle enemyVisionUpdateTimerHandle;
 
    FWindowsRWLock   visibleMutex; // Guards visibleEnemies
-   FCriticalSection visiblePlayersMutex;
+   FWindowsRWLock visiblePlayersMutex; // Guard visiblePlayers
 
    /**Lists all party members that exist between every player (necessary for computing co op vision).  Faster to keep stuff in a set for quick removal
     * Also it holds all of the references to allies (across all players) if there ever is multiplayer*/

@@ -225,17 +225,21 @@ void ARTSGameState::UpdateVisiblePlayerUnits()
          for(AUnit* ally : enemy->possibleEnemiesInRadius) {
             ally->visionMutex.ReadLock();
             // if ally hasn't been checked yet so we don't do it twice
+            visiblePlayersMutex.ReadLock();
             if(!visiblePlayerUnits.Contains(ally)) {
+               visiblePlayersMutex.ReadUnlock();
                // If we can trace a line and hit the ally without hitting a wall
                if(!GetWorld()->LineTraceSingleByChannel(visionHitResult, enemy->GetActorLocation(), ally->GetActorLocation(), UNIT_VISION_CHANNEL)) {
                   if(UNLIKELY(!ally->IsInvisible())) {
                      // make it visible
-                     visiblePlayersMutex.Lock();
+                     visiblePlayersMutex.WriteLock();
                      visiblePlayerUnits.Add(ally);
-                     visiblePlayersMutex.Unlock();
+                     visiblePlayersMutex.WriteUnlock();
                   }
                }
             }
+            else
+               visiblePlayersMutex.ReadUnlock();
             ally->visionMutex.ReadUnlock();
          }
          enemy->visionMutex.ReadUnlock();

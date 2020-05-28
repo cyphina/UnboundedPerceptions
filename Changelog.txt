@@ -1,57 +1,11 @@
-Updated code to run in 4.25 including component visualizer code, as well reflection code 
-Updated plugin code for UE4EditorCustomize for 4.25
-Made some adjustments in character stat UI
-Updated font size in stat graph browser
-Fixed NPC patrolling
-Fixed various bugs with Social Window and refactored that code
-Started writing a test plan
-Fixed some bugs with multithreaded quest goal completion (accidentally passed in variables to another thread that got destroyed)
-Fixed some code with the damage indicator and changed that font
-Changed design of various inventory UIs
-Fixed color of slot text
-Fixed template code for stat adjusting
-Fixed missing reference to HUDManager in trigger
-Fixed logic in AddDialogLinesCustom in HudManager
-Fixed storage UI not updating
-Fixed shop UI not updating
-Fixed store slot passing in item id to UseItemAtInventorySlot instead of slotIndex
-Fixed trigger creation failure when attempting to open a locked door
-Fixed door unlock spell and refactored that blueprint
-Cleaned up the interactable level -> Added a new quest, layout to the level, and some more tests
-Refactored quest system a bit and fixed massive logic flaw and setting improper goalIndex in NativeConstruct for quest list widgets
-Reserved initial values for empty arrays in QuestManager
-Fixed dereferencing null pointer in CondititionalManager (goal completion condition)
-Fixed bugs with backpack container logic not handling overflow and refactored all the sites using it
-Removed some duplicate old blueprints I made earlier that I was not satisfied with
-Spruced up various comments in code and blueprints
-Fixed drag and drop from storage
-Set timebomb owner to prevent it from persisting across level transitions
-Modified the look of the loading widget
-Added message for trying to transfer items (via pickup, storage, and store) for a filled backpack
-Fixed backpacks reserving too much space initially causing dropping items to free inventory space not working correctly
-Fixed backpacks adding items with counts > 1 for unstackable items
-Disabled slots that have a slotindex greater than the backpack's size for storage and store inventories
-Fixed backpack item transfer (used in transfering storage items) to properly check for case with no space left
-Moved OnItemPickup check for QuestManager to after valid item add check when grabbing items from storage
-Added maxStorage property to StorageContainres (clamped value) and added some comments
-Removed random excess variable in StorageInventoryBP
-Fixed up look of scrollable inventory widgets, confirmation modal, and input modal.
-Disabled clicking in the backdrop for the modal widgets
-Fixed wrong text showing up when trading with not enough trade items
-Hide the count text in ShopSlot
-Redesigned NPC Test level (adding some more test cases)
-Modified NPC interaction. Now if the NPC doens't have a conversation starter there will be a message denoting their silence even if they do not want to interact
-Spruced up the combat test level
-Added missing selection ally broadcasts to tabbing
-Fixed the different hero images
-Fixed Cyphina's custom render depth
-Fixed skill ring default texture not showing up and having the wrong CD texture show up. Still need a refactor and more comments to be confident in this system
-Fixed sidebar UI scaling and stat UI scaling
-Fixed various bugs prior to deploying shipping build including removing some C++17 template magic
-Refactoring selection rect code into C++
-Removed Inline from things that were defined in CPP (the compiler should handle that with LTCG)
-Fixed up animation in sidebar widget, and removed default data bindings in both browser widgets
-Passed in RTSPawn ref to HUD through CameraPawnController during OnPossess
+Fixed tab indexing when a unit dies
+Fixed cursor issue (accidentally toggled wrong setting in my controller class | KEEP THE CURSOR VISIBLE FLAG ON)
+Fixed more threading issues for vision
+Resized the browser sidebar again (my updated animation changes broke it)...
+Created a delay during level transition to fix data races (not a guaranteed fix but its more optimal than using an extra lock
+but it is not guaranteed to work with hundreds of units).
+
+--
 
 TODO: Document skill actionbar stuff some more
 TODO: Clamp Vitals

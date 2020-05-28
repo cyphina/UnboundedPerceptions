@@ -370,7 +370,9 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "UI")
    FBox2D FindBoundary() const;
 
-   /** Function to disable (pretty much erases its trace from the world) but not destroy this actor in memory*/
+   /** Function to disable (pretty much erases its trace from the world) but not destroy this actor in memory
+    * Removes heroes and allies from the hero and ally array, although there may be a way to get them back through resurrection
+    */
    UFUNCTION(BlueprintCallable, Category = "Functionality")
    virtual void SetEnabled(bool bEnabled);
 

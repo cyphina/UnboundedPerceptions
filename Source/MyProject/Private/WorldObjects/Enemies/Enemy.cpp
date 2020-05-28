@@ -170,9 +170,9 @@ void AEnemy::OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, 
       possibleEnemiesInRadius.Remove(ally);
       ally->DecVisionCount();
       if (!ally->GetVisionCount()) {
-         controllerRef->GetGameState()->visiblePlayersMutex.Lock();
+         controllerRef->GetGameState()->visiblePlayersMutex.WriteLock();
          controllerRef->GetGameState()->visiblePlayerUnits.Remove(ally);
-         controllerRef->GetGameState()->visiblePlayersMutex.Unlock();
+         controllerRef->GetGameState()->visiblePlayersMutex.WriteUnlock();
       }
    }
 }
