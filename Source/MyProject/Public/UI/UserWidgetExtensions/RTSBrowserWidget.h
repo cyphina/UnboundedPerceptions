@@ -28,6 +28,5 @@ class MYPROJECT_API IRTSBrowserWidget
    virtual void StartDisplay(int browserWidth, int browserHeight) = 0;
 
    /** Updates the browser with new information used in the reactive apps the browser is displayed (svelte apps)*/
-   UFUNCTION()
-   virtual void UpdateInformation(const FString& updateFunctionName, const FString& updateJSON) = 0;
+   virtual void UpdateInformation(const FString& updateFunctionName, FStringView updateJSON) = 0;
 };

@@ -10,10 +10,11 @@ USettingsMenu::USettingsMenu() : Super()
 {
 #define LOCTEXT_NAMESPACE "SettingsMenuCategories"
 
-   resolutionCategories = {LOCTEXT("Resolution1", "1920x1080"), LOCTEXT("Resolution2", "1600x900"), LOCTEXT("Resolution3", "1366x768"), LOCTEXT("Resolution4", "1024x768"),
-                           LOCTEXT("Resolution5", "800x600")};
-   qualityCategories    = {LOCTEXT("Quality1", "Low"), LOCTEXT("Quality2", "Medium"), LOCTEXT("Quality3", "High"), LOCTEXT("Quality4", "Epic"), LOCTEXT("Quality5", "Cinematic")};
-   fPSCategories        = {LOCTEXT("FPS1", "30"), LOCTEXT("FPS2", "60"), LOCTEXT("FPS3", "90"), LOCTEXT("FPS4", "120"), LOCTEXT("FPS5", "200"), LOCTEXT("FPS6", "Unlimited")};
+   resolutionCategories = {LOCTEXT("Resolution1", "1920x1080"), LOCTEXT("Resolution2", "1600x900"), LOCTEXT("Resolution3", "1366x768"),
+                           LOCTEXT("Resolution4", "1024x768"), LOCTEXT("Resolution5", "800x600")};
+   qualityCategories    = {LOCTEXT("Quality1", "Low"), LOCTEXT("Quality2", "Medium"), LOCTEXT("Quality3", "High"), LOCTEXT("Quality4", "Epic"),
+                        LOCTEXT("Quality5", "Cinematic")};
+   fPSCategories = {LOCTEXT("FPS1", "30"), LOCTEXT("FPS2", "60"), LOCTEXT("FPS3", "90"), LOCTEXT("FPS4", "120"), LOCTEXT("FPS5", "200"), LOCTEXT("FPS6", "Unlimited")};
 
    resolutionIndex = 0;
 #undef LOCTEXT_NAMESPACE
@@ -21,10 +22,12 @@ USettingsMenu::USettingsMenu() : Super()
 
 void USettingsMenu::ChangeQualityValue(bool inc, UPARAM(ref) int& qualityValue, int numQualityVals)
 {
-   if (inc) {
-      if (qualityValue < numQualityVals - 1) ++qualityValue;
+   if(inc) {
+      if(qualityValue < numQualityVals - 1)
+         ++qualityValue;
    } else {
-      if (qualityValue > 0) --qualityValue;
+      if(qualityValue > 0)
+         --qualityValue;
    }
 }
 
@@ -67,7 +70,7 @@ void USettingsMenu::ChangeFrameRateCap(bool inc)
 {
    ChangeQualityValue(inc, frameRateIndex, fPSCategories.Num());
    FString command;
-   if (frameRateIndex != fPSCategories.Num() - 1)
+   if(frameRateIndex != fPSCategories.Num() - 1)
       command = "t.MaxFPS " + fPSCategories[frameRateIndex].ToString();
    else
       command = "t.MaxFPS 0";
@@ -81,14 +84,15 @@ void USettingsMenu::ChangeCameraSpeed(float val)
 
 void USettingsMenu::ChangeAudioVolume(float val)
 {
+   // TODO: Implement any sounds haha
 }
 
 void USettingsMenu::ChangeEffectVolume(float val)
 {
-   // GetWorld()->SetS
+   // TODO: Implement any sounds haha
 }
 
 void USettingsMenu::ToggleQuickCast()
 {
-   CPC->GetMyGameInstance()->playerQuickCast = !CPC->GetMyGameInstance()->playerQuickCast;
+   CPC->GetCameraPawn()->bQuickCast = !CPC->GetCameraPawn()->bQuickCast;
 }

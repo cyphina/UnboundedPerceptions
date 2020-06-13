@@ -20,10 +20,11 @@ class MYPROJECT_API UStoreInventory : public UInventory
 {
    GENERATED_BODY()
 
-   static FText NotEnoughItemsText;
-   static FText NotEnoughMoneyText;
-   static FText ensurePurchaseText;
-   static FText confirmTitleText;
+   static const FText NotEnoughItemsText;
+   static const FText NotEnoughMoneyText;
+   static const FText ensurePurchaseText;
+   static const FText ensurePurchaseSingleText;
+   static const FText confirmTitleText;
 
    int         itemSlot  = -1;
    FItemPrice* itemPrice = nullptr;
@@ -36,12 +37,12 @@ class MYPROJECT_API UStoreInventory : public UInventory
    class AHUDManager* hudManagerRef;
 
    UFUNCTION()
-   bool OnItemPurchased();
+   bool OnItemPurchased() const;
 
    UFUNCTION()
    bool OnItemsPurchased(FString howManyItems);
 
-   bool EnoughFunds(int numPurchasing);
+   bool EnoughFunds(int numPurchasing) const;
 
    UPROPERTY()
    AShopNPC* shopkeeper;

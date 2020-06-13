@@ -46,6 +46,9 @@ void ARTSGameState::BeginPlay()
    GetWorld()->GetTimerManager().SetTimer(allyVisionUpdateTimerHandle, this, &ARTSGameState::UpdateVisibleEnemies, .1, true);
    GetWorld()->GetTimerManager().SetTimer(enemyVisionUpdateTimerHandle, this, &ARTSGameState::UpdateVisiblePlayerUnits, .1, true);
 
+   // Don't really use this ATM but it's there if we want to play around with it and actually make it a thing we can increase the precision of the model by adding more polygons to the plane
+   // and performing more line traces. However it is quite inefficient since we would have to do this for every ally...
+   // Implemented via https://www.redblobgames.com/articles/visibility/.
    FOWplane = GetWorld()->SpawnActor<AFogOfWarPlane>(FOWplaneClass, FVector(0, 0, 0), FRotator());
 }
 
@@ -153,6 +156,7 @@ void ARTSGameState::UpdateVisibleEnemies()
       // Then after some kind of delay (hopefully the delay is long enough) the unit will actually be GC'd. But the thread referencing it should be long gone
       // This won't work if the thread referencing the unit is still running after it is GC'd. This means we have way too many enemies to loop through
       // Or too many ally threads were spawned
+      
       ParallelForWithPreWork(
           allyList.Num(),
           [this](int32 curIndx) {
@@ -190,9 +194,8 @@ void ARTSGameState::UpdateVisibleEnemies()
              visibleMutex.WriteUnlock();
           });
 
-      /// --Non multi-threaded code below--
+      /// --Non multi-threaded code below runs after parallel work--
 
-      visibleMutex.ReadLock();
       for(auto enemy : visibleEnemies) {
          if(!enemy->GetCapsuleComponent()->IsVisible()) {
             // Can't change flags like visibility in threads
@@ -200,7 +203,6 @@ void ARTSGameState::UpdateVisibleEnemies()
             enemy->GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECollisionResponse::ECR_Block); // not selectable by clicks
          }
       }
-      visibleMutex.ReadUnlock();
 
       // If there's an ally that is not visible this time, but was last time, make sure he's now invisible
       // Even if due to timing issues visibleEnemies doesn't have the right units inside it, it doesn't matter because the timing is so narrow and this will be rerun

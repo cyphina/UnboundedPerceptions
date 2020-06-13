@@ -16,9 +16,10 @@ struct FBTPatrolTaskMemory {
 };
 
 /**
- * Task which directs unit to move to next patrol location.  Relies on the unit having a patrol component else it fails.  
+ * Task which directs unit to move to next patrol location. Used by units and NPCs, although units (via attack move) may stop patrolling if they find a target
+ * Relies on the unit having a patrol component else it fails.  
  * Patrol component ended up being the best place to store the control points since the points are really a decorative member.
- * Does not initiate any attacks on its own
+ * Does not initiate any attacks on its own.
  */
 UCLASS()
 class MYPROJECT_API UBTTask_Patrol : public UBTTaskNode

@@ -32,7 +32,8 @@ class MYPROJECT_API USpellBook : public UObject
    TDoubleLinkedList<SpellNode> unknownSpells;   // spells we haven't learned
    TMap<int, SpellNode>         spellNodes;      // list of all spellnodes -- maps can have invalidated elements so watch out pointing to them.  Just copy values for now
 
-   bool isLearnable(SpellNode sNode);
+   // Checks to see if spell is in learnable spells list
+   bool IsLearnable(SpellNode sNode);
 
    UPROPERTY()
    class AUserInput* cpcRef;
@@ -54,16 +55,17 @@ class MYPROJECT_API USpellBook : public UObject
    TArray<int> GetLearnableSpells() const
    {
       TArray<int> spellIndices = TArray<int>();
-      for (SpellNode sNode : learnableSpells) {
+      for(SpellNode sNode : learnableSpells) {
          spellIndices.Add(sNode.index);
       }
       return spellIndices;
    }
+
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spellbook")
    TArray<int> GetLearnedSpells() const
    {
       TArray<int> spellIndices = TArray<int>();
-      for (SpellNode sNode : learnedSpells) {
+      for(SpellNode sNode : learnedSpells) {
          spellIndices.Add(sNode.index);
       }
       return spellIndices;
@@ -72,7 +74,7 @@ class MYPROJECT_API USpellBook : public UObject
    TArray<int> GetUnknownSpells() const
    {
       TArray<int> spellIndices = TArray<int>();
-      for (SpellNode sNode : unknownSpells) {
+      for(SpellNode sNode : unknownSpells) {
          spellIndices.Add(sNode.index);
       }
       return spellIndices;

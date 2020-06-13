@@ -49,7 +49,7 @@ class MYPROJECT_API UMyCheatManager : public UCheatManager
    UFUNCTION(exec, Category = "Cheats")
    virtual void GodMode(FString objectID, int toggleGodMode);
 
-    /** Adds a quest
+   /** Adds a quest
     * @param questName - Name of the quest to be completed that maps to a tag in BPQuestMap
     */
    UFUNCTION(exec, Category = "Cheats")

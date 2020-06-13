@@ -58,8 +58,12 @@ enum class ETriggerType : uint8 {
    /**Sets the IntimateNPC with name (object 1) to allow conversations (!= 0) or not (==0) (value1)*/
    SetNPCWantConverse,
    /**Plays sequence with filePath (relative to sequence folder)*/
-   PlaySequence
+   PlaySequence,
+   /**Purely used to keep count*/
+   TriggerCount
 };
+
+ENUM_RANGE_BY_COUNT(ETriggerType, static_cast<uint8>(ETriggerType::TriggerCount));
 
 USTRUCT(BlueprintType, NoExport)
 struct FTriggerData {

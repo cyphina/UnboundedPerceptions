@@ -132,8 +132,10 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
 
    class AUserInput* controllerRef;
 
-   TUniquePtr<StateMachine>   state = nullptr; // Reference to statemachine
-   TUniquePtr<FBaseCharacter> baseC = nullptr; // Reference to statmanager.  Is a pointer so we can make it and give it a reference to the attribute set
+   // Reference to statemachine
+   TUniquePtr<StateMachine> state = nullptr;
+   // Reference to statmanager.  Is a pointer so we can make it and give it a reference to the attribute set. Also don't want to overuse stack memory
+   TUniquePtr<FBaseCharacter> baseC = nullptr;
 
    UPROPERTY()
    class AUnitController* unitController = nullptr; // Reference to AIController
@@ -261,13 +263,13 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    float GetDPS(float timespan);
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   float GetDamageRecievedPerSecond(float timespan);
+   float GetDamageReceivedPerSecond(float timespan);
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
    float GetHealingPerSecond(float timespan);
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   float GetHealingRecievedPerSecond(float timespan);
+   float GetHealingReceivedPerSecond(float timespan);
 
    // float GetStunPerSecond(float timespan);
    const FBaseCharacter& GetBaseCharacter() const { return *baseC; }
@@ -308,7 +310,7 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
 
    /**Get Level of unit from baseCharacter*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
-   FORCEINLINE int GetLevel() const { return baseC->GetLevel(); }
+   FORCEINLINE int GetUnitLevel() const { return baseC->GetLevel(); }
 
    UFUNCTION(BlueprintCallable, Category = "Stats")
    void UpdateStats(const FGameplayAttribute& updatedStat); // call whenever stats get changed

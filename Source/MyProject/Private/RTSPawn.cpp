@@ -209,9 +209,20 @@ void ARTSPawn::GetHitResultClick(FHitResult& clickHitResult) const
 {
    FVector worldLocation, worldDirection;
    if(controllerRef->DeprojectMousePositionToWorld(worldLocation, worldDirection)) {
-      const auto               endPos = worldLocation + worldDirection * GetMaxArmLength() * CLICK_TRACE_LENGTH_MULTIPLIER;
-      FCollisionResponseParams f;
-      GetWorld()->LineTraceSingleByChannel(clickHitResult, worldLocation, endPos, SELECTABLE_BY_CLICK_CHANNEL, clickCollisionQueryParams);
+      const auto endPos = worldLocation + worldDirection * GetMaxArmLength() * CLICK_TRACE_LENGTH_MULTIPLIER;
+      GetWorld()->LineTraceSingleByChannel(clickHitResult, worldLocation, endPos, SELECTABLE_BY_CLICK_CHANNEL);
+   }
+}
+
+void ARTSPawn::GetHitResultRightClick(FHitResult& clickHitResult) const
+{
+   FVector worldLocation, worldDirection;
+   if(controllerRef->DeprojectMousePositionToWorld(worldLocation, worldDirection)) {
+      const auto            endPos = worldLocation + worldDirection * GetMaxArmLength() * CLICK_TRACE_LENGTH_MULTIPLIER;
+      FCollisionObjectQueryParams queryParams;
+      queryParams.AddObjectTypesToQuery(ECC_WorldStatic);
+      queryParams.AddObjectTypesToQuery(ENEMY_CHANNEL);
+      GetWorld()->LineTraceSingleByObjectType(clickHitResult, worldLocation, endPos, queryParams);
    }
 }
 
@@ -249,7 +260,7 @@ void ARTSPawn::CreateSelectionRect()
 
 FLinearColor ARTSPawn::GetSelectionRectColor() const
 {
-   return FLinearColor(0.15,0.57,0.78,0.4); // Blue-ish color
+   return FLinearColor(0.15, 0.57, 0.78, 0.4); // Blue-ish color
 }
 
 void ARTSPawn::CursorHover()
@@ -517,7 +528,7 @@ void ARTSPawn::TabNextAlly()
 
 void ARTSPawn::AttackMoveInitiate()
 {
-   if(!controllerRef->GetMyGameInstance()->playerQuickCast)
+   if(!bQuickCast)
       SetSecondaryCursor(ECursorStateEnum::AttackMove);
    else {
       FHitResult hitRes;
@@ -530,7 +541,7 @@ void ARTSPawn::UseAbility(int abilityIndex)
 {
    controllerRef->GetHUDManager()->GetActionHUD()->UseSkill(abilityIndex);
    //Quick cast enabled
-   if(controllerRef->GetMyGameInstance()->playerQuickCast) {
+   if(bQuickCast) {
       FHitResult hitRes;
       if(controllerRef->GetHitResultUnderCursor(SELECTABLE_BY_CLICK_CHANNEL, false, hitRes))
          for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {

@@ -104,9 +104,6 @@ class MYPROJECT_API AAllyAIController : public AUnitController
    UFUNCTION(BlueprintCallable, Category = "Spells")
    bool SetupSpellTargetting(UPARAM(ref) FHitResult& result, TSubclassOf<UMySpell> spellClass);
 
-   /** Stop behavior tree from running*/
-   void StopAutomation();
-
  private:
    /**Necessary setup to trigger our character to perform the actions to cast a spell*/
    void FinalizeSpellTargetting(TSubclassOf<UMySpell> spellClass);

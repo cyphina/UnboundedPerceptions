@@ -60,7 +60,7 @@ void UpResourceManager::ExecuteFunctionFromWorldObject(UObject* objectRef, FName
 }
 
 template <>
-ABaseHero* UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(FString nameToMatch, UWorld* worldRef)
+ABaseHero* UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(FStringView nameToMatch, UWorld* worldRef)
 {
    AUserInput* cpcRef = Cast<AUserInput>(worldRef->GetFirstPlayerController());
    for (ABaseHero* hero : cpcRef->GetBasePlayer()->allHeroes) { if (hero->GetGameName().ToString() == nameToMatch) { return Cast<ABaseHero>(hero); } }

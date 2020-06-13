@@ -29,10 +29,10 @@ class AAlly;
 class ICursorClickFunctionality;
 
 // Callback delegates for handling events when units are selected
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllySelected, bool, ToggleSelect); // ToggleAllySelect, SelectAllyUnit, SelectionRect
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllyDeselected, AAlly*, DeselectedAlly);  // ToggleAllyDeselect,
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGroundSelected);                                   // SelectGround,
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);                                     // SelectEnemy
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllySelected, bool, ToggleSelect);       // ToggleAllySelect, SelectAllyUnit, SelectionRect
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllyDeselected, AAlly*, DeselectedAlly); // ToggleAllyDeselect,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGroundSelected);                                  // SelectGround,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);                                    // SelectEnemy
 
 /**Pawn that is associated with the main RPG/RTS gameplay input*/
 UCLASS()
@@ -130,6 +130,10 @@ class MYPROJECT_API ARTSPawn : public APawn
    UFUNCTION(BlueprintCallable)
    void GetHitResultClick(FHitResult& clickHitResult) const;
 
+   /** Line trace specifically for right click (only hits ground and enemies)*/
+   UFUNCTION(BlueprintCallable)
+   void GetHitResultRightClick(FHitResult& clickHitResult) const;
+
    /** Returns an the actor hit from a cursor line trace or nullptr if no actor was hit*/
    UFUNCTION(BlueprintCallable)
    AActor* GetHitActorClick(FHitResult& clickHitResult);
@@ -140,6 +144,9 @@ class MYPROJECT_API ARTSPawn : public APawn
 
    /** Hopefully this gets copy elided to its destination and LTCG inlines it*/
    FLinearColor GetSelectionRectColor() const;
+
+   /** Should we enable quick casting (casting without having to click after pressing our spell key. Also makes attack move quick*/
+   bool bQuickCast;
 
  private:
    // These references store information about hit in member so we don't have to reconstruct every tick
@@ -294,7 +301,7 @@ class MYPROJECT_API ARTSPawn : public APawn
 
    /* If we need the ally that ws just selected, we can get it from baseplayer selectedAllies last */
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnAllySelected OnAllySelectedDelegate; 
+   FOnAllySelected OnAllySelectedDelegate;
 
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnAllyDeselected OnAllyDeselectedDelegate;

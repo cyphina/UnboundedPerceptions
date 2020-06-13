@@ -18,11 +18,6 @@ void ABasePlayer::BeginPlay()
    Super::BeginPlay();
 }
 
-void ABasePlayer::OnConstruction(const FTransform& transform)
-{
-   Super::OnConstruction(transform);
-}
-
 void ABasePlayer::ClearSelectedAllies()
 {
    while(selectedAllies.Num() > 0)

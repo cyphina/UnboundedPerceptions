@@ -16,12 +16,14 @@
 #include "WorldObjects/ShopNPC.h"
 #include "ItemManager.h"
 
-FText UStoreInventory::NotEnoughItemsText = NSLOCTEXT("HelpMessages", "MisisngItems", "Missing required items for trade");
-FText UStoreInventory::NotEnoughMoneyText = NSLOCTEXT("HelpMessages", "NotEnoughSqueezies", "You don't have enough squeezies...");
-FText UStoreInventory::confirmTitleText   = NSLOCTEXT("HelpMessages", "ItemPurchaseConfirmTitle", "Purchase");
-FText UStoreInventory::ensurePurchaseText = NSLOCTEXT("HelpMessages", "ItemPurchaseConfirm", "How many of these would you like to purchase?");
+const FText UStoreInventory::NotEnoughItemsText = NSLOCTEXT("HelpMessages", "MisisngItems", "Missing required items for trade");
+const FText UStoreInventory::NotEnoughMoneyText = NSLOCTEXT("HelpMessages", "NotEnoughSqueezies", "You don't have enough squeezies...");
+const FText UStoreInventory::confirmTitleText   = NSLOCTEXT("HelpMessages", "ItemPurchaseConfirmTitle", "Purchase");
+const FText UStoreInventory::ensurePurchaseText = NSLOCTEXT("HelpMessages", "ItemPurchaseConfirm", "How many of these would you like to purchase?");
+const FText UStoreInventory::ensurePurchaseSingleText = NSLOCTEXT("HelpMessages", "ItemPurchaseConfirm", "Are you sure you want to purchase this?");
 
-bool UStoreInventory::OnItemPurchased()
+
+bool UStoreInventory::OnItemPurchased() const
 {
    interactingHeroPack->RemoveItems(itemPrice->items);
    CPC->GetBasePlayer()->money -= itemPrice->money;
@@ -66,14 +68,14 @@ bool UStoreInventory::OnItemsPurchased(FString howManyItems)
    return false;
 }
 
-bool UStoreInventory::EnoughFunds(int numPurchasing)
+bool UStoreInventory::EnoughFunds(int numPurchasing) const
 {
    // Ensure we have more money than required
    if(itemPrice->money * numPurchasing <= CPC->GetBasePlayer()->money) {
       if(itemPrice->items.Num() > 0) {
          int itemCount = 0;
          // Check we have the items necessary to trade
-         for(FMyItem& tradeItems : itemPrice->items) {
+         for(const FMyItem& tradeItems : itemPrice->items) {
             itemCount = interactingHeroPack->FindItemCount(tradeItems.id);
             if(itemCount < tradeItems.count * numPurchasing) {
                CPC->GetHUDManager()->GetIngameHUD()->DisplayHelpText(NotEnoughItemsText);
@@ -109,9 +111,10 @@ void UStoreInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)
    if(IsValid(CPC->GetBasePlayer()->heroInBlockingInteraction))
       interactingHeroPack = CPC->GetBasePlayer()->heroInBlockingInteraction->backpack;
 
+   // Display a textbox for the player to input how many of an item they want to buy if it's a stackable item, else display a confirmation box
    if(!UItemManager::Get().GetItemInfo(itemToBuy)->isStackable) {
       if(EnoughFunds(1))
          hudManagerRef->ShowConfirmationBox("OnItemPurchased", this, confirmTitleText, ensurePurchaseText);
    } else
-      hudManagerRef->ShowInputBox("OnItemsPurchased", this, confirmTitleText, ensurePurchaseText);
+      hudManagerRef->ShowInputBox("OnItemsPurchased", this, confirmTitleText, ensurePurchaseSingleText);
 }

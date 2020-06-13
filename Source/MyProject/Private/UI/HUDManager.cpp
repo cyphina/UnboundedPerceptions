@@ -153,6 +153,7 @@ void AHUDManager::AddHUD(uint8 newState)
          case HUDs::HS_Settings: ApplyHUD(newState, true, false, true); break;
          case HUDs::HS_SaveLoad: ApplyHUD(newState, true, false, true); break;
          case HUDs::HS_ChatBox: ApplyHUD(newState, true, true, false); break;
+         case HUDs::HS_KeyMap: ApplyHUD(newState, true, false, false); break;
          default: break;
       }
    }

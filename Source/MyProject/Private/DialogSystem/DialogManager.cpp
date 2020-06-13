@@ -4,7 +4,6 @@
 #include "CoreMisc.h"
 #include "Json.h"
 #include "DialogManager.h"
-#include "DialogGraph.h"
 
 UDialogManager* UDialogManager::dialogManager = nullptr;
 
@@ -21,7 +20,7 @@ void UDialogManager::InitializeManager()
    dialogManager->AddToRoot();
 }
 
-TArray<FDialogData> UDialogManager::LoadDialog(const FName& rowName, FString contextString)
+TArray<FDialogData> UDialogManager::LoadDialog(const FName& rowName, const FString& contextString)
 {
    int                 i          = 0;
    FString             strRowName = rowName.ToString();

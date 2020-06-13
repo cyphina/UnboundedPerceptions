@@ -4,7 +4,7 @@
 #include "SaveLoadClass.generated.h"
 
 /**
- * Class that deals with saving and loading
+ * Class that deals with saving and loading to disk
  * Saving requires us to store our information in a binary array, and then write that array to disk
  * When writing to the binary array, we have to pass information by reference, which is why we want to copy our information to a struct.
  * For certain data, we can only grab some copies of information.  We can workaround this using friend classes, however

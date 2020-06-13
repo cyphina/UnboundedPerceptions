@@ -42,12 +42,13 @@ class MYPROJECT_API UDialogManager : public UObject
    /**Load up dialogue string from the table:
    @param contextString - A string with information about the caller.  Haven't found much use of this, usually I just pass an empty string*/
    UFUNCTION(BlueprintCallable, Category = "File Handling")
-   TArray<FDialogData> LoadDialog(const FName& rowName, FString contextString);
+   TArray<FDialogData> LoadDialog(const FName& rowName, const FString& contextString);
 
  private:
    static UDialogManager* dialogManager;
 
    static void InitializeManager();
 
+   UPROPERTY()
    UDataTable* dialogLookupTable;
 };

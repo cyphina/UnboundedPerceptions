@@ -43,7 +43,7 @@ void UMyCheatManager::LevelUp(FString heroName)
 void UMyCheatManager::LevelUpToLevel(FString heroName, int level)
 {
    if (ABaseHero* heroRef = *userInputRef->GetBasePlayer()->heroes.FindByPredicate([heroName](ABaseHero* hero) { return hero->GetGameName().ToString() == heroName; })) {
-      while (heroRef->GetLevel() < level)
+      while (heroRef->GetUnitLevel() < level)
          heroRef->LevelUp();
    }
 }

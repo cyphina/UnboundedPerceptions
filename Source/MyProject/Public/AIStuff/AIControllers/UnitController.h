@@ -164,6 +164,11 @@ class MYPROJECT_API AUnitController : public AAIController
    UFUNCTION(BlueprintCallable, Category = "Action")
    virtual void Stop();
 
+   /** Stop behavior tree from running. Used in the case we want to stop tasks that are performed via the behavior tree (like attack move) and override them with our predefined actions
+    * like when we issue a command via a click
+    */
+   void StopAutomation() const;
+
    /**Used to initiate an attack on a target*/
    UFUNCTION(BlueprintCallable, Category = "Action")
    virtual void BeginAttack(AUnit* target);

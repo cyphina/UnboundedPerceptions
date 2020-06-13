@@ -206,6 +206,7 @@ void UQuestManager::OnPartyLeaderMove()
 
 void UQuestManager::OnEnemyDie(const AEnemy* enemy)
 {
+   // For updating UI, we need to use TaskGraphMainThread
    auto dieFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, enemy]() {
       for(AQuest* quest : quests) {
          for(const int& goalIndex : quest->currentGoalIndices) {

@@ -82,8 +82,14 @@ enum class HUDs : uint8 {
    /**Chatbox to type in commands to be processed via NLP and converted to actions*/
    HS_ChatBox,
    /**Start menu for the beginning of the game*/
-   HS_Start
+   HS_Start,
+   /**Widget which has buttons we can use to map our keys*/
+   HS_KeyMap,
+   /** Number of widgets managed by the hudmanager*/
+   HS_Count
 };
+
+ENUM_RANGE_BY_COUNT(HUDs, static_cast<uint8>(HUDs::HS_Count));
 
 //! SINGLETON CLASS that is partially Injected
 // The purpose of the HUDManager is for easy swapping in and out widgets.  Not too useful for getting references though.
@@ -97,12 +103,11 @@ class MYPROJECT_API AHUDManager : public AInfo
 {
    GENERATED_BODY()
 
-   static const int HUDCount = 21; // Number of huds we have total.  Change if adding more. Assertion fails if we dont have enough space to remind us to update this size
+   static const int HUDCount = static_cast<uint8>(
+       HUDs::HS_Count); // Number of huds we have total.  Change if adding more. Assertion fails if we dont have enough space to remind us to update this size
 
-   UPROPERTY()
-   ARTSGameMode*                        gameMode;
-   UPROPERTY()
-   AUserInput*                          playerControllerRef;
+   ARTSGameMode* gameMode;
+   AUserInput* playerControllerRef;
 
    TBitArray<FDefaultBitArrayAllocator> currentlyDisplayedWidgetsBitSet = TBitArray<FDefaultBitArrayAllocator>(false, HUDCount); // widgets that are on screen
 
@@ -118,12 +123,13 @@ class MYPROJECT_API AHUDManager : public AInfo
     *@param bBlocking - Can other MyUserWidgets be opened while this one is open?
     */
    bool ApplyHUD(uint8 newState, bool enableClickEvents, bool canOpenCombat, bool bBlocking = false);
-   void UpdateWidgetTracking(int removeIndex, bool enableClickEvents, bool canOpenCombat); // helper function to update tracking of widgets on screen or widgets blocking actions
+   void UpdateWidgetTracking(int removeIndex, bool enableClickEvents,
+                             bool canOpenCombat); // helper function to update tracking of widgets on screen or widgets blocking actions
 
    void InjectDependency(UObject* objectToInject)
    {
       FObjectProperty* objectProperty = FindFProperty<FObjectProperty>(objectToInject->GetClass(), "hudManagerRef"); // Find the property on that object
-      objectProperty->SetPropertyValue_InContainer(objectToInject, this); // Get that property and set its value in the container (actually object) and set it to this 
+      objectProperty->SetPropertyValue_InContainer(objectToInject, this); // Get that property and set its value in the container (actually object) and set it to this
    }
 
  public:
@@ -177,7 +183,7 @@ class MYPROJECT_API AHUDManager : public AInfo
     */
    void ShowConfirmationBox(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty());
 
-    /**Adds an input box that can do something with the input once the confirmation button is pressed
+   /**Adds an input box that can do something with the input once the confirmation button is pressed
     * @param funcObject - Pointer to UObject member function that will be called after the confirmation
     */
    void ShowInputBox(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty());
@@ -197,11 +203,17 @@ class MYPROJECT_API AHUDManager : public AInfo
 
    /**Add the confirmationbox HUD by passing in the callback*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add ConfirmationBox HUD", AutoCreateRefTerm = "newTitle,newDesc"))
-   void BP_AddConfirmationBox(const FText& newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) { ShowConfirmationBox(funcName, funcObject, newTitle, newDesc); }
+   void BP_AddConfirmationBox(const FText& newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr)
+   {
+      ShowConfirmationBox(funcName, funcObject, newTitle, newDesc);
+   }
 
    /**Add the inputbox HUD by passing in the callback*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add InputBox HUD", AutoCreateRefTerm = "newTitle,newDesc"))
-   void BP_AddInputBox(FText newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) { ShowInputBox(funcName, funcObject, newTitle, newDesc); }
+   void BP_AddInputBox(FText newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr)
+   {
+      ShowInputBox(funcName, funcObject, newTitle, newDesc);
+   }
 
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle")
    bool IsWidgetOnScreen(HUDs hudToCheck) const { return currentlyDisplayedWidgetsBitSet[static_cast<int>(hudToCheck)]; }

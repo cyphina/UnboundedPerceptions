@@ -254,12 +254,6 @@ bool AAllyAIController::SetupSpellTargetting(UPARAM(ref) FHitResult& result, TSu
    return false;
 }
 
-void AAllyAIController::StopAutomation()
-{
-   if(behaviorTreeComp->IsRunning())
-      behaviorTreeComp->StopTree();
-}
-
 void AAllyAIController::FinalizeSpellTargetting(TSubclassOf<UMySpell> spellClass)
 {
    GetCPCRef()->GetCameraPawn()->SetSecondaryCursor(); // Just set cursor to to select so the cursor check loop will quickly change the cursor back to normal

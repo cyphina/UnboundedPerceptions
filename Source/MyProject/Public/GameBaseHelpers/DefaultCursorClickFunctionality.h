@@ -19,7 +19,9 @@ class UDefaultCursorClickFunctionality : public ICursorClickFunctionality
 
    void HandleLeftClick() final;
    void HandleRightClick() final;
+   /** Can queue item usage, attack moves, and spell casting*/
    void HandleShiftLeftClick() final;
+   /** Leads to queueing a move action or an attack */
    void HandleShiftRightClick() final;
 
  private:
@@ -28,6 +30,8 @@ class UDefaultCursorClickFunctionality : public ICursorClickFunctionality
    /// Left click functionality
    void ToggleSingleAllySelection();
    void AttackMoveQueue();
+   void SpellCastQueue();
+   void ItemUsageQueue();
    /** Select an ally or enemy when we have the select cursor (no units are selected)*/
    void SelectSingleUnitUnderClick();
    /** Select an enemy unit when we have attack cursor (one ally selected)*/

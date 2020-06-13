@@ -11,6 +11,7 @@
  */
 
 class ARTSGameMode;
+class UButton;
 
 UCLASS()
 class MYPROJECT_API UBreakMenu : public UMyDraggableWidget
@@ -24,8 +25,18 @@ class MYPROJECT_API UBreakMenu : public UMyDraggableWidget
    UPROPERTY()
    class AHUDManager* hudManagerRef;
 
-   UPROPERTY()
    ARTSGameMode* gameModeRef;
+
+   UPROPERTY(Meta = (BindWidget))
+   UButton* btnResume;
+   UPROPERTY(Meta = (BindWidget))
+   UButton* btnSaveLoad;
+   UPROPERTY(Meta = (BindWidget))
+   UButton* btnOption;
+   UPROPERTY(Meta = (BindWidget))
+   UButton* btnKeys;
+   UPROPERTY(Meta = (BindWidget))
+   UButton* btnExit;
 
    UFUNCTION(BlueprintCallable, Category = "BreakMenu Functionality")
    void Resume();
@@ -35,6 +46,9 @@ class MYPROJECT_API UBreakMenu : public UMyDraggableWidget
 
    UFUNCTION(BlueprintCallable, Category = "BreakMenu Functionality")
    void Options();
+
+   UFUNCTION(BlueprintCallable, Category = "BreakMenu Functionality")
+   void RemapKeys();
 
    UFUNCTION(BlueprintCallable, Category = "BreakMenu Functionality")
    void Exit();

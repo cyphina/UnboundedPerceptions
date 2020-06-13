@@ -30,7 +30,6 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    FGameplayTagContainer dialogTopics = FGameplayTagContainer();
 
    void         BeginPlay() override;
-   virtual void OnConstruction(const FTransform& transform) override;
 
  public:
 #pragma region PartyInfo
@@ -72,6 +71,7 @@ class MYPROJECT_API ABasePlayer : public APlayerState
 
 #pragma endregion
 
+   /** Enemy or hero unit that we see detailed information in our actionbar.*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
    AUnit* focusedUnit;
 
@@ -81,12 +81,15 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    UPROPERTY(BlueprintReadWrite, Category = "Quest")
    UQuestManager* questManager;
 
+   /** How much squeezies we have*/
    UPROPERTY(BlueprintReadWrite, EditAnywhere)
    int money;
 
+   /** Callback when we learn a new dialog topic*/
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnDialogTopicLearned OnDialogLearned;
 
+   /** Callback when we change the heroes in our party*/
    OnPartyUpdated partyUpdatedEvent;
 
    ABasePlayer();
@@ -123,6 +126,7 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    UFUNCTION(BlueprintCallable, Category = "DialogAccessor")
    void LearnDialogTopic(FGameplayTag topic);
 
+   /** Retrieves a list of all dialog topics this player knows*/
    UFUNCTION(BlueprintCallable, Category = "DialogAccessor")
    FGameplayTagContainer GetDialogTopics() const { return dialogTopics; }
 

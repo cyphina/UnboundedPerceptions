@@ -64,31 +64,34 @@ void UDefaultCursorClickFunctionality::HandleRightClick()
    }
 
    if(GetCursorState() != ECursorStateEnum::UI) {
-      pawnRef->GetHitResultClick(clickHitResult);
+      pawnRef->GetHitResultRightClick(clickHitResult);
+      if(clickHitResult.bBlockingHit) {
+         switch(clickHitResult.GetComponent()->GetCollisionObjectType()) {
+            case ECC_WorldStatic: {
+               // Last time when I didn't make this temporary, we tried making our lambda automatically capture location and it failed miserably
+               const FVector location = clickHitResult.Location;
 
-      switch(clickHitResult.GetComponent()->GetCollisionObjectType()) {
-         case ECC_WorldStatic: {
-            // Last time when I didn't make this temporary, we tried making our lambda automatically capture location and it failed miserably
-            FVector location = clickHitResult.Location;
+               // Create a little decal where we clicked
+               pawnRef->CreateClickVisual(location);
 
-            // Create a little decal where we clicked
-            pawnRef->CreateClickVisual(location);
+               // Stop the unit and move
+               pawnRef->StopSelectedAllyCommands();
+               for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
+                  ally->GetUnitController()->Move(FVector(location));
+                  ally->GetAllyAIController()->StopAutomation();
+               }
+            } break;
+            case ENEMY_CHANNEL: {
+               AEnemy* enemy = Cast<AEnemy>(clickHitResult.GetActor());
 
-            // Stop the unit and move
-            pawnRef->StopSelectedAllyCommands();
-            for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
-               ally->GetUnitController()->Move(FVector(location));
-            }
-         } break;
-         case ENEMY_CHANNEL: {
-            AEnemy* enemy = Cast<AEnemy>(clickHitResult.GetActor());
-
-            pawnRef->StopSelectedAllyCommands();
-            for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
-               ally->GetUnitController()->BeginAttack(enemy);
-            }
-         } break;
-         default: break;
+               pawnRef->StopSelectedAllyCommands();
+               for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
+                  ally->GetUnitController()->BeginAttack(enemy);
+                  ally->GetAllyAIController()->StopAutomation();
+               }
+            } break;
+            default: break;
+         }
       }
    }
 }
@@ -184,6 +187,14 @@ void UDefaultCursorClickFunctionality::AttackMoveQueue()
       pawnRef->CreateClickVisual(moveLocation);
       pawnRef->SetSecondaryCursor();
    }
+}
+
+void UDefaultCursorClickFunctionality::SpellCastQueue()
+{
+}
+
+void UDefaultCursorClickFunctionality::ItemUsageQueue()
+{
 }
 
 void UDefaultCursorClickFunctionality::SelectSingleUnitUnderClick()

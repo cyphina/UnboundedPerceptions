@@ -1,5 +1,9 @@
 #pragma once
 
+/** This header has information used to save data between level transitions in memory
+ * Saves information about a few levels so that loading can be shorter.
+ */
+
 #include "GameplayTags.h"
 #include "SaveGameStructs.h"
 #include "Interactables/InteractableBase.h"

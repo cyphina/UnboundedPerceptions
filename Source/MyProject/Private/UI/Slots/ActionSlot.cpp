@@ -15,7 +15,7 @@ TSubclassOf<UToolTipWidget> UActionSlot::toolTipWidgetClass = nullptr;
 
 UActionSlot::UActionSlot(const FObjectInitializer& o) : UUserWidget(o)
 {
-   ConstructorHelpers::FClassFinder<UToolTipWidget> tooltipClass(TEXT("/Game/RTS_Tutorial/HUDs/HelpText/BP_ToolTipBox"));
+   ConstructorHelpers::FClassFinder<UToolTipWidget> tooltipClass(TEXT("/Game/RTS_Tutorial/HUDs/HelpUI/GameIndicators/BP_ToolTipBox"));
    toolTipWidgetClass = tooltipClass.Class;
 }
 

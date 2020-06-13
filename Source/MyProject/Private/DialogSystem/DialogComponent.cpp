@@ -78,7 +78,7 @@ TArray<FDialogData> UDialogComponent::JSONToDialogNodes(FString jsonString)
 #undef LOCTEXT_NAMESPACE
 */
 
-void UDialogComponent::LoadDialog(FString filePath)
+void UDialogComponent::LoadDialog(const FString& filePath) const
 {
    FString loadedString;
    FFileHelper::LoadFileToString(loadedString, *filePath, FFileHelper::EHashOptions::ErrorMissingHash);

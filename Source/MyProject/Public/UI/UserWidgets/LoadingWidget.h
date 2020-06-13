@@ -25,6 +25,7 @@ class MYPROJECT_API ULoadingWidget : public UMyUserWidget
    /**Has the level finished loading?*/
    UPROPERTY(BlueprintReadWrite, Category = "Data")
    bool isReadyToContinue;
+
    /**Current loading screen tip that is displayed*/
    UPROPERTY(BlueprintReadWrite, Category = "Data")
    FText tip;

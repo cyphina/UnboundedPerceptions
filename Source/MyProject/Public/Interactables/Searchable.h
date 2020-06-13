@@ -4,7 +4,7 @@
 #include "Items/Item.h"
 #include "Searchable.generated.h"
 
-/*Interactable we can scavange after a delay searching (think of those things in escape room games)
+/*Interactable we can scavenge after a delay searching (think of those things in escape room games)
  * Examples: Treasure chests, table, shelf, and cupboard.
  */
 UCLASS()

@@ -21,8 +21,7 @@ class MYPROJECT_API URTSBrowserWidgetBase : public UUserWidget, public IRTSBrows
    void StartDisplay(int browserWidth, int browserHeight) override final;
 
    /** Send JSON information to the browser to update UI*/
-   UFUNCTION(BlueprintCallable)
-   void UpdateInformation(const FString& updateFunctionName, const FString& updateJSON) override final;
+   void UpdateInformation(const FString& updateFunctionName, FStringView updateJSON) override final;
 
  protected:
    void NativeConstruct() override;

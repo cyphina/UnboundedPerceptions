@@ -22,7 +22,7 @@ void URTSBrowserWidgetBase::StartDisplay(int browserWidth, int browserHeight)
    browserCanvas->SetBrushFromTexture(browser->GetTexture());
 }
 
-void URTSBrowserWidgetBase::UpdateInformation(const FString& updateFunctionName, const FString& updateJSON)
+void URTSBrowserWidgetBase::UpdateInformation(const FString& updateFunctionName, FStringView updateJSON)
 {
    TArray<FString> parameters;
    parameters.Emplace(updateJSON);

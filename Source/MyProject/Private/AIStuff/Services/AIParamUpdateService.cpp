@@ -24,8 +24,8 @@ void UAIParamUpdateService::TickNode(UBehaviorTreeComponent& ownerComp, uint8* n
    // threatValue += p.stunDealt;
    threatValue += myMemory->owner->GetHealingPerSecond(3) * 2; // prioritze healers, and maybe life leeching?
 
-   riskValue += myMemory->owner->GetDamageRecievedPerSecond(3);
-   riskValue -= myMemory->owner->GetHealingRecievedPerSecond(3);
+   riskValue += myMemory->owner->GetDamageReceivedPerSecond(3);
+   riskValue -= myMemory->owner->GetHealingReceivedPerSecond(3);
    riskValue *= myMemory->owner->GetVitalCurValue(EVitals::Health) / unitTotalHealth;
 
    ownerComp.GetBlackboardComponent()->SetValueAsInt("risk", riskValue);

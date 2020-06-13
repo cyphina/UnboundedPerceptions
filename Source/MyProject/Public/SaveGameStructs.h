@@ -3,7 +3,7 @@
 #include "GameplayTags.h"
 #include "Archive.h"
 
-/*Definitions of all the structs which we first copy the data we want to save to
+/*Definitions of all the structs that represent data we want to save to disk.
  The structs are declared here since we want them to be class members since we need to setup a callback without any parameters
 to FWorldDelegate::OnPostWorldInitialization to properly call the loading setup at the right time since OpenLevel is Async.*/
 

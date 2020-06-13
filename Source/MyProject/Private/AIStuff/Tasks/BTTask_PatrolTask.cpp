@@ -59,7 +59,7 @@ uint16 UBTTask_Patrol::GetInstanceMemorySize() const
 
 void UBTTask_Patrol::OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FName Message, int32 RequestID, bool bSuccess)
 {
-   // Line 84 - BTTaskNoded.cpp shows that bSuccess is the message status
+   // Line 84 - BTTaskNoded.cpp shows that bSuccess is the message status for whathever message triggers this
    if(!bSuccess)
    {
       UE_LOG(LogBehaviorTree, Warning, TEXT("Problem patrolling to location"));

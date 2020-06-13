@@ -62,7 +62,7 @@ class MYPROJECT_API AUserInput : public APlayerController
    UPROPERTY()
    ARTSPawn* cameraPawn;
 
-   UPROPERTY(EditDefaultsOnly, Meta=(AllowPrivateAccess="true"))
+   UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = "true"))
    TSubclassOf<AHUDManager> hudManagerClass;
 
  public:
@@ -70,7 +70,7 @@ class MYPROJECT_API AUserInput : public APlayerController
    UPROPERTY(BlueprintReadWrite)
    FVector2D offset;
 
-  /**Won't exist until after widgets created*/
+   /**Won't exist until after widgets created*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    FORCEINLINE AHUDManager* GetHUDManager() const { return hudManagerRef; }
 

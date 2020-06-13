@@ -71,7 +71,7 @@ void URTSSidebarWidget::UpdatePartyInformation()
 
 void URTSSidebarWidget::UpdateDeselectAllHeroes()
 {
-   UpdateInformation("updateDeselectAllHeroes", "");
+   UpdateInformation("updateDeselectAllHeroes", TEXT(""_SV));
 }
 
 void URTSSidebarWidget::UpdateHeroToggleDeselected(AAlly* deselectedHeroRef)

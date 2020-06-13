@@ -36,7 +36,7 @@ class MYPROJECT_API UDialogComponent : public UActorComponent
    // TArray<FDialogData>					JSONToDialogNodes(FString jsonString);
    // Load up dialogue tree
    UFUNCTION(BlueprintCallable, Category = "File Handling")
-   void LoadDialog(FString filePath);
+   void LoadDialog(const FString& filePath) const;
 
  public:
    UDialogComponent();

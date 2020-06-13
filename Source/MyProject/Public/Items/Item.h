@@ -1,16 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 #include "GameplayTagsModule.h"
 #include "GameplayTags.h"
-#include "WorldDataObject.h"
 #include "Item.generated.h"
-
-/**
- * NOTES:
- * When using structs, make any member as a UPROPERTY to protect from dangling pointing crashes.
- * Clear pointers to UObjects for GC to collect them
- */
 
 class UMySpell;
 
@@ -40,7 +31,10 @@ enum class ERarity : uint8 // rarity enum for all types of items
 
 USTRUCT(BlueprintType, NoExport)
 struct FMyItemInfo {
-   FMyItemInfo() : name(FText::GetEmpty()), image(nullptr), description(FText::GetEmpty()), itemType(FGameplayTag()), isStackable(false), count(1), rarity(ERarity::Common) {}
+   FMyItemInfo() :
+       name(FText::GetEmpty()), image(nullptr), description(FText::GetEmpty()), itemType(FGameplayTag()), isStackable(false), count(1), rarity(ERarity::Common)
+   {
+   }
 
    FMyItemInfo(FText name, UTexture2D* image, FText desc, FGameplayTag itemType, bool isStackable, int count, ERarity rarity) :
        image(image), itemType(itemType), isStackable(isStackable), count(count), rarity(rarity)
@@ -63,7 +57,7 @@ struct FMyItemInfo {
 
    /**Unique item ID*/
    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-   int id;
+   int id = -1;
 
    /**Every item name should be unique*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite)

@@ -1,9 +1,24 @@
-Fixed tab indexing when a unit dies
-Fixed cursor issue (accidentally toggled wrong setting in my controller class | KEEP THE CURSOR VISIBLE FLAG ON)
-Fixed more threading issues for vision
-Resized the browser sidebar again (my updated animation changes broke it)...
-Created a delay during level transition to fix data races (not a guaranteed fix but its more optimal than using an extra lock
-but it is not guaranteed to work with hundreds of units).
+Added in some custom editor details when editing FTriggerData in the level editor or blueprints. Still a WIP to make it functional for all trigger types
+Linked some properties between the custom details and FTriggerData struct (only for HUD changing trigger so far)
+Made TriggerType and HUD enums iterable (via TEnumRange)
+Added extra count value to those enums as well
+Removed some unnecessary classes
+Added patrol components to the allies
+Moved StopAutomation() to unit controller class
+Added some extra checking in some places
+Stops behavior trees on 
+Changed AttackMove task to AttackWhileMoving and invalidated the periodic attack timer
+Renamed HelpText folder to HelpUI and had to rename its usage in ActionSlot
+Added new widget for rebinding keys (it moves the orders of the keys and I'm not sure how to prevent that (Well I know of ways but they are inefficient so we'll leave it as so for now))
+Moved widget logic for break menu to C++ and added way to navigate to key remapping widget
+Deleted some older assets from systems I no longer use
+Deleted some older code files that were for testing
+Removed some unecessary code in random spots...
+Set a default value for id field in FMyItemInfo
+Moved quick cast logic to pawn
+Renamed spelling errors inside Unit
+Used some string_view in certain places where copying large strings could be a problem
+Fixed being unable to right click under allied units
 
 --
 
@@ -26,3 +41,8 @@ TODO: Implement spell description parsing
 TODO: Add spell requirements (overloads and combos)
 TODO: Implement firebase to record some data?
 TODO: Manual enemy debug controls to test some combat cases
+
+Improvement TODOs:
+Unify target inside blackboard with target data target? (not possible since we use that one for ai stuff, and the targetData everywhere else)
+How to handle attack move queueing? (using patrol in which case we need to stop the tree once we move to the destination however we don't want to do this when not queueing)
+

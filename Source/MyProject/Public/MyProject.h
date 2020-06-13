@@ -4,7 +4,7 @@
 
 #include "Engine.h"
 
-#define GROUND_TRACE_ONLY_CHANNEL ECollisionChannel::ECC_GameTraceChannel1
+#define GROUND_TRACE_ONLY_CHANNEL ECollisionChannel::ECC_GameTraceChannel1 // Different from static mesh, is actually the trace channel
 #define ENEMY_CHANNEL ECollisionChannel::ECC_GameTraceChannel2
 #define INTERACTABLE_CHANNEL ECollisionChannel::ECC_GameTraceChannel3
 #define NPC_CHANNEL ECollisionChannel::ECC_GameTraceChannel4

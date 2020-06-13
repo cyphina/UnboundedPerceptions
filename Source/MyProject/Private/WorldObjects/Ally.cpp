@@ -13,6 +13,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AIStuff/AIControllers/AllyAIController.h"
+#include "PatrolComponent.h"
 #include "Enemy.h"
 #include "UpResourceManager.h"
 #include "InteractableBase.h"
@@ -38,6 +39,8 @@ AAlly::AAlly(const FObjectInitializer& oI) : AUnit(oI)
    visionSphere->SetCollisionProfileName("FriendlyVision");
    visionSphere->OnComponentBeginOverlap.AddDynamic(this, &AAlly::OnVisionSphereOverlap);
    visionSphere->OnComponentEndOverlap.AddDynamic(this, &AAlly::OnVisionSphereEndOverlap);
+
+   patrolComp = CreateDefaultSubobject<UPatrolComponent>("PatrolComponent");
 
    GetMesh()->CustomDepthStencilValue = 254;
 

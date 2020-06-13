@@ -110,6 +110,9 @@ protected:
    /**Like CastSpell in Unit but triggers actionbar redraw*/
    bool CastSpell(TSubclassOf<UMySpell> spellToCast) override;
 
+   UPROPERTY(VisibleAnywhere)
+   class UPatrolComponent* patrolComp;
+
    ///< summary>
    /// The vision section contains information on making units hidden and visible based upon hiding behind walls, and information relevant
    /// to creating a custom mesh that represents a visibility polygon which will be used in a post processing effect to create an alpha mask

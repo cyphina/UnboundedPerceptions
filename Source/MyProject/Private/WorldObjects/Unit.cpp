@@ -425,7 +425,7 @@ float AUnit::GetDPS(float timespan)
    return combatParams.GetDPS(timespan, GetWorld()->GetTimeSeconds());
 }
 
-float AUnit::GetDamageRecievedPerSecond(float timespan)
+float AUnit::GetDamageReceivedPerSecond(float timespan)
 {
    return combatParams.GetDamageRecievedPerSecond(timespan, GetWorld()->GetTimeSeconds());
 }
@@ -435,7 +435,7 @@ float AUnit::GetHealingPerSecond(float timespan)
    return combatParams.GetHealingPerSecond(timespan, GetWorld()->GetTimeSeconds());
 }
 
-float AUnit::GetHealingRecievedPerSecond(float timespan)
+float AUnit::GetHealingReceivedPerSecond(float timespan)
 {
    return combatParams.GetHealingRecievedPerSecond(timespan, GetWorld()->GetTimeSeconds());
 }
@@ -457,7 +457,7 @@ float AUnit::CalculateRisk()
    const float targetRiskValue = CalculateTargetRisk();
 
    // Calculate score based on how much damage we are taking per second
-   const float damageIntake = GetDamageRecievedPerSecond(1), healingIntake = GetHealingRecievedPerSecond(1);
+   const float damageIntake = GetDamageReceivedPerSecond(1), healingIntake = GetHealingReceivedPerSecond(1);
    const float netIntake = (damageIntake - healingIntake) / currentHealth;
 
    GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Silver, FString::Printf(TEXT("Target, Debuff, NetIntake: %f, %f, %f"), targetRiskValue, debuffRiskValue, netIntake));
