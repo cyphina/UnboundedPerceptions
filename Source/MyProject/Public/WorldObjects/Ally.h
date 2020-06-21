@@ -37,7 +37,10 @@ class MYPROJECT_API AAlly : public AUnit {
    /** Object query that only includes things that should fade in and out */
    ECollisionChannel fadeChannel;
 
-   /* SpellIndex to remember what slot was used so we can set the visual indicator to be on CD after casting spell.  Don't make it part of begincast because items don't need it */
+   /* SpellIndex to remember what slot was used so we can set the visual indicator to be on CD after casting spell.  Don't make it part of begincast because items don't need it
+    * The player could in theory cast a spell and then select another one which would put the second selected spell on CD even though it's the first one that was casted so we use
+    * this variable to save whatever spell is being casted since it only changes after we begin casting the spell (as opposed to when we press down the key).
+    */
    UPROPERTY(BlueprintSetter = SetSpellIndex, BlueprintGetter = GetSpellIndex, Category = "Spells")
    int spellIndex = -1;
 

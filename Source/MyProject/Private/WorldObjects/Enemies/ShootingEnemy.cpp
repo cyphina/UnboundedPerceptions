@@ -21,7 +21,7 @@ void AShootingEnemy::Attack_Implementation()
 {
    if (!IsStunned()) // If we're not stunned and our attack rate is filled
    {
-      FTransform      transform  = FTransform{FVector(GetActorLocation().X, GetActorLocation().Y, targetData.targetUnit->GetActorLocation().Z)};
+      FTransform      transform  = FTransform{FVector(GetActorLocation().X, GetActorLocation().Y, GetTargetUnit()->GetActorLocation().Z)};
       ARTSProjectile* projectile = GetWorld()->SpawnActorDeferred<ARTSProjectile>(projectileType, transform, this);
 
       FGameplayEffectContextHandle context = GetAbilitySystemComponent()->MakeEffectContext();
@@ -43,16 +43,16 @@ void AShootingEnemy::Attack_Implementation()
       projectile->FinishSpawning(transform);
 
       if(projectile->IsHoming())
-         projectile->FireAtTarget(targetData.targetUnit);
+         projectile->FireAtTarget(GetTargetUnit());
       else
-         projectile->FireInDirection((targetData.targetUnit->GetActorLocation() - FVector(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z)).GetSafeNormal());
+         projectile->FireInDirection((GetTargetUnit()->GetActorLocation() - FVector(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z)).GetSafeNormal());
    
       //Remove invisibility if you attack somebody
       GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
 
       //If they die and the targets get canceled out, then targetUnit can be nulled
-      if(IsValid(targetData.targetUnit))
-         if(!targetData.targetUnit->IsVisible())
+      if(IsValid(GetTargetUnit()))
+         if(!GetTargetUnit()->IsVisible())
             GetUnitController()->Stop();
    }
 }

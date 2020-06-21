@@ -30,7 +30,7 @@ void AHeroAIController::BeginInteract(AActor* interactor)
 
       // Make sure this is set before we call GetInteractableLocation when handling a door
       heroRef->currentInteractable    = interactor;
-      heroRef->targetData.targetActor = interactor;
+      heroRef->SetTargetActor(interactor);
       heroRef->unitProperties.turnAction.BindLambda([this]() { IInteractable::Execute_Interact(heroRef->currentInteractable, heroRef); });
 
       heroRef->state->ChangeState(EUnitState::STATE_INTERACTING);
@@ -44,7 +44,7 @@ void AHeroAIController::BeginInteract(AActor* interactor)
          float pathCost = 0;
          if(UNavigationSystemV1::GetCurrent(GetWorld())->GetPathCost(GetWorld(), heroRef->GetActorLocation(), interactableLoc, pathCost) !=
             ENavigationQueryResult::Fail) {
-            heroRef->targetData.targetLocation = interactableLoc;
+            heroRef->SetTargetLocation(interactableLoc);
             if(AdjustPosition(10, interactableLoc))
                // If we're already here execute the turn action
                heroRef->unitProperties.turnAction.Execute();
@@ -55,8 +55,8 @@ void AHeroAIController::BeginInteract(AActor* interactor)
                AdjustPosition(10, resLocation);
          }
       } else {
-         // If our actor can move, we'll starting walking towards the actor.  If it is blocked off lets hope the designer put it in a path where we can walk towards it eventually
-         heroRef->targetData.targetActor = interactor;
+         // If our target actor can move, we'll starting walking towards the actor.  If it is blocked off lets hope the designer put it in a path where we can walk towards it eventually
+         heroRef->SetTargetActor(interactor);
          if(AdjustPosition(heroRef->interactRange, interactor))
             heroRef->unitProperties.turnAction.Execute();
       }

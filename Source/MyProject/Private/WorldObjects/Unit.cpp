@@ -135,7 +135,7 @@ void AUnit::BeginPlay()
    if(GetAbilitySystemComponent()) {
       // Make sure owner is player controller else the whole ability systme fails to function
       GetAbilitySystemComponent()->InitAbilityActorInfo(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(), this); // setup owner and avatar
-      baseC                                = TUniquePtr<FBaseCharacter>(new FBaseCharacter(GetAbilitySystemComponent()->AddSet<UMyAttributeSet>()));
+      baseC = TUniquePtr<FBaseCharacter>(new FBaseCharacter(GetAbilitySystemComponent()->AddSet<UMyAttributeSet>()));
       baseC->InitializeAttributeBaseValues();
       GetCharacterMovement()->MaxWalkSpeed = GetMechanicAdjValue(EMechanics::MovementSpeed);
 
@@ -205,21 +205,21 @@ void AUnit::Die_Implementation()
    // Trigger "Death Events" in all skills that need them like Soul Catcher
    FGameplayEventData eD = FGameplayEventData();
    eD.EventTag           = FGameplayTag::RequestGameplayTag("Event.Death");
-   eD.TargetData         = targetData.spellTargetData;
+   eD.TargetData         = GetTargetData();
    if(GetAbilitySystemComponent()->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("Event.Death"), &eD)) {
       // GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Emerald, FString("Wee") + FString::FromInt(currentSpellIndex));
    }
 
    // Stop any enemy and allied units that we're targetting us with any channeled spells by sending the AI a notification
    for(auto& enemy : controllerRef->GetGameState()->enemyList) {
-      if(enemy->GetTarget() == this) {
+      if(GetTargetUnitValid() && enemy->GetTargetUnit() == this) {
          enemy->GetUnitController()->Stop();
          FAIMessage msg(AUnit::AIMessage_TargetLoss, enemy);
          FAIMessage::Send(enemy->GetUnitController(), msg);
       }
    }
    for(auto& ally : controllerRef->GetGameState()->allyList) {
-      if(ally->GetTarget() == this) {
+      if(GetTargetUnitValid() && ally->GetTargetUnit() == this) {
          ally->GetUnitController()->Stop();
          FAIMessage msg(AUnit::AIMessage_TargetLoss, ally);
          FAIMessage::Send(ally->GetUnitController(), msg);
@@ -269,7 +269,7 @@ void AUnit::PlayAttackEffects()
 void AUnit::Attack_Implementation()
 {
    // If we're not stunned and our attack rate is filled
-   if(!IsStunned() && targetData.targetUnit) {
+   if(!IsStunned() && GetTargetUnit()) {
       // Create a gameplay effect for this
       FGameplayEffectContextHandle context = GetAbilitySystemComponent()->MakeEffectContext();
       context.AddInstigator(this, this);
@@ -297,7 +297,7 @@ void AUnit::Attack_Implementation()
 
       // TODO: Should add weapon element here
       UAbilitySystemBlueprintLibrary::AddAssetTag(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Element.Force"));
-      GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*damageEffectHandle.Data.Get(), targetData.targetUnit->GetAbilitySystemComponent());
+      GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*damageEffectHandle.Data.Get(), GetTargetUnit()->GetAbilitySystemComponent());
    }
 
    // Remove invisibility if you attack somebody
@@ -320,7 +320,7 @@ bool AUnit::CanCast(TSubclassOf<UMySpell> spellToCheck)
       // Make sure we have enough mana
       if(spell->GetCost(GetAbilitySystemComponent()) <= GetVitalCurValue(EVitals::Mana)) // Enough Mana?
       {
-         // Make sure the spell isn't on CD
+         // Make sure the spell isn't on CD and we don't have any status preventing us from using spells
          if(!spell->isOnCD(GetAbilitySystemComponent()) && !IsStunned() && !IsSilenced()) // Spell on CD and we aren't affected by any status that prevents us
          {
             return true;
@@ -354,45 +354,17 @@ void AUnit::OnMoveCompleted(FAIRequestID RequestID, const EPathFollowingResult::
    // Check to see if we need to turn towards a point or a target after we're done moving.
    // Moving naturally rotates us to our desired point/target, but it doesn't finish if we stop moving
    if(Result == EPathFollowingResult::Success) {
-      switch(GetState()) {
-         case EUnitState::STATE_MOVING:
-            if(!unitController->IsFacingTarget(targetData.targetLocation))
-               unitController->TurnTowardsTarget(targetData.targetLocation);
-            state->ChangeState(EUnitState::STATE_IDLE);
-            break;
-         case EUnitState::STATE_ATTACKING:
-            if(IsValid(targetData.targetUnit))
-               !unitController->IsFacingTarget(targetData.targetUnit->GetActorLocation()) ? unitController->TurnTowardsActor(targetData.targetUnit)
-                                                                                          : unitProperties.turnAction.Execute();
-            break;
-         case EUnitState::STATE_CASTING:
-            if(IsValid(targetData.targetUnit)) // Most spells target units
-               !unitController->IsFacingTarget(targetData.targetUnit->GetActorLocation()) ? unitController->TurnTowardsTarget(targetData.targetLocation)
-                                                                                          : unitProperties.turnAction.Execute();
-            else // Some spells can target interactables
-               !unitController->IsFacingTarget(targetData.targetLocation) ? unitController->TurnTowardsTarget(targetData.targetLocation)
-                                                                          : unitProperties.turnAction.Execute();
-            break;
-         case EUnitState::STATE_INTERACTING:
-            if(!targetData.targetActor) // Sometimes we target an actor because the interactable can move
-               !unitController->IsFacingTarget(targetData.targetLocation) ? unitController->TurnTowardsTarget(targetData.targetLocation)
-                                                                          : unitProperties.turnAction.Execute();
-            else // Else we target a point we want to move to before we use the interactable
-                if(IsValid(targetData.targetActor))
-               !unitController->IsFacingTarget(targetData.targetActor->GetActorLocation()) ? unitController->TurnTowardsActor(targetData.targetActor)
-                                                                                           : unitProperties.turnAction.Execute();
-            break;
-         case EUnitState::STATE_CHASING:
-            if(unitController->ChasingQuit()) {
-               unitController->Stop();
-               FAIMessage msg(AUnit::AIMessage_TargetLoss, this);
-               FAIMessage::Send(unitController, msg);
-            } else
-               unitController->Chase();
-            break;
-         case EUnitState::STATE_ATTACK_MOVE: unitController->Stop(); break;
-         default: break;
-      }
+      // Handle's logic about turning to the proper target and thus prompts any turn actions after it completes
+      Visit(MoveCompletedVisitor(this), targetData.target);
+
+      // TODO: Remove this logic and place it somewhere better
+      if(GetState() == EUnitState::STATE_CHASING)
+         if(unitController->ChasingQuit()) {
+            unitController->Stop();
+            FAIMessage msg(AUnit::AIMessage_TargetLoss, this);
+            FAIMessage::Send(unitController, msg);
+         } else
+            unitController->Chase();
    }
 }
 
@@ -487,6 +459,75 @@ float AUnit::CalculateThreat()
    const float availableSpellsThreatValue = FMath::Clamp(diminishFunc(numAvailableSpells), 0.f, 1.f);
 
    return buffThreatValue + availableSpellsThreatValue;
+}
+
+void AUnit::MoveCompletedVisitor::operator()(FEmptyVariantState)
+{
+   unitRef->GetUnitController()->Stop();
+}
+
+void AUnit::MoveCompletedVisitor::operator()(FVector v)
+{
+   !unitRef->GetUnitController()->IsFacingTarget(v) ? unitRef->GetUnitController()->TurnTowardsTarget(v) : unitRef->unitProperties.turnAction.ExecuteIfBound();
+}
+
+void AUnit::MoveCompletedVisitor::operator()(AActor* a)
+{
+   if(IsValid(a)) // Ensure the actor wasn't destroyed after we finished our movement
+      !unitRef->GetUnitController()->IsFacingTarget(a->GetActorLocation()) ? unitRef->GetUnitController()->TurnTowardsActor(a)
+                                                                           : unitRef->unitProperties.turnAction.ExecuteIfBound();
+}
+
+void AUnit::MoveCompletedVisitor::operator()(AUnit* u)
+{
+   if(IsValid(u)) // Ensure the actor wasn't destroyed after we finished our movement
+      !unitRef->GetUnitController()->IsFacingTarget(u->GetActorLocation()) ? unitRef->GetUnitController()->TurnTowardsActor(u)
+                                                                           : unitRef->unitProperties.turnAction.ExecuteIfBound();
+}
+
+FVector AUnit::TargetLocationVisitor::operator()(FEmptyVariantState)
+{
+   checkf(false, TEXT("Should never call this!"));
+   return FVector::ZeroVector;
+}
+
+FVector AUnit::TargetLocationVisitor::operator()(FVector v)
+{
+   return v;
+}
+
+FVector AUnit::TargetLocationVisitor::operator()(AActor* a)
+{
+   return a->GetActorLocation();
+}
+
+FVector AUnit::TargetLocationVisitor::operator()(AUnit* u)
+{
+   return u->GetActorLocation();
+}
+
+FGameplayAbilityTargetDataHandle AUnit::TargetDataVisitor::operator()(FEmptyVariantState)
+{
+   // If we call BeginCastSpell for a spell that requires no targetting
+   return FGameplayAbilityTargetDataHandle();
+}
+
+FGameplayAbilityTargetDataHandle AUnit::TargetDataVisitor::operator()(FVector v)
+{
+   FGameplayAbilityTargetingLocationInfo tInfo;
+   tInfo.LocationType     = EGameplayAbilityTargetingLocationType::LiteralTransform;
+   tInfo.LiteralTransform = FTransform(v);
+   return UAbilitySystemBlueprintLibrary::AbilityTargetDataFromLocations(tInfo, tInfo);
+}
+
+FGameplayAbilityTargetDataHandle AUnit::TargetDataVisitor::operator()(AActor* a)
+{
+   return UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(a);
+}
+
+FGameplayAbilityTargetDataHandle AUnit::TargetDataVisitor::operator()(AUnit* u)
+{
+   return UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(u);
 }
 
 void AUnit::OnUpdateGameSpeed(float speedMultiplier)

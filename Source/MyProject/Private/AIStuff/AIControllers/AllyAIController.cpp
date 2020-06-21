@@ -64,7 +64,7 @@ void AAllyAIController::BeginAttack(AUnit* target)
       if(!allyRef->IsStunned()) {
          Stop(); // Stop any other actions we're doing
          allyRef->state->ChangeState(EUnitState::STATE_ATTACKING);
-         allyRef->SetTarget(target);
+         allyRef->SetTargetUnit(target);
          // GetUnitOwner()->targetData.spellTargetData    = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(target);
          allyRef->unitProperties.turnAction.BindUObject(this, &AAllyAIController::PrepareAttack);
          if(AdjustPosition(allyRef->GetMechanicAdjValue(EMechanics::AttackRange), target))
@@ -75,17 +75,24 @@ void AAllyAIController::BeginAttack(AUnit* target)
    }
 }
 
-bool AAllyAIController::BeginCastSpell(TSubclassOf<UMySpell> spellToCast, const FGameplayAbilityTargetDataHandle& targetData)
+bool AAllyAIController::BeginCastSpell(TSubclassOf<UMySpell> spellToCast)
 {
-   // If we ever directly call this in our ally behavioral tree, make sure the spellclass set to this task is actually one we have equipped
-   int spellToCastAbilityIndex = allyRef->abilities.Find(spellToCast);
+   // If we ever directly call this in our ally behavioral tree, make sure the spell class set to this task is actually one we have equipped
+   const int spellToCastAbilityIndex = allyRef->abilities.Find(spellToCast);
    if(spellToCastAbilityIndex != INDEX_NONE) {
-      allyRef->SetSpellIndex(spellToCastAbilityIndex);
-      if(Super::BeginCastSpell(spellToCast, targetData)) {
+      allyRef->SetSpellIndex(spellToCastAbilityIndex); // Set this here because player could press another button while AI spell is being casted leading to wrong spell CD
+      if(Super::BeginCastSpell(spellToCast)) {
          return true;
       }
    }
    return false;
+}
+
+void AAllyAIController::DeselectSpell()
+{
+   currentlySelectedSpell = nullptr;
+   GetCPCRef()->GetCameraPawn()->HideSpellCircle();
+   GetCPCRef()->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Select);
 }
 
 bool AAllyAIController::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
@@ -97,17 +104,14 @@ bool AAllyAIController::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
          if(spell->GetCost(allyRef->GetAbilitySystemComponent()) <= allyRef->GetVitalCurValue(EVitals::Mana)) {
             if(currentlySelectedSpell == spellToCast) // If already selected
             {
-               currentlySelectedSpell = nullptr; // Deselect the spell
-               GetCPCRef()->GetCameraPawn()->HideSpellCircle();
-               GetCPCRef()->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Select);
+               DeselectSpell();
                return false;
             }
 
             if(spell->GetTargetting().GetTagName() == "Skill.Targetting.None") // Non-targetted?  Then just cast it
             {
                Stop();
-               allyRef->SetCurrentSpell(spellToCast);
-               allyRef->SetSpellIndex(currentlySelectedSpellIndex);
+               SetupDelayedSpellProps(spellToCast);
                IncantationCheck(spellToCast);
             } else {
                GetCPCRef()->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Magic); // Set wand targetting cursor
@@ -118,7 +122,7 @@ bool AAllyAIController::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
 
             if(spell->GetTargetting().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))) {
                // TODO: depending on the spell area targetting, use different indicators
-               // if it's an AOE spell show the targetting indicator
+               // If it's an AOE spell show the targetting indicator
                GetCPCRef()->GetCameraPawn()->ShowSpellCircle(spell->GetAOE(allyRef->GetAbilitySystemComponent()));
             } else {
                GetCPCRef()->GetCameraPawn()->HideSpellCircle();
@@ -146,120 +150,159 @@ bool AAllyAIController::PressedCastSpell(int spellCastingIndex)
    return spellSelected;
 }
 
-bool AAllyAIController::SetupSpellTargetting(UPARAM(ref) FHitResult& result, TSubclassOf<UMySpell> spellClass)
+bool AAllyAIController::InvalidTarget() const
 {
-   UMySpell* spell           = spellClass.GetDefaultObject();
-   FName     spellTargetting = spell->GetTargetting().GetTagName();
+   allyRef->controllerRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(allyRef->invalidTargetText);
+   return false;
+}
 
-   if(IsValid(spell)) {
-      if(spellTargetting == "Skill.Targetting.Area") // We can target anything and the area around it will be affected
-      {
-         Stop();
-         allyRef->targetData.spellTargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(result);
-         // If we clicked on a unit, target the unit for the cast
-         if(AUnit* unitRef = Cast<AUnit>(result.Actor.Get())) {
-            allyRef->SetTarget(unitRef);
-
-            FinalizeSpellTargetting(spellClass);
-            if(allyRef->targetData.targetUnit == allyRef || AdjustPosition(spell->GetRange(allyRef->GetAbilitySystemComponent()), allyRef->targetData.targetActor))
-               IncantationCheck(spellClass);
-            GetCPCRef()->GetCameraPawn()->HideSpellCircle();
-            return true;
-         } else // Else cast on the ground
-         {
-            allyRef->targetData.targetLocation = result.Location;
-            FinalizeSpellTargetting(spellClass);
-            if(AdjustPosition(spell->GetRange(allyRef->GetAbilitySystemComponent()), allyRef->targetData.targetLocation))
-               IncantationCheck(spellClass);
-            GetCPCRef()->GetCameraPawn()->HideSpellCircle();
-            return true;
-         }
-      } else // We need to check to see if we targetted the right kind of actor
-      {
-         if(IsValid(result.Actor.Get())) {
-            // If we clicked on a unit, we must be using a single target spell.  Make sure actor is a unit and that it is visible (we have vision over the target)
-            if(result.Actor->GetClass()->IsChildOf(AUnit::StaticClass())) {
-               if(spellTargetting != "Skill.Targetting.Single.Interactable") {
-                  AUnit* unit = Cast<AUnit>(result.Actor.Get());
-                  if(unit->GetCanTarget()) {
-                     if(unit->GetIsEnemy()) {
-                        // Check to see if target is meets the criteria of the spell
-                        if(spellTargetting == "Skill.Targetting.Single.Friendly") {
-                           allyRef->controllerRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(allyRef->invalidTargetText);
-                           return false;
-                        }
-                     } else {
-                        if(spellTargetting == "Skill.Targetting.Single.Enemy") {
-                           allyRef->controllerRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(allyRef->invalidTargetText);
-                           return false;
-                        }
-                     }
-
-                     // Keep track of targetting data
-                     Stop();
-                     allyRef->targetData.spellTargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(result);
-                     allyRef->SetTarget(unit);
-
-                     // If casting on ourselves, then we can just instantly cast
-                     if(allyRef->targetData.targetUnit == allyRef) {
-                        allyRef->SetCurrentSpell(spellClass); // Set it again for now since we had to stop
-                        allyRef->SetSpellIndex(currentlySelectedSpellIndex);
-                        IncantationCheck(spellClass);
-                        GetCPCRef()->GetCameraPawn()->SetSecondaryCursor();
-                        return true;
-                     }
-                  } else // Invulnerable unit
-                  {
-                     allyRef->controllerRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(allyRef->invalidTargetText);
-                     return false;
-                  }
-               } else // We tried to target a unit with an interactable spell
-               {
-                  allyRef->controllerRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(allyRef->invalidTargetText);
-                  return false;
-               }
-            }
-            // If we are targetting an interactable
-            else if(result.Actor->GetClass()->IsChildOf(AInteractableBase::StaticClass())) {
-               if(spellTargetting != "Skill.Targetting.Single.Interactable" && spellTargetting != "Skill.Targetting.Single.AllUnitsAndInteractables") {
-                  // Make sure our spell works on that
-
-                  GetCPCRef()->GetHUDManager()->GetIngameHUD()->DisplayHelpText(allyRef->invalidTargetText);
-                  return false;
-               }
-
-               Stop();
-               allyRef->targetData.targetActor = Cast<AInteractableBase>(result.Actor);
-               // Set the targetlocation as the actor location since logically you're casting the spell on the object (not the interactable location)
-               allyRef->targetData.targetLocation  = allyRef->targetData.targetActor->GetActorLocation();
-               allyRef->targetData.spellTargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromHitResult(result);
-            } else {
-               // If we clicked on something that isn't an interactable or unit, and our targetting isn't a location
-               GetCPCRef()->GetHUDManager()->GetIngameHUD()->DisplayHelpText(allyRef->invalidTargetText);
-               return false;
-            }
-         } else {
-            // If our click trace failed
-            GetCPCRef()->GetHUDManager()->GetIngameHUD()->DisplayHelpText(allyRef->invalidTargetText);
-            return false;
-         }
-
-         FinalizeSpellTargetting(spellClass);
-         // If we are already in range
-         if(AdjustPosition(spell->GetRange(allyRef->GetAbilitySystemComponent()), allyRef->targetData.targetActor))
-            IncantationCheck(spellClass);
-         return true;
+bool AAllyAIController::CheckUnitTarget(FName spellTargetting, AUnit* unit) const
+{
+   if(UNLIKELY(unit->GetIsEnemy())) { // Mostly used by allies except in testing modes
+      // Check to see if target is meets the criteria of the spell
+      if(spellTargetting == "Skill.Targetting.Single.Friendly") {
+         return InvalidTarget();
       }
+   } else {
+      if(spellTargetting == "Skill.Targetting.Single.Enemy") {
+         return InvalidTarget();
+      }
+   }
+   return true;
+}
+
+void AAllyAIController::CastSpellOnSelf(TSubclassOf<UMySpell> spellClass)
+{
+   Stop();
+   SetupDelayedSpellProps(spellClass);
+   IncantationCheck(spellClass);
+   GetCPCRef()->GetCameraPawn()->SetSecondaryCursor();
+}
+
+void AAllyAIController::AreaManualTargetting(FHitResult& result, TSubclassOf<UMySpell> spellClass, UMySpell* spell)
+{
+   // If we clicked on a unit, target the unit for the cast
+   if(AUnit* unitRef = Cast<AUnit>(result.Actor.Get())) {
+      // If we're in range already or we're casting it on ourself
+      if(IsTargettingSelf(unitRef))
+         CastSpellOnSelf(spellClass);
+
+      // Else target the unit and move to position
+      FinalizeSpellTargetting(spellClass, unitRef);
+      GetCPCRef()->GetCameraPawn()->HideSpellCircle();
+   }
+   // Else cast on the ground
+   else {
+      FinalizeSpellTargetting(spellClass, result.Location);
+      GetCPCRef()->GetCameraPawn()->HideSpellCircle();
+   }
+}
+
+bool AAllyAIController::UnitManualTargetting(FHitResult& result, TSubclassOf<UMySpell> spellClass, FName spellTargetting)
+{
+   if(spellTargetting != "Skill.Targetting.Single.Interactable") {
+      AUnit* unitRef = Cast<AUnit>(result.Actor.Get());
+      if(unitRef->GetCanTarget()) {
+         if(!CheckUnitTarget(spellTargetting, unitRef))
+            return false;
+
+         // If casting on ourselves, then we can just instantly cast
+         if(IsTargettingSelf(unitRef)) {
+            CastSpellOnSelf(spellClass);
+            return true;
+         }
+
+         FinalizeSpellTargetting(spellClass, unitRef);
+
+      } else // Invulnerable unit
+      {
+         return InvalidTarget();
+      }
+   } else // We tried to target a unit with an interactable spell
+   {
+      return InvalidTarget();
    }
    return false;
 }
 
-void AAllyAIController::FinalizeSpellTargetting(TSubclassOf<UMySpell> spellClass)
+bool AAllyAIController::InteractableManualTargetting(FHitResult& result, TSubclassOf<UMySpell> spellClass, FName spellTargetting)
 {
-   GetCPCRef()->GetCameraPawn()->SetSecondaryCursor(); // Just set cursor to to select so the cursor check loop will quickly change the cursor back to normal
-   auto castTurnAction = [this, spellClass]() { IncantationCheck(spellClass); };
-   allyRef->unitProperties.turnAction.BindLambda(castTurnAction);
-   allyRef->SetCurrentSpell(spellClass); // Set it again for now since we had to stop before casting the spell to clear unecessary values for this action's setup
+   if(spellTargetting != "Skill.Targetting.Single.Interactable" && spellTargetting != "Skill.Targetting.Single.AllUnitsAndInteractables") {
+      return InvalidTarget();
+   }
+
+   FinalizeSpellTargetting(spellClass, result.Actor.Get());
+   return true;
+}
+
+bool AAllyAIController::SetupSpellTargetting(UPARAM(ref) FHitResult& result, TSubclassOf<UMySpell> spellClass)
+{
+   UMySpell*   spell           = spellClass.GetDefaultObject();
+   const FName spellTargetting = spell->GetTargetting().GetTagName();
+
+   if(IsValid(spell) && result.IsValidBlockingHit()) {
+      // Handle any spells that can target the ground first
+      if(spellTargetting == "Skill.Targetting.Area") {
+         AreaManualTargetting(result, spellClass, spell);
+      } else {
+         // Targetting a single object
+         if(IsValid(result.Actor.Get())) {
+            // If we clicked on a unit, we must be using a single target spell.
+            // Make sure actor is a unit and that it is visible (we have vision over the target).
+            // This may already be handled for us since we turn off collision when toggling a unit's visibility
+            if(result.Actor->GetClass()->IsChildOf(AUnit::StaticClass())) {
+               if(!UnitManualTargetting(result, spellClass, spellTargetting))
+                  return false;
+            }
+            // If we are targetting an interactable
+            else if(result.Actor->GetClass()->IsChildOf(AInteractableBase::StaticClass())) {
+               if(!InteractableManualTargetting(result, spellClass, spellTargetting))
+                  return false;
+            }
+            // If we clicked on something that isn't an interactable or unit, and our targetting isn't a location
+            else {
+               return InvalidTarget();
+            }
+         } else {
+            // If our click trace failed
+            return InvalidTarget();
+         }
+      }
+      return true;
+   }
+   return false;
+}
+
+void AAllyAIController::SetupDelayedSpellProps(TSubclassOf<UMySpell> spellToCast) const
+{
+   allyRef->SetCurrentSpell(spellToCast);
    allyRef->SetSpellIndex(currentlySelectedSpellIndex);
-   allyRef->state->ChangeState(EUnitState::STATE_CASTING);
+}
+
+void AAllyAIController::FinalizeSpellTargetting(TSubclassOf<UMySpell> spellClass, AActor* targetActor)
+{
+   Stop();
+   allyRef->SetTargetActor(targetActor);
+   GetCPCRef()->GetCameraPawn()->SetSecondaryCursor(); // Just set cursor to to select so the cursor check loop will quickly change the cursor back to normal
+   SetupDelayedSpellProps(spellClass);                 // Reassign these variables that were cleared since we had to stop our current action
+
+   AdjustCastingPosition(spellClass, targetActor);
+}
+
+void AAllyAIController::FinalizeSpellTargetting(TSubclassOf<UMySpell> spellClass, AUnit* targetUnit)
+{
+   Stop(); // Stop whatever we were doing currently
+   allyRef->SetTargetUnit(targetUnit);
+   GetCPCRef()->GetCameraPawn()->SetSecondaryCursor(); // Just set cursor to to select so the cursor check loop will quickly change the cursor back to normal
+   SetupDelayedSpellProps(spellClass);                 // Reassign these variables that were cleared since we had to stop our current action
+   AdjustCastingPosition(spellClass, targetUnit);
+}
+
+void AAllyAIController::FinalizeSpellTargetting(TSubclassOf<UMySpell> spellClass, FVector targetLocation)
+{
+   Stop();
+   allyRef->SetTargetLocation(targetLocation);
+   GetCPCRef()->GetCameraPawn()->SetSecondaryCursor(); // Just set cursor to to select so the cursor check loop will quickly change the cursor back to normal
+   SetupDelayedSpellProps(spellClass);                 // Reassign these variables that were cleared since we had to stop our current action
+   AdjustCastingPosition(spellClass, targetLocation);
 }

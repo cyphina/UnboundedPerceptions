@@ -69,7 +69,8 @@ class MYPROJECT_API AAllyAIController : public AUnitController
    /** Unlike the curent spell, this is the one selected by the player, but it may not be the one being channeled */
    TSubclassOf<UMySpell> currentlySelectedSpell;
 
-   /** Index of the spell that is selected by the player */
+   /** Index of the spell that is selected by the player (stored after the player presses the key down). It is then saved in ally once the player clicks to confirm
+    * the spell target so that this can be modified (if the player wants to queue up another spell while the current is being casted or something like that */
    int currentlySelectedSpellIndex;
 
    UFUNCTION()
@@ -84,7 +85,7 @@ class MYPROJECT_API AAllyAIController : public AUnitController
 
    /** Gets spell that has been selected, but may not be channeled*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spells")
-   FORCEINLINE TSubclassOf<UMySpell> GetCurrentlySelectedSpell() { return currentlySelectedSpell; }
+   FORCEINLINE TSubclassOf<UMySpell> GetCurrentlySelectedSpell() const { return currentlySelectedSpell; }
 
    /** Change how an ally should behave by either clicking on the actionbar or group command bar*/
    UFUNCTION(BlueprintCallable, Category = "AI Mode")
@@ -97,20 +98,40 @@ class MYPROJECT_API AAllyAIController : public AUnitController
    UFUNCTION(BlueprintCallable, Category = "Spells")
    bool PressedCastSpell(int spellToCastIndex);
 
-   /**From a raycast (left click) we can test to see if the target clicked on is a proper target for our spell
+   void AreaManualTargetting(FHitResult& result, TSubclassOf<UMySpell> spellClass, UMySpell* spell);
+
+   bool InteractableManualTargetting(FHitResult& result, TSubclassOf<UMySpell> spellClass, FName spellTargetting);
+
+   /** Always returns false since we targetted something we were not supposed with this spell*/
+   bool InvalidTarget() const;
+
+   void CastSpellOnSelf(TSubclassOf<UMySpell> spellClass);
+
+   /** Used to check the bIsEnemy relationship matches for targets */
+   bool CheckUnitTarget(FName spellTargetting, AUnit* unit) const;
+
+   bool UnitManualTargetting(FHitResult& result, TSubclassOf<UMySpell> spellClass, FName spellTargetting);
+
+   /** Called right after we press our spell key and then click on a target to confirm our spell
+    * From a raycast (left click) we can test to see if the target clicked on is a proper target for our spell
     * @param result - Result of the target we found with a click
     * @param spellClass - Pass in class because we can technically setup targetting for a new spell while casting a spell (and thus can't use currentSpell)
     */
    UFUNCTION(BlueprintCallable, Category = "Spells")
    bool SetupSpellTargetting(UPARAM(ref) FHitResult& result, TSubclassOf<UMySpell> spellClass);
 
+   /** Helper to setup currentSpell and spellIndex used when we have to save these properties so that the spell can be casted after the ally moves to the target*/
+   FORCEINLINE void SetupDelayedSpellProps(TSubclassOf<UMySpell> spellToCast) const;
+
  private:
-   /**Necessary setup to trigger our character to perform the actions to cast a spell*/
-   void FinalizeSpellTargetting(TSubclassOf<UMySpell> spellClass);
+   void FinalizeSpellTargetting(TSubclassOf<UMySpell> spellClass, AActor* targetActor);
+   void FinalizeSpellTargetting(TSubclassOf<UMySpell> spellClass, AUnit* targetUnit);
+   void FinalizeSpellTargetting(TSubclassOf<UMySpell> spellClass, FVector targetLocation);
 
  public:
    virtual void Stop() override;
 
    void BeginAttack(AUnit* target) override;
-   bool BeginCastSpell(TSubclassOf<UMySpell> spellToCastIndex, const FGameplayAbilityTargetDataHandle& targetData) override;
+   bool BeginCastSpell(TSubclassOf<UMySpell> spellToCastIndex) override;
+   void DeselectSpell();
 };

@@ -4,12 +4,11 @@
 
 #include "AIController.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
-
 #include "UnitTargetData.h"
-
 #include "UnitController.generated.h"
 
 struct FAIMessage;
+enum class EUnitState : uint8;
 class AUnit;
 class AUserInput;
 class UEnvQuery;
@@ -30,8 +29,8 @@ class MYPROJECT_API AUnitController : public AAIController
    UPROPERTY()
    AUserInput* CPCRef = nullptr;
    UPROPERTY()
-   TSet<AUnit*>  groupRef;         // Denotes is unit is part of a group (group AI)
-   int           spellToCastIndex; // Spell to cast after target is found using EQS
+   TSet<AUnit*> groupRef;         // Denotes is unit is part of a group (group AI)
+   int          spellToCastIndex; // Spell to cast after target is found using EQS
 
  protected:
    /**blackboard key value name*/
@@ -40,7 +39,8 @@ class MYPROJECT_API AUnitController : public AAIController
    const FName blackboardProtectKey = FName("protect");
    const FName blackboardThreatKey  = FName("threat");
 
-   static const FName AIMessage_Help; // sent when a unit needs some help defensively
+   static const FName             AIMessage_Help; // sent when a unit needs some help defensively
+   void CastTurnAction();
 
    AUserInput* GetCPCRef() const { return CPCRef; }
 
@@ -70,7 +70,7 @@ class MYPROJECT_API AUnitController : public AAIController
    void Tick(float deltaSeconds) override final;
 
    UFUNCTION(BlueprintCallable, BlueprintPure)
-   AUnit*      GetUnitOwner() const { return ownerRef; }
+   FORCEINLINE AUnit* GetUnitOwner() const { return ownerRef; }
 
  private:
    typedef TSharedPtr<struct FAIMessageObserver, ESPMode::Fast> FAIMessageObserverHandle;
@@ -173,9 +173,15 @@ class MYPROJECT_API AUnitController : public AAIController
    UFUNCTION(BlueprintCallable, Category = "Action")
    virtual void BeginAttack(AUnit* target);
 
+   /**Setup a move towards a position so we're in range to cast our spell (Requires currentSpell be set)*/
+   void AdjustCastingPosition(TSubclassOf<UMySpell> spellClass, FVector spellTargetLocation);
+
+   /**Setup a move towards an actor so we're in range to cast our spell (Requires currentSpell be set)*/
+   void AdjustCastingPosition(TSubclassOf<UMySpell> spellClass, AActor* spellTargetActor);
+
    /**Initiate spell casting procedure without any input triggers.  Used for AI spellcasting.  Returns if we successfully transitioned to CASTING state*/
    UFUNCTION(BlueprintCallable, Category = "Action")
-   virtual bool BeginCastSpell(TSubclassOf<UMySpell> spellToCastIndex, const FGameplayAbilityTargetDataHandle& targetData);
+   virtual bool BeginCastSpell(TSubclassOf<UMySpell> spellToCastIndex);
 
    /** Move to a location searching for a target to attack or attack the unit closest to the location*/
    UFUNCTION(BlueprintCallable, Category = "Action")
@@ -195,8 +201,12 @@ class MYPROJECT_API AUnitController : public AAIController
    bool IsFacingTarget(FVector targetLocation, float errorAngleCutoff = .02f);
 
  protected:
+   /** Check to see if we're targetting ourself with a spell*/
+   bool IsTargettingSelf(AUnit* unitRef) const { return unitRef == GetUnitOwner(); }
+
    /**Checks to see if spell has a cast time, and if so, it will start channeling (incantation) process.  Else it will just cast the spell*/
-   virtual void IncantationCheck(TSubclassOf<UMySpell> spellToCast);
+   virtual void IncantationCheck(TSubclassOf<UMySpell> spellToCast) const;
+
    /**If the spell has the Skill.Channeling tag then it requires us to channel after the incantation aka unit has to focus energy into the spell*/
    virtual void SpellChanneling(TSubclassOf<UMySpell> spellToCast);
 
@@ -226,9 +236,20 @@ class MYPROJECT_API AUnitController : public AAIController
    /**Function to move to appropriate distance from target and face direction*/
    bool AdjustPosition(float range, AActor* targetActor);
 
+   /**Function to move to appropriate distance from target and face direction*
+   * This variant is used when intiating some kind of BeginAction() operation we have to move to a closer location before we can start our action
+   * @param range - Distance away from target we can be to stop moving closer
+   * @param targetLocation - Actual location of target point we're attempting to move closer to
+   * @param newState - What state should we change this unit to be in when attempting to move
+   * @param turnAction - What should we tell this unit to do after we finished moving and turn towards our target?
+   */
+   bool AdjustPosition(float range, FVector targetLocation, EUnitState newState, TFunction<void()> turnAction);
+
+   bool AdjustPosition(float range, AActor* targetActor, EUnitState newState, TFunction<void()> turnAction);
+
    UFUNCTION()
    void OnActorTurnFinished();
-
+    
    UFUNCTION()
    void ActionAfterTurning();
 

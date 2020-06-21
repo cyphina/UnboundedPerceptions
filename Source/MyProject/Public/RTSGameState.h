@@ -57,7 +57,7 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase
 
    /** Resumes timers that need to be called when a level is being played*/
    UFUNCTION(BlueprintCallable)
-   void ResumeUpdate();
+   void ResumeUpdate() const;
 
    /**Set by CPC*/
    UPROPERTY(BlueprintReadWrite, Category = "References")

@@ -119,8 +119,8 @@ void AAlly::Attack_Implementation()
 {
    Super::Attack_Implementation();
    // If they die (when this current attack kills them) and the targets get canceled out, then targetUnit can be nulled
-   if(IsValid(targetData.targetUnit))
-      if(!targetData.targetUnit->IsVisible())
+   if(IsValid(GetTargetUnit()))
+      if(!GetTargetUnit()->IsVisible())
          GetAllyAIController()->Stop();
 }
 
@@ -154,11 +154,11 @@ UGameplayAbility* AAlly::GetSpellInstance(TSubclassOf<UMySpell> spellClass) cons
 bool AAlly::CastSpell(TSubclassOf<UMySpell> spellToCast)
 {
    bool invis = GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility"));
-   if(Super::CastSpell(spellToCast)) {
+   if(Super::CastSpell(spellToCast)) { // Cast the spell then do some post processing
       if(controllerRef->GetBasePlayer()->focusedUnit == this) {
          controllerRef->GetHUDManager()->GetActionHUD()->ShowSkillVisualCD(spellIndex);
-         // Cancel AI targetting if enemy turns invisible
-         if(IsValid(targetData.targetUnit) && !controllerRef->GetGameState()->visibleEnemies.Contains(targetData.targetUnit))
+         // After we cast the spell, cancel AI targetting if enemy turns invisible (or goes out of range) and possibly stop auto attack after spellcast once that's implemented
+         if(GetTargetUnitValid() && !controllerRef->GetGameState()->visibleEnemies.Contains(GetTargetUnit()))
             GetAllyAIController()->Stop();
          // Reveal self if invisile when spell casted.  If we don't check this before spell casted, we could just end up canceling an invisibility spell being cast
          if(invis)
@@ -173,7 +173,7 @@ float AAlly::CalculateTargetRisk()
 {
    int targetNum = 0;
    for(AUnit* e : controllerRef->GetGameState()->visibleEnemies) {
-      if(e->GetTarget() == this)
+      if(e->GetTargetUnit() == this)
          ++targetNum;
    }
    const float targetRiskValue = FMath::Clamp(diminishFunc(targetNum), 0.f, 1.f);

@@ -98,7 +98,7 @@ struct FUnitInfoRow : public FTableRowBase {
 };
 
 /** Base class for all things in the world that fights!*/
-UCLASS(Abstract, HideCategories = (Movement, Optimization, Character, Camera, Pawn, CharacterMovement, Lighting, Rendering, Input, Actor))
+UCLASS(Abstract, HideCategories = (Movement, Optimization, Character, Camera, CharacterMovement, Lighting, Rendering, Input, Actor))
 class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbilitySystemInterface
 {
    GENERATED_BODY()
@@ -232,17 +232,42 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    /** Call this function over setting values manually (which will be made private one day) because it sets the targetActor and targetUnit, both which are used
     * when dealing with unit tasks. */
    UFUNCTION(BlueprintCallable, Category = "CombatAccessors")
-   void SetTarget(AUnit* value)
+   void SetTargetUnit(AUnit* value) { targetData.target.Set<AUnit*>(value); }
+
+   UFUNCTION(BlueprintCallable, Category = "CombatAccessors")
+   void SetTargetActor(AActor* value) { targetData.target.Set<AActor*>(value); }
+
+   UFUNCTION(BlueprintCallable, Category = "CombatAccessors")
+   void SetTargetLocation(FVector value) { targetData.target.Set<FVector>(value); }
+
+   /** Get data on targetted unit.  Used in single target spellcasting and attacking.
+    * Reset after spell casted and if we attack a new target or stop.
+    * Faster to use this then cast GetTargetData() to some unit type */
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   AUnit* GetTargetUnit() const { return targetData.target.Get<AUnit*>(); }
+
+   /** Checks to see if the variant is currently representing a target unit*/
+   bool GetTargetUnitValid() const { return targetData.target.TryGet<AUnit*>() != nullptr; }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   AActor* GetTargetActor() const { return targetData.target.Get<AActor*>(); }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   FVector GetTargetLocation() const { return targetData.target.Get<FVector>(); }
+
+   /** Use this to get the location of a target despite whatever kind of object is stored in the target variant*/
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   FVector GetTargetLocationVisit() const { return Visit(TargetLocationVisitor(), targetData.target); }
+
+   FORCEINLINE AActor* GetTargetActorOrUnit() const
    {
-      targetData.targetUnit  = value;
-      targetData.targetActor = value;
+      if(targetData.target.IsType<AUnit*>())
+         return targetData.target.Get<AUnit*>();
+      else if(targetData.target.IsType<AActor*>())
+         return targetData.target.Get<AActor*>();
+      else
+         return nullptr;
    }
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   AUnit* GetTarget() const { return targetData.targetUnit; }
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   FVector GetTargetLoc() const { return targetData.targetLocation; }
 
    UFUNCTION(BlueprintCallable, Category = "CombatAccessors")
    void SetCanTarget(bool value) { unitProperties.canTarget = value; }
@@ -383,13 +408,7 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
 
    /** Get data on our spell target.  Is reset after the spell is sucessfully casted*/
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-   FGameplayAbilityTargetDataHandle GetTargetData() const { return targetData.spellTargetData; }
-
-   /** Get data on targetted unit.  Used in single target spellcasting and attacking.
-    * Reset after spell casted and if we attack a new target or stop.
-    * Faster to use this then cast GetTargetData() to some unit type */
-   UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-   AUnit* GetTargetUnit() const { return targetData.targetUnit; }
+   FGameplayAbilityTargetDataHandle GetTargetData() const { return Visit(TargetDataVisitor(), targetData.target); }
 
    /** Damage Calculations on Receiving End.  If using some magic armor, attacker may get some debuffs */
    friend void UUpDamageComponent::DamageTarget(FUpDamage& d, FGameplayTagContainer effects) const;
@@ -460,7 +479,7 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
    UMySpell* GetSpellCDO(TSubclassOf<UMySpell> spellClass) const;
 
-   /** Do we have the resources necessary to cast this spell */
+   /** Do we have the resources necessary to cast this spell and make sure we don't have any status effects preventing us*/
    bool CanCast(TSubclassOf<UMySpell> spellToCheck);
 
  protected:
@@ -528,4 +547,35 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    virtual float CalculateTargetRisk() PURE_VIRTUAL(AUnit::CalculateTargetRisk, return 0.f;);
 
 #pragma endregion
+
+   class MoveCompletedVisitor
+   {
+    public:
+      MoveCompletedVisitor(AUnit* unitRef) : unitRef(unitRef) {}
+      void operator()(FEmptyVariantState);
+      void operator()(FVector v);
+      void operator()(AActor* a);
+      void operator()(AUnit* u);
+
+    private:
+      AUnit* unitRef;
+   };
+
+   class TargetLocationVisitor
+   {
+    public:
+      FVector operator()(FEmptyVariantState);
+      FVector operator()(FVector v);
+      FVector operator()(AActor* a);
+      FVector operator()(AUnit* u);
+   };
+
+   class TargetDataVisitor
+   {
+    public:
+      FGameplayAbilityTargetDataHandle operator()(FEmptyVariantState);
+      FGameplayAbilityTargetDataHandle operator()(FVector v);
+      FGameplayAbilityTargetDataHandle operator()(AActor* a);
+      FGameplayAbilityTargetDataHandle operator()(AUnit* u);
+   };
 };

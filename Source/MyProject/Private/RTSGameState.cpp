@@ -60,7 +60,7 @@ void ARTSGameState::StopUpdate()
    visiblePlayerUnits.Empty();
 }
 
-void ARTSGameState::ResumeUpdate()
+void ARTSGameState::ResumeUpdate() const
 {
    GetWorld()->GetTimerManager().UnPauseTimer(allyVisionUpdateTimerHandle);
    GetWorld()->GetTimerManager().UnPauseTimer(enemyVisionUpdateTimerHandle);

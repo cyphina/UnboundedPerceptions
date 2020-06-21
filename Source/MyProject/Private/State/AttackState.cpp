@@ -26,16 +26,16 @@ void AttackState::Update(AUnit& unit, float deltaSeconds)
 {
    // Checks to see if we're positioned correctly
    if (unit.combatParams.readyToAttack) {
-      if (LIKELY(unit.targetData.targetUnit->GetCanTarget())) {
+      if (LIKELY(unit.GetTargetUnit()->GetCanTarget())) {
          //if we're playing the attack animation, but our unit goes out of range, then cancel the attack and start moving closer
          if (!unit.unitController->IsTargetInRange(unit.GetMechanicAdjValue(EMechanics::AttackRange) + unit.combatParams.attackRangeCancel,
-                                                   unit.targetData.targetUnit->GetActorLocation())) {
+                                                   unit.GetTargetUnit()->GetActorLocation())) {
             unit.combatParams.currentAttTime = 0;
             unit.combatParams.readyToAttack  = false;
-            unit.unitController->AdjustPosition(unit.GetMechanicAdjValue(EMechanics::AttackRange), unit.targetData.targetUnit);
+            unit.unitController->AdjustPosition(unit.GetMechanicAdjValue(EMechanics::AttackRange), unit.GetTargetUnit());
          } else {
             // Once we start the attack animation, just keep facing our target without any turning
-            if (unit.unitController->IsFacingTarget(unit.targetData.targetUnit->GetActorLocation())) {
+            if (unit.unitController->IsFacingTarget(unit.GetTargetUnit()->GetActorLocation())) {
                if (LIKELY(unit.combatParams.currentAttTime < 2 / ((unit.GetSkillAdjValue(EUnitScalingStats::Attack_Speed) + 100) * 0.01))) {
                   unit.combatParams.currentAttTime += deltaSeconds * unit.controllerRef->GetGameState()->speedModifier;
                } else {
@@ -45,11 +45,11 @@ void AttackState::Update(AUnit& unit, float deltaSeconds)
                   FAIMessage msg(AUnit::AIMessage_AttackReady, &unit);
                   FAIMessage::Send(unit.unitController, msg);
                }
-            } else { unit.SetActorRotation(unit.unitController->FindLookRotation(unit.targetData.targetUnit->GetActorLocation())); }
+            } else { unit.SetActorRotation(unit.unitController->FindLookRotation(unit.GetTargetUnit()->GetActorLocation())); }
          }
       }
    } else {
       //If the unit goes out of vision while we're attempting to chase it during our attack positional adjustment
-      if (!unit.targetData.targetUnit->IsVisible()) { unit.state->ChangeState(EUnitState::STATE_CHASING); }
+      if (!unit.GetTargetUnit()->IsVisible()) { unit.state->ChangeState(EUnitState::STATE_CHASING); }
    }
 }

@@ -21,6 +21,7 @@
 #include "PatrolComponent.h"
 
 const FName AUnitController::AIMessage_Help = TEXT("HelpMe!");
+// ! Requires us to have the proper current spell already set
 
 AUnitController::AUnitController()
 {
@@ -108,7 +109,7 @@ void AUnitController::FindBestSpellTarget(FGameplayTag targettingTag, bool isSup
    if(targettingTag == FGameplayTag::RequestGameplayTag("Skill.Targetting.Area")) {
       FindBestAOELocation(isSupport);
    } else if(targettingTag == FGameplayTag::RequestGameplayTag("Skill.Targetting.None")) {
-      BeginCastSpell(ownerRef->abilities[spellToCastIndex], FGameplayAbilityTargetDataHandle());
+      BeginCastSpell(ownerRef->abilities[spellToCastIndex]);
    } else if(targettingTag.MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Single"))) {
       FindWeakestTarget(isSupport);
    }
@@ -136,12 +137,8 @@ bool AUnitController::SearchAndCastSpell(const FGameplayTagContainer& spellRequi
 void AUnitController::OnAOELocationFound(TSharedPtr<FEnvQueryResult> result)
 {
    if(result->IsSuccsessful()) {
-      FGameplayAbilityTargetingLocationInfo tInfo;
-      tInfo.LocationType     = EGameplayAbilityTargetingLocationType::LiteralTransform;
-      tInfo.LiteralTransform = FTransform(result->GetItemAsLocation(0));
-      FGameplayAbilityTargetDataHandle targetData =
-          UAbilitySystemBlueprintLibrary::AbilityTargetDataFromLocations(tInfo, tInfo); // start point isn't really used so we can put this twice
-      BeginCastSpell(ownerRef->abilities[spellToCastIndex], targetData);
+      ownerRef->SetTargetLocation(result->GetItemAsLocation(0));
+      BeginCastSpell(ownerRef->abilities[spellToCastIndex]);
    } else
       // Aborting means it needs some cleanup while fail just ends the node
       Cast<UBTTaskNode>(behaviorTreeComp->GetActiveNode())->FinishLatentTask(*behaviorTreeComp, EBTNodeResult::Failed);
@@ -151,10 +148,10 @@ void AUnitController::OnWeakestTargetFound(TSharedPtr<FEnvQueryResult> result)
 {
    GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("FOUND WEAKEST TARGET!"));
    if(result.IsValid())
-   // need to actually check here since our filter could end up with us having no heroes to target like if all heroes are full
+   // Need to actually check here since our filter could end up with us having no heroes to target like if all heroes are full hp
    {
-      FGameplayAbilityTargetDataHandle targetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(result->GetItemAsActor(0));
-      BeginCastSpell(ownerRef->abilities[spellToCastIndex], targetData);
+      ownerRef->SetTargetUnit(Cast<AUnit>(result->GetItemAsActor(0)));
+      BeginCastSpell(ownerRef->abilities[spellToCastIndex]);
    } else
       Cast<UBTTaskNode>(behaviorTreeComp->GetActiveNode())->FinishLatentTask(*behaviorTreeComp, EBTNodeResult::Failed);
 }
@@ -182,7 +179,7 @@ EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation)
       // shift location a little bit if we're moving multiple units so they can group together ok
       FVector shiftedLocation = newLocation - ownerRef->GetActorLocation().GetSafeNormal() * ownerRef->GetCapsuleComponent()->GetScaledCapsuleRadius() / 2;
       // setup end rotation here in case we decide to do a ministep where we want to turn but not move
-      ownerRef->targetData.targetLocation      = shiftedLocation;
+      ownerRef->SetTargetLocation(shiftedLocation);
       EPathFollowingRequestResult::Type result = MoveToLocation(shiftedLocation, 10, true, true, false, true);
       if(result == EPathFollowingRequestResult::RequestSuccessful) {
          ownerRef->state->ChangeState(EUnitState::STATE_MOVING);
@@ -197,12 +194,11 @@ EPathFollowingRequestResult::Type AUnitController::MoveActor(AActor* targetActor
 {
    if(!ownerRef->IsStunned()) {
       Stop();
-      ownerRef->targetData.targetLocation      = targetActor->GetActorLocation();
+      ownerRef->SetTargetActor(targetActor);
       EPathFollowingRequestResult::Type result = MoveToActor(targetActor);
 
       if(result == EPathFollowingRequestResult::RequestSuccessful) {
          ownerRef->state->ChangeState(EUnitState::STATE_MOVING);
-         ownerRef->targetData.targetLocation = targetActor->GetActorLocation();
       }
       return result;
    }
@@ -247,7 +243,7 @@ void AUnitController::Run()
 
 void AUnitController::Chase()
 {
-   ownerRef->GetUnitController()->AdjustPosition(CHASE_RANGE, ownerRef->targetData.targetUnit->GetActorLocation());
+   ownerRef->GetUnitController()->AdjustPosition(CHASE_RANGE, ownerRef->GetTargetUnit()->GetActorLocation());
 }
 
 bool AUnitController::ChasingQuit()
@@ -258,14 +254,11 @@ bool AUnitController::ChasingQuit()
 void AUnitController::Stop()
 {
    // Stop will not only stop unit in its track, but will also make it forget its target, and set its state to idle so it can transition to something else
-   ownerRef->targetData.spellTargetData.Clear();
    ownerRef->unitProperties.turnAction.Unbind();
    turnActorTimeline.Stop();
    turnTimeline.Stop();
    ownerRef->SetCurrentSpell(nullptr);
-   ownerRef->targetData.targetUnit       = nullptr;
-   ownerRef->targetData.targetActor      = nullptr;
-   ownerRef->targetData.targetLocation   = FVector();
+   ownerRef->targetData.ResetTarget();
    ownerRef->combatParams.readyToAttack  = false;
    ownerRef->combatParams.currentAttTime = 0.f;
    ownerRef->unitController->StopMovement();
@@ -284,7 +277,7 @@ void AUnitController::BeginAttack(AUnit* target)
    if(target->GetCanTarget() && !ownerRef->IsStunned()) {
       Stop(); // Stop any other turnActions we're doing
       ownerRef->state->ChangeState(EUnitState::STATE_ATTACKING);
-      ownerRef->SetTarget(target);
+      ownerRef->SetTargetUnit(target);
       ownerRef->unitProperties.turnAction.BindUObject(this, &AUnitController::PrepareAttack);
 
       //If only we don't have to adjust our position, then attack.  Else adjust position and let callbacks handle what's next
@@ -293,53 +286,60 @@ void AUnitController::BeginAttack(AUnit* target)
    }
 }
 
-bool AUnitController::BeginCastSpell(TSubclassOf<UMySpell> spellToCast, const FGameplayAbilityTargetDataHandle& targetData)
+void AUnitController::CastTurnAction()
 {
-   AUnit*    unitOwner = ownerRef;
-   UMySpell* spell     = spellToCast.GetDefaultObject();
-   FVector   spellTargetLocation;
+   IncantationCheck(ownerRef->GetCurrentSpell());
+}
+
+void AUnitController::AdjustCastingPosition(TSubclassOf<UMySpell> spellClass, FVector spellTargetLocation)
+{
+   GetUnitOwner()->unitProperties.turnAction.BindUObject(this, &AUnitController::CastTurnAction);
+   GetUnitOwner()->state->ChangeState(EUnitState::STATE_CASTING);
+   if(AdjustPosition(spellClass.GetDefaultObject()->GetRange(GetUnitOwner()->GetAbilitySystemComponent()), spellTargetLocation))
+      IncantationCheck(spellClass);
+}
+
+void AUnitController::AdjustCastingPosition(TSubclassOf<UMySpell> spellClass, AActor* spellTargetActor)
+{
+   GetUnitOwner()->unitProperties.turnAction.BindUObject(this, &AUnitController::CastTurnAction);
+   GetUnitOwner()->state->ChangeState(EUnitState::STATE_CASTING);
+   if(AdjustPosition(spellClass.GetDefaultObject()->GetRange(GetUnitOwner()->GetAbilitySystemComponent()), spellTargetActor))
+      IncantationCheck(spellClass);
+}
+
+bool AUnitController::BeginCastSpell(TSubclassOf<UMySpell> spellToCast)
+{
+   UMySpell* spell = spellToCast.GetDefaultObject();
 
    if(IsValid(spell)) {
-      if(unitOwner->CanCast(spellToCast)) {
-         //Check to see if we have enough mana and aren't silenced or stunned
+      if(GetUnitOwner()->CanCast(spellToCast)) {
          Stop();
-         unitOwner->SetCurrentSpell(spellToCast); //Keep track of the spell since we may cast it later (like targetted spells casted by an ally)
+         GetUnitOwner()->SetCurrentSpell(spellToCast); //Keep track of the spell since we may cast it later (we may have to move into position first)
 
-         if(spell->GetTargetting().GetTagName() == "Skill.Targetting.None") //Non targetted?  Then just cast it
+         if(spell->GetTargetting().GetTagName() == "Skill.Targetting.None") //Non-targetted?  Then just cast it
          {
-            unitOwner->state->ChangeState(EUnitState::STATE_CASTING);
-            IncantationCheck(unitOwner->GetCurrentSpell());
+            IncantationCheck(GetUnitOwner()->GetCurrentSpell());
             return true;
-         } else {
-            if(targetData.Num() > 0) {
-               //This spell requires a ground or unit target
-               unitOwner->targetData.spellTargetData = targetData;
+         } else { //This spell requires a ground or unit target
 
-               if(spell->GetTargetting().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))) {
-                  //The ground location should be determined by EQS
-                  spellTargetLocation = unitOwner->targetData.targetLocation =
-                      UAbilitySystemBlueprintLibrary::GetTargetDataEndPoint(unitOwner->targetData.spellTargetData, 0);
-               } else {
-                  unitOwner->targetData.targetActor = UAbilitySystemBlueprintLibrary::GetActorsFromTargetData(unitOwner->targetData.spellTargetData, 0)[0];
-                  spellTargetLocation               = unitOwner->targetData.targetActor->GetActorLocation();
-               }
-
-               //GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("%f"), FVector::Dist2D(unitOwner->targetData.targetLocation, unitOwner->GetActorLocation())));
-               //If we're self casting or the target location is very close to us (so that move fails)
-               if(unitOwner->targetData.targetActor == this || FVector::Dist2D(unitOwner->targetData.targetLocation, unitOwner->GetActorLocation()) < 5.f) {
-                  IncantationCheck(unitOwner->GetCurrentSpell());
+            if(spell->GetTargetting().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))) {
+               // If the target position is extremely close (like we're targetting the ground underneath us which isn't a problem with click confirm because it would)
+               // register the click trace as hitting ourself
+               if(FVector::Dist2D(GetUnitOwner()->GetTargetLocation(), GetUnitOwner()->GetActorLocation()) < 5.f) {
+                  IncantationCheck(GetUnitOwner()->GetCurrentSpell());
                   return true;
                }
-
-               //If our spell requires us to go through the whole movement process, call the processes here
-               unitOwner->state->ChangeState(EUnitState::STATE_CASTING);
-               if(!AdjustPosition(spell->GetRange(unitOwner->GetAbilitySystemComponent()), spellTargetLocation)) {
-                  static auto castTurnAction = [this]() { IncantationCheck(ownerRef->GetCurrentSpell()); };
-                  unitOwner->unitProperties.turnAction.BindLambda(castTurnAction);
-               } else
-                  IncantationCheck(ownerRef->GetCurrentSpell());
-               return true;
+               AdjustCastingPosition(spellToCast, GetUnitOwner()->GetTargetLocation());
+            } else {
+               // If the target unit is ourself
+               if(IsTargettingSelf(GetUnitOwner()->GetTargetUnit())) {
+                  IncantationCheck(GetUnitOwner()->GetCurrentSpell());
+                  return true;
+               }
+               AdjustCastingPosition(spellToCast, GetUnitOwner()->GetTargetUnit());
             }
+            // Since we made it here, we have a legit target that is not ourself or a point very close so pre
+            return true;
          }
       }
    }
@@ -382,21 +382,21 @@ void AUnitController::PrepareAttack()
    // When this is called, we have typically finished moving and turning at the right position and we want
    // to start the attack animation.  We do one last final check and then set readyToAttack to let the
    // attack update (inside the state machine) know we're ready to start the attack animation.
-   if(!ownerRef->combatParams.readyToAttack && !ownerRef->IsStunned() && ownerRef->targetData.targetUnit) {
+   if(!ownerRef->combatParams.readyToAttack && !ownerRef->IsStunned() && ownerRef->GetTargetUnit()) {
       // check that target is still alive and we can act
-      if(ownerRef->targetData.targetUnit->GetCanTarget()) {
+      if(ownerRef->GetTargetUnit()->GetCanTarget()) {
          // check that target can even be targetted
 
-         FVector targetLoc   = ownerRef->targetData.targetUnit->GetActorLocation();
+         FVector targetLoc   = ownerRef->GetTargetUnit()->GetActorLocation();
          float   attackRange = ownerRef->GetMechanicAdjValue(EMechanics::AttackRange);
 
          if(IsTargetInRange(attackRange + ownerRef->combatParams.attackRangeCancel, targetLoc)) {
             ownerRef->combatParams.readyToAttack = true;
          } else {
-            AdjustPosition(ownerRef->GetMechanicAdjValue(EMechanics::AttackRange), ownerRef->targetData.targetUnit);
+            AdjustPosition(ownerRef->GetMechanicAdjValue(EMechanics::AttackRange), ownerRef->GetTargetUnit());
          }
       } else {
-         ownerRef->SetTarget(nullptr);
+         ownerRef->SetTargetUnit(nullptr);
       }
    } else {
       // necessary or else Attack() will use a nullptr target
@@ -422,9 +422,10 @@ void AUnitController::TurnTowardsActor(AActor* targetActor)
 
 void AUnitController::OnActorTurnFinished()
 {
-   //if we didn't successfully turn towards the actor, try again
-   if(!IsFacingTarget(ownerRef->targetData.targetActor->GetActorLocation())) {
-      TurnTowardsActor(ownerRef->targetData.targetActor);
+   // If we didn't successfully turn towards the actor, try again (this happens if they moved)
+   AActor* targetActor = ownerRef->GetTargetActorOrUnit();
+   if(!IsFacingTarget(targetActor->GetActorLocation())) {
+      TurnTowardsActor(targetActor);
    } else
       ownerRef->unitProperties.turnAction.ExecuteIfBound();
 }
@@ -436,19 +437,21 @@ void AUnitController::ActionAfterTurning()
 
 void AUnitController::TurnActor(float turnValue)
 {
-   //check to see if actor moved back to face target and also if the actor
-   if(!IsFacingTarget(ownerRef->targetData.targetActor->GetActorLocation())) {
-      FQuat rotation = FQuat::Slerp(startRotation, turnRotator, turnValue);
+   // Continually checks to see if actor walked back to face target and ensures there is na actor or unit set
+   AActor* targetActor = ownerRef->GetTargetActorOrUnit();
+   if(!IsFacingTarget(targetActor->GetActorLocation())) {
+      const FQuat rotation = FQuat::Slerp(startRotation, turnRotator, turnValue);
       ownerRef->SetActorRelativeRotation(rotation);
    } else {
       turnActorTimeline.Stop();
+      // Call this explicitly because stop does not
       OnActorTurnFinished();
    }
 }
 
 void AUnitController::Turn(float turnValue)
 {
-   FQuat rotation = FQuat::Slerp(startRotation, turnRotator, turnValue);
+   const FQuat rotation = FQuat::Slerp(startRotation, turnRotator, turnValue);
    ownerRef->SetActorRelativeRotation(rotation);
 }
 
@@ -468,12 +471,14 @@ bool AUnitController::AdjustPosition(float range, FVector targetLoc)
 
 bool AUnitController::AdjustPosition(float range, AActor* targetActor)
 {
-   // While moving to the actor, our rotation will be controlled through movement so don't force a rotatoin until after we are in position
+   // While moving to the actor, our rotation will be controlled through movement so don't force a rotation until after we are in position
+   // Now after we're in position, we rotate using OnMoveCompleted() as our final rotation check
    FVector targetActorLocation = targetActor->GetActorLocation();
    if(!IsTargetInRange(range, targetActorLocation)) {
       MoveToActor(targetActor, range);
       return false;
    } else {
+      // If we're already in position, turn towards the target.
       if(!IsFacingTarget(targetActorLocation)) {
          TurnTowardsActor(targetActor);
          return false;
@@ -482,7 +487,21 @@ bool AUnitController::AdjustPosition(float range, AActor* targetActor)
    return true;
 }
 
-void AUnitController::IncantationCheck(TSubclassOf<UMySpell> spellToCast)
+bool AUnitController::AdjustPosition(float range, FVector targetLocation, EUnitState newState, TFunction<void()> turnAction)
+{
+   GetUnitOwner()->state->ChangeState(newState);
+   GetUnitOwner()->unitProperties.turnAction.BindLambda(turnAction);
+   return AdjustPosition(range, targetLocation);
+}
+
+bool AUnitController::AdjustPosition(float range, AActor* targetActor, EUnitState newState, TFunction<void()> turnAction)
+{
+   GetUnitOwner()->state->ChangeState(newState);
+   GetUnitOwner()->unitProperties.turnAction.BindLambda(turnAction);
+   return AdjustPosition(range, targetActor);
+}
+
+void AUnitController::IncantationCheck(TSubclassOf<UMySpell> spellToCast) const
 {
    float castTime = spellToCast.GetDefaultObject()->GetCastTime(ownerRef->GetAbilitySystemComponent());
    if(UNLIKELY(!castTime)) // If there isn't a cast time

@@ -109,8 +109,8 @@ void AEnemy::Attack_Implementation()
 {
    Super::Attack_Implementation();
    //If they die (when this current attack kills them) and the targets get canceled out, then targetUnit can be nulled
-   if (IsValid(targetData.targetUnit))
-      if (!targetData.targetUnit->IsVisible())
+   if (IsValid(GetTargetUnit()))
+      if (!GetTargetUnit()->IsVisible())
          GetUnitController()->Stop();
 }
 
@@ -118,11 +118,10 @@ bool AEnemy::CastSpell(TSubclassOf<UMySpell> spellToCast)
 {
    bool invis = GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility"));
    if (Super::CastSpell(spellToCast)) {
-      //Cancel AI targetting if enemy turns invisible
-      if (IsValid(targetData.targetUnit) && !controllerRef->GetGameState()->visiblePlayerUnits.Contains(targetData.targetUnit))
+      //Cancel AI targetting if enemy target turns invisible
+      if (GetTargetUnitValid() && !controllerRef->GetGameState()->visiblePlayerUnits.Contains(GetTargetUnit()))
          GetUnitController()->Stop();
-      //Reveal self if invisile when spell casted
-      //Reveal self if invisile when spell casted.  If we don't check this before spell casted, we could just end up canceling an invisibility spell being cast
+      //Reveal self if invisible when spell casted.  If we don't check this before spell casted, we could just end up canceling an invisibility spell being cast
       if (invis)
          GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
       return true;
@@ -204,7 +203,7 @@ void AEnemy::InitializeStats()
 float AEnemy::CalculateTargetRisk()
 {
    int targetNum = 0;
-   for (AUnit* a : controllerRef->GetGameState()->visiblePlayerUnits) { if (a->GetTarget() == this) targetNum += 1; }
+   for (AUnit* a : controllerRef->GetGameState()->visiblePlayerUnits) { if (a->GetTargetUnit() == this) targetNum += 1; }
 
    const float targetRiskValue = FMath::Clamp(diminishFunc(targetNum), 0.f, 1.f);
    return targetRiskValue;
