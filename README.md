@@ -2,7 +2,7 @@
 
 Look at my blog/game site I made in Svelte/Sapper for more information about what features of the game are in the works. The site is a **WIP** but it will have relevant information soon
 
-[My Site](https://unbounded-perceptions-blog.vercel.app/)
+[My Site](https://agitated-lalande-f97eb6.netlify.app/Blog)
 
 ## Setup
 
