@@ -31,7 +31,7 @@ void AHeroAIController::BeginInteract(AActor* interactor)
       // Make sure this is set before we call GetInteractableLocation when handling a door
       heroRef->currentInteractable    = interactor;
       heroRef->SetTargetActor(interactor);
-      heroRef->unitProperties.turnAction.BindLambda([this]() { IInteractable::Execute_Interact(heroRef->currentInteractable, heroRef); });
+      heroRef->unitProperties.finishedTurningAction.BindLambda([this]() { IInteractable::Execute_Interact(heroRef->currentInteractable, heroRef); });
 
       heroRef->state->ChangeState(EUnitState::STATE_INTERACTING);
       UStaticMeshComponent* meshComp = interactor->FindComponentByClass<UStaticMeshComponent>();
@@ -47,7 +47,7 @@ void AHeroAIController::BeginInteract(AActor* interactor)
             heroRef->SetTargetLocation(interactableLoc);
             if(AdjustPosition(10, interactableLoc))
                // If we're already here execute the turn action
-               heroRef->unitProperties.turnAction.Execute();
+               heroRef->unitProperties.finishedTurningAction.Execute();
          } else {
             // If we can't reach the target location component, move towards the actor
             FNavLocation resLocation;
@@ -58,7 +58,7 @@ void AHeroAIController::BeginInteract(AActor* interactor)
          // If our target actor can move, we'll starting walking towards the actor.  If it is blocked off lets hope the designer put it in a path where we can walk towards it eventually
          heroRef->SetTargetActor(interactor);
          if(AdjustPosition(heroRef->interactRange, interactor))
-            heroRef->unitProperties.turnAction.Execute();
+            heroRef->unitProperties.finishedTurningAction.Execute();
       }
    }
 }

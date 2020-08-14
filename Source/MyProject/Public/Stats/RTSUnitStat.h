@@ -29,7 +29,7 @@ namespace CombatInfo
    {
     public:
       ModifyingAttribute  attMod;
-      FGameplayAttribute attribute; // Since a stat can be directly modified by things like equipment and buffs, we need it to have features of an attribute as well
+      FGameplayAttribute& attribute; // Since a stat can be directly modified by things like equipment and buffs, we need it to have features of an attribute as well
 
       RTSUnitStat(FGameplayAttribute& attData);
       /// <param name="attData"> Link to AttSet  </param>

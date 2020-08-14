@@ -86,7 +86,6 @@ class MYPROJECT_API AEnemy : public AUnit
    TSet<AUnit*>* GetSeenEnemies() override;
 
  private:
-
    bool IsVisible() override;
 
    UFUNCTION()

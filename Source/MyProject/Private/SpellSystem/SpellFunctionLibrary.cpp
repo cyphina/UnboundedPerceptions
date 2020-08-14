@@ -19,9 +19,12 @@
 #include "ESkillContainer.h"
 #include "SkillSlot.h"
 
+
+
 USpellFunctionLibrary::USpellFunctionLibrary(const FObjectInitializer& o) : Super(o)
 {
 }
+
 
 FGameplayEffectSpecHandle USpellFunctionLibrary::MakeGameplayEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration,
                                                                     float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags)

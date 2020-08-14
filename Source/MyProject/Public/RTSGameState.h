@@ -98,7 +98,7 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase
    FTimerHandle allyVisionUpdateTimerHandle;
    FTimerHandle enemyVisionUpdateTimerHandle;
 
-   FWindowsRWLock   visibleMutex; // Guards visibleEnemies
+   FWindowsRWLock visibleMutex;        // Guards visibleEnemies
    FWindowsRWLock visiblePlayersMutex; // Guard visiblePlayers
 
    /**Lists all party members that exist between every player (necessary for computing co op vision).  Faster to keep stuff in a set for quick removal
@@ -142,4 +142,8 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase
     */
    UFUNCTION()
    void UpdateVisiblePlayerUnits();
+
+   /** Called when an enemy is no longer a candidate for ray trace checks through walls since they  are out of range anyways*/
+   UFUNCTION()
+   void OnEnemyOutsideVisionSpheres(AUnit* enemy);
 };

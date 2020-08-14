@@ -30,6 +30,8 @@ struct FUpDamage {
    FGameplayTag type = FGameplayTag(); // type - physical, magical
    UPROPERTY(BlueprintReadOnly)
    bool crit = false;
+   UPROPERTY(BlueprintReadOnly)
+   const FGameplayTagContainer& effects;
 };
 
 USTRUCT(BlueprintType, NoExport)

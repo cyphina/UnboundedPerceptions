@@ -66,9 +66,9 @@ void AAllyAIController::BeginAttack(AUnit* target)
          allyRef->state->ChangeState(EUnitState::STATE_ATTACKING);
          allyRef->SetTargetUnit(target);
          // GetUnitOwner()->targetData.spellTargetData    = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(target);
-         allyRef->unitProperties.turnAction.BindUObject(this, &AAllyAIController::PrepareAttack);
+         allyRef->unitProperties.finishedTurningAction.BindUObject(this, &AAllyAIController::PrepareAttack);
          if(AdjustPosition(allyRef->GetMechanicAdjValue(EMechanics::AttackRange), target))
-            allyRef->unitProperties.turnAction.Execute();
+            allyRef->unitProperties.finishedTurningAction.Execute();
       }
    } else {
       GetCPCRef()->GetHUDManager()->GetIngameHUD()->DisplayHelpText(AAlly::invalidTargetText);

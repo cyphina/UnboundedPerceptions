@@ -10,7 +10,8 @@ class ARTSGameState;
 class ABasePlayer;
 class UProceduralMeshComponent;
 
-/**Creates visualizations of the visibility polygons for all allied actors*/
+/** Creates visualizations of the visibility polygons for all allied actors*/
+
 UCLASS()
 class MYPROJECT_API AFogOfWarPlane : public AActor
 {

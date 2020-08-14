@@ -32,7 +32,8 @@ class AUnit;
 DECLARE_EVENT_ThreeParams(UMyAttributeSet, FOnStatsUpdated, const FGameplayAttribute&, float&, AUnit*);
 
 UCLASS()
-class MYPROJECT_API UMyAttributeSet : public UAttributeSet {
+class MYPROJECT_API UMyAttributeSet : public UAttributeSet
+{
    GENERATED_BODY()
 
    static TArray<FGameplayAttribute> attList;
@@ -41,8 +42,7 @@ class MYPROJECT_API UMyAttributeSet : public UAttributeSet {
    UPROPERTY()
    class AUserInput* cpcRef;
 
-public:
-
+ public:
    UMyAttributeSet();
    static const float MAX_HEALTH;
 
@@ -221,5 +221,4 @@ public:
 
    FOnStatsUpdated statUpdatedEvent;
    FOnStatsUpdated baseStatUpdatedEvent;
-
 };

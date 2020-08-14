@@ -32,10 +32,12 @@ void AFogOfWarPlane::UpdateVisionPlane()
       for (ABasePlayer* basePlayer : basePlayerRefs) {
          for (AAlly* ally : basePlayer->allies) {
             ally->FindVisibilityPoints();
+            // Winding counter clockwise (central point, left vertex, right vertex)
             for (int i = 1; i < ally->visionPolygonVertices.Num() - 1; ++i) {
                AddTriangle(0, i, i + 1);
             }
 
+            // Final traingle to connect back to beginning of polygon
             AddTriangle(0, ally->visionPolygonVertices.Num() - 1, 1);
             customMesh->CreateMeshSection(index, ally->visionPolygonVertices, triangles, TArray<FVector>(), TArray<FVector2D>(), TArray<FColor>(), TArray<FProcMeshTangent>(), false);
             triangles.Empty();

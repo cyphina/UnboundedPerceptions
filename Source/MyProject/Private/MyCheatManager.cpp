@@ -18,7 +18,7 @@
 #include "UI/Slots/SkillSlot.h"
 
 #include "SpellSystem/SpellManager.h"
-#include "SpellSystem/MyAbilitySystemComponent.h"
+#include "SpellSystem/RTSAbilitySystemComponent.h"
 
 #include "WorldObjects/Unit.h"
 #include "WorldObjects/BaseHero.h"

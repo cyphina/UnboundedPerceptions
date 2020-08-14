@@ -21,7 +21,8 @@ float UChannelingBar::GetSpellChannelProgress()
 {
    // The unit could die while we have the channelbar visible so we need a nullcheck
    AUnit* channelingUnit = controllerRef->GetBasePlayer()->focusedUnit;
-   if (IsValid(channelingUnit)) {  
+   if (IsValid(channelingUnit)) {
+      // TODO: Update this via delegate I suppose
       return channelingUnit->GetCurrentChannelTime() / channelingUnit->GetChannelTime();
    }
    SetVisibility(ESlateVisibility::Hidden);

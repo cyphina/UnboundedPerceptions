@@ -49,7 +49,10 @@ void ARTSGameState::BeginPlay()
    // Don't really use this ATM but it's there if we want to play around with it and actually make it a thing we can increase the precision of the model by adding more polygons to the plane
    // and performing more line traces. However it is quite inefficient since we would have to do this for every ally...
    // Implemented via https://www.redblobgames.com/articles/visibility/.
+   // ! Not using this currently however...
    FOWplane = GetWorld()->SpawnActor<AFogOfWarPlane>(FOWplaneClass, FVector(0, 0, 0), FRotator());
+
+   URTSVisionComponent::unitNoLongerInVisionSpheres.AddUObject(this, &ARTSGameState::OnEnemyOutsideVisionSpheres);
 }
 
 void ARTSGameState::StopUpdate()
@@ -156,7 +159,7 @@ void ARTSGameState::UpdateVisibleEnemies()
       // Then after some kind of delay (hopefully the delay is long enough) the unit will actually be GC'd. But the thread referencing it should be long gone
       // This won't work if the thread referencing the unit is still running after it is GC'd. This means we have way too many enemies to loop through
       // Or too many ally threads were spawned
-      
+
       ParallelForWithPreWork(
           allyList.Num(),
           [this](int32 curIndx) {
@@ -239,12 +242,18 @@ void ARTSGameState::UpdateVisiblePlayerUnits()
                      visiblePlayersMutex.WriteUnlock();
                   }
                }
-            }
-            else
+            } else
                visiblePlayersMutex.ReadUnlock();
             ally->visionMutex.ReadUnlock();
          }
          enemy->visionMutex.ReadUnlock();
       }
    });
+}
+
+void ARTSGameState::OnEnemyOutsideVisionSpheres(AUnit* enemy)
+{
+   visibleMutex.WriteLock();
+   visibleEnemies.Remove(enemy);
+   visibleMutex.WriteUnlock();
 }

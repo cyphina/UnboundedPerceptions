@@ -22,11 +22,11 @@ void ChasingState::Update(AUnit& unit, float deltaSeconds)
 {
    if(unit.GetTargetUnit()->IsVisible())
       unit.GetUnitController()->BeginAttack(unit.GetTargetUnit());
-   else if(LIKELY(unit.combatParams.currentChaseTime < 5)) {
-      unit.combatParams.currentChaseTime += deltaSeconds;
+   else if(LIKELY(currentChaseTime < 5)) {
+      currentChaseTime += deltaSeconds;
    } else {
       // Abandon chase since it took too long
-      unit.combatParams.currentChaseTime = 0;
+      currentChaseTime = 0;
       FAIMessage msg(AUnit::AIMessage_TargetLoss, &unit);
       FAIMessage::Send(unit.unitController, msg);
    }

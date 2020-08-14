@@ -107,20 +107,27 @@ ENUM_RANGE_BY_COUNT(EMechanics, CombatInfo::MechanicCount);
 
 #pragma endregion
 
+/** 
+ * A wrapper class around the attribute set to enable some custom scaling on stats
+ * We never need to use this class directly. A stat component contains this struct and it will expose this classes useful functionality
+ */
 USTRUCT(BlueprintType, NoExport)
 struct FBaseCharacter {
    static const int BASE_ATTACK_RANGE   = 500;
    static const int BASE_MOVEMENT_SPEED = 500;
    static const int BASE_ATTACK_POWER   = 100;
-   // how many elements in each enum
 
-   FBaseCharacter(const UMyAttributeSet* AttSet);
+   FBaseCharacter(const UMyAttributeSet& AttSet);
    ~FBaseCharacter();
    FBaseCharacter& operator=(const FBaseCharacter& otherChar) = default;
    int             GetLevel() const { return level; }
    void            InitializeAttributeBaseValues();
    void            LevelUp();
-   void            StatUpdate(const FGameplayAttribute& updatedStat); // Recalculate base values
+
+   /** Recalculate base values of skills from a base attribute change
+    * @param updatedStat - Attribute that was modified
+    */
+   void StatUpdate(const FGameplayAttribute& updatedStat);
 
    FGameplayAttributeData* GetAttribute(int skill) const;
    FGameplayAttributeData* GetSkill(int skill) const;
@@ -137,10 +144,10 @@ struct FBaseCharacter {
    void SetVitalBase(int skill, float newValue);
    void SetMechanicBase(int skill, float newValue);
 
-   TArray<FGameplayAttribute> GetAttributes() const { return baseAttributes; }
-   TArray<RTSUnitStat>        GetSkills() const { return skills; }
-   TArray<Vital>              GetVitals() const { return vitals; }
-   TArray<FGameplayAttribute> GetMechanics() const { return mechanics; }
+   const TArray<FGameplayAttribute*>& GetAttributes() const { return baseAttributes; }
+   const TArray<RTSUnitStat>&         GetSkills() const { return skills; }
+   const TArray<Vital>&               GetVitals() const { return vitals; }
+   const TArray<FGameplayAttribute*>& GetMechanics() const { return mechanics; }
 
    UMyAttributeSet* GetAttSet() const { return attSet; }
 
@@ -154,10 +161,10 @@ struct FBaseCharacter {
    int level                  = 1;
    int MIN_STARTING_ATT_VALUE = 20;
 
-   TArray<FGameplayAttribute> baseAttributes;
-   TArray<RTSUnitStat>        skills; // called them skills here but stats and skills are interchangeable names
-   TArray<Vital>              vitals;
-   TArray<FGameplayAttribute> mechanics;
+   TArray<FGameplayAttribute*> baseAttributes;
+   TArray<RTSUnitStat>         skills; // called them skills here but stats and skills are interchangeable names
+   TArray<Vital>               vitals;
+   TArray<FGameplayAttribute*> mechanics;
 
    void SetupPrimaryAttributes();
    void InitialStatUpdate();

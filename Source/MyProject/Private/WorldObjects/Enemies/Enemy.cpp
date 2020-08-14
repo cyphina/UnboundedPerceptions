@@ -16,7 +16,7 @@
 #include "BaseCharacter.h"
 #include "SpellSystem/MySpell.h"
 
-#include "SpellSystem/MyAbilitySystemComponent.h"
+#include "SpellSystem/RTSAbilitySystemComponent.h"
 #include "DIRender.h"
 
 #include "NavArea_EnemySpot.h"
@@ -26,26 +26,24 @@
 
 #include "Interactables/Pickup.h"
 
-
-AEnemy::AEnemy(const FObjectInitializer& oI) :
-   AUnit(oI)
+AEnemy::AEnemy(const FObjectInitializer& oI) : AUnit(oI)
 {
    aggroRange = 20;
-   state      = TUniquePtr<StateMachine>(new StateMachine(this));
+   state      = TUniquePtr<RTSStateMachine>(new RTSStateMachine(this));
    SetActorHiddenInGame(true); //Set hidden by default so won't be revealed by vision
    combatParams.isEnemy = true;
 
    GetCapsuleComponent()->AreaClass = UNavArea_EnemySpot::StaticClass(); //Custom area class so navigation filter for defensive movement will avoid this
    GetCapsuleComponent()->SetCollisionProfileName("Enemy");
 
-   visionSphere->SetCollisionProfileName("EnemyVision");
-   visionSphere->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Overlap); //Friendly
-   visionSphere->SetCanEverAffectNavigation(true);
-   visionSphere->AreaClass = UNavArea_EnemySpot::StaticClass();
-   visionSphere->SetAbsolute(false, false, true);
-   visionSphere->bDynamicObstacle = true;
-   visionSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::OnVisionSphereOverlap);
-   visionSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemy::OnVisionSphereEndOverlap);
+   visionComponent->SetCollisionProfileName("EnemyVision");
+   visionComponent->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Overlap); //Friendly
+   visionComponent->SetCanEverAffectNavigation(true);
+   visionComponent->AreaClass = UNavArea_EnemySpot::StaticClass();
+   visionComponent->SetAbsolute(false, false, true);
+   visionComponent->bDynamicObstacle = true;
+   visionComponent->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::OnVisionSphereOverlap);
+   visionComponent->OnComponentEndOverlap.AddDynamic(this, &AEnemy::OnVisionSphereEndOverlap);
 
    GetMesh()->CustomDepthStencilValue = 254;
 }
@@ -64,7 +62,10 @@ void AEnemy::BeginPlay()
    InitializeStats();
 }
 
-void AEnemy::Tick(float deltaSeconds) { Super::Tick(deltaSeconds); }
+void AEnemy::Tick(float deltaSeconds)
+{
+   Super::Tick(deltaSeconds);
+}
 
 void AEnemy::Die_Implementation()
 {
@@ -75,9 +76,9 @@ void AEnemy::Die_Implementation()
    controllerRef->GetBasePlayer()->UpdateGold(moneyGiven);
 
    //Generate drops
-   for (FItemDrop& itemDrop : itemDrops) {
+   for(FItemDrop& itemDrop : itemDrops) {
       int dropRoll = FMath::FRandRange(0, 100);
-      if (itemDrop.dropPerc > dropRoll) {
+      if(itemDrop.dropPerc > dropRoll) {
          APickup* itemPickup = GetWorld()->SpawnActorDeferred<APickup>(APickup::StaticClass(), GetActorTransform());
          itemPickup->item    = itemDrop.itemInfo;
          UGameplayStatics::FinishSpawningActor(itemPickup, GetActorTransform());
@@ -91,7 +92,7 @@ void AEnemy::Die_Implementation()
       x->SetVisibility(true);
    }
 
-   // Set alive to show damage number 
+   // Set alive to show damage number
    SetLifeSpan(2.f);
 }
 
@@ -103,26 +104,29 @@ void AEnemy::EndPlay(EEndPlayReason::Type e)
    visionMutex.WriteUnlock();
 }
 
-void AEnemy::Destroyed() { Super::Destroyed(); }
+void AEnemy::Destroyed()
+{
+   Super::Destroyed();
+}
 
 void AEnemy::Attack_Implementation()
 {
    Super::Attack_Implementation();
    //If they die (when this current attack kills them) and the targets get canceled out, then targetUnit can be nulled
-   if (IsValid(GetTargetUnit()))
-      if (!GetTargetUnit()->IsVisible())
+   if(IsValid(GetTargetUnit()))
+      if(!GetTargetUnit()->IsVisible())
          GetUnitController()->Stop();
 }
 
 bool AEnemy::CastSpell(TSubclassOf<UMySpell> spellToCast)
 {
    bool invis = GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility"));
-   if (Super::CastSpell(spellToCast)) {
+   if(Super::CastSpell(spellToCast)) {
       //Cancel AI targetting if enemy target turns invisible
-      if (GetTargetUnitValid() && !controllerRef->GetGameState()->visiblePlayerUnits.Contains(GetTargetUnit()))
+      if(GetTargetUnitValid() && !controllerRef->GetGameState()->visiblePlayerUnits.Contains(GetTargetUnit()))
          GetUnitController()->Stop();
       //Reveal self if invisible when spell casted.  If we don't check this before spell casted, we could just end up canceling an invisibility spell being cast
-      if (invis)
+      if(invis)
          GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
       return true;
    }
@@ -131,8 +135,10 @@ bool AEnemy::CastSpell(TSubclassOf<UMySpell> spellToCast)
 
 void AEnemy::SetSelected(bool value)
 {
-   if (value) { controllerRef->GetBasePlayer()->focusedUnit = this; } else {
-      if (controllerRef->GetBasePlayer()->focusedUnit == this)
+   if(value) {
+      controllerRef->GetBasePlayer()->focusedUnit = this;
+   } else {
+      if(controllerRef->GetBasePlayer()->focusedUnit == this)
          controllerRef->GetBasePlayer()->focusedUnit = nullptr;
    }
    // Call on unit selected delegate afterwards
@@ -142,19 +148,30 @@ void AEnemy::SetSelected(bool value)
 void AEnemy::SetEnabled(bool bEnabled)
 {
    Super::SetEnabled(bEnabled);
-   if (bEnabled) { controllerRef->GetGameState()->enemyList.Add(this); } else { controllerRef->GetGameState()->enemyList.Remove(this); }
+   if(bEnabled) {
+      controllerRef->GetGameState()->enemyList.Add(this);
+   } else {
+      controllerRef->GetGameState()->enemyList.Remove(this);
+   }
    controllerRef->GetGameState()->enemyList.Shrink();
    controllerRef->GetGameState()->enemyList.Compact();
 }
 
-bool AEnemy::IsVisible() { return controllerRef->GetGameState()->visibleEnemies.Contains(this); }
+bool AEnemy::IsVisible()
+{
+   return controllerRef->GetGameState()->visibleEnemies.Contains(this);
+}
 
-TSet<AUnit*>* AEnemy::GetSeenEnemies() { return &possibleEnemiesInRadius; }
+TSet<AUnit*>* AEnemy::GetSeenEnemies()
+{
+   return &possibleEnemiesInRadius;
+}
 
-void AEnemy::OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep, const FHitResult& sweepRes)
+void AEnemy::OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep,
+                                   const FHitResult& sweepRes)
 {
    //! Note to self, we rely on these functions being called as we destroy the overlap sphere to not run into data races during vision checks
-   if (otherActor->GetClass()->IsChildOf(AAlly::StaticClass())) {
+   if(otherActor->GetClass()->IsChildOf(AAlly::StaticClass())) {
       AAlly* ally = Cast<AAlly>(otherActor);
 
       possibleEnemiesInRadius.Add(ally);
@@ -165,10 +182,10 @@ void AEnemy::OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AAc
 void AEnemy::OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex)
 {
    AUnit* ally = Cast<AUnit>(otherActor);
-   if (IsValid(ally)) {
+   if(IsValid(ally)) {
       possibleEnemiesInRadius.Remove(ally);
       ally->DecVisionCount();
-      if (!ally->GetVisionCount()) {
+      if(!ally->GetVisionCount()) {
          controllerRef->GetGameState()->visiblePlayersMutex.WriteLock();
          controllerRef->GetGameState()->visiblePlayerUnits.Remove(ally);
          controllerRef->GetGameState()->visiblePlayersMutex.WriteUnlock();
@@ -179,22 +196,22 @@ void AEnemy::OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, 
 void AEnemy::InitializeStats()
 {
    int index = -1;
-   for (auto& x : initialStats.defaultAttributes) {
+   for(auto& x : initialStats.defaultAttributes) {
       ModifyStats<true>(x.defaultValue, x.att);
       ModifyStats<true>(x.defaultValue, x.att);
    }
 
-   for (auto& x : initialStats.defaultUnitScalingStats) {
+   for(auto& x : initialStats.defaultUnitScalingStats) {
       ModifyStats<true>(x.defaultValue, x.stat);
       ModifyStats<true>(x.defaultValue, x.stat);
    }
 
-   for (auto& x : initialStats.defaultVitals) {
+   for(auto& x : initialStats.defaultVitals) {
       ModifyStats<true>(x.defaultValue, x.vit);
       ModifyStats<true>(x.defaultValue, x.vit);
    }
 
-   for (auto& x : initialStats.defaultMechanics) {
+   for(auto& x : initialStats.defaultMechanics) {
       ModifyStats<true>(x.defaultValue, x.mech);
       ModifyStats<true>(x.defaultValue, x.mech);
    }
@@ -203,7 +220,10 @@ void AEnemy::InitializeStats()
 float AEnemy::CalculateTargetRisk()
 {
    int targetNum = 0;
-   for (AUnit* a : controllerRef->GetGameState()->visiblePlayerUnits) { if (a->GetTargetUnit() == this) targetNum += 1; }
+   for(AUnit* a : controllerRef->GetGameState()->visiblePlayerUnits) {
+      if(a->GetTargetUnit() == this)
+         targetNum += 1;
+   }
 
    const float targetRiskValue = FMath::Clamp(diminishFunc(targetNum), 0.f, 1.f);
    return targetRiskValue;

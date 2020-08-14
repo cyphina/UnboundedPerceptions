@@ -1,14 +1,20 @@
 #include "ChannelingState.h"
 #include "Unit.h"
 #include "GameplayAbilityTypes.h"
-#include "AbilitySystemComponent.h"
+#include "MyAbilitySystemComponent.h"
+#include "MySpell.h"
 #include "UnitController.h"
 
-ChannelingState::ChannelingState() {}
+ChannelingState::ChannelingState()
+{
+}
 
 void ChannelingState::Enter(AUnit& unit)
 {
    //TODO: Incantation animation
+   //TODO: Setup ChannelTime max from CurrentSpell inn AbilityComponent (maybe there's a better way)
+   currentChannelTime = 0.f;
+   channelTime        = unit.GetAbilitySystemComponent()->GetCurrentSpell().GetDefaultObject()->GetCastTime(unit.GetAbilitySystemComponent());
 }
 
 void ChannelingState::Exit(AUnit& unit)
@@ -24,13 +30,15 @@ void ChannelingState::Exit(AUnit& unit)
    //Handle the end of channeling in the spell itself by having some action taken when the event is heard.
    //Chanelled spell should call stop when it finishes or activated early.
    unit.GetAbilitySystemComponent()->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("Skill.Confirm"), &eD);
-   unit.unitSpellData.currentChannelTime = 0;
+   currentChannelTime = 0;
 }
 
 void ChannelingState::Update(AUnit& unit, float deltaSeconds)
 {
-   if (unit.unitSpellData.currentChannelTime < unit.unitSpellData.channelTime)
-      unit.unitSpellData.currentChannelTime += deltaSeconds;
+   if(currentChannelTime < channelTime)
+      currentChannelTime += deltaSeconds;
 }
 
-ChannelingState::~ChannelingState() {}
+ChannelingState::~ChannelingState()
+{
+}

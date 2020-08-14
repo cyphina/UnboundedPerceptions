@@ -1,55 +1,195 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 
 #include "AttackState.h"
 
+#include "AttackAnim.h"
 #include "RTSGameState.h"
 
 #include "Unit.h"
-#include "AIStuff/AIControllers/UnitController.h"
+#include "UnitController.h"
 #include "UserInput.h"
 #include "BrainComponent.h"
+#include "RTSUnitAnimController.h"
+#include "SpellDataLibrary.h"
+#include "TargetComponent.h"
 
-AttackState::AttackState() {}
+#include "UpPositionalMoveLibrary.h"
+#include "UpStatComponent.h"
 
-AttackState::~AttackState() {}
-
-void AttackState::Enter(AUnit& unit) {}
-
-void AttackState::Exit(AUnit& unit)
+AttackState::AttackState()
 {
-   // GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Purple, TEXT("WEE"));
+   agent.OnUnitHit().AddSP(this, &AttackState::OnHitEvent);
 }
 
-void AttackState::Update(AUnit& unit, float deltaSeconds)
+void AttackState::OnHitEvent()
 {
-   // Checks to see if we're positioned correctly
-   if (unit.combatParams.readyToAttack) {
-      if (LIKELY(unit.GetTargetUnit()->GetCanTarget())) {
-         //if we're playing the attack animation, but our unit goes out of range, then cancel the attack and start moving closer
-         if (!unit.unitController->IsTargetInRange(unit.GetMechanicAdjValue(EMechanics::AttackRange) + unit.combatParams.attackRangeCancel,
-                                                   unit.GetTargetUnit()->GetActorLocation())) {
-            unit.combatParams.currentAttTime = 0;
-            unit.combatParams.readyToAttack  = false;
-            unit.unitController->AdjustPosition(unit.GetMechanicAdjValue(EMechanics::AttackRange), unit.GetTargetUnit());
-         } else {
-            // Once we start the attack animation, just keep facing our target without any turning
-            if (unit.unitController->IsFacingTarget(unit.GetTargetUnit()->GetActorLocation())) {
-               if (LIKELY(unit.combatParams.currentAttTime < 2 / ((unit.GetSkillAdjValue(EUnitScalingStats::Attack_Speed) + 100) * 0.01))) {
-                  unit.combatParams.currentAttTime += deltaSeconds * unit.controllerRef->GetGameState()->speedModifier;
-               } else {
-                  unit.combatParams.currentAttTime = 0;
-                  unit.PlayAttackEffects();
+   ResetAttTimer();
+   FAIMessage msg(AUnit::AI_MESSAGES.AIMessage_AttackReady, &agent);
+   FAIMessage::Send(agent.unitController, msg);
+}
 
-                  FAIMessage msg(AUnit::AIMessage_AttackReady, &unit);
-                  FAIMessage::Send(unit.unitController, msg);
-               }
-            } else { unit.SetActorRotation(unit.unitController->FindLookRotation(unit.GetTargetUnit()->GetActorLocation())); }
+void AttackState::ResetAttTimer()
+{
+   currentAttTime = 0;
+}
+
+AttackState::~AttackState()
+{
+}
+
+void AttackState::Enter()
+{
+   attackAnimationPlaying = false;
+   if(AttemptReposition()) {
+      bMvingTowdTarg = true;
+   } else {
+      bMvingTowdTarg = false;
+   }
+}
+
+void AttackState::Exit()
+{
+   ResetAttTimer();
+   stopTime               = UGameplayStatics::GetTimeSeconds(&agent);
+   bMvingTowdTarg         = false;
+   attackAnimationPlaying = false;
+}
+
+void AttackState::Update(float deltaSeconds)
+{
+   UpdateAttackTimer(deltaSeconds);
+
+   if(bMvingTowdTarg) {
+      if(CheckAndHandleCancelConditions())
+         return;
+   } else {
+      if(CheckAndHandleCancelConditions()) {
+         if(!attackAnimationPlaying) {
+            if(AttackInitiationSetup())
+               PlayAttackAnimation();
+         } else {
+            LockOnTarget();
+            CheckAndHandleTargetOutsideAnimationRange();
          }
       }
-   } else {
-      //If the unit goes out of vision while we're attempting to chase it during our attack positional adjustment
-      if (!unit.GetTargetUnit()->IsVisible()) { unit.state->ChangeState(EUnitState::STATE_CHASING); }
    }
+}
+
+bool AttackState::AttemptReposition()
+{
+   return agent.unitController->AdjustPosition(AgentAttackRange(), AgentTargetUnit(), [this]() { OnFinishReposition(); });
+}
+
+void AttackState::OnFinishReposition()
+{
+   bMvingTowdTarg         = false;
+   attackAnimationPlaying = true;
+   PlayAttackAnimation();
+}
+
+void AttackState::UpdateAttackTimer(float deltaSeconds)
+{
+   currentAttTime = FMath::Min(currentAttTime + deltaSeconds * agent.controllerRef->GetGameState()->speedModifier, AttackTimerThreshold());
+}
+
+bool AttackState::CheckAndHandleCancelConditions()
+{
+   if(UNLIKELY(CheckTargetVisionLost())) {
+      TransitionToChaseState();
+      return false;
+   }
+   if(UNLIKELY(!CheckTargetAttackable())) {
+      StopAgent();
+      return false;
+   }
+   return true;
+}
+
+bool AttackState::CheckTargetVisionLost() const
+{
+   return !agent.targetComponent->GetTargetUnit()->visionComponent->IsVisible();
+}
+
+bool AttackState::CheckTargetAttackable() const
+{
+   return USpellDataLibrary::IsAttackable(*agent.GetAbilitySystemComponent());
+}
+
+void AttackState::TransitionToChaseState() const
+{
+   agent.state->ChangeState(EUnitState::STATE_CHASING);
+}
+
+void AttackState::StopAgent() const
+{
+   agent.unitController->Stop();
+}
+
+bool AttackState::AttackInitiationSetup()
+{
+   if(AttemptReposition()) {
+      return false;
+   }
+   return true;
+}
+
+void AttackState::PlayAttackAnimation()
+{
+   if(AttackSpeedTimerCheck()) {
+      attackAnimationPlaying = true;
+      agent.attackAnim->PlayAttackAnimation();
+   }
+}
+
+bool AttackState::AttackSpeedTimerCheck() const
+{
+   return currentAttTime < AttackTimerThreshold() ? true : false;
+}
+
+float AttackState::AttackTimerThreshold() const
+{
+   // Similar to DOTA's formula where initial attack speed is 100, IAS (Increased Attack Speed) is our stat, and BAT is 2 for all units
+   return 2 / ((AgentAttackSpeed() + 100) * 0.01);
+}
+
+void AttackState::LockOnTarget() const
+{
+   if(!UUpPositionalMoveLibrary::IsFacingTarget(agent, AgentTargetLocation())) {
+      agent.SetActorRotation(UUpPositionalMoveLibrary::FindLookRotation(agent, AgentTargetLocation()));
+   }
+}
+
+bool AttackState::CheckAndHandleTargetOutsideAnimationRange()
+{
+   if(!UUpPositionalMoveLibrary::IsTargetInRange(agent, AgentTargetLocation(), AgentBufferAttackRange())) {
+      agent.attackAnim->StopAttackAnimation();
+      attackAnimationPlaying = false;
+      return false;
+   }
+   return true;
+}
+
+float AttackState::AgentAttackRange() const
+{
+   return agent.statComponent->GetMechanicAdjValue(EMechanics::AttackRange);
+}
+
+float AttackState::AgentAttackSpeed() const
+{
+   return agent.statComponent->GetSkillAdjValue(EUnitScalingStats::Attack_Speed);
+}
+
+float AttackState::AgentBufferAttackRange() const
+{
+   return AgentAttackRange() + bTgtInAttBuff;
+}
+
+FVector AttackState::AgentTargetLocation() const
+{
+   return agent.FindComponentByClass<UTargetComponent>()->GetTargetLocation();
+}
+
+AUnit* AttackState::AgentTargetUnit() const
+{
+   return agent.FindComponentByClass<UTargetComponent>()->GetTargetUnit();
 }

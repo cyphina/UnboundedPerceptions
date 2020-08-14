@@ -13,10 +13,13 @@ class AUnit;
 class AUserInput;
 class UEnvQuery;
 class UMySpell;
+class URTSAttackExecution;
+class URTSDeathExecution;
+class URTSMoveExecution;
 
 /**
- * Base controller for all unit classes.  Controller manages a behavior, and allows different units
- * to swap out how they behave.  Holds all of the task functions.
+ * Base controller for all unit classes.  Controller manages a behavior flow, and allows different units
+ * to swap out how they behave by storing various trees.  Holds all of the task functions.
  */
 
 UCLASS()
@@ -39,8 +42,8 @@ class MYPROJECT_API AUnitController : public AAIController
    const FName blackboardProtectKey = FName("protect");
    const FName blackboardThreatKey  = FName("threat");
 
-   static const FName             AIMessage_Help; // sent when a unit needs some help defensively
-   void CastTurnAction();
+   static const FName AIMessage_Help; // sent when a unit needs some help defensively
+   void               CastTurnAction();
 
    AUserInput* GetCPCRef() const { return CPCRef; }
 
@@ -48,10 +51,6 @@ class MYPROJECT_API AUnitController : public AAIController
    static const int CHASE_RANGE = 100;
 
    AUnitController();
-
-   /** Location which our controller will patrol */
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AISettings")
-   TArray<FVector> patrolLocations;
 
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AISettings")
    bool canProtect = false;
@@ -66,6 +65,14 @@ class MYPROJECT_API AUnitController : public AAIController
    /**Make sure to call UseBlackboard/InitializeBlackboard in the children classes depending
     * on how they use their blackboards as well as starting the tree*/
    void OnPossess(APawn* InPawn) override;
+
+   /** This timeline is for when we have to turn towards a point (FVector)*/
+   void SetupTurnPointTimeline();
+   /** This timeline is for when we have to turn towards an actor (AActor*). It may take several attempts to reach the actor's location
+    * because the actor may be moving around.
+    */
+   void SetupTurnActorTimeline();
+
    void BeginPlay() override;
    void Tick(float deltaSeconds) override final;
 
@@ -76,60 +83,41 @@ class MYPROJECT_API AUnitController : public AAIController
    typedef TSharedPtr<struct FAIMessageObserver, ESPMode::Fast> FAIMessageObserverHandle;
    FAIMessageObserverHandle                                     protectListener;
 
-/** Used to search for an actor/vector that matches certain criteria */
-#pragma region EnvironmentQuery
-
- public:
-   /**Find the best spot for targetting an AOE spell
-    *@param isSupport - Find best AOE location to hit the most enemies (false) or friends (true)? */
-   virtual void FindBestAOELocation(bool isSupport);
-
-   /**Find the best unit to target a single spell
-    *@param isSupport - Find best AOE location to hit the most enemies (false) or friends (true)? */
-   virtual void FindWeakestTarget(bool isSupport);
 
  private:
-   /**Environment query to find the best place to cast an AOE spell for maximum target hits when healing*/
+   /** Holds logic for basic auto attack */
    UPROPERTY(EditDefaultsOnly)
-   UEnvQuery* findBestAOESupportLocation;
+   TSubclassOf<URTSAttackExecution> customAttackLogic;
 
-   /** Environment query to find the best place to cast an AOE spell for maximum target hits when casting an AOE spell*/
+   /** Holds logic for death */
    UPROPERTY(EditDefaultsOnly)
-   UEnvQuery* findBestAOEAssaultLocation;
+   TSubclassOf<URTSDeathExecution> customDeathLogic;
 
-   /** Environment query to find the weakest allied unit.  Allies and enemies have should have different EQueries set*/
+   /** Holds custom move logic so that we add some logic for the AI to move in certain ways instead of just walking everywhere.
+    * For instance, if we want our character to teleport towards its target we can cast the spell if its on CD and if the target is far or something. 
+    */
    UPROPERTY(EditDefaultsOnly)
-   UEnvQuery* findWeakestAllyTarget;
-
-   /** Environment query to find the weakest enemy unit.  Allies and enemies have should have different EQueries set*/
-   UPROPERTY(EditDefaultsOnly)
-   UEnvQuery* findWeakestEnemyTarget;
-
-   /** Environment query to find the best place to escape to.  Allies and enemies have should have different EQueries set*/
-   UPROPERTY(EditDefaultsOnly)
-   UEnvQuery* findBestDefensivePosition;
-
-   /** Environment query to find the best place to deal damage.  Allies and enemies have should have different EQueries set*/
-   UPROPERTY(EditDefaultsOnly)
-   UEnvQuery* findBestOffensivePosition;
-
-   /** Chances of the unit casting a spell when at state 0 - Passive, 1 - Defensive, 2 - Offensive, 3 - Aggressive*/
-   UPROPERTY(EditDefaultsOnly)
-   TArray<int> spellCastingChances;
+   TSubclassOf<URTSMoveExecution> customMoveLogic;
 
    void FindBestSpellTarget(FGameplayTag targettingTag, bool isSupport);
-   void OnAOELocationFound(TSharedPtr<FEnvQueryResult> result);
-   void OnWeakestTargetFound(TSharedPtr<FEnvQueryResult> result);
 
-#pragma endregion;
+   UFUNCTION()
+   void OnDamageReceived(const FUpDamage& d);
 
 /** Functions used for commands and AI tasks on the tree */
 #pragma region actions
 
  public:
-   bool SearchAndCastSpell(const FGameplayTagContainer& spellRequirementTags);
+   /**Function called when unit dies :(*/
+   void Die();
 
-   virtual void Protect(UBrainComponent* BrainComp, const FAIMessage& Message);
+   /** Calls execute within the functor object and handles some logic common to all attacking methods
+    * Some common functionality implemented for attack is:
+    *
+    */
+   void Attack();
+
+   bool SearchAndCastSpell(const FGameplayTagContainer& spellRequirementTags);
 
    /** Function for moving units around, based upon the ACharacter move.  Changes our state, and some different characters may move differently*/
    UFUNCTION(BlueprintCallable, Category = "Action")
@@ -139,26 +127,9 @@ class MYPROJECT_API AUnitController : public AAIController
    UFUNCTION(BlueprintCallable, Category = "Action")
    virtual EPathFollowingRequestResult::Type MoveActor(AActor* targetActor);
 
-   /** Follows a target denoted by the followTarget field in the Unit class*/
-   virtual void Follow();
-
-   /** Patrol around a set of points*/
-   virtual void Patrol(TArray<FVector> newPatrolPoints);
-
-   /** Move after a target even when it is out of vision by guessing where it could be*/
-   virtual void Search();
-
-   /** Randomly move about the map*/
-   virtual void Roam();
-
-   /** Get away from enemies*/
-   virtual void Run();
-
-   /** Used to chase after enemies that leave the vision radius*/
-   virtual void Chase();
-
-   /** Condition used to indicate chasing failure.  Chasing sucess is finding the enemy again*/
-   virtual bool ChasingQuit();
+   /** Either Idle, Follow, Patrol, Search, or Roam*/
+   UPROPERTY(EditAnywhere)
+   UBehaviorTree* idleMoveLogic;
 
    /** Stop should be overidden based on the subclass because stopping some classes has to cancel more things*/
    UFUNCTION(BlueprintCallable, Category = "Action")
@@ -169,47 +140,13 @@ class MYPROJECT_API AUnitController : public AAIController
     */
    void StopAutomation() const;
 
-   /**Used to initiate an attack on a target*/
+   /** Triggers setup required to enter attack loop logic, and them sets up callbacks to enter the loop once the setup is complete */
    UFUNCTION(BlueprintCallable, Category = "Action")
    virtual void BeginAttack(AUnit* target);
 
-   /**Setup a move towards a position so we're in range to cast our spell (Requires currentSpell be set)*/
-   void AdjustCastingPosition(TSubclassOf<UMySpell> spellClass, FVector spellTargetLocation);
-
-   /**Setup a move towards an actor so we're in range to cast our spell (Requires currentSpell be set)*/
-   void AdjustCastingPosition(TSubclassOf<UMySpell> spellClass, AActor* spellTargetActor);
-
-   /**Initiate spell casting procedure without any input triggers.  Used for AI spellcasting.  Returns if we successfully transitioned to CASTING state*/
-   UFUNCTION(BlueprintCallable, Category = "Action")
-   virtual bool BeginCastSpell(TSubclassOf<UMySpell> spellToCastIndex);
-
-   /** Move to a location searching for a target to attack or attack the unit closest to the location*/
-   UFUNCTION(BlueprintCallable, Category = "Action")
-   virtual void AttackMove(FVector moveLocation);
-
 #pragma endregion
 
-/** Functions used to perform checks within the tasks */
-#pragma region ActionHelpers
-
-   /**Function for checking if a unit is in range of some action*/
-   UFUNCTION(BlueprintCallable, Category = "Positioning")
-   bool IsTargetInRange(float range, FVector targetLocation);
-
-   /**Function to see if unit is facing the direction*/
-   UFUNCTION(BlueprintCallable, Category = "Positioning")
-   bool IsFacingTarget(FVector targetLocation, float errorAngleCutoff = .02f);
-
  protected:
-   /** Check to see if we're targetting ourself with a spell*/
-   bool IsTargettingSelf(AUnit* unitRef) const { return unitRef == GetUnitOwner(); }
-
-   /**Checks to see if spell has a cast time, and if so, it will start channeling (incantation) process.  Else it will just cast the spell*/
-   virtual void IncantationCheck(TSubclassOf<UMySpell> spellToCast) const;
-
-   /**If the spell has the Skill.Channeling tag then it requires us to channel after the incantation aka unit has to focus energy into the spell*/
-   virtual void SpellChanneling(TSubclassOf<UMySpell> spellToCast);
-
    /** Initiates attack animation after moving into position */
    UFUNCTION()
    void PrepareAttack();
@@ -219,44 +156,62 @@ class MYPROJECT_API AUnitController : public AAIController
 /** Not actions, but functions used to get the character in the right position */
 #pragma region MoveAdjustments
 
- public:
-   FQuat FindLookRotation(FVector targetPoint);
+ private:
+   friend void USpellCastComponent::AdjustCastingPosition(TSubclassOf<UMySpell> spellClass, AActor* spellTargetActor);
+   friend void USpellCastComponent::AdjustCastingPosition(TSubclassOf<UMySpell> spellClass, FVector spellTargetLocation);
 
    /**Function to turn self towards a direction*/
    UFUNCTION(BlueprintCallable, Category = "Movement")
-   void TurnTowardsTarget(FVector targetLocation);
+   void TurnTowardsPoint(FVector targetLocation);
 
    /**Function to turn self towards an actor*/
    UFUNCTION(BlueprintCallable, Category = "Movement")
    void TurnTowardsActor(AActor* targetActor);
 
-   /**Function to move to appropriate distance from target and face direction*/
+   /**Function to move to appropriate distance from target and face direction
+    * It does two checks. First it checks to see if we're out of range and then moves the unit to the position.
+    * Else if the unit is not facing the target it rotates the unit towards the target.
+    * If the unit needs both adjusted, then the unit will turn towards the target after the move finishes as setup by a callback that triggers after a move.
+    */
    bool AdjustPosition(float range, FVector targetLocation);
 
-   /**Function to move to appropriate distance from target and face direction*/
+   inline static FVector GetLocation(AActor* targetActor);
+
+   /**Function to move to appropriate distance from target and face the target*/
    bool AdjustPosition(float range, AActor* targetActor);
 
    /**Function to move to appropriate distance from target and face direction*
-   * This variant is used when intiating some kind of BeginAction() operation we have to move to a closer location before we can start our action
+   * This variant is used when initiating some kind of BeginAction() operation we have to move to a closer location before we can start our action
    * @param range - Distance away from target we can be to stop moving closer
    * @param targetLocation - Actual location of target point we're attempting to move closer to
-   * @param newState - What state should we change this unit to be in when attempting to move
-   * @param turnAction - What should we tell this unit to do after we finished moving and turn towards our target?
+   * @param finishedTurnAction - What should we tell this unit to do after we finished moving and turn towards our target?
    */
-   bool AdjustPosition(float range, FVector targetLocation, EUnitState newState, TFunction<void()> turnAction);
+   bool AdjustPosition(float range, FVector targetLocation, TFunction<void()>&& finishedTurnAction);
 
-   bool AdjustPosition(float range, AActor* targetActor, EUnitState newState, TFunction<void()> turnAction);
+   bool AdjustPosition(float range, AActor* targetActor, TFunction<void()>&& finishedTurnAction);
 
    UFUNCTION()
    void OnActorTurnFinished();
-    
+
    UFUNCTION()
-   void ActionAfterTurning();
+   void OnPointTurnFinished();
 
    UPROPERTY(EditAnywhere, Category = "Movement")
    float rotationRate = 0.03f;
 
- private:
+   /** Turn action that is set after movement because we either turn towards a point or an actor (which is set by the corresponding AdjustPosition functino).
+    *  If the unit is already already facing its target, executes onPosAdjDoneAct
+    *  We use TFunctions over corresponding delegates because this functionality is only supposed
+    *  to be set through very specific interfaces.
+    */
+   TFunction<void()> QueuedTurnAction;
+
+   /** Action to be done after positional adjustment is finished. This means we've moved into position and turned towards the target
+    *  We use TFunctions over corresponding delegates because this functionality is only supposed
+    *  to be set through very specific interfaces.
+    */
+   TFunction<void()> onPosAdjDoneAct;
+
    UCurveFloat* turnCurve;
    FQuat        turnRotator;
    FQuat        startRotation;
@@ -270,5 +225,25 @@ class MYPROJECT_API AUnitController : public AAIController
    UFUNCTION()
    void TurnActor(float turnValue);
 
+   void QueueTurnAfterMovement(FVector targetLoc);
+   void QueueTurnAfterMovement(AActor* targetActor);
+
+   /** Callback function for move completed. Delegates can work with virtual functions. */
+   UFUNCTION()
+   void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
+
+   class MoveCompletedVisitor
+   {
+    public:
+      MoveCompletedVisitor(AUnitController* controllerRef) : finishedMovingUnitController(controllerRef) {}
+      void operator()(FEmptyVariantState);
+      void operator()(FVector targetVector);
+      void operator()(AActor* targetActor);
+      void operator()(AUnit* targetUnit);
+
+    private:
+      inline AUnit&    FinishedMovingUnit() const;
+      AUnitController* finishedMovingUnitController;
+   };
 #pragma endregion
 };

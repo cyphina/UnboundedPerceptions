@@ -10,6 +10,7 @@
 #include "GameplayEffectExtension.h"
 #include "Image.h"
 #include "RTSPawn.h"
+#include "UpStatComponent.h"
 #include "UserInput.h"
 #include "Blu/Public/BluEye.h"
 #include "Blu/Public/BluBlueprintFunctionLibrary.h"
@@ -49,16 +50,16 @@ void URTSSidebarWidget::UpdatePartyInformation()
       for(auto hero : cpcRef->GetBasePlayer()->heroes) {
          TSharedPtr<FJsonObject> heroObj = MakeShareable(new FJsonObject);
          heroObj->SetStringField("name", hero->GetGameName().ToString());
-         heroObj->SetNumberField("hitpoints", hero->GetVitalCurValue(EVitals::Health));
-         heroObj->SetNumberField("maxHitpoints", hero->GetVitalBaseValue(EVitals::Health));
-         heroObj->SetNumberField("mana", hero->GetVitalCurValue(EVitals::Mana));
-         heroObj->SetNumberField("maxMana", hero->GetVitalBaseValue(EVitals::Mana));
+         heroObj->SetNumberField("hitpoints", hero->statComponent->GetVitalCurValue(EVitals::Health));
+         heroObj->SetNumberField("maxHitpoints", hero->statComponent->GetVitalBaseValue(EVitals::Health));
+         heroObj->SetNumberField("mana", hero->statComponent->GetVitalCurValue(EVitals::Mana));
+         heroObj->SetNumberField("maxMana", hero->statComponent->GetVitalBaseValue(EVitals::Mana));
          heroObj->SetBoolField("bSelected", hero->GetSelected());
 
          // Start listening to the health values
          UMyAttributeSet* attSet = const_cast<UMyAttributeSet*>(hero->GetAbilitySystemComponent()->GetSet<UMyAttributeSet>());
          subscribedAttributeSetDelegateHandles.Emplace(MakeTuple(attSet->statUpdatedEvent.AddUObject(this, &URTSSidebarWidget::UpdateHeroVitals),
-                                                             attSet->baseStatUpdatedEvent.AddUObject(this, &URTSSidebarWidget::UpdateHeroMaxVitals)));
+                                                                 attSet->baseStatUpdatedEvent.AddUObject(this, &URTSSidebarWidget::UpdateHeroMaxVitals)));
          // Serialize our object (write the object to the string)
          FJsonSerializer::Serialize(heroObj.ToSharedRef(), writer);
       }

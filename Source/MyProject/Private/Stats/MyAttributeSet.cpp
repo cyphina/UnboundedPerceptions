@@ -7,6 +7,7 @@
 #include "GameplayEffectExtension.h"
 #include "AbilitySystemComponent.h"
 #include "NumericLimits.h"
+#include "UpStatComponent.h"
 
 TArray<FGameplayAttribute> UMyAttributeSet::attList = TArray<FGameplayAttribute>();
 TSet<FGameplayAttribute>   UMyAttributeSet::attSet  = TSet<FGameplayAttribute>();
@@ -25,7 +26,7 @@ void UMyAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 {
    UAbilitySystemComponent* source = data.EffectSpec.GetContext().GetOriginalInstigatorAbilitySystemComponent();
 
-   // This logic is laready handled by the damage component
+   // This logic is already handled by the damage component
    /*if (HealthAttribute() == data.EvaluatedData.Attribute) {
       AActor*      damagedActor      = nullptr;
       AController* damagedController = nullptr;
@@ -92,18 +93,20 @@ DEFINE_ATTRIBUTE_FUNCTION(GlobalDamageModifier, UMyAttributeSet);
 
 TArray<FGameplayAttribute> UMyAttributeSet::GetAtts()
 {
-   TArray<FGameplayAttribute> atts = {StrengthAttribute(), UnderstandingAttribute(), IntelligenceAttribute(), ExplosivenessAttribute(),
-                                     EnduranceAttribute(),  AgilityAttribute(),       LuckAttribute()};
+   TArray<FGameplayAttribute> atts = {StrengthAttribute(),  UnderstandingAttribute(), IntelligenceAttribute(), ExplosivenessAttribute(),
+                                      EnduranceAttribute(), AgilityAttribute(),       LuckAttribute()};
    return atts;
 }
 
 TArray<FGameplayAttribute> UMyAttributeSet::GetSkills()
 {
-   TArray<FGameplayAttribute> skills = {Critical_ChanceAttribute(), Critical_DamageAttribute(), AccuracyAttribute(),     DodgeAttribute(),           Attack_SpeedAttribute(),    Cast_SpeedAttribute(),      Physical_AffAttribute(),
-                                       Fire_AffAttribute(),        Water_AffAttribute(),       Wind_AffAttribute(),     Earth_AffAttribute(),       Electric_AffAttribute(),    Darkness_AffAttribute(),    Light_AffAttribute(),
-                                       Arcane_AffAttribute(),      Chaos_AffAttribute(),       Poison_AffAttribute(),   Blood_AffAttribute(),       Ethereal_AffAttribute(),    Physical_ResistAttribute(), Fire_ResistAttribute(),
-                                       Water_ResistAttribute(),    Wind_ResistAttribute(),     Earth_ResistAttribute(), Electric_ResistAttribute(), Darkness_ResistAttribute(), Light_ResistAttribute(),    Arcane_ResistAttribute(),
-                                       Chaos_ResistAttribute(),    Poison_ResistAttribute(),   Blood_ResistAttribute(), Ethereal_ResistAttribute()};
+   TArray<FGameplayAttribute> skills = {
+       Critical_ChanceAttribute(), Critical_DamageAttribute(), AccuracyAttribute(),     DodgeAttribute(),         Attack_SpeedAttribute(), Cast_SpeedAttribute(),
+       Physical_AffAttribute(),    Fire_AffAttribute(),        Water_AffAttribute(),    Wind_AffAttribute(),      Earth_AffAttribute(),    Electric_AffAttribute(),
+       Darkness_AffAttribute(),    Light_AffAttribute(),       Arcane_AffAttribute(),   Chaos_AffAttribute(),     Poison_AffAttribute(),   Blood_AffAttribute(),
+       Ethereal_AffAttribute(),    Physical_ResistAttribute(), Fire_ResistAttribute(),  Water_ResistAttribute(),  Wind_ResistAttribute(),  Earth_ResistAttribute(),
+       Electric_ResistAttribute(), Darkness_ResistAttribute(), Light_ResistAttribute(), Arcane_ResistAttribute(), Chaos_ResistAttribute(), Poison_ResistAttribute(),
+       Blood_ResistAttribute(),    Ethereal_ResistAttribute()};
    return skills;
 }
 
@@ -128,21 +131,19 @@ void UMyAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute
 {
    AUnit* unit = Cast<AUnit>(GetOwningActor());
    if(attSet.Contains(Attribute)) {
-      unit->UpdateStats(Attribute);
+      unit->statComponent->UpdateStats(Attribute);
    }
+
    baseStatUpdatedEvent.Broadcast(Attribute, NewValue, unit);
 }
 
 void UMyAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
-   // Clamp values and update walk speed if we get movement speed changes
    AUnit* unit = Cast<AUnit>(GetOwningActor());
-   if(Attribute == HealthAttribute()) {
+   if(Attribute == HealthAttribute()) { // Health clamping
       Health.SetCurrentValue(FMath::Clamp(Health.GetCurrentValue(), 0.0f, Health.GetBaseValue()));
-   } else if(Attribute == MovementSpeedAttribute()) {
-      unit->GetCharacterMovement()->MaxWalkSpeed = NewValue;
-   } else if(attSet.Contains(Attribute)) {
-      unit->UpdateStats(Attribute);
+   } else if(attSet.Contains(Attribute)) { // Needs to be run before the broadcast to get proper values to the stat widget in the character menu
+      unit->statComponent->UpdateStats(Attribute);
    }
 
    statUpdatedEvent.Broadcast(Attribute, NewValue, unit);

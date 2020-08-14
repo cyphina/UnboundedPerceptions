@@ -1,16 +1,14 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 #include "Interactable.generated.h"
 
-/**Interfaces are good when we want different objects in different hierarchies to be able to communicate
- * Interfaces take no memory because of empty base optimization (or so I assume)
+/**
+ * Classes derived from interfaces use no extra memory because of empty base optimization
  */
 
 class ABaseHero;
 
 /**Use this uobject to expose the interface to blueprints*/
-UINTERFACE(BlueprintType)
+UINTERFACE(BlueprintType, MinimalAPI)
 class MYPROJECT_API UInteractable : public UInterface
 {
    GENERATED_UINTERFACE_BODY()

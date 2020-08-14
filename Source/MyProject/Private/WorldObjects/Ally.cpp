@@ -28,7 +28,7 @@ FText const AAlly::filledQueueText   = NSLOCTEXT("HelpMessages", "Queue", "Comma
 
 AAlly::AAlly(const FObjectInitializer& oI) : AUnit(oI)
 {
-   state = TUniquePtr<StateMachine>(new StateMachine(this));
+   state = TUniquePtr<RTSStateMachine>(new RTSStateMachine(this));
 
    combatParams.isEnemy = false;
 
@@ -36,16 +36,16 @@ AAlly::AAlly(const FObjectInitializer& oI) : AUnit(oI)
 
    // Set collision to friendly type and block traces made on the AllyTrace channel
    GetCapsuleComponent()->SetCollisionProfileName("Ally");
-   visionSphere->SetCollisionProfileName("FriendlyVision");
-   visionSphere->OnComponentBeginOverlap.AddDynamic(this, &AAlly::OnVisionSphereOverlap);
-   visionSphere->OnComponentEndOverlap.AddDynamic(this, &AAlly::OnVisionSphereEndOverlap);
+   visionComponent->SetCollisionProfileName("FriendlyVision");
+   visionComponent->OnComponentBeginOverlap.AddDynamic(this, &AAlly::OnVisionSphereOverlap);
+   visionComponent->OnComponentEndOverlap.AddDynamic(this, &AAlly::OnVisionSphereEndOverlap);
 
    patrolComp = CreateDefaultSubobject<UPatrolComponent>("PatrolComponent");
 
    GetMesh()->CustomDepthStencilValue = 254;
 
 #if UE_EDITOR
-   visionSphere->SetHiddenInGame(false);
+   visionComponent->SetHiddenInGame(false);
 #endif
 
    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
@@ -100,7 +100,7 @@ void AAlly::SetEnabled(bool bEnabled)
       controllerRef->GetBasePlayer()->selectedAllies.RemoveSingle(this);
       visionMutex.WriteLock();
       controllerRef->GetGameState()->allyList.Remove(this);
-      // Even if we remove the item there will be some kind of empty space in the set that can be hit when iterating 
+      // Even if we remove the item there will be some kind of empty space in the set that can be hit when iterating
       controllerRef->GetGameState()->allyList.CompactStable();
 
       visionMutex.WriteUnlock();
@@ -218,15 +218,6 @@ void AAlly::OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AAct
          GetCornersInRange(otherActor);
          break;
       }
-      case ENEMY_CHANNEL: {
-#if UE_EDITOR
-         checkf(otherActor->GetClass()->IsChildOf(AEnemy::StaticClass()), TEXT("Actor %s is not a valid enemy"), *otherActor->GetName());
-#endif
-         AUnit* enemy = Cast<AUnit>(otherActor);
-
-         possibleEnemiesInRadius.Add(enemy);
-         enemy->IncVisionCount();
-      }
       default: break;
    }
 }
@@ -295,6 +286,7 @@ void AAlly::FindVisibilityPoints()
       static const float root2Over2 = .70710f;
 
       visionPolygonVertices.Empty();
+      visionPolygonVertices.Reserve(visionBlockerCorners.Num() + 8); // 8 extra points plus corners from visibility blockers
 
       // Add extra points to make resulting shape close to a circle
       TSet<FVector, DefaultKeyFuncs<FVector>, TInlineSetAllocator<8>> calculationCorners = TSet<FVector>(visionBlockerCorners);
@@ -307,12 +299,15 @@ void AAlly::FindVisibilityPoints()
       calculationCorners.Add(GetActorLocation() + FVector(-GetVisionRadius(), 0, 0));
       calculationCorners.Add(GetActorLocation() + FVector(GetVisionRadius() * -root2Over2, GetVisionRadius() * root2Over2, 0));
 
-      // Sort the points by angle
+      // Sort the points by angle (so they are arranged in a circle since we have corner points from the vision blockers sporadically placed in the set)
+      // This allows us to easily create triangles later on
       calculationCorners.Sort(pred);
       visionPolygonVertices.Add(GetActorLocation());
 
+      // Find the points of our visibility polygon by tracing and adding any hit points or else the bound points
       for(FVector& c : calculationCorners) {
          FVector dist = c - GetActorLocation();
+         // In case we obtained corner points from visibility blockers that are outside our vision radius. Possibly not needed?
          if(dist.SizeSquared2D() < GetVisionRadius() * GetVisionRadius() + 1) {
             // traceHandlers.Add(GetWorld()->AsyncLineTraceByObjectType(EAsyncTraceType::Single,GetActorLocation(), c, gameState->queryParamVision));
             FHitResult r;

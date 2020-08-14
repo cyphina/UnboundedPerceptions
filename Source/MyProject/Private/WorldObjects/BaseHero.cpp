@@ -28,6 +28,7 @@
 #include "AbilitySystemComponent.h"
 #include "RTSIngameWidget.h"
 #include "RTSSidebarWidget.h"
+#include "UpStatComponent.h"
 #include "SpellSystem/MySpell.h"
 #include "SpellSystem/Spellbook.h"
 
@@ -142,10 +143,10 @@ void ABaseHero::SetEnabled(bool bEnabled)
    } else {
       // Renumber the hero indices, then remove hero. To bring this hero back we need some tracking else the party must be reassigned
       TArray<ABaseHero*>& heroesArray = controllerRef->GetBasePlayer()->heroes;
-      heroesArray.RemoveSingle(this); 
+      heroesArray.RemoveSingle(this);
       for(int i = heroIndex; i < heroesArray.Num(); ++i) {
          heroesArray[i]->heroIndex -= 1;
-      }    
+      }
    }
 }
 
@@ -231,10 +232,10 @@ void ABaseHero::Equip(int inventorySlotWeEquip)
    int prevEquipInSlot = equipment->Equip(backpack->GetItem(inventorySlotWeEquip).id);
    backpack->RemoveItemAtSlot(inventorySlotWeEquip);
 
-   if(prevEquipInSlot)
-   {
+   if(prevEquipInSlot) {
       auto item{FMyItem(prevEquipInSlot)};
-      if(!ensure(backpack->AddItem(item))) UE_LOG(LogTemp, Error, TEXT("Impossible case reached no space to swap equipment"));
+      if(!ensure(backpack->AddItem(item)))
+         UE_LOG(LogTemp, Error, TEXT("Impossible case reached no space to swap equipment"));
    }
 
    if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Equipment))
@@ -249,12 +250,11 @@ void ABaseHero::Unequip(int unequipSlot)
    if(equipment->GetEquips()[unequipSlot]) {
       // If there is space in the backpack
       if(backpack->Count() < backpack->GetItemMax()) {
-         int itemID = equipment->GetEquips()[unequipSlot];
+         int  itemID = equipment->GetEquips()[unequipSlot];
          auto item{FMyItem(itemID)};
          backpack->AddItem(item); // Space checked again here
          equipment->Unequip(unequipSlot);
-      }
-      else
+      } else
          controllerRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Equipment", "NotEnoughSpaceUnequip", "Not enough space to unequip!"));
 
       if(controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Equipment))
@@ -292,27 +292,27 @@ void ABaseHero::OnEquipped(int equipID, bool isEquip)
 {
    FEquipLookupRow* e = UItemManager::Get().GetEquipInfo(equipID);
    for(auto& x : e->stats.defaultAttributes)
-      ModifyStats<true>(GetAttributeBaseValue(x.att) + x.defaultValue * (2 * isEquip - 1), x.att);
+      statComponent->ModifyStats<true>(statComponent->GetAttributeBaseValue(x.att) + x.defaultValue * (2 * isEquip - 1), x.att);
 
    for(auto& x : e->stats.defaultUnitScalingStats)
-      ModifyStats<true>(GetSkillBaseValue(x.stat) + x.defaultValue * (2 * isEquip - 1), x.stat);
+      statComponent->ModifyStats<true>(statComponent->GetSkillBaseValue(x.stat) + x.defaultValue * (2 * isEquip - 1), x.stat);
 
    for(auto& x : e->stats.defaultVitals)
-      ModifyStats<true>(GetVitalBaseValue(x.vit) + x.defaultValue * (2 * isEquip - 1), x.vit);
+      statComponent->ModifyStats<true>(statComponent->GetVitalBaseValue(x.vit) + x.defaultValue * (2 * isEquip - 1), x.vit);
 
    for(auto& x : e->stats.defaultMechanics)
-      ModifyStats<true>(GetMechanicBaseValue(x.mech) + x.defaultValue * (2 * isEquip - 1), x.mech);
+      statComponent->ModifyStats<true>(statComponent->GetMechanicBaseValue(x.mech) + x.defaultValue * (2 * isEquip - 1), x.mech);
 }
 
 bool ABaseHero::CastSpell(TSubclassOf<UMySpell> spellToCast)
 {
    // Do the same thing as casting a spell
-   bool sucessfulCast = Super::CastSpell(spellToCast);
+   const bool successfulCast = Super::CastSpell(spellToCast);
 
    // If the itemID is set, then we casted this spell by using an item
-   if(currentItem && sucessfulCast)
+   if(currentItem && successfulCast)
       UseItem(currentItem);
-   return sucessfulCast;
+   return successfulCast;
 }
 
 void ABaseHero::SetSelected(bool value)

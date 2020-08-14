@@ -5,7 +5,7 @@
 #include "WorldObjects/BaseHero.h"
 
 HeroStateMachine::HeroStateMachine(ABaseHero* hero) :
-   StateMachine(hero), Interacting{InteractState(hero)}, UsingItem{ItemState(hero)} {}
+   RTSStateMachine(hero), Interacting{InteractState(hero)}, UsingItem{ItemState(hero)} {}
 
 HeroStateMachine::~HeroStateMachine() {}
 
