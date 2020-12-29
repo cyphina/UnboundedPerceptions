@@ -1,7 +1,7 @@
 #include "MyProject.h"
 #include "CombatParameters.h"
 
-float UPAICombatParameters::GetDPS(float timespan, float currentWorldTime)
+float UpCombatInfo::GetDPS(float timespan, float currentWorldTime)
 {
    unsigned int      i                   = 0;
    int               totalDamage         = 0;
@@ -14,7 +14,7 @@ float UPAICombatParameters::GetDPS(float timespan, float currentWorldTime)
    return totalDamage / timespan;
 }
 
-float UPAICombatParameters::GetDamageRecievedPerSecond(float timespan, float currentWorldTime)
+float UpCombatInfo::GetDamageRecievedPerSecond(float timespan, float currentWorldTime)
 {
    unsigned int      i                   = 0;
    int               totalDamageRecieved = 0;
@@ -27,7 +27,7 @@ float UPAICombatParameters::GetDamageRecievedPerSecond(float timespan, float cur
    return totalDamageRecieved / timespan;
 }
 
-float UPAICombatParameters::GetHealingPerSecond(float timespan, float currentWorldTime)
+float UpCombatInfo::GetHealingPerSecond(float timespan, float currentWorldTime)
 {
    unsigned int      i                   = 0;
    int               totalHealingDealt   = 0;
@@ -40,7 +40,7 @@ float UPAICombatParameters::GetHealingPerSecond(float timespan, float currentWor
    return totalHealingDealt / timespan;
 }
 
-float UPAICombatParameters::GetHealingRecievedPerSecond(float timespan, float currentWorldTime)
+float UpCombatInfo::GetHealingRecievedPerSecond(float timespan, float currentWorldTime)
 {
    unsigned int      i                    = 0;
    int               totalHealingRecieved = 0;

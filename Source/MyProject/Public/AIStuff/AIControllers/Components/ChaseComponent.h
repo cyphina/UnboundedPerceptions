@@ -18,3 +18,4 @@ class MYPROJECT_API UUpChaseComponent : public UActorComponent
    /** Condition used to indicate chasing failure.  Chasing sucess is finding the enemy again*/
    virtual bool ChasingQuit();
 };
+

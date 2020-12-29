@@ -9,31 +9,29 @@
 class USkillSlot;
 class UMySpell;
 class AAlly;
+class AUnit;
+class UManualSpellComponent;
 
-/* Container widget for skillslots.  Represents an interface between a group of skillslots and spell usage.
- * A ESkillContainer can be linked to any spell array inside a unit, meaning we can use this for
- * our heroes' class specific ability list too.
+/**
+ * @brief Widget to display a skill ring when a unit is selected. Players can select skills from the ring ot cast, and swap positions on the ring
+ * to control what skill binds to what hotkey.
  */
-
 UCLASS()
-class MYPROJECT_API UESkillContainer : public UUserWidget {
+class MYPROJECT_API UESkillContainer : public UUserWidget
+{
    GENERATED_BODY()
 
-   UPROPERTY(BlueprintSetter = SetAllyRef)
-   AAlly* allyRef;
+ public:
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
+   AAlly* GetAllyRef() const { return allyRef; }
 
-  /**Shouldn't take too much space/performance to copy of we just copy the pointer
-     * Represents the container in the unit which the set of skills in this container comes from.  So far only use for this is having two sets of containers
-     * in heroes (skill and class abilities)
-     * May one day replace this with polymorphic SkillContainerSkillSet classes which allow us to get the right skill container polymorphically
-     
-    UPROPERTY(BlueprintReadOnly, Category = "Properties", Meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
-    TArray<TSubclassOf<UMySpell>> skills;*/
+   UFUNCTION(BlueprintSetter, Category = "Accessors")
+   void SetManualSpellComponentRef(UManualSpellComponent* spellComp) { manualSpellComponent = spellComp; }
 
-public:
+   UFUNCTION(BlueprintCallable)
+   void UseSkill(int skillToUseIndex);
+
    void NativeConstruct() override;
-
-   FText manaHelpText;
 
    UPROPERTY(BlueprintReadWrite, Category = "Properties")
    TArray<USkillSlot*> skillSlots;
@@ -42,12 +40,9 @@ public:
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    USkillSlot* GetSkillSlot(int index) const;
 
-   FORCEINLINE
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors") AAlly* GetAllyRef() const { return allyRef; }
-
-   UFUNCTION(BlueprintSetter, Category = "Accessors")
-   void SetAllyRef(AAlly* ally) { allyRef = ally; }
-
-   UFUNCTION(BlueprintCallable)
-   void UseSkill(int skillToUseIndex);
+ private:
+   void OnFocusedUnitSpellCasted(AUnit* focusedUnit, int spellIndex);
+	
+   UPROPERTY()
+   UManualSpellComponent* manualSpellComponent;
 };

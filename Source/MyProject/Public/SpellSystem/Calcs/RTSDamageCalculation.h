@@ -18,11 +18,14 @@ class MYPROJECT_API URTSDamageCalculation : public UGameplayEffectExecutionCalcu
 {
    GENERATED_UCLASS_BODY()
 
-   void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& executionParams,
-                               OUT FGameplayEffectCustomExecutionOutput& outExecutionOutput) const override;
-   void BroadcastDamageEvents(FUpDamage& d) const;
+ protected:
+   virtual void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& executionParams, OUT FGameplayEffectCustomExecutionOutput& outExecutionOutput) = 0;
 
- private:
+   void BroadcastDamageEvents(FUpDamage& d) const;
+	
+   /** Damage a target from a unit source*/
+   virtual void DamageTarget(UPARAM(ref) FUpDamage& d, FGameplayTagContainer effects) const = 0;
+
    /** Plug in damage to damage formula and modify the damage amount based on crit or piercing */
    void CalculateDamage(FUpDamage& d, FGameplayTagContainer& effects) const;
 
@@ -36,20 +39,13 @@ class MYPROJECT_API URTSDamageCalculation : public UGameplayEffectExecutionCalcu
        AUnit declares this as a friend function so we can access the setter methods */
    void CalculateDamageReduction(FUpDamage& damage, FGameplayTagContainer& effects) const;
 
-   UFUNCTION(BlueprintCallable)
-   void DamageTarget(UPARAM(ref) FUpDamage& d, FGameplayTagContainer effects) const;
-
-   /** Damage a target from a unit source*/
-   UFUNCTION(BlueprintCallable)
-   void UnitDamageTarget(UPARAM(ref) FUpDamage& d, FGameplayTagContainer effects) const;
-
    /** Create some text to display the damage dealt to this unit */
-   void ShowDamageDealt(const FUpDamage& damage);
+   static void ShowDamageDealt(UWorld* worldRef, const FUpDamage& damageInfo);
 
    /** Helper function to quickly calculate attack and defense bonuses due to affinity and resistance */
    static void CalculatePiercing(AUnit* unit, FUpDamage& d, bool isAtt);
    static void PrintDamageCalcsBeforeProcessing(FUpDamage& d, int damageRange);
    static void PrintPreDamageReductionValues(FUpDamage& d);
-   static void PrintCritOccurence(FUpDamage& d);
+   static void PrintCritOccurrence(FUpDamage& d);
    static void PrintFinalCalculatedDamage(FUpDamage& d);
 };

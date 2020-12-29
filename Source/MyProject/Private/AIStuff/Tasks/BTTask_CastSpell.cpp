@@ -23,7 +23,7 @@ EBTNodeResult::Type UBTTask_CastSpell::ExecuteTask(UBehaviorTreeComponent& owner
    AUnitController* unitController = Cast<AUnitController>(ownerComp.GetAIOwner());
    UMySpell*        spell          = spellToCast.GetDefaultObject();
 
-   if(spell->GetTargetting() == FGameplayTag::RequestGameplayTag("Skill.Targetting.Area")) {
+   if(spell->GetTargeting() == FGameplayTag::RequestGameplayTag("Skill.Targetting.Area")) {
       unitController->GetUnitOwner()->SetTargetLocation(ownerComp.GetBlackboardComponent()->GetValueAsVector(BlackboardKey.SelectedKeyName));
 
       if(unitController->BeginCastSpell(spellToCast)) {
@@ -31,13 +31,13 @@ EBTNodeResult::Type UBTTask_CastSpell::ExecuteTask(UBehaviorTreeComponent& owner
          WaitForMessage(ownerComp, AUnit::AIMessage_SpellInterrupt);
          return EBTNodeResult::InProgress;
       }
-   } else if(spell->GetTargetting() == FGameplayTag::RequestGameplayTag("Skill.Targetting.None")) {
+   } else if(spell->GetTargeting() == FGameplayTag::RequestGameplayTag("Skill.Targetting.None")) {
       if(unitController->BeginCastSpell(spellToCast)) {
          WaitForMessage(ownerComp, AUnit::AIMessage_SpellCasted);
          WaitForMessage(ownerComp, AUnit::AIMessage_SpellInterrupt);
          return EBTNodeResult::InProgress;
       }
-   } else if(spell->GetTargetting() == FGameplayTag::RequestGameplayTag("Skill.Targetting.Single")) {
+   } else if(spell->GetTargeting() == FGameplayTag::RequestGameplayTag("Skill.Targetting.Single")) {
       unitController->GetUnitOwner()->SetTargetUnit(Cast<AUnit>(ownerComp.GetBlackboardComponent()->GetValueAsObject(BlackboardKey.SelectedKeyName)));
       if(unitController->BeginCastSpell(spellToCast)) {
          WaitForMessage(ownerComp, AUnit::AIMessage_SpellCasted);

@@ -1,13 +1,11 @@
 #pragma once
-
 #include "GameplayTags.h"
 
-/**This header is so we can just include information about these structs without having to include other parts of a class had we put the structs in those headers*/
-
-/**Damage struct contains relevant information when calculating the amount of damage dealt*/
+/** This header is so we can just include information about these structs without having to include other parts of a class had we put the structs in those headers*/
 
 class AUnit;
 
+/** Damage struct contains relevant information when calculating the amount of damage dealt*/
 USTRUCT(BlueprintType, NoExport)
 struct FUpDamage {
    FUpDamage() {}
@@ -31,9 +29,10 @@ struct FUpDamage {
    UPROPERTY(BlueprintReadOnly)
    bool crit = false;
    UPROPERTY(BlueprintReadOnly)
-   const FGameplayTagContainer& effects;
+   FGameplayTagContainer effects;
 };
 
+/** Most skills derive damage from a combination of these stats. */
 USTRUCT(BlueprintType, NoExport)
 struct FDamageScalarStruct {
    UPROPERTY(BlueprintReadWrite)

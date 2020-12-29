@@ -144,9 +144,9 @@ FVector ARTSDoor::GetInteractableLocation_Implementation() const
    const FVector2D heroDoorCoords = changeOfBasisM.TransformVector(heroLocation);
    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, heroDoorCoords.ToString());
    if(heroDoorCoords.Y > 0)
-      return GetActorForwardVector() * ABaseHero::interactRange + GetActorLocation();
+      return GetActorForwardVector() * ABaseHero::INTERACT_RANGE + GetActorLocation();
    else
-      return GetActorForwardVector() * ABaseHero::interactRange * -1 + GetActorLocation();
+      return GetActorForwardVector() * ABaseHero::INTERACT_RANGE * -1 + GetActorLocation();
 }
 
 bool ARTSDoor::CanInteract_Implementation() const

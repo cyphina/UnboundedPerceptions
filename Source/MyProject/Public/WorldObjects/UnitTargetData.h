@@ -12,8 +12,7 @@ struct UnitTargetData {
     * FGameplayAbilityTargetDataHandle* - Used for spell targeting and AI spell targeting
     */
    TVariant<FEmptyVariantState, AActor*, AUnit*, FVector, FGameplayAbilityTargetDataHandle> target;
-   /** A target that we can follow.  We can still target something else to attack it while following this unit perhaps? */
-   AUnit* followTarget;
+
    /** Resets all this unit's targetting information */
    void ResetTarget();
 };
@@ -21,5 +20,4 @@ struct UnitTargetData {
 inline void UnitTargetData::ResetTarget()
 {
    target.Set<FEmptyVariantState>(FEmptyVariantState());
-   followTarget = nullptr;
 }

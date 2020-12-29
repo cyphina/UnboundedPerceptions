@@ -10,6 +10,7 @@
 #include "Items/HeroInventory.h"
 #include "LevelSaveStructs.h"
 #include "RTSIngameWidget.h"
+#include "ItemDelegateStore.h"
 
 APickup::APickup()
 {
@@ -23,9 +24,6 @@ APickup::APickup()
 void APickup::BeginPlay()
 {
    Super::BeginPlay();
-   CPCRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
-   OnPickupDelegate.AddDynamic(this, &APickup::OnPickedUp);
-   // create object here
 }
 
 void APickup::Tick(float deltaSeconds)
@@ -35,15 +33,8 @@ void APickup::Tick(float deltaSeconds)
 
 void APickup::Interact_Implementation(ABaseHero* hero)
 {
-   // Put code here that places the item in the characters inventory
-   if (CanInteract_Implementation()) {
-      if (hero->backpack) {
-         const int initialItemCount = item.count;
-         if(!hero->backpack->AddItem(item))
-            CPCRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Pickup", "NoSpaceLeft", "No space in inventory to pickup everything!"));
-         CPCRef->GetGameMode()->GetQuestManager()->OnItemPickup(FMyItem(item.id, initialItemCount));
-         OnPickupDelegate.Broadcast();
-      }
+   if(CanInteract_Implementation()) {
+      if(hero->OnPickupItem().Execute(item)) { Destroy(); }
    }
 }
 
@@ -52,13 +43,8 @@ FVector APickup::GetInteractableLocation_Implementation() const
    return GetActorLocation();
 }
 
-void APickup::OnPickedUp()
-{
-   if (item.count == 0) { Destroy(); }
-   CPCRef->GetHUDManager()->GetInventoryHUD()->LoadItems();
-}
-
-void APickup::OnComponentBeginOverlap(UPrimitiveComponent* hitComp, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex, bool bFromSweep, const FHitResult& sweepResult)
+void APickup::OnComponentBeginOverlap(UPrimitiveComponent* hitComp, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex, bool bFromSweep,
+                                      const FHitResult& sweepResult)
 {
 }
 
@@ -70,7 +56,7 @@ void APickup::SaveInteractable(FMapSaveInfo& mapData)
 void APickup::LoadInteractable(FMapSaveInfo& mapData)
 {
    // If we have already been picked up in our save, delete this
-   if (!mapData.pickupList.Find(GetName())) {
+   if(!mapData.pickupList.Find(GetName())) {
       GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Pickup named %s was found"), *GetName()));
       Destroy();
    } else {

@@ -1,8 +1,10 @@
+
+
 // Fill out your copyright notice in the Description page of Project Settings.
 #pragma once
 
 #include "UserInput.h"
-#include "BasePlayer.h"
+#include "Stats/BaseCharacter.h"
 #include "WorldObjects/BaseHero.h"
 
 #if UE_EDITOR
@@ -31,15 +33,9 @@ namespace UpResourceManager
       static FORCEINLINE uint32 GetKeyHash(uint8 Key)
       {
          checkf((unsigned)Key < (unsigned)(CombatInfo::TotalStatCount), TEXT("Don't map any values out of the number of stats %d"), Key);
-         if(Key < CombatInfo::AttCount) {
-            return 0;
-         }
-         if(Key < CombatInfo::AttCount + CombatInfo::StatCount) {
-            return 1;
-         }
-         if(Key < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::MechanicCount) {
-            return 2;
-         }
+         if(Key < CombatInfo::AttCount) { return 0; }
+         if(Key < CombatInfo::AttCount + CombatInfo::StatCount) { return 1; }
+         if(Key < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::MechanicCount) { return 2; }
          return 3;
       }
    };
@@ -51,25 +47,32 @@ namespace UpResourceManager
                                                                              {CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount, 3}};
 
    /**Returns the Simpson quadrature's coefficient*/
-   static const TFunction<float(float)> SimpsonSpacing = [](float space) { return 1.f / 3 * space; };
-   /**Function used to get diminishing return values 1/(x+1)^n.*/
-   const TFunction<float(float, float)> DiminishFunc = [](float x, float n) { return (FMath::Pow(x + 1.f, 1.f - n) - 1.f) / (1.f - n); };
-   /**Simple numerical integration from 0 to x, primarily used to estimate integral of the diminishing function*/
+   static const TFunction<float(float)> SimpsonSpacing = [](const float space) {
+      return 1.f / 3 * space;
+   };
+
+   /**Function used to get diminishing return values 1/(x+1)^n.
+    * First param x is the value
+    * Second param n gives larger diminishing returns if set to a larger number
+    */
+   const TFunction<float(float, float)> DiminishFunc = [](float x, float n) {
+      return (FMath::Pow(x + 1.f, 1.f - n) - 1.f) / (1.f - n);
+   };
+
+   /** Simple numerical integration from 0 to x, primarily used to estimate integral of the diminishing function*/
    const TFunction<float(float, TFunction<float(float)>)> SimpsonApprox = [](float x, TFunction<float(float)> f) {
       GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Function values: %f, %f, %f"), f(0), f(x / 2), x));
       return SimpsonSpacing(x / 2) * (f(0) + 4 * f(x / 2) + f(x));
    };
 
-   /**Helper to score how large a vector's angle is compared to the vector (0,1,0)*/
+   /** Helper to score how large a vector's angle is compared to the vector (0,1,0)*/
    float FindOrientation(const FVector& v);
 
-   ///< summary>
-   /// These template can generate alot of code if you use too many different types.  Probably not a problem considering how large codebase already is but just a note
-   ///</summary>
-
-   /**Make sure when you pass a world reference to this class, you pass it one from an actor or from a function that has (meta=WorldContextObject)
-    *@param nameToMatch - Name of an object that implements IWorldObject
-    *@param worldRef - Reference to the world (from an actor or uobject with an actor outer)
+   /**
+    * Finds an actor in the world with a certain name.
+    * Make sure when you pass a world reference to this class, you pass it one from an actor or from a function that has (meta=WorldContextObject)
+    * @param nameToMatch - Name of an object that implements IWorldObject
+    * @param worldRef - Reference to the world (from an Actor or UObject with an actor outer)
     */
    template <class T>
    T* FindTriggerObjectInWorld(FStringView nameToMatch, UWorld* worldRef)
@@ -79,9 +82,7 @@ namespace UpResourceManager
 #endif
 
       for(TActorIterator<T> actItr(worldRef); actItr; ++actItr) {
-         if((*actItr)->GetGameName().ToString() == nameToMatch) {
-            return *actItr;
-         }
+         if((*actItr)->GetGameName().ToString() == nameToMatch) { return *actItr; }
       }
 
 #if UE_EDITOR
@@ -115,7 +116,7 @@ namespace UpResourceManager
    {
       if(objectRef) {
          using Property = GetPropertyFromType<T>::value;
-         Property p     = FindField<Property>(wo->GetClass(), propertyToRead);
+         Property p     = FindField<Property>(objectRef->GetClass(), propertyToRead);
          if(p) {
             outValue = p->GetPropertyValue_InContainer(objectRef);
             return true;
@@ -129,12 +130,12 @@ namespace UpResourceManager
    {
       if(objectRef) {
          using Property = GetPropertyFromType<T>::value;
-         Property p     = FindField<Property>(wo->GetClass(), propertyToRead);
+         Property p     = FindField<Property>(objectRef->GetClass(), propertyToRead);
          if(p) {
-            outValue = p->SetPropertyValue_InContainer(objectRef, newValue);
+            p->SetPropertyValue_InContainer(objectRef, newValue);
             return true;
          }
       }
       return false;
    }
-} // namespace UpResourceManager
+} 

@@ -88,9 +88,9 @@ void AQuest::CompleteSubGoal(int goalIndex, bool fail)
             currentDescription = FText::Format(NSLOCTEXT("Quest", "Description", "{0}\n\n{1}"), currentDescription, completedGoal.updatedDescription);
             // If this quest is the one selected in the quest journal, update the journal
             if (questManagerRef->questJournalRef->GetSelectedQuest() == this) questManagerRef->questJournalRef->UpdateDetailWindow();
-            questManagerRef->controllerRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Quest", "DetailsUpdated", "Quest Journal Updated!"));
+            questManagerRef->controllerRef->GetWidgetProvider()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Quest", "DetailsUpdated", "Quest Journal Updated!"));
          } else {
-            questManagerRef->controllerRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Quest", "GoalCompleted", "Quest Goal Completed!"));
+            questManagerRef->controllerRef->GetWidgetProvider()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Quest", "GoalCompleted", "Quest Goal Completed!"));
          }
          completedGoal.goalState = EGoalState::completedGoal;
       } else
@@ -129,7 +129,7 @@ void AQuest::CompleteSubGoal(int goalIndex, bool fail)
          return;
       }
 
-      if (questManagerRef->controllerRef->GetHUDManager()->GetQuestJournal()->GetSelectedQuest() == this) // if our quest selected in quest journal
+      if (questManagerRef->controllerRef->GetWidgetProvider()->GetIngameHUD()->GetQuestJournal()->GetSelectedQuest() == this) // if our quest selected in quest journal
       {
          questManagerRef->questJournalRef->UpdateDetailWindow();
          if (this == questManagerRef->questListRef->currentlySelectedQuest &&

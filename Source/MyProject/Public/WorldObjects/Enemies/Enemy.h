@@ -83,11 +83,11 @@ class MYPROJECT_API AEnemy : public AUnit
    UFUNCTION(BlueprintCallable, Category = "Combat")
    void SetIsActive(bool value) { isActive = value; }
 
+   bool GetIsEnemy() const override final { return true; }
+
    TSet<AUnit*>* GetSeenEnemies() override;
 
  private:
-   bool IsVisible() override;
-
    UFUNCTION()
    void OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep,
                               const FHitResult& sweepRes);

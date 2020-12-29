@@ -5,27 +5,28 @@
 #include "UserInput.h"
 #include "Items/Backpack.h"
 #include "UI/HUDManager.h"
-#include "DialogSystem/DialogUI.h"
+#include "DialogSystem/NPCSocialMenu.h"
+#include "RTSIngameWidget.h"
 #include "LevelSaveStructs.h"
 
 FItemPrice AShopNPC::defaultItemPrice = FItemPrice();
 
 void AShopNPC::SetupAppropriateView()
 {
-   controllerRef->GetHUDManager()->GetSocialWindow()->SetShopView();
+   controllerRef->GetWidgetProvider()->GetIngameHUD()->GetSocialWindow()->SetShopView();
 }
 
 void AShopNPC::BeginPlay()
 {
    Super::BeginPlay();
-   itemsToSellBackpack = NewObject<UBackpack>(this);
-   for (FMyItem& item : itemsToSell) {
+   itemsToSellBackpack = UBackpack::CreateBackpack(this, 20);
+   for(FMyItem& item : itemsToSell) {
       itemsToSellBackpack->AddItem(item);
    }
 }
 
 FItemPrice& AShopNPC::GetItemPrice(int itemID)
 {
-   if (itemPrices.Contains(itemID)) { return itemPrices[itemID]; }
+   if(itemPrices.Contains(itemID)) { return itemPrices[itemID]; }
    return defaultItemPrice;
 }

@@ -5,6 +5,8 @@
 
 class ARTSPawn;
 class AUserInput;
+class AAlly;
+
 enum class ECursorStateEnum : uint8;
 
 class UDefaultCursorClickFunctionality : public ICursorClickFunctionality
@@ -18,6 +20,7 @@ class UDefaultCursorClickFunctionality : public ICursorClickFunctionality
    ~UDefaultCursorClickFunctionality() = default;
 
    void HandleLeftClick() final;
+   void HandleLeftClickRelease() final;
    void HandleRightClick() final;
    /** Can queue item usage, attack moves, and spell casting*/
    void HandleShiftLeftClick() final;
@@ -25,8 +28,6 @@ class UDefaultCursorClickFunctionality : public ICursorClickFunctionality
    void HandleShiftRightClick() final;
 
  private:
-   inline ECursorStateEnum GetCursorState() const;
-
    /// Left click functionality
    void ToggleSingleAllySelection();
    void AttackMoveQueue();
@@ -41,4 +42,9 @@ class UDefaultCursorClickFunctionality : public ICursorClickFunctionality
    void ClickUseItem();
    void ClickCastSpell();
    void ClickAttackMove();
+
+   inline ECursorStateEnum GetCursorState() const;
+   inline static bool      CheckAllyWantToCast(const AAlly* ally) const;
+   inline bool             AttemptAllyCastOnTarget(const AAlly* ally);
+   const TArray<AAlly*>&   GetSelectedAllies() const;
 };

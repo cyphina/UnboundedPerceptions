@@ -24,7 +24,9 @@ class MYPROJECT_API UItemExamineWidget : public UMyUserWidget
 
    bool OnWidgetAddToViewport_Implementation() override;
 
-   /**ID of the item who's picture should be examined when the item is used*/
+   /**
+    * @brief ID of the item who's picture should be examined when the item is used. Only set in the Examine spell's BP.
+    */
    UPROPERTY(BlueprintReadWrite)
    int itemToDisplayID = -1;
 
@@ -32,7 +34,7 @@ class MYPROJECT_API UItemExamineWidget : public UMyUserWidget
    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
    TMap<int, TSoftObjectPtr<UTexture>> itemIDToDetailedPicture;
 
- protected:
+ private:
    UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
    UButton* btnClose;
 

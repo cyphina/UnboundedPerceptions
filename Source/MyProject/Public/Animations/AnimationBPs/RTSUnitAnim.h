@@ -20,7 +20,7 @@ class MYPROJECT_API URTSUnitAnim : public UAnimInstance, public IAttackAnim
 
  public:
    void        PlayAttackAnimation();
-   FORCEINLINE FOnAttackNotify& OnAttackNotify() override { return OnAttackNotifyEvent; };
+   FORCEINLINE FOnHitNotify& OnAttackNotify() override { return OnAttackNotifyEvent; };
 
  protected:
    /** The attack animation has a notify which triggers this function. */

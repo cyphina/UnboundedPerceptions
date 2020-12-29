@@ -33,12 +33,11 @@
 
 #include "BrainComponent.h"
 #include "CombatParameters.h"
+#include "RTSStateComponent.h"
+#include "RTSVisionComponent.h"
 
 #include "TargetComponent.h"
 #include "UpStatComponent.h"
-
-const float                   AUnit::diminishParam = 1.8f;
-const TFunction<float(float)> AUnit::diminishFunc  = [](float x) { return UpResourceManager::DiminishFunc(x, diminishParam); };
 
 void AUnit::SetupHealthbarComponent()
 {
@@ -49,9 +48,7 @@ void AUnit::SetupHealthbarComponent()
    healthBar->SetDrawAtDesiredSize(true);
 
    ConstructorHelpers::FClassFinder<UUserWidget> healthBarWig(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/Hitpoints/HealthbarWidget"));
-   if(healthBarWig.Succeeded()) {
-      healthBar->SetWidgetClass(healthBarWig.Class);
-   }
+   if(healthBarWig.Succeeded()) { healthBar->SetWidgetClass(healthBarWig.Class); }
 }
 
 void AUnit::SetupCharacterCollision() const
@@ -81,8 +78,8 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
 {
    PrimaryActorTick.bCanEverTick = true;
    AutoPossessAI                 = EAutoPossessAI::PlacedInWorldOrSpawned;
-   combatParams                  = MakeUnique<UPAICombatParameters>();
-   combatParams->combatStyle     = ECombatType::Melee;
+   combatInfo                  = MakeUnique<UpCombatInfo>();
+   combatInfo->combatStyle     = ECombatType::Melee;
 
    RemoveArrowComponent();
 
@@ -93,8 +90,6 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
 
    selectionCircleDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));
    selectionCircleDecal->SetupAttachment(RootComponent);
-
-   attackAnimClass = UNullAttackAnim::StaticClass();
 
    SetupHealthbarComponent();
 
@@ -109,20 +104,16 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
 void AUnit::SetupAbilitiesAndStats()
 {
    if(GetAbilitySystemComponent()) {
-      // Make sure owner is player controller else the whole ability system fails to function (maybe it should be set to RTSPawn I'll have to double check)
+      // ! Make sure owner is player controller else the whole ability system fails to function (maybe it should be set to RTSPawn I'll have to double check)
       GetAbilitySystemComponent()->InitAbilityActorInfo(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(), this); // setup owner and avatar
       GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed);
 
-      for(TSubclassOf<UMySpell> ability : abilitySystemComponent->abilities) {
+      for(TSubclassOf<UMySpell> ability : GetAbilitySystemComponent()->GetAbilities()) {
          if(ability.GetDefaultObject()) // if client tries to give himself ability assert fails
          {
             GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(ability.GetDefaultObject(), 1));
          }
       }
-
-      // Every unit should have the confirm abilities
-      GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(USpellManager::Get().GetSpellClass(CONFIRM_SPELL_ID)));
-      GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(USpellManager::Get().GetSpellClass(CONFIRM_SPELL_TARGET_ID)));
    }
 }
 
@@ -144,22 +135,17 @@ void AUnit::StoreUnitHeight()
 
 void AUnit::BeginPlay()
 {
-   if(UNLIKELY(!IsValid(controllerRef)))
-      controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
-
-   auto gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
+   if(UNLIKELY(!IsValid(controllerRef))) controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 
    StoreUnitHeight();
 
    AlignSelectionCircleWithGround();
 
-   gameStateRef->UpdateGameSpeedDelegate.AddDynamic(this, &AUnit::OnUpdateGameSpeed);
+   if(auto gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState())) { gameStateRef->OnGameSpeedUpdated().AddUObject(this, &AUnit::OnUpdateGameSpeed); }
 
    SetupAbilitiesAndStats();
 
    visionComponent->SetRelativeLocation(FVector::ZeroVector);
-
-   attackAnim = TUniquePtr<IAttackAnim>(NewObject<IAttackAnim>(this, attackAnimClass));
 
    Super::BeginPlay();
 }
@@ -173,12 +159,11 @@ void AUnit::PossessedBy(AController* newController)
 void AUnit::Tick(float deltaSeconds)
 {
    Super::Tick(deltaSeconds);
-   state->Update(deltaSeconds);
 }
 
 EUnitState AUnit::GetState() const
 {
-   return state->GetCurrentState();
+   return FindComponentByClass<URTSStateComponent>()->GetState();
 }
 
 void AUnit::SetEnabled(bool bEnabled)
@@ -193,6 +178,7 @@ void AUnit::SetEnabled(bool bEnabled)
       GetCapsuleComponent()->SetSimulatePhysics(false); // can't move w/o physics
       bCanAffectNavigationGeneration = true;
    } else {
+      GetUnitController()->Stop();
       GetCapsuleComponent()->SetVisibility(false, true);
       SetActorEnableCollision(false);
       SetActorTickEnabled(false);
@@ -209,14 +195,9 @@ void AUnit::OnUpdateGameSpeed(float speedMultiplier)
    GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed) * speedMultiplier;
 }
 
-bool AUnit::GetIsEnemy() const
-{
-   return combatParams->isEnemy;
-}
-
 bool AUnit::GetIsDead() const
 {
-   return combatParams->isDead;
+   return combatInfo->isDead;
 }
 
 FBox2D AUnit::FindBoundary() const
@@ -225,6 +206,7 @@ FBox2D AUnit::FindBoundary() const
    FBox2D  boundary = FBox2D(ForceInit);
    FVector origin, extent;
    GetActorBounds(true, origin, extent);
+
    FVector2D                                        screenLocation;
    static const int                                 CORNER_COUNT = 8;
    TArray<FVector2D, TFixedAllocator<CORNER_COUNT>> corners; // Get 8 corners of box

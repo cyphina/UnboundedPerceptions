@@ -3,9 +3,28 @@
 #pragma once
 #include "RTSStateComponent.generated.h"
 
-UCLASS()
+class RTSStateMachine;
+class IUnitState;
+class ChannelingState;
+enum class EUnitState : uint8;
 
-class MYPROJECT_API URTSStateComponent : public UObject
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+class MYPROJECT_API URTSStateComponent : public UActorComponent
 {
-  GENERATED_BODY()
+   GENERATED_BODY()
+
+ public:
+   EUnitState             GetState() const;
+   IUnitState*            GetStateObject() const;
+   const ChannelingState& GetChannelingState() const;
+   void                   ChangeState(EUnitState newState) const;
+
+ protected:
+   void BeginPlay() override;
+   void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+ private:
+   void OnUnitStopped();
+
+   TUniquePtr<RTSStateMachine> stateMachine;
 };

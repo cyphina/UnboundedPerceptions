@@ -33,12 +33,10 @@ void CombatInfo::RTSUnitStat::ChangeModifier(ModifyingAttribute mod)
    attMod = mod;
 }
 
-// calculate base value
 void CombatInfo::RTSUnitStat::CalculateModValue(UMyAttributeSet* attSet)
 {
-   // Add to our adjusted value the increased base value. Since we add without recalcuating the adjusted value, if the player wants to get large buffs they
-   // should try to get a higher base first
-   float currentBaseValue = GetBaseValue(attSet);
+   // When recalculating the modified value due to an attribute change, we don't recalculate the buff values (so you can get larger buffs if you increase your base value first)
+   const float currentBaseValue = GetBaseValue(attSet);
    float scaledValue = attMod.effectRatio(attMod.attribute->GetNumericValue(attSet));
    float adjustedDifference =  attribute.GetNumericValue(attSet) + scaledValue - currentBaseValue;
 
@@ -55,7 +53,7 @@ float CombatInfo::RTSUnitStat::GetBaseValue(UMyAttributeSet* attSet) const
 void CombatInfo::RTSUnitStat::SetBaseValue(float value, UMyAttributeSet* attSet)
 {
    auto attData = attribute.GetGameplayAttributeData(attSet);
-   float oldBaseVal = attData->GetBaseValue();
+   const float oldBaseVal = attData->GetBaseValue();
    attData->SetBaseValue(value);
    attSet->PreAttributeBaseChange(attribute, value);
    float newCurrentValue = attribute.GetNumericValue(attSet) + value - oldBaseVal;
@@ -64,8 +62,8 @@ void CombatInfo::RTSUnitStat::SetBaseValue(float value, UMyAttributeSet* attSet)
 
 float CombatInfo::RTSUnitStat::GetBuffValue(UMyAttributeSet* attSet) const
 {
-   auto attData = attribute.GetGameplayAttributeData(attSet);
-   float baseVal = attData->GetBaseValue();
+   const auto attData = attribute.GetGameplayAttributeData(attSet);
+   const float baseVal = attData->GetBaseValue();
    return attribute.GetNumericValue(attSet) - baseVal;
 }
 

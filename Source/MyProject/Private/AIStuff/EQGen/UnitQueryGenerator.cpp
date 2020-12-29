@@ -4,8 +4,6 @@
 #include "UnitQueryGenerator.h"
 #include "RTSGameState.h"
 #include "WorldObjects/Unit.h"
-#include "WorldObjects/Ally.h"
-#include "Worldobjects/Enemies/Enemy.h"
 #include "EnvironmentQuery/Items/EnvQueryItemType_Actor.h"
 
 UUnitQueryGenerator::UUnitQueryGenerator()
@@ -15,15 +13,15 @@ UUnitQueryGenerator::UUnitQueryGenerator()
 
 void UUnitQueryGenerator::GenerateItems(FEnvQueryInstance& queryInstance) const
 {
-   ARTSGameState* gameStateRef = Cast<ARTSGameState>(queryInstance.Owner.Get()->GetWorld()->GetGameState());
+   IAllUnitsContext* allUnitsContext = Cast<IAllUnitsContext>(queryInstance.Owner.Get()->GetWorld()->GetGameState());
 
    TArray<AActor*> matchingActors;
 
-   for (AAlly* unit : gameStateRef->allyList) {
+   for(AUnit* unit : allUnitsContext->GetAllFriendlyUnits()) {
       matchingActors.Add(unit);
    }
 
-   for (AEnemy* unit : gameStateRef->enemyList) {
+   for(AUnit* unit : allUnitsContext->GetAllEnemyUnits()) {
       matchingActors.Add(unit);
    }
 

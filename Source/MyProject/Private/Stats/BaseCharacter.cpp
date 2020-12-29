@@ -139,19 +139,14 @@ void FBaseCharacter::SetupVitalModifiers()
    ChangeModifier(vits::Shield, atts::Luck, [](int x) { return 0; });  // 0 basevalue - isn't affected by baseAttributes
 }
 
-void FBaseCharacter::ChangeModifier(sks skillName, atts att, EFF eff)
+void FBaseCharacter::ChangeModifier(sks skillName, atts att, AttributeModifierFunction eff)
 {
    skills[static_cast<int>(skillName)].ChangeModifier(ModifyingAttribute(baseAttributes[static_cast<int>(att)], eff));
 }
 
-void FBaseCharacter::ChangeModifier(vits vitalName, atts att, EFF eff)
+void FBaseCharacter::ChangeModifier(vits vitalName, atts att, AttributeModifierFunction eff)
 {
    vitals[static_cast<int>(vitalName)].ChangeModifier(ModifyingAttribute(baseAttributes[static_cast<int>(att)], eff));
-}
-
-void FBaseCharacter::LevelUp()
-{
-   level++;
 }
 
 void FBaseCharacter::StatUpdate(const FGameplayAttribute& updatedStat)

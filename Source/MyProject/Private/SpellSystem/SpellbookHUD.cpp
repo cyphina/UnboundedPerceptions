@@ -53,7 +53,7 @@ void USpellbookHUD::Update()
    for(int i = 0; i < numSpellsToUpdate; ++i) {
       if(TSubclassOf<UMySpell> spell = heroRef->spellbook->availableSpells[i]; IsValid(spell)) {
          const auto spellDefaultObj = spell.GetDefaultObject();
-         spellbookSlots[i]->SetImage(spellDefaultObj->spellDefaults.image);
+         spellbookSlots[i]->SetSlotImage(spellDefaultObj->spellDefaults.image);
          const int spellLevel = spellDefaultObj->GetLevel(heroRef->GetAbilitySystemComponent());
          if(spellLevel != 0)
             spellbookSlots[i]->UpdateSlotLevelText(spellLevel);

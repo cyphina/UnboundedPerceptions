@@ -16,17 +16,17 @@
 
 void USpellbookSlot::OnBtnClick()
 {
-   if(CPCRef->GetHUDManager()->GetSpellBookMenu()->bLevelingUp) {
-      CPCRef->GetHUDManager()->GetSpellBookMenu()->GetHeroRef()->GetSpellBook()->LearnSpell(slotIndex);
-      CPCRef->GetHUDManager()->GetSpellBookMenu()->Update();
+   if(CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->bLevelingUp) {
+      CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef()->GetSpellBook()->LearnSpell(slotIndex);
+      CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->Update();
    } else {
-      CPCRef->GetHUDManager()->GetIngameHUD()->DisplayHelpText(LOCTEXT("PressUpgradeButtonSpellLevelup", "Press the upgrade button before levling up a spell!"));
+      CPCRef->GetWidgetProvider()->GetIngameHUD()->DisplayHelpText(LOCTEXT("PressUpgradeButtonSpellLevelup", "Press the upgrade button before levling up a spell!"));
    }
 }
 
 void USpellbookSlot::ShowDesc(UToolTipWidget* tooltip)
 {
-   const auto heroRef              = CPCRef->GetHUDManager()->GetSpellBookMenu()->GetHeroRef();
+   const auto heroRef              = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef();
    const auto abilitySystemCompRef = heroRef->GetAbilitySystemComponent();
    if(unsigned(slotIndex) >= unsigned(heroRef->GetSpellBook()->availableSpells.Num()))
       return; // If the person hovers over an empty slot

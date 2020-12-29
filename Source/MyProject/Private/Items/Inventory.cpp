@@ -13,7 +13,7 @@ bool UInventory::OnWidgetAddToViewport_Implementation()
    // We still need to fix this to go before we add it to the hud
    Super::OnWidgetAddToViewport_Implementation();
 
-   if (!backpack) return false;
+   if(!backpack) return false;
    LoadItems();
    return true;
 }

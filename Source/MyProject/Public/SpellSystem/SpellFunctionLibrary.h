@@ -27,6 +27,7 @@ class USpellFunctionLibrary : public UBlueprintFunctionLibrary
    GENERATED_UCLASS_BODY()
 
    static const int CONFIRM_SPELL_ID = 1003;
+   static const int CONFIRM_SPELL_TARGET_ID = 1004;
 
  public:
 

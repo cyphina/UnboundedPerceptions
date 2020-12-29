@@ -6,15 +6,22 @@
 #include "Items/Backpack.h"
 #include "BaseHero.generated.h"
 
+enum class EAttributes : uint8;
+
 class ABasePlayer;
+class ABaseHero;
 class Inventory;
 class IInteractable;
 class UGameplayAbility;
 class USpellBook;
-class UEquipment;
+class UEquipmentContainer;
+class UTriggerManager;
 class AHeroAIController;
 
+using Equip_Slot_Arr = TStaticArray<int, 10>;
+
 DECLARE_EVENT(ABaseHero, FOnLevelUp);
+DECLARE_DELEGATE_RetVal_OneParam(bool, FOnPickupItem, FMyItem&);
 
 UCLASS(HideCategories = ("Clothing", "Mobile", "Replication"), Blueprintable)
 class MYPROJECT_API ABaseHero : public AAlly
@@ -22,176 +29,171 @@ class MYPROJECT_API ABaseHero : public AAlly
    GENERATED_BODY()
 
    friend class AHeroAIController;
+   friend class UTriggerManager;
+   friend void USaveLoadClass::SetupAlliedUnits();
 
  public:
-   static const int interactRange = 150; // range of how close we have to be to an object to interact with it.
-   static const int shadowRange =
-       600; // range of how far we cast in front to see if shadows are blocking us along the direction of the directional light parameter set in our shader
-   static const float nextExpMultiplier; // multiplier to increase amount of xp needed for next level
-
-   /** Constructors set default values for this character's properties */
    ABaseHero(const FObjectInitializer& oI);
 
-   FOnLevelUp      onLevelUp;
-
-#pragma region Callbacks
-
-   void BeginPlay() override final;
-   void Tick(float deltaSeconds) override final;
-   void EndPlay(const EEndPlayReason::Type epr) override final;
-   void PossessedBy(AController* newController) override final;
-   void SetEnabled(bool bEnabled) override final;
-   void Die_Implementation() override;
-
-#pragma endregion
-
-#pragma region HeroCharacterStuff
-
-   /**Equip an item
-    * @param equipItem - ID of the item to equip */
+   /**
+    * Equip an item
+    * @param backpackIndex - Index of the slot holding the item we want to equip
+    */
    UFUNCTION(BlueprintCallable, Category = "Interfacing Equipment")
-   void Equip(int inventorySlotWeEquip);
+   void Equip(const int backpackIndex);
 
-   /**Unequip an item
-    * @unequipSlot - Equipment slot index of the item to unequip*/
+   /**
+    * Unequip an item
+    * @param unequipSlot - Equipment slot index of the item to unequip
+    */
    UFUNCTION(BlueprintCallable, Category = "Interfacing Equipment")
-   void Unequip(int unequipSlot);
+   void Unequip(const int unequipSlot) const;
 
-   /**Swap an item from one slot to another
+   /**
+    * Swap an item from one slot to another
     * @param equipSlot1 - First slot to be swapped
-    * @param equipSlot2 - Second slot to be swapped*/
+    * @param equipSlot2 - Second slot to be swapped
+    */
    UFUNCTION(BlueprintCallable, Category = "Interfacing Equipment")
    void SwapEquip(int equipSlot1, int equipSlot2);
-
-   /**Levelup functionality mostly scripted in blueprints so we can add some effects*/
-   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Stats")
-   void LevelUp();
-
-   /**Interface to add points to some category*/
-   UFUNCTION(BlueprintCallable)
-   void ChangeAttribute(EAttributes att, bool isIncrementing);
-
-   /**Like CastSpell in Ally, but checks to see if the spell was casted via an item*/
-   bool CastSpell(TSubclassOf<UMySpell> spellToCast) override final;
-#pragma endregion
-
-#pragma region Accessors
-
-   void SetSelected(bool value) override;
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Stats")
    int GetCurrentExp() const;
 
-   UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Stats")
-   int GetExpToLevel() const;
-
    UFUNCTION(BlueprintCallable, Category = "Stats")
    void SetCurrentExp(int amount);
 
-   /**Get the item set to be used currently by this hero*/
-   UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Items")
-   int GetCurrentItem() const { return currentItem; }
+   UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Stats")
+   int GetExpToLevel() const;
+
+   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Stats")
+   void LevelUp();
 
    /**Set the item set to be used currently by this hero*/
    UFUNCTION(BlueprintCallable, Category = "Items")
-   void SetCurrentItem(int itemID) { currentItem = itemID; }
+   void SetCurrentItem(int newCurrentItemID, int newCurrentItemSlotIndex);
 
-   /**Get the interactable this hero is targetted to interact with*/
+   /**Get the interactable this hero is targeted to interact with*/
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Interactable")
-   AActor* GetCurrentInteractable() const;
+   AActor* GetCurrentInteractable() const { return Cast<AActor>(currentInteractable); }
 
-   /**Get a copy of our spellbook which holdls all the spells in our skilltree*/
-   UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-   FORCEINLINE USpellBook* GetSpellBook() const { return spellbook; }
+   /** Allows us to change this character's base attributes, which can modify their other stats which scale off that attribute */
+   UFUNCTION(BlueprintCallable)
+   void ChangeAttribute(EAttributes att, bool isIncrementing);
 
+   /** Get a copy of our spell book which holds all the spells in our skill tree*/
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-   TArray<int> GetEquipment() const;
+   USpellBook* GetSpellBook() const { return spellbook; }
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
    int GetSkillPoints() const { return skillPoints; }
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
-   FORCEINLINE AHeroAIController* GetHeroController() const { return heroController; }
+   AHeroAIController* GetHeroController() const { return heroController; }
 
-#pragma endregion
+   void SetCurrentInteractable(AActor* newInteractable);
 
-   /**Default material color*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-   FLinearColor baseColor;
+   /** Gets the item set to be used currently by this hero */
+   TOptional<int> GetCurrentItem() const { return currentItemId; }
 
-   /**Color of the hero currently (Depreciated - Back when I first started this project, instead of using a selection box, I changed the colors on selection*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-   FLinearColor currentColor;
+   void SetSelected(bool value) override;
 
-   /**Dynamic material instance reference used to change material's color*/
-   UPROPERTY()
-   UMaterialInstanceDynamic* dMat;
+   FOnLevelUp& OnLevelUp() { return OnLevelUpEvent; }
+
+   FOnPickupItem& OnPickupItem() { return OnPickupItemEvent; }
+
+   const Equip_Slot_Arr& GetEquipment() const;
+
+   const UBackpack& GetBackpack() const { return *backpack; }
+
+   int  GetHeroIndex() const { return heroIndex; }
+   void SetHeroIndex(int newHeroIndex) { heroIndex = newHeroIndex; }
+
+   void SetEnabled(bool bEnabled) override final;
+
+   /**
+    * @brief Range of how close we have to be to an object to interact with it.
+    */
+   static const int INTERACT_RANGE = 150;
+
+   /**
+    * @brief Multiplier to increase amount of xp needed for next level
+    */
+   static inline const float NEXT_EXP_MULTIPLIER = 1.5f;
+
+ protected:
+   void BeginPlay() override final;
+   void Tick(float deltaSeconds) override final;
+   void EndPlay(const EEndPlayReason::Type epr) override final;
+   void PossessedBy(AController* newController) override final;
+   void UnPossessed() override;
+   void CheckGameOverOnDeath(const AUnit& unitThatDied) const;
 
    /**Index inside party.  -1 means we're not in the party*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hero Props")
    int heroIndex = -1;
 
    /**Attribute points to divy up*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hero Props")
    int attPoints = 100;
 
    /**Skill (spellbook) points to divy up*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hero Props")
    int skillPoints = 5;
-
-   /**Reference to our character's backpack*/
-   UPROPERTY(BlueprintReadWrite)
-   UBackpack* backpack;
-
-   /**Reference to our character's spellbook*/
-   UPROPERTY(BlueprintReadOnly)
-   USpellBook* spellbook;
 
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<USpellBook> spellbookClass;
 
  private:
-   /**Function to imitate cheaply effects of shadows on our character.  See if some object is in front of us so we know its casting a shadow upon us*/
-   void CheckShadows();
-   /**Using some kind of item, consumeable, utility, etc when the item ability is finally activated (spell is cast).  Needs parameter since currentItem is reset on spellcast.*/
-   void UseItem(int itemID);
-
    /**Functions for adding and removing bonuses when equipping and unequipping.  Set isEquip to true when equipping, and to false when unequipping
     *@param equipID - ID of the equipment being added/removed
     *@param isEquip - Are we equipping or removing equipment?*/
    UFUNCTION()
-   void OnEquipped(int equipID, bool isEquip);
+   void OnEquipped(int equipID, bool isEquip) const;
 
-   ///References
+   /**
+    * @brief Removes a single instance of an item. Called after the controller completes a UseItem action.
+    * @param itemID ItemID of the item we want to use
+    */
+   void OnSpellCasted(TSubclassOf<UMySpell> spellCasted);
+
+   /**
+    * @brief Activates triggers that were supposed to fire off on this hero if it were alive
+    */
+   void LoadSavedTriggers() const;
+
+   /**
+    * @brief Gives the hero all abilities corresponding to items so that they can use any item
+    */
+   void GiveItemAbilities() const;
+
+   bool OnItemPickup(FMyItem& itemPickedUp) const;
+   void OnItemDropped(FMyItem& itemDropped, int droppedItemSlot);
+
+   UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess))
+   USpellBook* spellbook;
+
+   UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess))
+   UBackpack* backpack;
+
    UPROPERTY()
    ABasePlayer* player; // reference to our player class, which has information on our team
 
    UPROPERTY()
    AActor* currentInteractable; // reference to the interactable which we are trying to interact with
 
-   int     currentItem = 0;     // id of the item that is going to be used by this character
-
    UPROPERTY()
    AHeroAIController* heroController;
 
-   ///Lighting effect
    UPROPERTY()
-   UMaterialParameterCollection* lightSource = nullptr; // We need this parameter to figure out light direction based on our directional light we made
-   UPROPERTY()
-   UMaterialParameterCollectionInstance* lightDirectionPV = nullptr;
-   FVector                               lightVector      = FVector::ZeroVector; // A reference we use in calculating if there's shadows
+   UEquipmentContainer* equipment;
 
-   ///Leveling information
-   int currentExp  = 0;   // how much xp we have
-   int expForLevel = 100; // how much we need for next level
+   TOptional<int> currentItemId;        // id of the item that is going to be used by this character
+   TOptional<int> currentItemSlotIndex; // index in our inventory slots of the item that is going be used
 
-   ///< summary>
-   ///Equipment information
-   ///0 - Head, 1 - Body, 2 - Legs, 3 - Acc1, 4 - Codex, 5-9 - Codex Weapons
-   ///</summary>
-   UPROPERTY()
-   UEquipment* equipment; // a container of what we have equipped
+   FOnPickupItem OnPickupItemEvent;
 
-   friend void USaveLoadClass::SetupAlliedUnits();
-   friend void InteractState::Update(AUnit& unit, float deltaSeconds);
+   int        currentExp  = 0;   // how much xp we have
+   int        expForLevel = 100; // how much we need for next level
+   FOnLevelUp OnLevelUpEvent;
 };

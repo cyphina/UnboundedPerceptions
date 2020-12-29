@@ -7,7 +7,7 @@
 
 void UConfirmationBox::Confirm()
 {
-   if(onConfirmationMade.IsBound())
-      onConfirmationMade.Execute();
+   if(OnConfirmationMade().IsBound())
+      OnConfirmationMade().Execute();
    hudManagerRef->ShowConfirmationBox();
 }

@@ -15,29 +15,28 @@ class UButton;
 class UTextBlock;
 class UImage;
 class UToolTipWidget;
-     
+
 UCLASS(Abstract)
 class MYPROJECT_API UActionSlot : public UUserWidget
 {
    GENERATED_BODY()
 
-   static TSubclassOf<UToolTipWidget> toolTipWidgetClass;
+ public:
+   UActionSlot(const FObjectInitializer& o);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Action")
+   UTexture2D* GetImage() const;
+
+   UFUNCTION(BlueprintCallable, Category = "Action")
+   virtual void SetSlotImage(UTexture2D* image);
+
+   UFUNCTION(BlueprintCallable, Category = "Action")
+   void SetInfo(FText newInfo);
+
+   UFUNCTION(BlueprintCallable, Category = "Action")
+   void SetImageFromMaterial(UMaterialInstanceDynamic* image);
 
  protected:
-   UPROPERTY(BlueprintReadWrite, Category = "Action", Meta = (BindWidget))
-   UButton* btnAction;
-
-   UPROPERTY(BlueprintReadWrite, Category = "Action", Meta = (BindWidget))
-   UImage* actionImage;
-
-   UPROPERTY(BlueprintReadWrite, Category = "Action", Meta = (BindWidget))
-   UTextBlock* infoText;
-
-   UPROPERTY(BlueprintReadOnly)
-   AUserInput* CPCRef;
-
-   UFUNCTION() void NativeConstruct() override;
-
    UFUNCTION()
    virtual void OnBtnClick() PURE_VIRTUAL(UActionSlot::OnBtnClick, );
 
@@ -49,21 +48,26 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    UFUNCTION()
    virtual void ShowDesc(UToolTipWidget* tooltip) PURE_VIRTUAL(UActionSlot::ShowDesc, );
 
- public:
-   UActionSlot(const FObjectInitializer& o);
+   void NativeOnInitialized() override;
 
-   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Action", Meta = (ExposeOnSpawn = true))
+   // A button we can press to trigger the slot
+   UPROPERTY(Meta = (BindWidget))
+   UButton* btnAction;
+
+   // An image covering the slot (used for items, spells, etc.)
+   UPROPERTY(Meta = (BindWidget))
+   UImage* actionImage;
+
+   // Text that shows up in corner of the slot
+   UPROPERTY(Meta = (BindWidget))
+   UTextBlock* infoText;
+
+   UPROPERTY(BlueprintReadOnly)
+   AUserInput* CPCRef;
+
+   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Action", Meta = (ExposeOnSpawn = true))
    int slotIndex;
 
-   UFUNCTION(BlueprintCallable, Category = "Action")
-   virtual void SetImage(UTexture2D* image);
-
-   UFUNCTION(BlueprintCallable, Category = "Action")
-   void SetInfo(FText newInfo);
-
-   UFUNCTION(BlueprintCallable, Category = "Action")
-   void SetImageFromMaterial(UMaterialInstanceDynamic* image);
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Action")
-   UTexture2D* GetImage() const;
+ private:
+   static TSubclassOf<UToolTipWidget> toolTipWidgetClass;
 };

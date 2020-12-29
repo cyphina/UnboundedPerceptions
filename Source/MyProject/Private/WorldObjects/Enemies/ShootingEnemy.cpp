@@ -52,7 +52,7 @@ void AShootingEnemy::Attack_Implementation()
 
       //If they die and the targets get canceled out, then targetUnit can be nulled
       if(IsValid(GetTargetUnit()))
-         if(!GetTargetUnit()->IsVisible())
+         if(!GetTargetUnit()->IsUnitVisible())
             GetUnitController()->Stop();
    }
 }

@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -11,7 +9,6 @@ DECLARE_DELEGATE_RetVal_OneParam(bool, FOnInputConfirmed, FString);
 /**
  * Class that represents a box that can take in input and perform some function using it
  */
-
 UCLASS()
 class MYPROJECT_API URTSInputBox : public UPopupWidget
 {
@@ -26,5 +23,9 @@ class MYPROJECT_API URTSInputBox : public UPopupWidget
 
    void Confirm() override;
 
-   FOnInputConfirmed onInputConfirmed;
+   /** Look at my notes why accessors are important even in this seemingly trivial case. In particular, it's important for providing a debugging point. */
+   FOnInputConfirmed& OnInputConfirmed() const { return OnInputConfirmedEvent; };
+
+private:
+   mutable FOnInputConfirmed OnInputConfirmedEvent;
 };

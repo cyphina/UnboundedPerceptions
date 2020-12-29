@@ -1,8 +1,11 @@
 #pragma once
 
+#include "GameplayTagContainer.h"
 #include "Components/ActorComponent.h"
 #include "UUpPriorityComponent.generated.h"
 
+struct FSpellTargetCriteria;
+struct FGameplayTag;
 class AUnitController;
 class IPriorityCalculation;
 class UBehaviorTreeComponent;
@@ -11,21 +14,16 @@ class UEnvQuery;
 class UMySpell;
 struct FEnvQueryResult;
 
-USTRUCT(BlueprintType, NoExport)
-struct FSpellPriorityTest {
-   UPROPERTY(EditAnywhere)
-   UEnvQueryTest* test;
-
-   UPROPERTY(EditAnywhere)
-   float scoreMultiplier;
-};
-
 /*
- * This controller component contains logic about how to pick the best targets.
- * Without a custom component, the enemy will probably use very standard algorithms involving picking targets with the highest risk or thread level.
- * With this component, we can add custom functionality.
- * We can mix this up with some randomness too to give the illusion of a chance of survival.
+ * This controller component contains logic about how to pick the best targets (in standard scenarios).
+ *
+ * Sometimes the game gives us tools to use spells outside the box (and may require us to do so like using Retrograde), but
+ * the AI isn't smart enough to do that so players will have to improvise.
+ *
  * Requires us to have a targeting component on the unit.
+ *
+ * To control when a spell is actually cast, look at the SpellChoiceComponent.
+ * To have per spell custom targeting use a UpSpellPriorityComponent.
  */
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class MYPROJECT_API UUpPriorityComponent : public UActorComponent
@@ -40,40 +38,27 @@ class MYPROJECT_API UUpPriorityComponent : public UActorComponent
 
  private:
    AUnitController* unitControllerRef;
-   IPriorityCalculation* priorityCalculation;
 
-   /**Find the best spot for targetting an AOE spell
-    *@param isSupport - Find best AOE location to hit the most enemies (false) or friends (true)? */
-   virtual void FindBestAOELocation(bool isSupport);
+   /** The class which groups calculations for a particular type of targeting scheme.
+    * Different types of targeting requires AI to generate different target types, thus the
+    * calculation pipeline needs to be customized for each targeting scheme.*/
+   TUniquePtr<IPriorityCalculation> priorityCalculation;
 
-   /**Environment query to find the best place to cast an AOE spell for maximum target hits when healing*/
-   UPROPERTY(EditDefaultsOnly)
-   TArray<FSpellPriorityTest*> offensiveTests;
+   /** Holds criteria used to pick targets for different kinds of spells. Depending on the type of spell
+    * and the spell's purpose, a different set of tests stored within this object will be picked */
+   UPROPERTY(EditAnywhere)
+   const FSpellTargetCriteria* targetingCriteria;
 
-   /** Environment query to find the best place to cast an AOE spell for maximum target hits when casting an AOE spell*/
-   UPROPERTY(EditDefaultsOnly)
-   TArray<FSpellPriorityTest*> supportTests;
+   TUniquePtr<IPriorityCalculation> MakePriorityCalculation(FGameplayTag targetingTag) const;
 
-   /** Environment query to find best enemy unit to perform an offensive spell.*/
-   UPROPERTY(EditDefaultsOnly)
-   TArray<FSpellPriorityTest*> purgeTests;
+   void OnTargetFound(TSharedPtr<FEnvQueryResult> envQuery);
 
-   /** Environment query to find the allied unit that needs healing the most */
-   UPROPERTY(EditDefaultsOnly)
-   TArray<FSpellPriorityTest*> disableTests;
+   FGameplayTag          GetManualTag(TSubclassOf<UMySpell> spell) const;
+   FGameplayTagContainer GetDescriptorTags(TSubclassOf<UMySpell> spell) const;
 
-   /** Environment query to find the enemy that should be stunned */
-   UPROPERTY(EditDefaultsOnly)
-   TArray<FSpellPriorityTest*> findBestEnemyToStun;
-
-   /** Environment query to find the weakest allied unit.  Allies and enemies have should have different EQueries set*/
-   UPROPERTY(EditDefaultsOnly)
-   TArray<FSpellPriorityTest*> findBestTargetToBuff;
-
+   FORCEINLINE class UTargetComponent* GetTargetComp() const;
    FORCEINLINE UBehaviorTreeComponent* GetBehaviorTreeComp() const;
    FORCEINLINE void                    StopBehaviorTreeTargetTask() const;
    FORCEINLINE void                    GetCurrentlySelectedSpell() const;
    FORCEINLINE void                    CastCurrentlySelectedSpell() const;
-
-   void OnTargetFound(TSharedPtr<FEnvQueryResult> result);
 };

@@ -214,9 +214,18 @@ class MYPROJECT_API UMyAttributeSet : public UAttributeSet
    // Helper so we can upgrade our stats.  Just a temporary fix, we'll find a better way later
    static FGameplayAttribute IndexAtts(int index);
 
-   // PreAttributeBaseChange -- called before base value changed
+   /**
+    * @brief Called before one of the base attributes changes. It is used to recalculate other stats after an attribute change, but you can hook other things onto it.
+    * @param Attribute 
+    * @param NewValue 
+    */
    void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override final;
-   // Called before an attribute changes allowing us to update our stat UI
+
+   /**
+    * @brief Called before any stat changes. Can be used to clamp attributes, or even to have event driven UI modifications.
+    * @param Attribute 
+    * @param NewValue 
+    */
    void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override final;
 
    FOnStatsUpdated statUpdatedEvent;

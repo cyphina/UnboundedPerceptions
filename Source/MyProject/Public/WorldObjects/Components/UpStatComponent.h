@@ -47,16 +47,19 @@ class MYPROJECT_API UUpStatComponent : public UActorComponent
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
    FORCEINLINE float GetVitalCurValue(EVitals vit) const { return baseC->GetVital(static_cast<uint8>(vit))->GetCurrentValue(); }
 
-   /** Get Level of unit from baseCharacter*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
    FORCEINLINE int GetUnitLevel() const { return baseC->GetLevel(); }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
+   FORCEINLINE void SetUnitLevel(int newLevel) const { return baseC->SetLevel(newLevel); }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
    FORCEINLINE UMyAttributeSet* GetAttSet() const { return baseC->GetAttSet(); }
 
-   /**Allows us to apply some bonuses to this hero's stat
-    * @template bModifyBase - Modify the base stat or the adjusted value
-    * @template  StatType - Enum representing what stat to modify
+   /**
+    * @brief Allows us to apply some bonuses to this hero's stat
+    * @tparam bModifyBase - Modify the base stat or the adjusted value
+    * @tparam  StatType - Enum representing what stat to modify
     * @param value - New value for the stat
     * @param specificStatType - Actual enum value
     */
@@ -103,8 +106,6 @@ class MYPROJECT_API UUpStatComponent : public UActorComponent
 
  protected:
    void BeginPlay() override;
-
- public:
    void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
  private:

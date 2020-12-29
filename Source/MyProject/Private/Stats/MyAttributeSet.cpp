@@ -21,7 +21,6 @@ UMyAttributeSet::UMyAttributeSet()
    attSet  = TSet<FGameplayAttribute>(attList);
 }
 
-// check after gameplay effect occurs
 void UMyAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& data)
 {
    UAbilitySystemComponent* source = data.EffectSpec.GetContext().GetOriginalInstigatorAbilitySystemComponent();
@@ -130,9 +129,7 @@ FGameplayAttribute UMyAttributeSet::IndexAtts(int index)
 void UMyAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
 {
    AUnit* unit = Cast<AUnit>(GetOwningActor());
-   if(attSet.Contains(Attribute)) {
-      unit->statComponent->UpdateStats(Attribute);
-   }
+   if(attSet.Contains(Attribute)) { unit->GetStatComponent()->UpdateStats(Attribute); }
 
    baseStatUpdatedEvent.Broadcast(Attribute, NewValue, unit);
 }
@@ -143,7 +140,7 @@ void UMyAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, fl
    if(Attribute == HealthAttribute()) { // Health clamping
       Health.SetCurrentValue(FMath::Clamp(Health.GetCurrentValue(), 0.0f, Health.GetBaseValue()));
    } else if(attSet.Contains(Attribute)) { // Needs to be run before the broadcast to get proper values to the stat widget in the character menu
-      unit->statComponent->UpdateStats(Attribute);
+      unit->GetStatComponent()->UpdateStats(Attribute);
    }
 
    statUpdatedEvent.Broadcast(Attribute, NewValue, unit);

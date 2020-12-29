@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-struct UnitMessages {
+namespace UnitMessages {
    static const inline FName AIMessage_AttackReady    = TEXT("AttackReady");
    static const inline FName AIMessage_SpellInterrupt = TEXT("SpellInterrupted!");
    static const inline FName AIMessage_Stunned        = TEXT("Stunned!");

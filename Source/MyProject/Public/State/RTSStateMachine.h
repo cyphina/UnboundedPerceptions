@@ -22,13 +22,15 @@ class RTSStateMachine
    EUnitState GetCurrentState() const { return currentState->GetName(); }
 
    virtual void ChangeState(EUnitState newState);
+   IUnitState*  GetStateObject() const { return currentState; }
+   const ChannelingState&  GetChannelState() const { return Channeling; }
    void         Update(float deltaSeconds);
 
    // As long as our states don't actually hold any state, we can keep em static
    static IdleState        Idle;
    static MovingState      Moving;
    AttackState             Attacking;
-   static CastingState     Casting;
+   CastingState            Casting;
    static IncantationState Incanting;
    ChannelingState         Channeling;
    static ChasingState     Chasing;

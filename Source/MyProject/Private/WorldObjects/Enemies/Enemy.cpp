@@ -13,13 +13,15 @@
 
 #include "Enemy.h"
 
-#include "BaseCharacter.h"
+#include "CombatParameters.h"
+#include "RTSVisionComponent.h"
 #include "SpellSystem/MySpell.h"
 
 #include "SpellSystem/RTSAbilitySystemComponent.h"
 #include "DIRender.h"
 
 #include "NavArea_EnemySpot.h"
+#include "PartyDelegateStore.h"
 #include "../BaseHero.h"
 
 #include "UpResourceManager.h"
@@ -29,9 +31,6 @@
 AEnemy::AEnemy(const FObjectInitializer& oI) : AUnit(oI)
 {
    aggroRange = 20;
-   state      = TUniquePtr<RTSStateMachine>(new RTSStateMachine(this));
-   SetActorHiddenInGame(true); //Set hidden by default so won't be revealed by vision
-   combatParams.isEnemy = true;
 
    GetCapsuleComponent()->AreaClass = UNavArea_EnemySpot::StaticClass(); //Custom area class so navigation filter for defensive movement will avoid this
    GetCapsuleComponent()->SetCollisionProfileName("Enemy");
@@ -53,13 +52,12 @@ void AEnemy::BeginPlay()
    Super::BeginPlay();
    auto gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
 
-   // Add enemy to list of enemies for the level
-   visionMutex.WriteLock();
-   gameStateRef->enemyList.Add(this);
-   visionMutex.WriteUnlock();
+   gameStateRef->RegisterEnemyUnit(this);
 
    // Setup status as customized in level editor
    InitializeStats();
+   SetActorHiddenInGame(true); //Set hidden by default so won't be revealed by vision
+
 }
 
 void AEnemy::Tick(float deltaSeconds)
@@ -75,9 +73,8 @@ void AEnemy::Die_Implementation()
    controllerRef->GetBasePlayer()->UpdateEXP(expGiven);
    controllerRef->GetBasePlayer()->UpdateGold(moneyGiven);
 
-   //Generate drops
    for(FItemDrop& itemDrop : itemDrops) {
-      int dropRoll = FMath::FRandRange(0, 100);
+      const int dropRoll = FMath::FRandRange(0, 100);
       if(itemDrop.dropPerc > dropRoll) {
          APickup* itemPickup = GetWorld()->SpawnActorDeferred<APickup>(APickup::StaticClass(), GetActorTransform());
          itemPickup->item    = itemDrop.itemInfo;
@@ -99,9 +96,9 @@ void AEnemy::Die_Implementation()
 void AEnemy::EndPlay(EEndPlayReason::Type e)
 {
    Super::EndPlay(e);
-   visionMutex.WriteLock();
-   controllerRef->GetGameState()->enemyList.Remove(this);
-   visionMutex.WriteUnlock();
+   visionComponent->visionMutex.WriteLock();
+   controllerRef->GetGameState()->UnRegisterEnemyUnit(this);
+   visionComponent->visionMutex.WriteUnlock();
 }
 
 void AEnemy::Destroyed()
@@ -114,8 +111,7 @@ void AEnemy::Attack_Implementation()
    Super::Attack_Implementation();
    //If they die (when this current attack kills them) and the targets get canceled out, then targetUnit can be nulled
    if(IsValid(GetTargetUnit()))
-      if(!GetTargetUnit()->IsVisible())
-         GetUnitController()->Stop();
+      if(!GetTargetUnit()->IsUnitVisible()) GetUnitController()->Stop();
 }
 
 bool AEnemy::CastSpell(TSubclassOf<UMySpell> spellToCast)
@@ -123,11 +119,9 @@ bool AEnemy::CastSpell(TSubclassOf<UMySpell> spellToCast)
    bool invis = GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility"));
    if(Super::CastSpell(spellToCast)) {
       //Cancel AI targetting if enemy target turns invisible
-      if(GetTargetUnitValid() && !controllerRef->GetGameState()->visiblePlayerUnits.Contains(GetTargetUnit()))
-         GetUnitController()->Stop();
+      if(GetTargetUnitValid() && !controllerRef->GetGameState()->visiblePlayerUnits.Contains(GetTargetUnit())) GetUnitController()->Stop();
       //Reveal self if invisible when spell casted.  If we don't check this before spell casted, we could just end up canceling an invisibility spell being cast
-      if(invis)
-         GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
+      if(invis) GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
       return true;
    }
    return false;
@@ -136,10 +130,9 @@ bool AEnemy::CastSpell(TSubclassOf<UMySpell> spellToCast)
 void AEnemy::SetSelected(bool value)
 {
    if(value) {
-      controllerRef->GetBasePlayer()->focusedUnit = this;
+      controllerRef->GetBasePlayer()->GetFocusedUnit() = this;
    } else {
-      if(controllerRef->GetBasePlayer()->focusedUnit == this)
-         controllerRef->GetBasePlayer()->focusedUnit = nullptr;
+      if(controllerRef->GetBasePlayer()->focGetusedUnit == this) controllerRef->GetBasePlayer()->focusedUnit = nullptr;
    }
    // Call on unit selected delegate afterwards
    Super::SetSelected(value);
@@ -148,18 +141,20 @@ void AEnemy::SetSelected(bool value)
 void AEnemy::SetEnabled(bool bEnabled)
 {
    Super::SetEnabled(bEnabled);
+   if(UPartyDelegateStore* store = Cast<ULocalPlayer>(controllerRef->Player)->GetSubsystem<UPartyDelegateStore>())
+   {
+      store->OnEnemyActiveChanged().Broadcast(this, bEnabled);
+   }
+
    if(bEnabled) {
+      UGameplayStatics::GetLocal
       controllerRef->GetGameState()->enemyList.Add(this);
    } else {
       controllerRef->GetGameState()->enemyList.Remove(this);
    }
    controllerRef->GetGameState()->enemyList.Shrink();
    controllerRef->GetGameState()->enemyList.Compact();
-}
-
-bool AEnemy::IsVisible()
-{
-   return controllerRef->GetGameState()->visibleEnemies.Contains(this);
+   }
 }
 
 TSet<AUnit*>* AEnemy::GetSeenEnemies()
@@ -221,8 +216,7 @@ float AEnemy::CalculateTargetRisk()
 {
    int targetNum = 0;
    for(AUnit* a : controllerRef->GetGameState()->visiblePlayerUnits) {
-      if(a->GetTargetUnit() == this)
-         targetNum += 1;
+      if(a->GetTargetUnit() == this) targetNum += 1;
    }
 
    const float targetRiskValue = FMath::Clamp(diminishFunc(targetNum), 0.f, 1.f);

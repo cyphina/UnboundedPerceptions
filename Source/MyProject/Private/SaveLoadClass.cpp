@@ -71,24 +71,24 @@ void USaveLoadClass::SetupSavePlayerData()
    playerSaveData.summonNum = basePlayer->summons.Num();
    playerSaveData.npcNum    = basePlayer->npcs.Num();
 
-   for (auto it = basePlayer->GetDialogTopics().CreateConstIterator(); *it == basePlayer->GetDialogTopics().Last(); ++it) {
+   for(auto it = basePlayer->GetDialogTopics().CreateConstIterator(); *it == basePlayer->GetDialogTopics().Last(); ++it) {
       playerSaveData.dialogTopics.Add(it->GetTagName());
    }
 }
 
 void USaveLoadClass::SetupSaveBaseCharacterData(const FBaseCharacter& baseChar, FBaseCharacterSaveInfo& saveInfo)
 {
-   for (int i = 0; i < CombatInfo::AttCount; ++i) {
+   for(int i = 0; i < CombatInfo::AttCount; ++i) {
       saveInfo.attributes.Add(baseChar.GetAttribute(i)->GetBaseValue());
    }
-   for (int i = 0; i < CombatInfo::StatCount; ++i) {
+   for(int i = 0; i < CombatInfo::StatCount; ++i) {
       saveInfo.skills.Add(baseChar.GetSkill(i)->GetBaseValue());
    }
-   for (int i = 0; i < CombatInfo::VitalCount; ++i) {
+   for(int i = 0; i < CombatInfo::VitalCount; ++i) {
       saveInfo.currentVitals.Add(baseChar.GetMechanic(i)->GetCurrentValue());
       saveInfo.vitals.Add(baseChar.GetMechanic(i)->GetBaseValue());
    }
-   for (int i = 0; i < CombatInfo::MechanicCount; ++i) {
+   for(int i = 0; i < CombatInfo::MechanicCount; ++i) {
       saveInfo.mechanics.Add(baseChar.GetMechanic(i)->GetBaseValue());
    }
    saveInfo.level = baseChar.GetLevel();
@@ -107,7 +107,7 @@ void USaveLoadClass::SetupSaveSummonData()
 {
    // Save data for every summon
    int i = 0;
-   for (ASummon* summonRef : controllerRef->GetBasePlayer()->summons) {
+   for(ASummon* summonRef : controllerRef->GetBasePlayer()->summons) {
       summonsSaveData.Emplace();
       SetupSaveAllyData(*summonRef, summonsSaveData[i].allyInfo);
       summonsSaveData[i].duration = summonRef->timeLeft;
@@ -117,8 +117,8 @@ void USaveLoadClass::SetupSaveSummonData()
 
 void USaveLoadClass::SetupSaveHeroData()
 {
-   for (int i = 0; i < playerSaveData.heroNum; ++i) {
-      if (ABaseHero* heroRef = controllerRef->GetBasePlayer()->heroes[i]) // NULL check because heroes is always length 4 and can have some empty entries
+   for(int i = 0; i < playerSaveData.heroNum; ++i) {
+      if(ABaseHero* heroRef = controllerRef->GetBasePlayer()->heroes[i]) // NULL check because heroes is always length 4 and can have some empty entries
       {
          heroesSaveData.Emplace();
          SetupSaveAllyData(*heroRef, heroesSaveData[i].allyInfo);
@@ -128,9 +128,10 @@ void USaveLoadClass::SetupSaveHeroData()
          heroesSaveData[i].skillPoints    = heroRef->skillPoints;
 
          // save our spells
-         for (TSubclassOf<UMySpell> spell : heroRef->abilities) {
+         for(TSubclassOf<UMySpell> spell : heroRef->GetAbilitySystemComponent()->abilities) {
             // TODO: Properly setup namespace and keys for each spell in table
-            if (spell.GetDefaultObject()) heroesSaveData[i].spellIDs.Add(spell.GetDefaultObject()->spellDefaults.id);
+            if(spell.GetDefaultObject())
+               heroesSaveData[i].spellIDs.Add(spell.GetDefaultObject()->spellDefaults.id);
          }
 
          heroRef->backpack->SaveBackpack(heroesSaveData[i].backpackInfo);
@@ -146,7 +147,7 @@ void USaveLoadClass::SetupSaveHeroData()
 void USaveLoadClass::SetupNPCEscortData()
 {
    int i = 0;
-   for (AAlly* npcRef : controllerRef->GetBasePlayer()->npcs) {
+   for(AAlly* npcRef : controllerRef->GetBasePlayer()->npcs) {
       npcsSaveData.Emplace();
       SetupSaveAllyData(*npcRef, npcsSaveData[i]);
       ++i;
@@ -182,7 +183,7 @@ void USaveLoadClass::SetupController()
 
 void USaveLoadClass::SetupPlayer()
 {
-   for (FName dialogTopic : playerSaveData.dialogTopics) {
+   for(FName dialogTopic : playerSaveData.dialogTopics) {
       controllerRef->GetBasePlayer()->LearnDialogTopic(FGameplayTag::RequestGameplayTag(dialogTopic));
    }
 
@@ -193,8 +194,8 @@ void USaveLoadClass::SetupAlliedUnits()
 {
    FActorSpawnParameters spawnParams;
 
-   for (FAllySaveInfo finishedTalkNPC : npcsSaveData) {
-      if (AAlly* spawnedNPCAlly = UpResourceManager::FindTriggerObjectInWorld<AAlly>(*finishedTalkNPC.name.ToString(), controllerRef->GetWorld())) {
+   for(FAllySaveInfo finishedTalkNPC : npcsSaveData) {
+      if(AAlly* spawnedNPCAlly = UpResourceManager::FindTriggerObjectInWorld<AAlly>(*finishedTalkNPC.name.ToString(), controllerRef->GetWorld())) {
          spawnedNPCAlly->SetActorTransform(finishedTalkNPC.actorTransform);
          SetupBaseCharacter(spawnedNPCAlly, finishedTalkNPC.baseCSaveInfo);
          spawnedNPCAlly->GetUnitController()->Stop();
@@ -204,25 +205,21 @@ void USaveLoadClass::SetupAlliedUnits()
          // checkf(assetReg.Get().GetAssetsByPath("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects",allyAssets,false), TEXT("Cannot find ally assets to load, check validity of installation!"));
          // allyAssets.FindByPredicate([&](FAssetData assetData){ return *npc.name.ToString() == assetData.AssetName ;})->GetAsset();
          //!!!---INVARIANT: Names of files of characters must be the same name as their name in the game--!!!
-         FAssetData npcAllyAsset = assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/") + finishedTalkNPC.name.ToString()));
-         spawnedNPCAlly          = controllerRef->GetWorld()->SpawnActorDeferred<AAlly>(npcAllyAsset.GetAsset()->GetClass(), finishedTalkNPC.actorTransform);
+         FAssetData npcAllyAsset =
+             assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/") + finishedTalkNPC.name.ToString()));
+         spawnedNPCAlly = controllerRef->GetWorld()->SpawnActorDeferred<AAlly>(npcAllyAsset.GetAsset()->GetClass(), finishedTalkNPC.actorTransform);
          SetupBaseCharacter(spawnedNPCAlly, finishedTalkNPC.baseCSaveInfo);
          spawnedNPCAlly->FinishSpawning(finishedTalkNPC.actorTransform);
       }
    }
 
    // Load hero specific information
-   for (FHeroSaveInfo& heroSaveData : heroesSaveData) {
-      if (ABaseHero* spawnedHero = UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(*heroSaveData.allyInfo.name.ToString(), controllerRef->GetWorld())) {
+   for(FHeroSaveInfo& heroSaveData : heroesSaveData) {
+      if(ABaseHero* spawnedHero = UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(*heroSaveData.allyInfo.name.ToString(), controllerRef->GetWorld())) {
          spawnedHero->SetActorTransform(heroSaveData.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedHero, heroSaveData.allyInfo.baseCSaveInfo);
-         for (int i = 0; i < heroSaveData.spellIDs.Num(); ++i) {
-#if UE_EDITOR
-            // conditionally compiled because in the real game we should make sure these spell classes exist before hand and shouldn't need to check
-            // technically indexer checks but it crashes when it can't find key
-            if (USpellManager::Get().spellClasses.Contains(heroSaveData.spellIDs[i]))
-#endif
-               spawnedHero->abilities[i] = USpellManager::Get().spellClasses[heroSaveData.spellIDs[i]];
+         for(int i = 0; i < heroSaveData.spellIDs.Num(); ++i) {
+            spawnedHero->abilities[i] = USpellDataManager::Get().GetSpellClass(heroSaveData.spellIDs[i]);
          }
          spawnedHero->attPoints = heroSaveData.attPoints;
          spawnedHero->SetCurrentExp(heroSaveData.currentExp);
@@ -232,35 +229,36 @@ void USaveLoadClass::SetupAlliedUnits()
          // Load items into backpack
          spawnedHero->backpack->LoadBackpack(heroSaveData.backpackInfo);
       } else {
-         FAssetRegistryModule& assetReg  = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-         FAssetData            heroAsset = assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/Allies") + heroSaveData.allyInfo.name.ToString()));
-         spawnedHero                     = controllerRef->GetWorld()->SpawnActorDeferred<ABaseHero>(heroAsset.GetAsset()->GetClass(), heroSaveData.allyInfo.actorTransform);
+         FAssetRegistryModule& assetReg = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+         FAssetData            heroAsset =
+             assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/Allies") + heroSaveData.allyInfo.name.ToString()));
+         spawnedHero = controllerRef->GetWorld()->SpawnActorDeferred<ABaseHero>(heroAsset.GetAsset()->GetClass(), heroSaveData.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedHero, heroSaveData.allyInfo.baseCSaveInfo);
-         for (int i = 0; i < heroSaveData.spellIDs.Num(); ++i) {
-            spawnedHero->abilities[i] = USpellManager::Get().spellClasses[heroSaveData.spellIDs[i]];
+         for(int i = 0; i < heroSaveData.spellIDs.Num(); ++i) {
+            spawnedHero->abilities[i] = USpellDataManager::Get().GetSpellClass(heroSaveData.spellIDs[i]);
          }
          spawnedHero->attPoints = heroSaveData.attPoints;
          spawnedHero->SetCurrentExp(heroSaveData.currentExp);
          spawnedHero->expForLevel = heroSaveData.expToNextLevel;
          spawnedHero->FinishSpawning(heroSaveData.allyInfo.actorTransform);
 
-         for (int i = 0; i < heroSaveData.backpackInfo.itemIDs.Num(); ++i) {
-            FMyItem item {heroSaveData.backpackInfo.itemIDs[i], heroSaveData.backpackInfo.itemCounts[i]};
+         for(int i = 0; i < heroSaveData.backpackInfo.itemIDs.Num(); ++i) {
+            FMyItem item{heroSaveData.backpackInfo.itemIDs[i], heroSaveData.backpackInfo.itemCounts[i]};
             spawnedHero->backpack->AddItemToSlot(item, heroSaveData.backpackInfo.itemSlots[i]);
          }
       }
    }
 
-   for (FSummonSaveInfo summon : summonsSaveData) {
-      if (ASummon* spawnedSummon = UpResourceManager::FindTriggerObjectInWorld<ASummon>(*summon.allyInfo.name.ToString(), controllerRef->GetWorld())) {
+   for(FSummonSaveInfo summon : summonsSaveData) {
+      if(ASummon* spawnedSummon = UpResourceManager::FindTriggerObjectInWorld<ASummon>(*summon.allyInfo.name.ToString(), controllerRef->GetWorld())) {
          spawnedSummon->SetActorTransform(summon.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedSummon, summon.allyInfo.baseCSaveInfo);
          spawnedSummon->timeLeft = summon.duration;
          spawnedSummon->GetUnitController()->Stop();
       } else {
-         FAssetRegistryModule& assetReg    = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-         FAssetData            summonAsset = assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/") + summon.allyInfo.name.ToString()));
-         spawnedSummon                     = controllerRef->GetWorld()->SpawnActorDeferred<ASummon>(summonAsset.GetAsset()->GetClass(), summon.allyInfo.actorTransform);
+         FAssetRegistryModule& assetReg = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+         FAssetData summonAsset = assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/") + summon.allyInfo.name.ToString()));
+         spawnedSummon          = controllerRef->GetWorld()->SpawnActorDeferred<ASummon>(summonAsset.GetAsset()->GetClass(), summon.allyInfo.actorTransform);
          spawnedSummon->SetActorTransform(summon.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedSummon, summon.allyInfo.baseCSaveInfo);
          spawnedSummon->timeLeft = summon.duration;
@@ -271,23 +269,23 @@ void USaveLoadClass::SetupAlliedUnits()
 
 void USaveLoadClass::SetupBaseCharacter(AAlly* spawnedAlly, FBaseCharacterSaveInfo& baseCSaveInfo)
 {
-   for (int i = 0; i < baseCSaveInfo.attributes.Num(); ++i) {
+   for(int i = 0; i < baseCSaveInfo.attributes.Num(); ++i) {
       spawnedAlly->baseC->GetAttribute(i)->SetBaseValue(baseCSaveInfo.attributes[i]);
    }
-   for (int i = 0; i < baseCSaveInfo.skills.Num(); ++i) {
+   for(int i = 0; i < baseCSaveInfo.skills.Num(); ++i) {
       spawnedAlly->baseC->GetSkill(i)->SetBaseValue(baseCSaveInfo.skills[i]);
    }
-   for (int i = 0; i < baseCSaveInfo.vitals.Num(); ++i) {
+   for(int i = 0; i < baseCSaveInfo.vitals.Num(); ++i) {
       spawnedAlly->baseC->GetVital(i)->SetBaseValue(baseCSaveInfo.vitals[i]);
    }
-   for (int i = 0; i < baseCSaveInfo.mechanics.Num(); ++i) {
+   for(int i = 0; i < baseCSaveInfo.mechanics.Num(); ++i) {
       spawnedAlly->baseC->GetMechanic(i)->SetBaseValue(baseCSaveInfo.mechanics[i]);
    }
 }
 
 void USaveLoadClass::SetupLevelLoadData()
 {
-  controllerRef->GetMyGameInstance()->mapInfo = mapSaveData;
+   controllerRef->GetMyGameInstance()->mapInfo = mapSaveData;
 }
 
 void USaveLoadClass::SaveLoadFunction(FArchive& ar, bool isSaving)
@@ -308,7 +306,7 @@ void USaveLoadClass::SaveLoadFunction(FArchive& ar, bool isSaving)
    // Don't need to reset mapData since not all of it will be changed at once mapSaveData      = TMap<FName, FMapSaveInfo>();
 
    //If saving, load all the structs with information
-   if (isSaving)
+   if(isSaving)
       SetupSaveData();
 
    //If saving, store all information from structs to archive.  If loading, operator overloaded to load all information from binary array to structs
@@ -332,9 +330,10 @@ bool USaveLoadClass::SaveToFilePath(const FString& filePath)
 
    SaveLoadFunction(binaryArray, true);
 
-   if (binaryArray.Num() <= 0) return false;
+   if(binaryArray.Num() <= 0)
+      return false;
 
-   if (FFileHelper::SaveArrayToFile(binaryArray, *filePath)) {
+   if(FFileHelper::SaveArrayToFile(binaryArray, *filePath)) {
       binaryArray.FlushCache();
       binaryArray.Empty();
       // Client message from Controller
@@ -352,7 +351,7 @@ bool USaveLoadClass::SaveToFilePath(const FString& filePath)
 bool USaveLoadClass::LoadFromFilePath(const FString& filePath)
 {
    TArray<uint8> binaryArray;
-   if (!FFileHelper::LoadFileToArray(binaryArray, *filePath)) {
+   if(!FFileHelper::LoadFileToArray(binaryArray, *filePath)) {
       controllerRef->ClientMessage("FFILEHELPER:>> Invalid File");
       return false;
    }
@@ -361,7 +360,8 @@ bool USaveLoadClass::LoadFromFilePath(const FString& filePath)
    controllerRef->ClientMessage("Loaded file size", NAME_None, 2.f);
    controllerRef->ClientMessage(FString::FromInt(binaryArray.Num()), NAME_None, 2.f);
 
-   if (binaryArray.Num() <= 0) return false;
+   if(binaryArray.Num() <= 0)
+      return false;
    FMemoryReader fromBinary = FMemoryReader(binaryArray, true); // free data after done
    fromBinary.Seek(0);
 

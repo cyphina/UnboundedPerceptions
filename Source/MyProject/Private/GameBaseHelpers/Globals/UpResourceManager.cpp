@@ -4,9 +4,9 @@
 
 float UpResourceManager::FindOrientation(const FVector& v)
 {
-   bool    positiveX     = v.X >= 0;
-   FVector up            = positiveX ? FVector::RightVector : -FVector::RightVector;
-   float   normalizedDot = (up.X * v.X + up.Y * v.Y) / (FMath::Sqrt(v.SizeSquared()));
+   const bool  positiveX     = v.X >= 0;
+   FVector     up            = positiveX ? FVector::RightVector : -FVector::RightVector;
+   const float normalizedDot = (up.X * v.X + up.Y * v.Y) / (FMath::Sqrt(v.SizeSquared()));
    return positiveX ? normalizedDot + 2 : normalizedDot;
 }
 
@@ -31,9 +31,7 @@ ABaseHero* UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(FStringView na
 {
    AUserInput* cpcRef = Cast<AUserInput>(worldRef->GetFirstPlayerController());
    for(ABaseHero* hero : cpcRef->GetBasePlayer()->allHeroes) {
-      if(hero->GetGameName().ToString() == nameToMatch) {
-         return Cast<ABaseHero>(hero);
-      }
+      if(hero->GetGameName().ToString() == nameToMatch) { return Cast<ABaseHero>(hero); }
    }
    return nullptr;
 }

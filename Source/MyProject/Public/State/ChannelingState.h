@@ -17,10 +17,4 @@ class MYPROJECT_API ChannelingState : public IUnitState
    virtual void       Update(AUnit& unit, float deltaSeconds) override;
    virtual EUnitState GetName() const override { return EUnitState::STATE_CHANNELING; }
    virtual ~ChannelingState();
-
-   float GetCurrentChannelTime() const { return currentChannelTime; }
-
- private:
-   float currentChannelTime = 0; // Time spent channeling by unit
-   float channelTime        = 0; // How long unit has to channel
 };

@@ -9,6 +9,7 @@ class UEnvQueryGenerator;
 class UEnvQueryTest;
 class UEnvQueryItemType;
 struct FEnvQueryResult;
+struct FSpellTargetCriteria;
 
 UINTERFACE(MinimalAPI)
 class UPriorityCalculation : public UInterface
@@ -23,7 +24,7 @@ class IPriorityCalculation
  public:
 
   UFUNCTION()
-  virtual TArray<UEnvQueryTest*> GetQueryTestsFromDescriptors(TArray<FGameplayTag> spellDescriptiveTags) = 0;
+  virtual TArray<UEnvQueryTest*> GetQueryTestsFromDescriptors(const FGameplayTagContainer& spellDescriptiveTags, const FSpellTargetCriteria& targetCriteria) = 0;
 
   UFUNCTION()
   virtual UEnvQueryGenerator* GetGeneratorFromManualTag(FGameplayTag manualTag) = 0;
@@ -32,3 +33,4 @@ class IPriorityCalculation
   virtual FGameplayAbilityTargetDataHandle GetBestTargetFromDistribution(TSharedPtr<FEnvQueryResult> queryResult) = 0;
 
 };
+

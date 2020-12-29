@@ -2,7 +2,7 @@
 
 #include "MyProject.h"
 #include "Stats/MyAttributeSet.h"
-#include "../Calcs/DamageCalculation.h"
+#include "Calcs/RTSDamageCalculation.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "RTSDamageEffect.h"
 
@@ -53,7 +53,7 @@ URTSDamageEffect::URTSDamageEffect()
    modifierInfo5.ModifierMagnitude                    = FGameplayEffectModifierMagnitude(health);
 
    FGameplayEffectExecutionDefinition e;
-   e.CalculationClass = UDamageCalculation::StaticClass();
+   e.CalculationClass = URTSDamageCalculation::StaticClass();
    e.CalculationModifiers.Append({modifierInfo, modifierInfo2, modifierInfo3, modifierInfo4, modifierInfo5});
    Executions.Add(e);
 }

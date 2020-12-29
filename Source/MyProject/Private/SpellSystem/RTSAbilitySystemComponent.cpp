@@ -11,6 +11,7 @@
 #include "GameplayEffectCustomApplicationRequirement.h"
 #include "MySpell.h"
 #include "GameplayCueManager.h"
+#include "SpellDataLibrary.h"
 #include "UpStatComponent.h"
 #include "SpellSystem/SpellFunctionLibrary.h"
 #include "SpellSystem/GameplayEffects/RTSDamageEffect.h"
@@ -22,23 +23,25 @@ URTSAbilitySystemComponent::URTSAbilitySystemComponent() : UAbilitySystemCompone
 void URTSAbilitySystemComponent::BeginPlay()
 {
    unitOwnerRef = Cast<AUnit>(GetOwner());
+
+   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_ID)));
+   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_TARGET_ID)));
+}
+
+int URTSAbilitySystemComponent::FindSlotIndexOfSpell(TSubclassOf<UMySpell> spellToLookFor) const
+{
+   return abilities.Find(spellToLookFor);
 }
 
 bool URTSAbilitySystemComponent::CanCast(TSubclassOf<UMySpell> spellToCheck)
 {
    UMySpell* spell = spellToCheck.GetDefaultObject();
-   // Ensure our spell is a valid object and that it is contained within our registered abilities (registration used so that clients don't cheat)
+
    if(IsValid(spell) && GetActivatableAbilities().ContainsByPredicate([&spellToCheck](const FGameplayAbilitySpec& registeredAbilitySpec) {
          return registeredAbilitySpec.Ability == spellToCheck.GetDefaultObject();
       })) {
-      // Make sure we have enough mana
-      if(spell->GetCost(this) <= unitOwnerRef->FindComponentByClass<UUpStatComponent>()->GetVitalCurValue(EVitals::Mana)) // Enough Mana?
-      {
-         // Make sure the spell isn't on CD and we don't have any status preventing us from using spells
-         if(!spell->isOnCD(this) && !IsStunned() && !IsSilenced()) // Spell on CD and we aren't affected by any status that prevents us
-         {
-            return true;
-         }
+      if(spell->GetCost(this) <= unitOwnerRef->FindComponentByClass<UUpStatComponent>()->GetVitalCurValue(EVitals::Mana)) {
+         if(!spell->IsOnCD(this) && !USpellDataLibrary::IsStunned(*this) && !USpellDataLibrary::IsSilenced(*this)) { return true; }
       }
    }
    return false;
@@ -55,9 +58,7 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
    const bool bIsNetAuthority = IsOwnerActorAuthoritative();
 
    // Check Network Authority
-   if(!HasNetworkAuthorityToApplyGameplayEffect(PredictionKey)) {
-      return FActiveGameplayEffectHandle();
-   }
+   if(!HasNetworkAuthorityToApplyGameplayEffect(PredictionKey)) { return FActiveGameplayEffectHandle(); }
 
    // Don't allow prediction of periodic effects
    if(PredictionKey.IsValidKey() && Spec.GetPeriod() > 0.f) {
@@ -89,9 +90,7 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
 
    // check if the effect being applied actually succeeds
    float ChanceToApply = Spec.GetChanceToApplyToTarget();
-   if((ChanceToApply < 1.f - SMALL_NUMBER) && (FMath::FRand() > ChanceToApply)) {
-      return FActiveGameplayEffectHandle();
-   }
+   if((ChanceToApply < 1.f - SMALL_NUMBER) && (FMath::FRand() > ChanceToApply)) { return FActiveGameplayEffectHandle(); }
 
    // Get MyTags.
    //	We may want to cache off a GameplayTagContainer instead of rebuilding it every time.
@@ -105,9 +104,7 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
 
       GetOwnedGameplayTags(MyTags);
 
-      if(Spec.Def->ApplicationTagRequirements.RequirementsMet(MyTags) == false) {
-         return FActiveGameplayEffectHandle();
-      }
+      if(Spec.Def->ApplicationTagRequirements.RequirementsMet(MyTags) == false) { return FActiveGameplayEffectHandle(); }
    }
 
    // Custom application requirement check
@@ -137,9 +134,7 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
    {
       if(Spec.Def->DurationPolicy != EGameplayEffectDurationType::Instant || bTreatAsInfiniteDuration) {
          AppliedEffect = ActiveGameplayEffects.ApplyGameplayEffectSpec(Spec, PredictionKey, bFoundExistingStackableGE);
-         if(!AppliedEffect) {
-            return FActiveGameplayEffectHandle();
-         }
+         if(!AppliedEffect) { return FActiveGameplayEffectHandle(); }
 
          MyHandle      = AppliedEffect->Handle;
          OurCopyOfSpec = &(AppliedEffect->Spec);
@@ -204,9 +199,7 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
       // This is an instant application but we are treating it as an infinite duration for prediction. We should still predict the execute GameplayCUE.
       // (in non predictive case, this will happen inside ::ExecuteGameplayEffect)
 
-      if(!bSuppressGameplayCues) {
-         UAbilitySystemGlobals::Get().GetGameplayCueManager()->InvokeGameplayCueExecuted_FromSpec(this, *OurCopyOfSpec, PredictionKey);
-      }
+      if(!bSuppressGameplayCues) { UAbilitySystemGlobals::Get().GetGameplayCueManager()->InvokeGameplayCueExecuted_FromSpec(this, *OurCopyOfSpec, PredictionKey); }
    } else if(Spec.Def->DurationPolicy == EGameplayEffectDurationType::Instant) {
       if(OurCopyOfSpec->Def->OngoingTagRequirements.IsEmpty()) {
          ExecuteGameplayEffect(*OurCopyOfSpec, PredictionKey);
@@ -234,9 +227,7 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
    if(bIsNetAuthority && Spec.Def->RemoveGameplayEffectsWithTags.CombinedTags.Num() > 0) {
       // Clear tags is always removing all stacks.
       FGameplayEffectQuery ClearQuery = FGameplayEffectQuery::MakeQuery_MatchAllOwningTags(Spec.Def->RemoveGameplayEffectsWithTags.CombinedTags);
-      if(MyHandle.IsValid()) {
-         ClearQuery.IgnoreHandles.Add(MyHandle);
-      }
+      if(MyHandle.IsValid()) { ClearQuery.IgnoreHandles.Add(MyHandle); }
 
       // way to add a number to how many buffs get purged
       FGameplayTag purgeDesc =
@@ -255,9 +246,7 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
    // todo: this is ignoring the returned handles, should we put them into a TArray and return all of the handles?
    // ------------------------------------------------------
    for(const FGameplayEffectSpecHandle TargetSpec : Spec.TargetEffectSpecs) {
-      if(TargetSpec.IsValid()) {
-         ApplyGameplayEffectSpecToSelf(*TargetSpec.Data.Get(), PredictionKey);
-      }
+      if(TargetSpec.IsValid()) { ApplyGameplayEffectSpecToSelf(*TargetSpec.Data.Get(), PredictionKey); }
    }
 
    UAbilitySystemComponent* InstigatorASC = Spec.GetContext().GetInstigatorAbilitySystemComponent();
@@ -266,18 +255,26 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
    OnGameplayEffectAppliedToSelf(InstigatorASC, *OurCopyOfSpec, MyHandle);
 
    // Send the instigator a callback
-   if(InstigatorASC) {
-      InstigatorASC->OnGameplayEffectAppliedToTarget(this, *OurCopyOfSpec, MyHandle);
-   }
+   if(InstigatorASC) { InstigatorASC->OnGameplayEffectAppliedToTarget(this, *OurCopyOfSpec, MyHandle); }
 
    return MyHandle;
+}
+
+TSubclassOf<UMySpell> URTSAbilitySystemComponent::GetSpellAtSlot(int index) const
+{
+   if(index >= 0 && index < abilities.Num()) return abilities[index];
+   return nullptr;
+}
+
+void URTSAbilitySystemComponent::SetSpellAtSlot(TSubclassOf<UMySpell> spellClassToSet, int slotIndex)
+{
+   if(slotIndex >= 0 && slotIndex < abilities.Num()) abilities[slotIndex] = spellClassToSet;
 }
 
 void URTSAbilitySystemComponent::TryRemoveInvisibility()
 {
    const bool invis = HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility"));
-   if(invis)
-      RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
+   if(invis) RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
 }
 
 void URTSAbilitySystemComponent::ApplyDamageToSelf()

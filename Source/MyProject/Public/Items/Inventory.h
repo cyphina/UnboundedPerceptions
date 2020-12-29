@@ -10,40 +10,38 @@ class UBackpack;
 class ABaseHero;
 class UInventoryView;
 
-/*Inventory C++ base class.  Widgets don't get constructors.  Can be used as UI for chacter inventory and for treasure chest UI and such.
- *All Inventory does is display items in a backpack and lets us use them.*/
-
+/**
+ * @brief Inventory C++ base class. Should be used UI for any item management system like character inventory, treasure chests, etc.
+ */
 UCLASS(Blueprintable)
 class MYPROJECT_API UInventory : public UMyDraggableWidget
 {
    GENERATED_BODY()
 
  public:
-   void NativeConstruct() override;
-
-   bool OnWidgetAddToViewport_Implementation() override;
-
-   /**Runs when an itemSlot in the inventoryView is clicked on.  Depending on the inventory type, different things may occur.
+   /**
+    * Runs when an itemSlot in the inventoryView is clicked on.  Depending on the inventory type, different things may occur.
     * @iSlot - Index of the slot in the backpack (not inventory view slot index) to be used
     */
    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inventory Functions")
    void         UseItemAtInventorySlot(int32 iSlot);
    virtual void UseItemAtInventorySlot_Implementation(int32 iSlot) PURE_VIRTUAL(UInventory::UseItemAtInventorySlot, );
 
-   /**Used to update the view whenever change occurs within our inventory*/
+   /** Used to update the view whenever change occurs within the backpack corresponding to our inventory */
    UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Inventory Functions")
    void LoadItems();
 
-   /**Accessors for backpack*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Functions")
    UBackpack* GetBackpack() const { return backpack; }
 
-   /**Accessors for backpack*/
    UFUNCTION(BlueprintCallable, Category = "Inventory Functions")
    void SetBackPack(UBackpack* bPack) { backpack = bPack; }
 
-   /**a reference to our main inventory UI widget*/
-   UPROPERTY(BlueprintReadWrite)
+ protected:
+   void NativeConstruct() override;
+   bool OnWidgetAddToViewport_Implementation() override;
+
+   UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
    UInventoryView* inventoryView;
 
  private:

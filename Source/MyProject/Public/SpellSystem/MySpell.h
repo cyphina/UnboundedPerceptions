@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayAbility.h"
 #include "GameplayTagsManager.h"
-#include "SpellManager.h"
+#include "SpellDataManager.h"
 #include "GameplayEffect.h"
 #include "SpellSystem/DamageStructs.h"
 #include "MySpell.generated.h"
@@ -61,11 +61,11 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
    float GetCooldownTimeRemaining(const FGameplayAbilityActorInfo* ActorInfo) const override;
 
    UFUNCTION(BlueprintCallable, Category = "SpellChecks")
-   bool isOnCD(UAbilitySystemComponent* abilityComponent) const;
+   bool IsOnCD(UAbilitySystemComponent* abilityComponent) const;
 
 #pragma region accessors
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   int GetMaxLevel() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->maxLevel; }
+   int GetMaxLevel() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->maxLevel; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    float GetCDDuration(UAbilitySystemComponent* abilityComponent) const;
@@ -80,31 +80,31 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
    int GetCost(UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   FGameplayTag GetTargetting() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->targetting; }
+   FUpSpellTargeting* GetTargeting() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->targeting; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   FText GetDescription() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->desc; }
+   FText GetDescription() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->desc; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   FText GetName() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->name; }
-
-   /**Get the name of the primary element this spell is associated with*/
-   UFUNCTION(BlueprintCallable, Category = "Spell")
-   FText GetElem() const { return FText::FromString(USpellManager::Get().GetSpellInfo(spellDefaults.id)->elem.ToString().RightChop(15)); }
+   FText GetName() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->name; }
 
    /**Get the name of the primary element this spell is associated with*/
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   FGameplayTag GetElemTag() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->elem; }
+   FText GetElem() const { return FText::FromString(USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->elem.ToString().RightChop(15)); }
+
+   /**Get the name of the primary element this spell is associated with*/
+   UFUNCTION(BlueprintCallable, Category = "Spell")
+   FGameplayTag GetElemTag() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->elem; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   TArray<int> GetPreReqs() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->preReqs; }
+   TArray<int> GetPreReqs() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->preReqs; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    TArray<FText> GetPreReqNames() const
    {
       TArray<FText> preReqNames;
-      for (int i : USpellManager::Get().GetSpellInfo(spellDefaults.id)->preReqs) {
-         preReqNames.Add(USpellManager::Get().GetSpellInfo(i)->name);
+      for (int i : USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->preReqs) {
+         preReqNames.Add(USpellDataManager::GetData().GetSpellInfo(i)->name);
       }
       return preReqNames;
    }

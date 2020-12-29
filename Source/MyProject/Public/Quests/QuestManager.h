@@ -43,7 +43,7 @@ class MYPROJECT_API UQuestManager : public UObject
    void PostEditChangeProperty( struct FPropertyChangedEvent& PropertyChangedEvent) override;
  #endif
 
-   /**Updates map that maps quest classes to quest gameplaytags*/
+   /** Updates map that maps quest classes to quest gameplaytags whenever we recompile the blueprint */
    void UpdateQuestClassList();
 
    UPROPERTY(BlueprintReadWrite, Category = "References")
@@ -127,22 +127,22 @@ class MYPROJECT_API UQuestManager : public UObject
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
    void OnPartyLeaderMove();
 
-   /**Callback when enemy dies to check to see if this quest condition is fufilled
+   /**Callback when enemy dies to check to see if this quest condition is fulfilled
     * Need callbacks here since we specifically need that parameter
     */
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
    void OnEnemyDie(const AEnemy* enemyClass);
 
-   /**Callback when NPC is talked to to check to see if this quest condition is fufilled
-    * @param nPCClass - Class of the NPC that we're talking to
-    * @param conversationTopic - Gameplay tag representing conversationTopic.  If conversationTopic is default tag, then it means no conversation topic was used (default conversation)
+   
+   /**
+    * @brief Callback when we talk to an NPC
+    * @param talkedToNPC - NPC we talked to.
+    * @param conversationTopic - If this is the default tag, then it means there was no conversation topic.
     */
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
-   void OnTalkNPC(const ANPC* talkedToNPC, FGameplayTag conversationTopic);
+   void OnTalkNPC(ANPC* talkedToNPC, const FGameplayTag& conversationTopic);
 
-   /**Callback when Item is picked up to see if this quest condition is fulfilled*/
-   UFUNCTION(BlueprintCallable, Category = "Callbacks")
-   void OnItemPickup(const FMyItem& newItem);
+   void OnItemPickedUp(const ABaseHero* heroPickingItem, const FMyItem& newItem);
 
    /**Callback when Interactable is sucessfully interacted with*/
    UFUNCTION(BlueprintCallable, Category = "Callbacks")

@@ -13,10 +13,11 @@ UVisibleAlliesQueryGenerator::UVisibleAlliesQueryGenerator()
 
 void UVisibleAlliesQueryGenerator::GenerateItems(FEnvQueryInstance& queryInstance) const
 {
-   ARTSGameState*  gameStateRef = Cast<ARTSGameState>(GEngine->GetWorldFromContextObject(queryInstance.Owner.Get(), EGetWorldErrorMode::LogAndReturnNull)->GetGameState());
+   IVisionContext* gameStateRef =
+       Cast<IVisionContext>(GEngine->GetWorldFromContextObject(queryInstance.Owner.Get(), EGetWorldErrorMode::LogAndReturnNull)->GetGameState());
    TArray<AActor*> matchingActors;
 
-   for (AUnit* ally : gameStateRef->visiblePlayerUnits) {
+   for(AUnit* ally : gameStateRef->GetVisiblePlayerUnits()) {
       matchingActors.Add(ally);
    }
 
@@ -27,3 +28,4 @@ FText UVisibleAlliesQueryGenerator::GetDescriptionTitle() const
 {
    return NSLOCTEXT("EnvQueryGenerator", "VisibleAlliesGenerator", "Generates allies in enemy vision");
 }
+

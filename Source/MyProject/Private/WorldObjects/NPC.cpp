@@ -9,7 +9,7 @@
 #include "RTSGameState.h"
 #include "UI/HUDManager.h"
 #include "DialogSystem/DialogBox.h"
-#include "DialogSystem/DialogUI.h"
+#include "DialogSystem/NPCSocialMenu.h"
 #include "Quests/QuestManager.h"
 #include "LevelSaveStructs.h"
 #include "AIStuff/AIControllers/NPCAIController.h"
@@ -239,12 +239,12 @@ void ANPC::CountQuestDialogs()
    }
 }
 
-bool ANPC::IsQuestDialog(FName conversationName)
+bool ANPC::IsQuestDialog(FName conversationName) const
 {
    return conversationName.ToString().StartsWith("Quest") ? true : false;
 }
 
-bool ANPC::IsTopicLearned(FGameplayTag topic)
+bool ANPC::IsTopicLearned(FGameplayTag topic) const
 {
    return controllerRef->GetBasePlayer()->HasDialogTopic(topic);
 }

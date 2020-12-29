@@ -112,11 +112,12 @@ class MYPROJECT_API UTriggerManager : public UObject
 
    UPROPERTY()
    class AHUDManager* hudManagerRef;
+
  public:
    void Init();
 
    UPROPERTY()
-   AUserInput*   cpcRef;
+   AUserInput* cpcRef;
 
    UPROPERTY()
    ARTSGameMode* gameModeRef;
@@ -154,6 +155,10 @@ class MYPROJECT_API UTriggerManager : public UObject
    void SetNPCFollow(const FTriggerData& tdata);
    void SetNPCWantConverse(const FTriggerData& tdata);
    void PlaySequence(const FTriggerData& tdata);
+
    /**Function that triggers an effect when the trigger is activated*/
    void TriggerEffect(FTriggerData& tdata);
+
+   static int TriggerValueToNum(const FTriggerData& tdata, int triggerValueIndex) { return FCString::Atoi(*tdata.triggerValues[triggerValueIndex]); }
+   static int TriggerObjectToNum(const FTriggerData& tdata, int triggerObjectIndex) { return FCString::Atoi(*tdata.triggerObjects[triggerObjectIndex]); }
 };

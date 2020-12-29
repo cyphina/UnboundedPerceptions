@@ -3,59 +3,65 @@
 #include "MyProject.h"
 #include "RTSVisionComponent.h"
 
+#include "RTSGameState.h"
+#include "type_traits"
 #include "Unit.h"
 
 // Sets default values for this component's properties
 URTSVisionComponent::URTSVisionComponent()
 {
    PrimaryComponentTick.bCanEverTick = true;
-   SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-   SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+   UPrimitiveComponent::SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+   UPrimitiveComponent::SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+
+   SetSphereRadius(1000.f);
    bUseAttachParentBound = true;
-   SetCollisionObjectType(TRIGGER_CHANNEL);
+   UPrimitiveComponent::SetCollisionObjectType(TRIGGER_CHANNEL);
+}
+
+bool URTSVisionComponent::IsUnitVisible() const
+{
+   if(unitOwnerRef->GetIsEnemy()) {
+      return Cast<ARTSGameState>(GetWorld()->GetGameState())->GetVisibleEnemies().Contains(unitOwnerRef);
+   } else {
+      return Cast<ARTSGameState>(GetWorld()->GetGameState())->GetVisiblePlayerUnits().Contains(unitOwnerRef);
+   }
 }
 
 void URTSVisionComponent::BeginPlay()
 {
    Super::BeginPlay();
    OnComponentBeginOverlap.AddDynamic(this, &URTSVisionComponent::OnVisionSphereOverlap);
-
+   OnComponentEndOverlap.AddDynamic(this, &URTSVisionComponent::OnVisionSphereEndOverlap);
+   SetCollisionProfileName("FriendlyVision");
    SetSphereRadius(visionRadius);
 }
 
 void URTSVisionComponent::OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex,
                                                 bool fromSweep, const FHitResult& sweepRes)
 {
-   // On the server check to see if the unit we collided with is an enemy (relative to this unit).
-   // If so, we have to record it as one of the possible units we trace to for wall checks
    if(GetOwnerRole() == ROLE_Authority) {
-      if(otherActor->GetClass()->IsChildOf(AUnit::StaticClass())) {
-         AUnit* collidedUnit = Cast<AUnit>(otherActor);
-         {
-            if(collidedUnit->GetIsEnemy() != unitOwnerRef->GetIsEnemy()) {
-               possibleEnemiesInRadius.Add(collidedUnit);
-               collidedUnit->FindComponentByClass<URTSVisionComponent>()->IncVisionCount();
-            }
+      if(AUnit* collidedUnit = Cast<AUnit>(otherActor)) {
+         if(collidedUnit->GetIsEnemy() != Cast<AUnit>(GetOwner())->GetIsEnemy()) {
+            possibleVisibleEnemies.Add(collidedUnit);
+            if(URTSVisionComponent* visionComp = collidedUnit->FindComponentByClass<URTSVisionComponent>()) { visionComp->IncVisionCount(); }
          }
       }
    }
+}
 }
 
 void URTSVisionComponent::OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex)
 {
    if(GetOwnerRole() == ROLE_Authority) {
-      if(otherActor->GetClass()->IsChildOf(AUnit::StaticClass())) {
-         AUnit* collidedUnit = Cast<AUnit>(otherActor);
-         if(collidedUnit->GetIsEnemy() != unitOwnerRef->GetIsEnemy()) {
-            possibleEnemiesInRadius.Remove(collidedUnit);
-            auto enemyVisionComponent = collidedUnit->FindComponentByClass<URTSVisionComponent>() enemyVisionComponent->DecVisionCount();
-
-            // If there's no longer any units watching this enemy unit
-            if(!enemyVisionComponent->GetVisionCount()) {
-               collidedUnit->GetCapsuleComponent()->SetVisibility(false, true);
-               collidedUnit->GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECR_Ignore);
-
-               unitNoLongerInVisionSpheres.Broadcast(collidedUnit);
+      if(otherActor) {
+         if(AUnit* collidedUnit = Cast<AUnit>(otherActor);) {
+            if(AUnit* ownerRef = Cast<AUnit>(GetOwner())) {
+               if(collidedUnit->GetIsEnemy() != ownerRef->GetIsEnemy()) {
+                  possibleVisibleEnemies.Remove(collidedUnit);
+                  URTSVisionComponent* enemyVisionComponent = collidedUnit->FindComponentByClass<URTSVisionComponent>();
+                  enemyVisionComponent->DecVisionCount();
+               }
             }
          }
       }

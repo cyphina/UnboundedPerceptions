@@ -12,22 +12,25 @@ class ABaseHero;
  * Controller class for heroes contains tasks specifically heroes can perform
  */
 UCLASS()
-class MYPROJECT_API AHeroAIController : public AAllyAIController {
+class MYPROJECT_API AHeroAIController : public AAllyAIController
+{
    GENERATED_BODY()
 
-   UPROPERTY()
-   ABaseHero* heroRef;
-
-public:
-   virtual void OnPossess(APawn* InPawn) override final;
-
-   /** Interact with some interactable type object in the world*/
+ public:
+   /** Called when player clicks on an interactable */
    UFUNCTION(BlueprintCallable, Category = "Misc")
-   void BeginInteract(AActor* interactor);
+   void BeginInteract(AActor* interactable);
 
-   /** Use an item on something */
+   /** Called when the player clicks on one of the items to use */
    UFUNCTION(BlueprintCallable, Category = "Items")
-   void BeginUseItem(int itemToUseID);
+   void BeginUseItem(int itemToUseID, int slotIndex);
 
    void Stop() override final;
+
+ protected:
+   virtual void OnPossess(APawn* InPawn) override final;
+
+ private:
+   UPROPERTY()
+   ABaseHero* heroRef;
 };

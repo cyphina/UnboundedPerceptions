@@ -10,36 +10,40 @@
 
 #include "WorldObjects/BaseHero.h"
 
+#include "ItemDelegateStore.h"
+
 #include "AIStuff/AIControllers/HeroAIController.h"
 
 #include "ItemManager.h"
 
 #include "Backpack.h"
 
+void UHeroInventory::NativeOnInitialized()
+{
+   ItemChangeEvents::OnEquipmentChangedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+   ItemChangeEvents::OnItemPickedUpEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+   ItemChangeEvents::OnItemPurchasedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+   ItemChangeEvents::OnItemUsedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+}
+
 void UHeroInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)
 {
-   if (!GetBackpack()->IsEmptySlot(iSlot)) {
-      FMyItem      itemUsed = GetBackpack()->GetItem(iSlot);
-      FGameplayTag itemType = UItemManager::Get().GetItemInfo(itemUsed.id)->itemType;
-      ABaseHero*   hero     = CPC->GetBasePlayer()->heroes[hIndex];
+   if(!GetBackpack()->IsEmptySlot(iSlot)) {
+      const FMyItem      itemUsed = GetBackpack()->GetItem(iSlot);
+      const FGameplayTag itemType = UItemManager::Get().GetItemInfo(itemUsed.id)->itemType;
+      ABaseHero*         hero     = CPC->GetBasePlayer()->GetHeroes()[hIndex];
 
-      if (itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Equippable"))) {
-         GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Magenta, TEXT("USED AN EQUIP"));
-         if (hero) { hero->Equip(iSlot); }
-      }
-
-      // if we're using a consumeable
-      else if (itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Consumeable"))) {
-#if UE_EDITOR
-         GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Magenta, TEXT("USED A CONSUMEABLE"));
-#endif
-         // set it as the item the hero is going to be using, so we can now target the target which the consumeable is to be used upon
-         hero->GetHeroController()->BeginUseItem(itemUsed.id);
-      } else // some item type that isnt specified
-      {
-#if UE_EDITOR
-         GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Magenta, TEXT("ERROR WITH ITEM TYPE"));
-#endif
+      if(itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Equippable"))) {
+         if(hero) { hero->Equip(iSlot); }
+      } else if(itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Consumeable"))) {
+         hero->GetHeroController()->BeginUseItem(itemUsed.id, iSlot);
+      } else {
+         UE_LOG(LogTemp, Log, TEXT("ERROR WITH ITEM TYPE"));
       }
    }
+}
+
+void UHeroInventory::OnItemChangeEvent(const ABaseHero* heroUsingItem, const FMyItem& item)
+{
+   if(GetVisibility() == ESlateVisibility::Visible) LoadItems();
 }

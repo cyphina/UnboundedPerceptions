@@ -4,7 +4,7 @@
 #include "MySpell.h"
 #include "GameplayEffects/CoolDownEffect.h"
 #include "GameplayEffects/DamageEffect.h"
-#include "SpellManager.h"
+#include "SpellDataManager.h"
 #include "WorldObjects/Unit.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
@@ -109,7 +109,7 @@ float UMySpell::GetCooldownTimeRemaining(const FGameplayAbilityActorInfo* ActorI
    return 0.f;
 }
 
-bool UMySpell::isOnCD(UAbilitySystemComponent* abilityComponent) const
+bool UMySpell::IsOnCD(UAbilitySystemComponent* abilityComponent) const
 {
    if (abilityComponent->HasMatchingGameplayTag(AbilityTags.GetByIndex(0))) return true;
    return false;
@@ -126,16 +126,16 @@ float UMySpell::GetCDDuration(UAbilitySystemComponent* abilityComponent) const
       return -1;
    }
 
-   int numUpgrades = USpellManager::Get().GetSpellInfo(spellDefaults.id)->cdDuration.Num();
-   return USpellManager::Get().GetSpellInfo(spellDefaults.id)->cdDuration[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
+   int numUpgrades = USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->cdDuration.Num();
+   return USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->cdDuration[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
 }
 
 int UMySpell::GetRange(UAbilitySystemComponent* abilityComponent) const
 {
    FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
    checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   int numUpgrades = USpellManager::Get().GetSpellInfo(spellDefaults.id)->range.Num();
-   if (numUpgrades > 0) return USpellManager::Get().GetSpellInfo(spellDefaults.id)->range[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
+   int numUpgrades = USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->range.Num();
+   if (numUpgrades > 0) return USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->range[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
    return 0;
 }
 
@@ -143,16 +143,16 @@ int UMySpell::GetReqLevel(UAbilitySystemComponent* abilityComponent) const
 {
    FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
    checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   int numUpgrades = USpellManager::Get().GetSpellInfo(spellDefaults.id)->reqLevel.Num();
-   return USpellManager::Get().GetSpellInfo(spellDefaults.id)->reqLevel[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
+   int numUpgrades = USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->reqLevel.Num();
+   return USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->reqLevel[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
 }
 
 int UMySpell::GetCost(UAbilitySystemComponent* abilityComponent) const
 {
    FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
    checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   int numUpgrades = USpellManager::Get().GetSpellInfo(spellDefaults.id)->cost.Num();
-   if (numUpgrades > 0) return USpellManager::Get().GetSpellInfo(spellDefaults.id)->cost[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
+   int numUpgrades = USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->cost.Num();
+   if (numUpgrades > 0) return USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->cost[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
    return 0;
 }
 
@@ -160,8 +160,8 @@ float UMySpell::GetSpellDuration(UAbilitySystemComponent* abilityComponent) cons
 {
    FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
    checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   int numUpgrades = USpellManager::Get().GetSpellInfo(spellDefaults.id)->duration.Num();
-   if (numUpgrades > 0) return USpellManager::Get().GetSpellInfo(spellDefaults.id)->duration[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
+   int numUpgrades = USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->duration.Num();
+   if (numUpgrades > 0) return USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->duration[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
    return 0;
 }
 
@@ -169,14 +169,14 @@ FDamageScalarStruct UMySpell::GetDamage(UAbilitySystemComponent* abilityComponen
 {
    FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
    checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   int                 numUpgrades         = USpellManager::Get().GetSpellInfo(spellDefaults.id)->damage.Num() / 4;
+   int                 numUpgrades         = USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->damage.Num() / 4;
    FDamageScalarStruct damageScalerScalars = FDamageScalarStruct();
    if (numUpgrades > 0) {
       int damageOffsetIndex             = GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel());
-      damageScalerScalars.strength      = (USpellManager::Get().GetSpellInfo(spellDefaults.id)->damage[NUM_SCALING_DAMAGE_ATT * damageOffsetIndex]);
-      damageScalerScalars.intelligence  = (USpellManager::Get().GetSpellInfo(spellDefaults.id)->damage[NUM_SCALING_DAMAGE_ATT * damageOffsetIndex + 1]);
-      damageScalerScalars.agility       = (USpellManager::Get().GetSpellInfo(spellDefaults.id)->damage[NUM_SCALING_DAMAGE_ATT * damageOffsetIndex + 2]);
-      damageScalerScalars.understanding = (USpellManager::Get().GetSpellInfo(spellDefaults.id)->damage[NUM_SCALING_DAMAGE_ATT * damageOffsetIndex + 3]);
+      damageScalerScalars.strength      = (USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->damage[NUM_SCALING_DAMAGE_ATT * damageOffsetIndex]);
+      damageScalerScalars.intelligence  = (USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->damage[NUM_SCALING_DAMAGE_ATT * damageOffsetIndex + 1]);
+      damageScalerScalars.agility       = (USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->damage[NUM_SCALING_DAMAGE_ATT * damageOffsetIndex + 2]);
+      damageScalerScalars.understanding = (USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->damage[NUM_SCALING_DAMAGE_ATT * damageOffsetIndex + 3]);
    }
    return damageScalerScalars;
 }
@@ -185,8 +185,8 @@ float UMySpell::GetPeriod(UAbilitySystemComponent* abilityComponent) const
 {
    FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
    checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   int numUpgrades = USpellManager::Get().GetSpellInfo(spellDefaults.id)->period.Num();
-   if (numUpgrades > 0) return USpellManager::Get().GetSpellInfo(spellDefaults.id)->period[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
+   int numUpgrades = USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->period.Num();
+   if (numUpgrades > 0) return USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->period[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
    return 0;
 }
 
@@ -194,22 +194,22 @@ float UMySpell::GetCastTime(UAbilitySystemComponent* abilityComponent) const
 {
    FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
    checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   return USpellManager::Get().GetSpellInfo(spellDefaults.id)->casttime;
+   return USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->casttime;
 }
 
 float UMySpell::GetSecondaryTime(UAbilitySystemComponent* abilityComponent) const
 {
    FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
    checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   return USpellManager::Get().GetSpellInfo(spellDefaults.id)->secondaryTime;
+   return USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->secondaryTime;
 }
 
 float UMySpell::GetAOE(UAbilitySystemComponent* abilityComponent) const
 {
    FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
    checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   int numUpgrades = USpellManager::Get().GetSpellInfo(spellDefaults.id)->AOE.Num();
-   if (numUpgrades > 0) return USpellManager::Get().GetSpellInfo(spellDefaults.id)->AOE[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
+   int numUpgrades = USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->AOE.Num();
+   if (numUpgrades > 0) return USpellDataManager::Get().GetSpellInfo(spellDefaults.id)->AOE[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
    return 0;
 }
 

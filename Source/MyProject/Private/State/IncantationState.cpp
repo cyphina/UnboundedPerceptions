@@ -5,30 +5,24 @@
 #include "AIModule/Classes/BrainComponent.h"
 #include "MySpell.h"
 
-IncantationState::IncantationState() {}
+IncantationState::IncantationState()
+{
+}
 
-IncantationState::~IncantationState() {}
+IncantationState::~IncantationState()
+{
+}
 
 void IncantationState::Enter(AUnit& unit)
 {
-   //todo: Add channel UI bar to the screen
-   unit.PlayAnimMontage(unit.castAnimation, 1 / unit.unitSpellData.channelTime);
 }
 
 void IncantationState::Exit(AUnit& unit)
 {
-   // If we leave casting state before the spell can finish being casted, we've been interrupted so tell the AI system that
-   if (unit.unitSpellData.currentChannelTime < unit.unitSpellData.channelTime) {
-      FAIMessage msg(AUnit::AIMessage_SpellInterrupt, &unit);
-      FAIMessage::Send(unit.GetUnitController(), msg);
-   }
-   unit.unitSpellData.currentChannelTime = 0;
+   const auto spellCastComponent = unit.GetUnitController()->FindComponentByClass<USpellCastComponent>();
+   if(spellCastComponent->GetCurrentIncantationTime() > 0) unit.GetUnitController()->FindComponentByClass<USpellCastComponent>()->CancelChanneling();
 }
 
 void IncantationState::Update(AUnit& unit, float deltaSeconds)
 {
-   if (LIKELY(unit.unitSpellData.currentChannelTime < unit.unitSpellData.channelTime))
-      unit.unitSpellData.currentChannelTime += deltaSeconds;
-   else
-      unit.CastSpell(unit.GetCurrentSpell());
 }

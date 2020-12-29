@@ -20,6 +20,31 @@ class MYPROJECT_API UStoreInventory : public UInventory
 {
    GENERATED_BODY()
 
+ public:
+   UFUNCTION()
+   AShopNPC* GetShopkeeper() const { return shopkeeper; }
+
+   void UseItemAtInventorySlot_Implementation(int32 iSlot) override;
+
+ private:
+   UFUNCTION()
+   bool OnItemPurchased() const;
+
+   UFUNCTION()
+   bool OnItemsPurchased(FString howManyItems);
+
+   bool EnoughFunds(int numPurchasing) const;
+   bool OnWidgetAddToViewport_Implementation() override;
+
+   UPROPERTY()
+   AShopNPC* shopkeeper;
+
+   UPROPERTY()
+   UBackpack* interactingHeroPack = nullptr;
+
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
+
    static const FText NotEnoughItemsText;
    static const FText NotEnoughMoneyText;
    static const FText ensurePurchaseText;
@@ -29,29 +54,4 @@ class MYPROJECT_API UStoreInventory : public UInventory
    int         itemSlot  = -1;
    FItemPrice* itemPrice = nullptr;
    int         itemToBuy = -1;
-
-   UPROPERTY()
-   UBackpack* interactingHeroPack = nullptr;
-
-   UPROPERTY()
-   class AHUDManager* hudManagerRef;
-
-   UFUNCTION()
-   bool OnItemPurchased() const;
-
-   UFUNCTION()
-   bool OnItemsPurchased(FString howManyItems);
-
-   bool EnoughFunds(int numPurchasing) const;
-
-   UPROPERTY()
-   AShopNPC* shopkeeper;
-
-   bool OnWidgetAddToViewport_Implementation() override;
-
- public:
-   UFUNCTION()
-   AShopNPC* GetShopkeeper() const { return shopkeeper; }
-
-   void UseItemAtInventorySlot_Implementation(int32 iSlot) override;
 };

@@ -6,15 +6,17 @@
 #include "RTSGameState.h"
 
 #include "Unit.h"
+#include "UnitMessages.h"
 #include "UnitController.h"
 #include "UserInput.h"
 #include "BrainComponent.h"
-#include "RTSUnitAnimController.h"
+
 #include "SpellDataLibrary.h"
 #include "TargetComponent.h"
 
-#include "UpPositionalMoveLibrary.h"
+#include "UpAIHelperLibrary.h"
 #include "UpStatComponent.h"
+#include "RTSVisionComponent.h"
 
 AttackState::AttackState()
 {
@@ -24,7 +26,7 @@ AttackState::AttackState()
 void AttackState::OnHitEvent()
 {
    ResetAttTimer();
-   FAIMessage msg(AUnit::AI_MESSAGES.AIMessage_AttackReady, &agent);
+   FAIMessage msg(UnitMessages::AIMessage_AttackReady, &agent);
    FAIMessage::Send(agent.unitController, msg);
 }
 
@@ -41,9 +43,9 @@ void AttackState::Enter()
 {
    attackAnimationPlaying = false;
    if(AttemptReposition()) {
-      bMvingTowdTarg = true;
+      bMvingTwdTarg = true;
    } else {
-      bMvingTowdTarg = false;
+      bMvingTwdTarg = false;
    }
 }
 
@@ -51,7 +53,7 @@ void AttackState::Exit()
 {
    ResetAttTimer();
    stopTime               = UGameplayStatics::GetTimeSeconds(&agent);
-   bMvingTowdTarg         = false;
+   bMvingTwdTarg         = false;
    attackAnimationPlaying = false;
 }
 
@@ -59,14 +61,12 @@ void AttackState::Update(float deltaSeconds)
 {
    UpdateAttackTimer(deltaSeconds);
 
-   if(bMvingTowdTarg) {
-      if(CheckAndHandleCancelConditions())
-         return;
+   if(bMvingTwdTarg) {
+      if(CheckAndHandleCancelConditions()) return;
    } else {
       if(CheckAndHandleCancelConditions()) {
          if(!attackAnimationPlaying) {
-            if(AttackInitiationSetup())
-               PlayAttackAnimation();
+            if(AttackInitiationSetup()) PlayAttackAnimation();
          } else {
             LockOnTarget();
             CheckAndHandleTargetOutsideAnimationRange();
@@ -82,17 +82,17 @@ bool AttackState::AttemptReposition()
 
 void AttackState::OnFinishReposition()
 {
-   bMvingTowdTarg         = false;
+   bMvingTwdTarg         = false;
    attackAnimationPlaying = true;
    PlayAttackAnimation();
 }
 
 void AttackState::UpdateAttackTimer(float deltaSeconds)
 {
-   currentAttTime = FMath::Min(currentAttTime + deltaSeconds * agent.controllerRef->GetGameState()->speedModifier, AttackTimerThreshold());
+   currentAttTime = FMath::Min(currentAttTime + deltaSeconds * agent.controllerRef->GetGameState()->GetGameSpeed(), AttackTimerThreshold());
 }
 
-bool AttackState::CheckAndHandleCancelConditions()
+bool AttackState::CheckAndHandleCancelConditions() const
 {
    if(UNLIKELY(CheckTargetVisionLost())) {
       TransitionToChaseState();
@@ -107,7 +107,7 @@ bool AttackState::CheckAndHandleCancelConditions()
 
 bool AttackState::CheckTargetVisionLost() const
 {
-   return !agent.targetComponent->GetTargetUnit()->visionComponent->IsVisible();
+   return !agent.targetComponent->GetTargetUnit()->GetVisionComponent()->IsUnitVisible();
 }
 
 bool AttackState::CheckTargetAttackable() const
@@ -127,9 +127,7 @@ void AttackState::StopAgent() const
 
 bool AttackState::AttackInitiationSetup()
 {
-   if(AttemptReposition()) {
-      return false;
-   }
+   if(AttemptReposition()) { return false; }
    return true;
 }
 
@@ -154,14 +152,14 @@ float AttackState::AttackTimerThreshold() const
 
 void AttackState::LockOnTarget() const
 {
-   if(!UUpPositionalMoveLibrary::IsFacingTarget(agent, AgentTargetLocation())) {
-      agent.SetActorRotation(UUpPositionalMoveLibrary::FindLookRotation(agent, AgentTargetLocation()));
+   if(!UUpAIHelperLibrary::IsFacingTarget(agent, AgentTargetLocation())) {
+      agent.SetActorRotation(UUpAIHelperLibrary::FindLookRotation(agent, AgentTargetLocation()));
    }
 }
 
 bool AttackState::CheckAndHandleTargetOutsideAnimationRange()
 {
-   if(!UUpPositionalMoveLibrary::IsTargetInRange(agent, AgentTargetLocation(), AgentBufferAttackRange())) {
+   if(!UUpAIHelperLibrary::IsTargetInRange(agent, AgentTargetLocation(), AgentBufferAttackRange())) {
       agent.attackAnim->StopAttackAnimation();
       attackAnimationPlaying = false;
       return false;

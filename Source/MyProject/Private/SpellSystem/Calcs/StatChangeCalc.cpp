@@ -4,7 +4,7 @@
 #include "StatChangeCalc.h"
 #include "AbilitySystemComponent.h"
 #include "Stats/MyAttributeSet.h"
-#include "SpellManager.h"
+#include "SpellDataManager.h"
 #include "WorldObjects/Unit.h"
 
 UStatChangeCalc::UStatChangeCalc(const FObjectInitializer& objectInitializer) : Super(objectInitializer)

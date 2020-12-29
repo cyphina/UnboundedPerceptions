@@ -11,44 +11,12 @@
  * Displays the conversation topics so we can navigate through them when choosing what to say
  */
 
-class UDialogUI;
+class UNPCSocialMenu;
 
 UCLASS()
 class MYPROJECT_API UDialogWheel : public UMyUserWidget
 {
    GENERATED_BODY()
-
-   /**These are the topics that can be seen due to being children of the currentlySelectedTopic*/
-   TArray<FGameplayTagNode*> conversationTopicTagNodes;
-
-   /**This is the currently selected topic*/
-   FGameplayTagNode* currentlySelectedTopicNode;
-
-   /**Last selected topic*/
-   FGameplayTagNode* previouslySelectedTopicNode;
-
-   /** Reference to NPC when clicking a child node to activate conversation*/
-   UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "References")
-   UDialogUI* socialWindowRef;
-
-   UPROPERTY()
-   class AHUDManager* hudManagerRef;
-
-   /**Call this to get the next set of conversation topics*/
-   UFUNCTION(BlueprintCallable, Category = "Dialog Wheel Functionality")
-   void SelectNextConversationTopics(int nextIndex);
-   /**Call this to get the previous set of conversation topics*/
-   UFUNCTION(BlueprintCallable, Category = "Dialog Wheel Functionality")
-   void SelectPreviousConversationTopics();
-   /**Call this to get the previous set of conversation topics*/
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Dialog Wheel Functionality")
-   FName GetConversationTopicName(int index) const { return conversationTopicTagNodes[index]->GetSimpleTagName(); }
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Dialog Wheel Functionality")
-   FName GetCurrentConversationTopicName() const { return currentlySelectedTopicNode->GetSimpleTagName(); }
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Dialog Wheel Functionality")
-   int GetCurrentConversationTopicCount() const { return conversationTopicTagNodes.Num(); }
 
  public:
    UDialogWheel();
@@ -59,4 +27,47 @@ class MYPROJECT_API UDialogWheel : public UMyUserWidget
    void UpdateDialogWheelText();
 
    bool OnWidgetAddToViewport_Implementation() override;
+
+ private:
+   /**
+    * @brief Used to select the next subcategory of topics in the dialog wheel.
+    * @param nextIndex The index of the topic we selected in the dialog wheel.
+    */
+   UFUNCTION(BlueprintCallable, Category = "Dialog Wheel Functionality")
+   void SelectNextConversationTopics(int nextIndex);
+
+   /** Call this to get the previous set of conversation topics*/
+   UFUNCTION(BlueprintCallable, Category = "Dialog Wheel Functionality")
+   void SelectPreviousConversationTopics();
+
+   /** Call this to get the previous set of conversation topics */
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Dialog Wheel Functionality")
+   FName GetConversationTopicName(int index) const { return conversationTopicTagNodes[index]->GetSimpleTagName(); }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Dialog Wheel Functionality")
+   FName GetCurrentConversationTopicName() const { return currentlySelectedTopicNode->GetSimpleTagName(); }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Dialog Wheel Functionality")
+   int GetCurrentConversationTopicCount() const { return conversationTopicTagNodes.Num(); }
+
+   bool HandleSelectedLeafNode();
+
+   void UpdateDialogWheel();
+
+   UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "References")
+   UNPCSocialMenu* socialWindowRef;
+
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
+
+   static inline FName ROOT_DIALOG_NODE_NAME = "Dialog";
+
+   /** These are the topics that can be seen due to being children of the currentlySelectedTopic*/
+   TArray<FGameplayTagNode*> conversationTopicTagNodes;
+
+   /** This is the currently selected topic*/
+   FGameplayTagNode* currentlySelectedTopicNode;
+
+   /** Last selected topic*/
+   FGameplayTagNode* previouslySelectedTopicNode;
 };

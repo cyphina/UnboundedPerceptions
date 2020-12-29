@@ -18,16 +18,15 @@ void UEquipmentSlot::NativeConstruct()
 
 void UEquipmentSlot::OnBtnClick()
 {
-   // Unequip when this slot is clicked
-   CPCRef->GetHUDManager()->GetEquipHUD()->GetEquippedHero()->Unequip(slotIndex);
+   CPCRef->GetWidgetProvider()->GetIngameHUD()->GetEquipHUD()->GetEquippedHero()->Unequip(slotIndex);
 }
 
 void UEquipmentSlot::ShowDesc(UToolTipWidget* tooltip)
 {
    // Show information about the equipment in the slot
-   int itemId = CPCRef->GetHUDManager()->GetEquipHUD()->GetEquippedHero()->GetEquipment()[slotIndex];
+   const int itemId = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetEquipHUD()->GetEquippedHero()->GetEquipment()[slotIndex];
    if(itemId > 0) {
-      auto itemInfo = UItemManager::Get().GetItemInfo(itemId);
+      const auto itemInfo = UItemManager::Get().GetItemInfo(itemId);
       if(!itemInfo->name.IsEmpty()) {
          // Convert the rarity enum value to a string
          const UEnum* eRarity = FindObject<UEnum>(ANY_PACKAGE, TEXT("ERarity"), true);

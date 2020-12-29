@@ -1,15 +1,14 @@
 #pragma once
 
-#include "UObject/Object.h"
+#include "RTSExecution.h"
 #include "RTSAttackExecution.generated.h"
 
 UCLASS(BlueprintType, Blueprintable, Abstract)
-class GAMEPLAYABILITIES_API URTSAttackExecution : public UObject
+class GAMEPLAYABILITIES_API URTSAttackExecution : public UObject, public IRTSExecution
 {
    GENERATED_UCLASS_BODY()
 
  public:
-   UFUNCTION(BlueprintNativeEvent, Category = "Attack Effect")
-   void         ExecuteAttack();
-   virtual void ExecuteAttack_Implementation();
+   void Execute() override;
+   void Execute_Implementation() override;
 };

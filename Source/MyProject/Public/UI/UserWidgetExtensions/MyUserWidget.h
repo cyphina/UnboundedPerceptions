@@ -19,14 +19,25 @@ class MYPROJECT_API UMyUserWidget : public UUserWidget
    GENERATED_BODY()
 
  public:
-   UPROPERTY(BlueprintReadWrite, Category = "References")
-   AUserInput* CPC;
-
+   /**
+    * @brief Callback whenever toggled on screen
+    * @return Returns true if it successfully was added the widget to screen
+    */
    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Callback")
    bool         OnWidgetAddToViewport();
-   virtual bool OnWidgetAddToViewport_Implementation(); // Callback whenever toggled on and off screen
+   virtual bool OnWidgetAddToViewport_Implementation();
 
-   /**I used to think Construct ran before NativeConstruct(), but I didn't realize that calling the Super function of NativeConstruct called Construct() and I usually
-    *called the parent class NativeConstruct first so I thought it went before >_<*/
+   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Callback")
+   void         OnWidgetRemovedFromViewport();
+   virtual void OnWidgetRemovedFromViewport_Implementation();
+
+ protected:
+   /**
+    * I used to think Construct ran before NativeConstruct(), but I didn't realize that calling the Super function of NativeConstruct called Construct() and I usually
+    * called the parent class NativeConstruct first so I thought it went before >_<
+    */
    virtual void NativeConstruct();
+
+   UPROPERTY(BlueprintReadWrite, Category = "References")
+   AUserInput* CPC;
 };

@@ -8,7 +8,7 @@
 
 void ChasingState::Enter(AUnit& unit)
 {
-   if(unit.GetTargetUnit() && !unit.GetTargetUnit()->IsVisible()) {
+   if(unit.GetTargetUnit() && !unit.GetTargetUnit()->IsUnitVisible()) {
       unit.GetUnitController()->StopMovement();
    } else
       unit.state->ChangeState(EUnitState::STATE_IDLE);
@@ -20,7 +20,7 @@ void ChasingState::Exit(AUnit& unit)
 
 void ChasingState::Update(AUnit& unit, float deltaSeconds)
 {
-   if(unit.GetTargetUnit()->IsVisible())
+   if(unit.GetTargetUnit()->IsUnitVisible())
       unit.GetUnitController()->BeginAttack(unit.GetTargetUnit());
    else if(LIKELY(currentChaseTime < 5)) {
       currentChaseTime += deltaSeconds;

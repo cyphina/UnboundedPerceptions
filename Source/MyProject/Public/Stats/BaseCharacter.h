@@ -3,9 +3,7 @@
 #include "Stats/Vital.h"
 #include "MyAttributeSet.h"
 
-/**
- * BaseCharacter - The Base Class for Combat Oriented Information
- */
+class UAbilitySystemComponent;
 
 namespace CombatInfo
 {
@@ -18,7 +16,6 @@ namespace CombatInfo
 
 using namespace CombatInfo;
 
-class UAbilitySystemComponent;
 #pragma region enums
 
 // Quantities used for determining skill power and stats
@@ -121,8 +118,8 @@ struct FBaseCharacter {
    ~FBaseCharacter();
    FBaseCharacter& operator=(const FBaseCharacter& otherChar) = default;
    int             GetLevel() const { return level; }
-   void            InitializeAttributeBaseValues();
-   void            LevelUp();
+   void            SetLevel(int newLevel) { level = newLevel; }
+   void InitializeAttributeBaseValues();
 
    /** Recalculate base values of skills from a base attribute change
     * @param updatedStat - Attribute that was modified
@@ -173,6 +170,6 @@ struct FBaseCharacter {
    void SetupMechanics();
    void SetupSkillModifiers();
    void SetupVitalModifiers();
-   void ChangeModifier(sks skillName, atts att, EFF eff);
-   void ChangeModifier(vits skillName, atts att, EFF eff);
+   void ChangeModifier(sks skillName, atts att, AttributeModifierFunction eff);
+   void ChangeModifier(vits skillName, atts att, AttributeModifierFunction eff);
 };

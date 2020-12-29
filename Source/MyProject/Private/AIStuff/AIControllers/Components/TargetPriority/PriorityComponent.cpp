@@ -1,73 +1,93 @@
 #include "PriorityComponent.h"
 
+#include "ActorPriorityCalculation.h"
 #include "GameplayTagContainer.h"
 
 #include "UnitQueryGenerator.h"
 #include "EnvQueryTest_LowHPTarget.h"
+#include "MySpell.h"
+#include "PointPriorityCalculation.h"
+#include "PriorityCalculation.h"
+#include "PriorityStructs.h"
+#include "TargetComponent.h"
+#include "Unit.h"
+
+#include "UnitController.h"
+#include "VectorPriorityCalculation.h"
+#include "BehaviorTree/BehaviorTreeComponent.h"
+#include "BehaviorTree/BTTaskNode.h"
 
 #include "EnvironmentQuery/EnvQuery.h"
 #include "EnvironmentQuery/EnvQueryManager.h"
 #include "EnvironmentQuery/EnvQueryOption.h"
 
-void UUpPriorityComponent::FindBestAOELocation(bool isSupport)
+void UUpPriorityComponent::FindBestTargetForSpell(TSubclassOf<UMySpell> spell)
 {
    FEnvQueryRequest queryRequest;
-
-   if(isSupport)
-      queryRequest = FEnvQueryRequest(findBestAOESupportLocation, ownerRef);
-   else
-      queryRequest = FEnvQueryRequest(findBestAOEAssaultLocation, ownerRef);
-
-   // queryRequest.SetFloatParam("CircleRadius", ownerRef->abilities[spellIndex].GetDefaultObject()->GetAOE(ownerRef->GetAbilitySystemComponent()));
+   priorityCalculation = MakePriorityCalculation(GetManualTag(spell));
    queryRequest.SetFloatParam("SimpleGrid.GridSize", 700);
-   queryRequest.Execute(EEnvQueryRunMode::SingleResult, this, &AUnitController::OnAOELocationFound);
+   queryRequest.Execute(EEnvQueryRunMode::RandomBest25Pct, this, &UUpPriorityComponent::OnTargetFound);
 }
 
-void UUpPriorityComponent::FindWeakestTarget(bool isSupport)
+void UUpPriorityComponent::BeginPlay()
 {
-   FEnvQueryRequest queryRequest;
-   if(isSupport)
-      queryRequest = FEnvQueryRequest(findWeakestAllyTarget, ownerRef);
-   else
-      queryRequest = FEnvQueryRequest(findWeakestEnemyTarget, ownerRef);
-
-   queryRequest.Execute(EEnvQueryRunMode::SingleResult, this, &AUnitController::OnWeakestTargetFound);
+   unitControllerRef = Cast<AUnitController>(GetOwner());
 }
 
-void UUpPriorityComponent::CreateTargetDistribution()
+TUniquePtr<IPriorityCalculation> UUpPriorityComponent::MakePriorityCalculation(FGameplayTag targetingTag) const
 {
-   UEnvQuery::
+   if(targetingTag.MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Single"))) {
+      return TUniquePtr<IPriorityCalculation>(NewObject<UActorPriorityCalculation>());
+   } else if(targetingTag.MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))) {
+      return TUniquePtr<IPriorityCalculation>(NewObject<UPointPriorityCalculation>());
+
+   } else if(targetingTag.MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Vector"))) {
+      return TUniquePtr<IPriorityCalculation>(NewObject<UVectorPriorityCalculation>());
+   } else {
+      checkf(false, TEXT("Incorrect targetting tag passed to priority calculation factory"));
+   }
+   return nullptr;
 }
 
-void UUpPriorityComponent::FindBestSpellTarget(FGameplayTag targettingTag, bool isSupport)
+void UUpPriorityComponent::OnTargetFound(TSharedPtr<FEnvQueryResult> envQuery)
 {
-   if(targettingTag == FGameplayTag::RequestGameplayTag("Skill.Targetting.Area")) {
-      FindBestAOELocation(isSupport);
-   } else if(targettingTag == FGameplayTag::RequestGameplayTag("Skill.Targetting.None")) {
-      BeginCastSpell(ownerRef->abilities[spellToCastIndex]);
-   } else if(targettingTag.MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Single"))) {
-      FindWeakestTarget(isSupport);
+   if(envQuery->IsSuccsessful()) {
+      GetTargetComp()->SetSpellTarget(priorityCalculation->GetBestTargetFromDistribution(envQuery));
+   } else {
+      StopBehaviorTreeTargetTask();
    }
 }
 
-void UUpPriorityComponent::OnAOELocationFound(TSharedPtr<FEnvQueryResult> result)
+UTargetComponent* UUpPriorityComponent::GetTargetComp() const
 {
-   if(result->IsSuccsessful()) {
-      ownerRef->SetTargetLocation(result->GetItemAsLocation(0));
-      BeginCastSpell(ownerRef->abilities[spellToCastIndex]);
-   } else
-      // Aborting means it needs some cleanup while fail just ends the node
-      Cast<UBTTaskNode>(behaviorTreeComp->GetActiveNode())->FinishLatentTask(*behaviorTreeComp, EBTNodeResult::Failed);
+   return unitControllerRef->GetUnitOwner()->FindComponentByClass<UTargetComponent>();
 }
 
-void UUpPriorityComponent::OnWeakestTargetFound(TSharedPtr<FEnvQueryResult> result)
+FGameplayTag UUpPriorityComponent::GetManualTag(TSubclassOf<UMySpell> spell) const
 {
-   GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("FOUND WEAKEST TARGET!"));
-   if(result.IsValid())
-   // Need to actually check here since our filter could end up with us having no heroes to target like if all heroes are full hp
-   {
-      ownerRef->SetTargetUnit(Cast<AUnit>(result->GetItemAsActor(0)));
-      BeginCastSpell(ownerRef->abilities[spellToCastIndex]);
-   } else
-      Cast<UBTTaskNode>(behaviorTreeComp->GetActiveNode())->FinishLatentTask(*behaviorTreeComp, EBTNodeResult::Failed);
+   return spell.GetDefaultObject()->GetTargeting();
+}
+
+FGameplayTagContainer UUpPriorityComponent::GetDescriptorTags(TSubclassOf<UMySpell> spell) const
+{
+   return spell.GetDefaultObject()->AbilityTags.Filter(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Category")));
+}
+
+UBehaviorTreeComponent* UUpPriorityComponent::GetBehaviorTreeComp() const
+{
+   return unitControllerRef->behaviorTreeComp;
+}
+
+void UUpPriorityComponent::StopBehaviorTreeTargetTask() const
+{
+   Cast<UBTTaskNode>(GetBehaviorTreeComp()->GetActiveNode())->FinishLatentTask(*GetBehaviorTreeComp(), EBTNodeResult::Failed);
+}
+
+void UUpPriorityComponent::GetCurrentlySelectedSpell() const
+{
+}
+
+void UUpPriorityComponent::CastCurrentlySelectedSpell() const
+{
+   unitControllerRef->FindComponentByClass<USpellCastComponent>()->BeginCastSpell(unitControllerRef->GetUnitOwner()->abilities[spellToCastIndex]);
 }

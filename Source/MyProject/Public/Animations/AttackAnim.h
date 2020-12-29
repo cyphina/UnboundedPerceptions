@@ -16,13 +16,13 @@ class IAttackAnim
    GENERATED_IINTERFACE_BODY()
 
  public:
-   UFUNCTION(BlueprintCallable)
    virtual void PlayAttackAnimation(float playRate = 1) = 0;
 
-   UFUNCTION(BlueprintCallable)
    virtual void StopAttackAnimation() = 0;
 
+   /** Attack animations have a notify (like when the sword swing connects with the enemy) in which this function should fire off */
+   virtual void AttackNotify() = 0;
+
    /** Bind to this to set a function to execute when the animation time corresponding to the damage proc occurs*/
-   UFUNCTION(BlueprintCallable)
    virtual FOnHitNotify& OnAttackNotify() = 0;
 };

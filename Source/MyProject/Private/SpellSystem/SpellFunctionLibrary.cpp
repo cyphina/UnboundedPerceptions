@@ -17,14 +17,12 @@
 #include "HUDManager.h"
 #include "ActionbarInterface.h"
 #include "ESkillContainer.h"
+#include "RTSIngameWidget.h"
 #include "SkillSlot.h"
-
-
 
 USpellFunctionLibrary::USpellFunctionLibrary(const FObjectInitializer& o) : Super(o)
 {
 }
-
 
 FGameplayEffectSpecHandle USpellFunctionLibrary::MakeGameplayEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration,
                                                                     float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags)
@@ -122,14 +120,13 @@ void USpellFunctionLibrary::SpellSwap(TSubclassOf<UMySpell> originalSpell, TSubc
 {
    int slot = 0;
    for(auto equippedSkills : ownerRef->abilities) {
-      if(equippedSkills == originalSpell) {
-         break;
-      }
+      if(equippedSkills == originalSpell) { break; }
       ++slot;
    }
    if(slot != ownerRef->abilities.Num())
       Cast<AUserInput>(ownerRef->GetWorld()->GetGameInstance()->GetFirstLocalPlayerController())
-          ->GetHUDManager()
+          ->GetWidgetProvider()
+          ->GetIngameHUD()
           ->GetActionHUD()
           ->skillContainerRef->GetSkillSlot(slot)
           ->UpdateSkillSlot(newSpell);
