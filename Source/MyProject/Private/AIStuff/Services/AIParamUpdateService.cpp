@@ -1,9 +1,8 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "AIParamUpdateService.h"
 #include "AIModule/Classes/BehaviorTree/BlackboardComponent.h"
 #include "Unit.h"
+#include "UpStatComponent.h"
 
 void UAIParamUpdateService::OnSearchStart(FBehaviorTreeSearchData& SearchData)
 {
@@ -18,15 +17,15 @@ void UAIParamUpdateService::TickNode(UBehaviorTreeComponent& ownerComp, uint8* n
    int riskValue   = 1;
    int threatValue = 1;
 
-   float unitTotalHealth = myMemory->owner->GetVitalAdjValue(EVitals::Health);
+   float unitTotalHealth = myMemory->owner->GetStatComponent()->GetVitalAdjValue(EVitals::Health);
 
-   threatValue += myMemory->owner->GetDPS(3);
-   // threatValue += p.stunDealt;
-   threatValue += myMemory->owner->GetHealingPerSecond(3) * 2; // prioritze healers, and maybe life leeching?
-
-   riskValue += myMemory->owner->GetDamageReceivedPerSecond(3);
-   riskValue -= myMemory->owner->GetHealingReceivedPerSecond(3);
-   riskValue *= myMemory->owner->GetVitalCurValue(EVitals::Health) / unitTotalHealth;
+   // threatValue += myMemory->owner->GetDPS(3);
+   // // threatValue += p.stunDealt;
+   // threatValue += myMemory->owner->GetHealingPerSecond(3) * 2; // prioritze healers, and maybe life leeching?
+   //
+   // riskValue += myMemory->owner->GetDamageReceivedPerSecond(3);
+   // riskValue -= myMemory->owner->GetHealingReceivedPerSecond(3);
+   // riskValue *= myMemory->owner->GetVitalCurValue(EVitals::Health) / unitTotalHealth;
 
    ownerComp.GetBlackboardComponent()->SetValueAsInt("risk", riskValue);
    ownerComp.GetBlackboardComponent()->SetValueAsInt("risk", threatValue);

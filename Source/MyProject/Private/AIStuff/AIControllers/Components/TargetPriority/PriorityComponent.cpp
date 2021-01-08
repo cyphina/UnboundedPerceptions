@@ -34,15 +34,15 @@ void UUpPriorityComponent::BeginPlay()
    unitControllerRef = Cast<AUnitController>(GetOwner());
 }
 
-TUniquePtr<IPriorityCalculation> UUpPriorityComponent::MakePriorityCalculation(FGameplayTag targetingTag) const
+UPriorityCalculation* UUpPriorityComponent::MakePriorityCalculation(FGameplayTag targetingTag) const
 {
    if(targetingTag.MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Single"))) {
-      return TUniquePtr<IPriorityCalculation>(NewObject<UActorPriorityCalculation>());
+      return NewObject<UPriorityCalculation>();
    } else if(targetingTag.MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))) {
-      return TUniquePtr<IPriorityCalculation>(NewObject<UPointPriorityCalculation>());
+      return NewObject<UPriorityCalculation>();
 
    } else if(targetingTag.MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Vector"))) {
-      return TUniquePtr<IPriorityCalculation>(NewObject<UVectorPriorityCalculation>());
+      return NewObject<UPriorityCalculation>();
    } else {
       checkf(false, TEXT("Incorrect targetting tag passed to priority calculation factory"));
    }
@@ -52,7 +52,7 @@ TUniquePtr<IPriorityCalculation> UUpPriorityComponent::MakePriorityCalculation(F
 void UUpPriorityComponent::OnTargetFound(TSharedPtr<FEnvQueryResult> envQuery)
 {
    if(envQuery->IsSuccsessful()) {
-      GetTargetComp()->SetSpellTarget(priorityCalculation->GetBestTargetFromDistribution(envQuery));
+      GetTargetComp()->SetTarget(priorityCalculation->GetBestTargetFromDistribution(envQuery));
    } else {
       StopBehaviorTreeTargetTask();
    }
@@ -65,7 +65,7 @@ UTargetComponent* UUpPriorityComponent::GetTargetComp() const
 
 FGameplayTag UUpPriorityComponent::GetManualTag(TSubclassOf<UMySpell> spell) const
 {
-   return spell.GetDefaultObject()->GetTargeting();
+   return spell.GetDefaultObject()->GetTargeting()->GetTargetTag();
 }
 
 FGameplayTagContainer UUpPriorityComponent::GetDescriptorTags(TSubclassOf<UMySpell> spell) const
@@ -75,7 +75,7 @@ FGameplayTagContainer UUpPriorityComponent::GetDescriptorTags(TSubclassOf<UMySpe
 
 UBehaviorTreeComponent* UUpPriorityComponent::GetBehaviorTreeComp() const
 {
-   return unitControllerRef->behaviorTreeComp;
+   return unitControllerRef->FindComponentByClass<UBehaviorTreeComponent>();
 }
 
 void UUpPriorityComponent::StopBehaviorTreeTargetTask() const
@@ -89,5 +89,6 @@ void UUpPriorityComponent::GetCurrentlySelectedSpell() const
 
 void UUpPriorityComponent::CastCurrentlySelectedSpell() const
 {
-   unitControllerRef->FindComponentByClass<USpellCastComponent>()->BeginCastSpell(unitControllerRef->GetUnitOwner()->abilities[spellToCastIndex]);
+   /*unitControllerRef->FindComponentByClass<USpellCastComponent>()->BeginCastSpell(
+       unitControllerRef->GetUnitOwner()->GetAbilitySystemComponent()->GetAbilities()[spellToCastIndex]);*/
 }

@@ -1,5 +1,7 @@
 #include "MyProject.h"
 #include "EquipmentSlot.h"
+
+#include "EquipmentContainer.h"
 #include "UserInput.h"
 #include "HUDManager.h"
 #include "ItemFunctionLibrary.h"
@@ -24,7 +26,7 @@ void UEquipmentSlot::OnBtnClick()
 void UEquipmentSlot::ShowDesc(UToolTipWidget* tooltip)
 {
    // Show information about the equipment in the slot
-   const int itemId = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetEquipHUD()->GetEquippedHero()->GetEquipment()[slotIndex];
+   const int itemId = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetEquipHUD()->GetEquippedHero()->GetEquipment()->GetEquipAtSlot(slotIndex);
    if(itemId > 0) {
       const auto itemInfo = UItemManager::Get().GetItemInfo(itemId);
       if(!itemInfo->name.IsEmpty()) {

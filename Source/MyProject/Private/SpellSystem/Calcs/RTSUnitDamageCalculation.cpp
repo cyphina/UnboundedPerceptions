@@ -10,7 +10,7 @@
 #include "UpStatComponent.h"
 
 void URTSUnitDamageCalculation::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& executionParams,
-                                                       FGameplayEffectCustomExecutionOutput&           outExecutionOutput)
+                                                       FGameplayEffectCustomExecutionOutput&           outExecutionOutput) const
 {
    FUpDamage damage;
 
@@ -63,7 +63,7 @@ void URTSUnitDamageCalculation::DamageTarget(FUpDamage& d, FGameplayTagContainer
    }
 
    // Clamp damage to always deal 1 damage even on highly resisted hits
-   if(d.damage s <= 0) d.damage = 1;
+   if(d.damage <= 0) d.damage = 1;
 
    // Add lifesteal effects as healing here (since we have to calculate damage reduction first)
    // TODO: Maybe add a stat for lifesteal %
@@ -80,7 +80,7 @@ void URTSUnitDamageCalculation::DamageTarget(FUpDamage& d, FGameplayTagContainer
       // Kill the unit if it's health drops below 0 and stop us from attacking anymore (if we were auto attacking)
       // TODO: Change this to a delegate on UnitController
       if(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) <= 0) {
-         if(!USpellDataLibrary::IsImmortal(*d.targetUnit->GetAbilitySystemComponent())) { d.targetUnit->GetUnitController()->Die(); }
+         if(!USpellDataLibrary::IsImmortal(d.targetUnit->GetAbilitySystemComponent())) { d.targetUnit->GetUnitController()->Die(); }
       }
 
       BroadcastDamageEvents(d);

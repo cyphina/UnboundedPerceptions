@@ -15,12 +15,12 @@ class AUnit;
 UCLASS()
 class MYPROJECT_API URTSUnitAnim : public UAnimInstance, public IAttackAnim
 {
- private:
    GENERATED_BODY()
 
  public:
-   void        PlayAttackAnimation();
-   FORCEINLINE FOnHitNotify& OnAttackNotify() override { return OnAttackNotifyEvent; };
+   void          PlayAttackAnimation(float playRate) override;
+   void          StopAttackAnimation() override;
+   FOnHitNotify& OnAttackNotify() override { return OnAttackNotifyEvent; };
 
  protected:
    /** The attack animation has a notify which triggers this function. */
@@ -52,5 +52,5 @@ class MYPROJECT_API URTSUnitAnim : public UAnimInstance, public IAttackAnim
    void NativeUpdateAnimation(float deltaSeconds) override final;
 
  private:
-   FOnAttackNotify OnAttackNotifyEvent;
+   FOnHitNotify OnAttackNotifyEvent;
 };

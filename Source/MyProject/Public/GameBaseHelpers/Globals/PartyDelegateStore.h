@@ -1,7 +1,8 @@
 ﻿#pragma once
-#include "Object.h"
+#include "LocalPlayerSubsystem.h"
 #include "PartyDelegateStore.generated.h"
 
+class AUnit;
 class AEnemy;
 class AAlly;
 class ABaseHero;
@@ -13,14 +14,17 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEnemyActiveChanged, AEnemy*, bool);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnSummonActiveChanged, ASummon*, bool);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnFocusedUnitChanged, AUnit*);
 
+UCLASS()
 class UPartyDelegateStore : public ULocalPlayerSubsystem
 {
+   GENERATED_BODY()
+
  public:
    FOnAllyActiveChanged&   OnAllyActiveChanged() const { return OnAllyActiveChangedEvent; }
    FOnHeroActiveChanged&   OnHeroActiveChanged() const { return OnHeroActiveChangedEvent; }
    FOnEnemyActiveChanged&  OnEnemyActiveChanged() const { return OnEnemyActiveChangedEvent; }
    FOnSummonActiveChanged& OnSummonActiveChanged() const { return OnSummonActiveChangedEvent; }
-   FOnFocusedUnitChanged&  OnFocusedUnitChanged() const { return OnFocusedUnitChangedEvent; }
+   FOnFocusedUnitChanged& OnFocusedUnitChanged() const { return OnFocusedUnitChangedEvent; }
 
  protected:
    void Initialize(FSubsystemCollectionBase& Collection) override;

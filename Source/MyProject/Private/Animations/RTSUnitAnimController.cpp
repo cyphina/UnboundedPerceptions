@@ -37,5 +37,5 @@ void URTSUnitAnimController::NativeUpdateAnimation(float deltaSeconds)
 
 void URTSUnitAnimController::AnimNotify_Hit() const
 {
-   unitRef->OnUnitHit().Broadcast();
+   unitRef->OnUnitAttackSwingHit().Broadcast();
 }

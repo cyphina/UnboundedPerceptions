@@ -10,13 +10,16 @@
 #include "DefaultCursorClickFunctionality.h"
 #include "RTSIngameWidget.h"
 #include "RTSPawn.h"
-#include "RTSStateComponent.h"
 #include "SpellTargetingTypes.h"
 #include "TargetComponent.h"
 #include "Unit.h"
 #include "UnitController.h"
 #include "UpStatComponent.h"
 #include "UserInput.h"
+
+const FText UManualSpellComponent::NOT_ENOUGH_MANA_TEXT = NSLOCTEXT("HelpMessages", "Mana", "Not Enough Mana!");
+const FText UManualSpellComponent::INVALID_TARGET_TEXT  = NSLOCTEXT("HelpMessages", "Target", "Invalid Target!");
+const FText UManualSpellComponent::ON_COOLDOWN_TEXT     = NSLOCTEXT("HelpMessages", "CD", "Spell is on Cooldown!");
 
 bool UManualSpellComponent::PressedCastSpell(int spellCastingIndex)
 {
@@ -41,13 +44,11 @@ bool UManualSpellComponent::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
 
                if(spell->GetTargeting()->GetTargetTag().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.None"))) {
                   unitOwner->GetUnitController()->Stop();
-                  SetupDelayedSpellProps(spellToCast);
                   unitOwner->GetUnitController()->FindComponentByClass<USpellCastComponent>()->IncantationCheck(spellToCast);
                } else {
                   CPCRef->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Magic);
                }
 
-               // Set our current spell to spellToCast for recording purposes
                currentlySelectedSpell = spellToCast;
 
                if(spell->GetTargeting()->GetTargetTag().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))) {
@@ -76,11 +77,6 @@ bool UManualSpellComponent::InvalidTarget() const
 {
    URTSIngameWidget::NativeDisplayHelpText(GetWorld(), INVALID_TARGET_TEXT);
    return false;
-}
-
-void UManualSpellComponent::SetupDelayedSpellProps(TSubclassOf<UMySpell> spellToCast) const
-{
-   spellCastComp->currentSpell = spellToCast;
 }
 
 void UManualSpellComponent::OnUnitStopped()
@@ -121,10 +117,8 @@ void UManualSpellComponent::OnSpellCasted(TSubclassOf<UMySpell> spellCasted)
 {
    if(AUserInput* cpcRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController())) {
       if(cpcRef->GetBasePlayer()->GetFocusedUnit() == GetOwner()) {
-         if(AUnit* unitOwner = Cast<AUnitController>(GetOwner())->GetUnitOwner()) {
-            if(const int spellSlotIndex = unitOwner->GetAbilitySystemComponent()->FindSlotIndexOfSpell(spellCasted); spellSlotIndex != INDEX_NONE) {
-               SpellHUDEvents::OnFocusedUnitSpellCastedEvent.Broadcast(unitOwner, spellSlotIndex);
-            }
+         if(const int spellSlotIndex = unitOwner->GetAbilitySystemComponent()->FindSlotIndexOfSpell(spellCasted); spellSlotIndex != INDEX_NONE) {
+            SpellHUDEvents::OnFocusedUnitSpellCastedEvent.Broadcast(unitOwner, spellSlotIndex);
          }
       }
    }
@@ -133,14 +127,6 @@ void UManualSpellComponent::OnSpellCasted(TSubclassOf<UMySpell> spellCasted)
 void UManualSpellComponent::OnSpellSlotReplaced(int dropSlotindex, TSubclassOf<UMySpell> spellClass)
 {
    unitOwner->GetAbilitySystemComponent()->SetSpellAtSlot(spellClass, dropSlotindex);
-}
-
-void UManualSpellComponent::FinalizeSpellTargetingOnSelf(const FUpSpellTargeting* spellTargeting, TSubclassOf<UMySpell> spellClass, const FHitResult&)
-{
-   Cast<AUnitController>(GetOwner())->Stop();
-   SetupDelayedSpellProps(spellClass);
-   spellCastComp->IncantationCheck(spellClass);
-   Cast<AUserInput>(GetWorld()->GetFirstPlayerController())->GetCameraPawn()->SetSecondaryCursor();
 }
 
 bool UManualSpellComponent::IsTargetingSelf()
@@ -152,10 +138,8 @@ void UManualSpellComponent::FinalizeSpellTargeting(const FUpSpellTargeting* spel
 {
    if(AUserInput* userInput = Cast<AUserInput>(GetWorld()->GetFirstPlayerController())) {
       userInput->GetCameraPawn()->HideSpellCircle();
-      unitOwner->GetUnitController()->Stop();
-      spellTargeting->ManualSetSpellTarget(unitOwner->GetTargetComponent(), hitResult);
       userInput->GetCameraPawn()->SetSecondaryCursor(); // Just set cursor to to select so the cursor check loop will quickly change the cursor back to normal
-      SetupDelayedSpellProps(spellClass);               // Reassign these variables that were cleared since we had to stop our current action
-      spellTargeting->ManualAdjustCastPosition(spellCastComp, spellClass, hitResult);
+      spellTargeting->ManualSetSpellTarget(unitOwner->GetTargetComponent(), hitResult);
+      spellCastComp->BeginCastSpell(spellClass);
    }
 }

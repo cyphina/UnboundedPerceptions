@@ -14,7 +14,7 @@
 
 class UManualSpellComponent;
 class USpellCastComponent;
-class FUpSpellTargeting;
+struct FUpSpellTargeting;
 class UTargetComponent;
 struct FGameplayAbilityTargetDataHandle;
 
@@ -51,7 +51,7 @@ class AAlly;
  * @brief See AUnitController comments for more details about AIControllers. This class is an AIController with functionality specific to all allied units
  */
 UCLASS()
-class MYPROJECT_API AAllyAIController : public AUnitController, public IManualTargetingController
+class MYPROJECT_API AAllyAIController : public AUnitController
 {
    GENERATED_BODY()
 
@@ -92,6 +92,12 @@ class MYPROJECT_API AAllyAIController : public AUnitController, public IManualTa
 
    UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
    UManualSpellComponent* manualSpellCastComponent;
+
+   UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+   UBlackboardComponent* blackboardComp;
+
+   UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+   UBehaviorTreeComponent* behaviorTreeComp;
 
  private:
    /** Behavior tree contains logic of our AI.  Will swap depending on tactic and behavioral mode */

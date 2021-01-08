@@ -18,7 +18,7 @@ float URiskComponent::CalculateTargetRisk()
 {
    int targetNum = 0;
    for(AUnit* e : controllerRef->GetGameState()->GetVisibleEnemies()) {
-      if(e->targetComponent->GetTargetUnit() == GetOwner()) ++targetNum;
+      if(e->GetTargetComponent()->GetTargetUnit() == GetOwner()) ++targetNum;
    }
 
    const float targetRiskValue = FMath::Clamp(UpResourceManager::DiminishFunc(targetNum, 2), 0.f, 1.f);

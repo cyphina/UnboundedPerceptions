@@ -24,6 +24,7 @@
 #include "ManualSpellComponent.h"
 #include "PartyDelegateStore.h"
 #include "SceneViewport.h"
+#include "TargetedAttackComponent.h"
 
 #include "Algo/Transform.h"
 #include "GameBaseHelpers/DefaultCursorClickFunctionality.h"
@@ -558,7 +559,7 @@ void ARTSPawn::UseAbility(int abilityIndex)
       FHitResult hitRes;
       if(controllerRef->GetHitResultUnderCursor(SELECTABLE_BY_CLICK_CHANNEL, false, hitRes))
          for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
-            ally->GetAllyAIController()->GetManualSpellComponent()->SetupSpellTargeting(hitRes, ally->GetAbilitySystemComponent()->GetSpellAtSlot(abilityIndex));
+            ally->GetAllyAIController()->GetManualSpellComponent()->SetupSpellTargeting(hitRes);
          }
    }
 }
@@ -567,11 +568,11 @@ void ARTSPawn::AttackMoveConfirm(FVector moveLocation)
 {
    if(controllerRef->IsInputKeyDown(EKeys::LeftShift)) {
       for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
-         ally->QueueAction(TFunction<void()>([ally, moveLocation]() { ally->GetUnitController()->BeginAttackMove(moveLocation); }));
+         ally->QueueAction(TFunction<void()>([ally, moveLocation]() { ally->GetAllyAIController()->GetTargetedAttackComponent()->BeginAttackMove(moveLocation); }));
       }
    } else {
       for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
-         ally->GetUnitController()->BeginAttackMove(moveLocation);
+         ally->GetAllyAIController()->GetTargetedAttackComponent()->BeginAttackMove(moveLocation);
       }
    }
    CreateClickVisual(moveLocation);
@@ -611,7 +612,7 @@ void ARTSPawn::ControlGroupDoubleTapTimer()
 void ARTSPawn::ControlGroupDoubleTapHoldFollow()
 {
    // Follow the leader of the control group for whatever control group key we're pressing down
-   auto allyRef = controlGroups[controlBeingHeldIndex][0];
+   const auto allyRef = controlGroups[controlBeingHeldIndex][0];
    if(allyRef.IsValid()) {
       SetActorRotation(FRotator(0, 180, 0));
       const auto [x, y, z]       = allyRef->GetActorLocation();

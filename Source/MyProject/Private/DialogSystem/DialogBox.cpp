@@ -177,7 +177,7 @@ void UDialogBox::ResetDialog()
          // Depending on the type of NPC and various params UI will be manipulated differently
          Cast<ANPC>(basePlayerRef->heroInBlockingInteraction->GetCurrentInteractable())->OnDoneInitialTalk();
          break;
-      case EDialogBoxCloseCase::finishedNPCConvo: hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Social)); break;
+      case EDialogBoxCloseCase::finishedNPCConvo: hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Social)); break;
       case EDialogBoxCloseCase::finishedInteractableDialog: basePlayerRef->heroInBlockingInteraction = nullptr; break;
       case EDialogBoxCloseCase::finishedTriggerActivation:
       case EDialogBoxCloseCase::none:

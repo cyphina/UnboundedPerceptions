@@ -4,6 +4,7 @@
 #include "EQTest/EnvQueryTest_LowHPTarget.h"
 #include "EnvironmentQuery/Items/EnvQueryItemType_Actor.h"
 #include "Unit.h"
+#include "UpStatComponent.h"
 
 UEnvQueryTest_LowHPTarget::UEnvQueryTest_LowHPTarget()
 {
@@ -28,7 +29,7 @@ void UEnvQueryTest_LowHPTarget::RunTest(FEnvQueryInstance& QueryInstance) const
    for (FEnvQueryInstance::ItemIterator It(this, QueryInstance); It; ++It) {
       const AActor* itemActor = GetItemActor(QueryInstance, It.GetIndex());
       if (const AUnit* unitRef = Cast<AUnit>(itemActor)) {
-         const float health = unitRef->GetVitalCurValue(EVitals::Health);
+         const float health = unitRef->GetStatComponent()->GetVitalCurValue(EVitals::Health);
          It.SetScore(TestPurpose, FilterType, health, MinThresholdValue, MaxThresholdValue);
       }
    }

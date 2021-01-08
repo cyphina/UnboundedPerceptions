@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
-#include "UUpPositioningComponent.generated.h"
+#include "PositioningComponent.generated.h"
+
+class UEnvQuery;
 
 /*
  * This component holds information about how units move around while they are fighting. Some units may just attack, but others may try to annoy us by

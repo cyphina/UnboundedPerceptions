@@ -24,7 +24,7 @@ void UFindVisibleEnemiesCenterContext::ProvideContext(FEnvQueryInstance& QueryIn
 
 const TSet<AUnit*>&  UFindVisibleEnemiesCenterContext::GetVisibleEnemies(const FEnvQueryInstance& queryInstance) const
 {
-   return IVisionContext::Execute_GetVisibleEnemies(queryInstance.Owner.Get()->GetWorld()->GetGameState());
+   const auto& visionContext = Cast<IVisionContext>(queryInstance.Owner.Get()->GetWorld()->GetGameState());
+   return visionContext->GetVisibleEnemies();
 }
 
-}

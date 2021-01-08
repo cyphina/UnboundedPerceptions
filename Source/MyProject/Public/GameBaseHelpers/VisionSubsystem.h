@@ -13,28 +13,29 @@ class MYPROJECT_API UVisionSubsystem : public UObject
    GENERATED_BODY()
 
  public:
-   static TUniquePtr<UVisionSubsystem> Create(UObject* outer);
+   /** Creates a new UVisionSubsystem* and it is on the onus of the class in which the UVisionSubsystem is being created in to manage its memory (probably using UROPERTY())*/
+   static UVisionSubsystem* Create(UObject* outer);
 
-   FORCEINLINE const TSet<AUnit*>& GetVisibleEnemies() const { return visibleEnemies; }
-   FORCEINLINE const TSet<AUnit*>& GetVisiblePlayerUnits() const { return visiblePlayerUnits; }
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   const TSet<AUnit*>& GetVisibleEnemies() const { return visibleEnemies; }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   const TSet<AUnit*>& GetVisiblePlayerUnits() const { return visiblePlayerUnits; }
 
  private:
    UVisionSubsystem();
 
-   void           StartUpdating();
-   void           ResumeUpdating();
-   void           StopUpdating();
-   ARTSGameState* gameStateRef;
+   void StartUpdating();
+   void ResumeUpdating();
+   void StopUpdating();
 
    FHitResult                  visionHitResult;
    FCollisionObjectQueryParams queryParamVision;
 
    /**Lists what enemies are visible so we don't have to keep doing line traces which is an expensive op*/
-   UPROPERTY(BlueprintReadOnly, Category = "Vision")
    TSet<AUnit*> visibleEnemies;
 
    /**Lists what allies are visible so we don't have to keep doing line traces which is an expensive op*/
-   UPROPERTY(BlueprintReadOnly, Category = "Vision")
    TSet<AUnit*> visiblePlayerUnits;
 
    mutable FWindowsRWLock visibleMutex;        // Guards visibleEnemies as its gets updated by multiple threads in the parallelFor
@@ -43,11 +44,13 @@ class MYPROJECT_API UVisionSubsystem : public UObject
    void AddVisibleAlly(AUnit* newAlly);
    void AddVisibleEnemy(AUnit* newEnemy);
 
-   TSet<URTSVisionComponent*> GetFriendlyVisionComps() const;
-   TSet<URTSVisionComponent*> GetEnemyVisionComps() const;
+   TSet<const URTSVisionComponent*> GetFriendlyVisionComps() const;
+   TSet<const URTSVisionComponent*> GetEnemyVisionComps() const;
 
    FTimerHandle allyVisionUpdateTimerHandle;
    FTimerHandle enemyVisionUpdateTimerHandle;
+
+   ARTSGameState* gameStateRef;
 
    /**
     * *** !!! ALso handles killing of units to prevent data races !!! ***
@@ -70,9 +73,9 @@ class MYPROJECT_API UVisionSubsystem : public UObject
 
    void StoreEnemiesVisibleLastCall(TSet<AUnit*>& lastCallCache);
 
-   bool CheckUnitInVision(AUnit* unit, URTSVisionComponent* visionComp, FWindowsRWLock& unitListMutex, TSet<AUnit*>& visibleUnits);
+   bool CheckUnitInVision(AUnit* unit, const URTSVisionComponent* visionComp, FWindowsRWLock& unitListMutex, TSet<AUnit*>& visibleUnits);
    /** Trace to a target gets blocked by walls and fails if target is not visible */
-   bool LineOfSightToNonInvisUnit(AUnit* unit, URTSVisionComponent* allyVision);
+   bool LineOfSightToNonInvisUnit(AUnit* unit, const URTSVisionComponent* allyVision);
 
    /** Unhides enemies that pass the visibility check. */
    void MakeEnemiesInVisionVisible();

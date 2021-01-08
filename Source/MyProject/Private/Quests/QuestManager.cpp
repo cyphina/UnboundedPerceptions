@@ -101,7 +101,7 @@ bool UQuestManager::AddNewQuest(TSubclassOf<AQuest> questClassToSpawn, bool forc
          SelectNewQuest(quest);
          questListRef->GetQuestListSlot(questListRef->currentlySelectedQuest)->SelectSubGoal(0);
       }
-      if(questListRef->GetVisibility() == ESlateVisibility::Hidden) { hudManagerRef->AddHUD(static_cast<int>(HUDs::HS_QuestList)); }
+      if(questListRef->GetVisibility() == ESlateVisibility::Hidden) { hudManagerRef->AddHUD(static_cast<int>(EHUDs::HS_QuestList)); }
       return true;
    }
    return false;
@@ -264,8 +264,8 @@ void UQuestManager::OnItemPickedUp(const ABaseHero* heroPickingItem, const FMyIt
 
       for(AQuest* quest : quests) {
          for(const int& goalIndex : quest->currentGoalIndices) {
-            if(const FGoalInfo& goal = quest->questInfo.subgoals[goalIndex];
-               goal.goalType == EGoalType::Find && goal.amount > 1 && newItem.id == FCString::Atoi(*goal.additionalNames[0].ToString())) {
+            const FGoalInfo& goal = quest->questInfo.subgoals[goalIndex];
+            if(goal.goalType == EGoalType::Find && goal.amount > 1 && newItem.id == FCString::Atoi(*goal.additionalNames[0].ToString())) {
                // Store the quest and goal index for now of the relevant quest goal
                quest->currentAmounts[goalIndex] = FMath::Min(goal.amount, newItem.count);
                if(goal.additionalNames.Num() == 1) // If we don't have to turn in the items

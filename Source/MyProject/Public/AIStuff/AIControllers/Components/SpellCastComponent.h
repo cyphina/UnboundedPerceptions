@@ -35,9 +35,13 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    FORCEINLINE TSubclassOf<UMySpell> GetCurrentSpell() const { return currentSpell; }
 
-   /**Initiate spell casting procedure without any input triggers.  Used for AI spellcasting.  Returns if we successfully transitioned to CASTING state*/
+   /**
+    * -- Only call this after we have a target! -- \n
+    * Initiate spell casting procedure without any input triggers. Used by AI and manual spell casting. \n
+    * @return - Returns true if we successfully transitioned to CASTING state
+    */
    UFUNCTION(BlueprintCallable, Category = "Action")
-   virtual bool BeginCastSpell(TSubclassOf<UMySpell> spellToCastIndex);
+   virtual bool BeginCastSpell(TSubclassOf<UMySpell> spellToCast);
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    float GetCurrentIncantationTime() const;
@@ -45,8 +49,12 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    float GetCurrentChannelingTime() const;
 
-   /** Activates the ability when we're in position. Some abilities are casted in phases, which means they get replaced by another spell.  
+   /**
+    * Activates the ability when we're in position AND after we've incanted. It represents us having to focus energy while the spell is activating.
+    * Some abilities are casted in phases, which means they get replaced by another spell.  
     * Also used for item usage (which also triggers abilities).
+    * Some spells require another channeling after we've activated it. That means it's blocked until it gets an event raised from a "Confirmation Spell".
+    * This event is raised once channeling is finished.
     * @param spellToCast - Spell we want to cast.  Left as a parameter because we can cast 
     * @return  - Returns true if successful cast, or false on unsuccessful cast. In multiplayer, the cast may still fail due to some desync between server.
     */
@@ -63,9 +71,6 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
    void AdjustCastingPosition(TSubclassOf<UMySpell> spellClass, AActor* spellTargetActor);
 
    FOnSpellCasted& OnSpellCasted() { return OnSpellCastedEvent; }
-
-   /** Name used to notify AI observers that a spell has been casted*/
-   inline static const FName AIMessage_SpellCasted = TEXT("SpellCasted!");
 
  protected:
    void BeginPlay() override;
@@ -85,23 +90,18 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
  private:
    void OnUnitStopped();
 
+   void OnChannelingFinished();
+	
    void NotifyAIAboutSpellCast() const;
 
    int GetRange(TSubclassOf<UMySpell> spellClass) const;
 
-   /**Checks to see if spell has a cast time. If so, it will start channeling (incantation) process.  Else it will just cast the spell*/
+   /** 
+    * After we're in position we need to see  if spell has a cast time. If so, it will start channeling (incantation) process. Else it will just cast the spell instantly.
+   */
    void IncantationCheck(TSubclassOf<UMySpell> spellToCast);
 
-   void BeginUnitChaneling(TSubclassOf<UMySpell> spellToCast);
-
-   /**If the spell has the "Skill.Channeling" tag then it requires us to channel after the incantation aka unit has to focus energy into the spell*/
-   virtual void SpellChanneling(TSubclassOf<UMySpell> spellToCast);
-
-   void HandleVeryCloseTarget();
-
-   bool SpellRepositionCheckAndFix(TSubclassOf<UMySpell> spellClass);
-
-   void TestAndPlayAnimation(UAnimMontage* montageToPlay, float animPlayTime);
+   void PlayCastAnimIfValid(UAnimMontage* montageToPlay, float animPlayTime);
 
    TSubclassOf<class UMySpell>       currentSpell;
    class AUnit*                      unitOwnerRef;

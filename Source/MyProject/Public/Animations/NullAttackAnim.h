@@ -19,26 +19,29 @@ class MYPROJECT_API UNullAttackAnim : public UAnimInstance, public IAttackAnim
    /** By default the parent class looks for a mesh if we don't have one so we should be fine to set this */
    UNullAttackAnim();
 
-   void        PlayAttackAnimation(float playRate) override;
-   void        StopAttackAnimation() override;
-   FORCEINLINE FOnHitNotify& OnAttackNotify() override { return OnAttackNotifyEvent; }
+   void          PlayAttackAnimation(float playRate) override;
+   void          StopAttackAnimation() override;
+   FOnHitNotify& OnAttackNotify() override { return OnAttackNotifyEvent; }
 
    float GetMockAnimationLength() const;
+	
    void  SetMockAnimationLength(float newLength);
+	
    void  SetupNotifyEvent(float notifyTime);
+	
    /** Requires us to create a new timeline since there's nothing in FTimeline's API to delete an event*/
    void SetAttackEventTime(float newTime);
 
  protected:
-
-   /** Mock notification function broadcasts the hit delegate delegate*/
+   /**
+    * Mock notification function broadcasts the hit delegate delegate
+    */
    UFUNCTION()
-   void AttackNotify() const;
+   void AttackNotify() override;
 
    void NativeUpdateAnimation(float DeltaSeconds) override;
 
  private:
    FOnHitNotify OnAttackNotifyEvent;
-   FTimeline       mockAnimationTimeline;
+   FTimeline    mockAnimationTimeline;
 };
-

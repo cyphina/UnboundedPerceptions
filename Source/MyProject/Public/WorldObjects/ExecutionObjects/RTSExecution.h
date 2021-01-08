@@ -6,7 +6,7 @@
 UINTERFACE(MinimalAPI)
 class URTSExecution : public UInterface
 {
-   GENERATED_UINTERFACE_BODY()
+   GENERATED_BODY()
 };
 
 /**Allows us to create a hierarchy of purely behavioral function objects in blueprints that have a specific purpose -
@@ -18,10 +18,9 @@ class URTSExecution : public UInterface
  */
 class IRTSExecution
 {
-   GENERATED_IINTERFACE_BODY()
+   GENERATED_BODY()
 
- public:
+public:
    UFUNCTION(BlueprintNativeEvent)
-   virtual void Execute()                = 0;
-   virtual void Execute_Implementation() = 0;
+   void Execute();
 };

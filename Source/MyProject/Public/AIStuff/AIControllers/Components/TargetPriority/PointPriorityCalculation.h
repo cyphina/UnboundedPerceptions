@@ -7,11 +7,10 @@
 UCLASS()
 class MYPROJECT_API UPointPriorityCalculation : public UObject, public IPriorityCalculation
 {
+   GENERATED_BODY()
+   
  public:
    TArray<UEnvQueryTest*>           GetQueryTestsFromDescriptors(const FGameplayTagContainer& spellDescriptiveTags, const FSpellTargetCriteria& targetCriteria) override;
    UEnvQueryGenerator*              GetGeneratorFromManualTag(FGameplayTag manualTag) override;
    FGameplayAbilityTargetDataHandle GetBestTargetFromDistribution(TSharedPtr<FEnvQueryResult> queryResult) override;
-
- private:
-   GENERATED_BODY()
 };

@@ -16,7 +16,7 @@ class UBehaviorTree;
  * AIs that use the patrol task rely on the AIs having a PatrolComponent
  */
 
-UCLASS(ClassGroup = (Custom), Within = (AAIController), meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (Custom), Within = AIController, meta = (BlueprintSpawnableComponent))
 class MYPROJECT_API UPatrolComponent : public USceneComponent
 {
    GENERATED_BODY()
@@ -31,13 +31,13 @@ class MYPROJECT_API UPatrolComponent : public USceneComponent
    FORCEINLINE FVector GetCurrentPatrolPoint() { return patrolPoints[currentPatrolIndex]; }
 
    UFUNCTION(BlueprintCallable)
-   FORCEINLINE void SetPatrolPoints(TArray<FVector>&& pointsToPatrol) { patrolPoints = pointsToPatrol; }
+   void SetPatrolPoints(const TArray<FVector>& pointsToPatrol) { patrolPoints = pointsToPatrol; }
 
    /**
     * @brief Initiates a patrol command
     */
    UFUNCTION(BlueprintCallable)
-   void Patrol();
+   bool Patrol();
 
    UFUNCTION(BlueprintCallable)
    void StopPatrolling();
@@ -52,11 +52,8 @@ class MYPROJECT_API UPatrolComponent : public USceneComponent
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "NPCMovement", Meta = (MakeEditWidget = true))
    TArray<FVector> patrolPoints;
 
-   /** Called in Patrol task to move unit to next point*/
-   void MoveToNextPatrolPoint(FAIRequestID requestId, EPathFollowingResult::Type moveRes);
-
-   static inline FLinearColor EDITOR_UNSELECTED_PATROL_COLOR = FLinearColor::Black;
-   static inline FLinearColor EDITOR_SELECTED_PATROL_COLOR   = FLinearColor::Blue;
+   static FLinearColor EDITOR_UNSELECTED_PATROL_COLOR;
+   static FLinearColor EDITOR_SELECTED_PATROL_COLOR;
 
  protected:
    virtual void BeginPlay() override final;
@@ -66,7 +63,12 @@ class MYPROJECT_API UPatrolComponent : public USceneComponent
    UBehaviorTree* patrolTree;
 
  private:
+   /** Called in Patrol task to move unit to next point*/
+   void MoveToNextPatrolPoint(FAIRequestID requestId, EPathFollowingResult::Type moveRes);
+
+   bool MoveToNextPointAfterMoveRequestFail(EPathFollowingRequestResult::Type moveRes);
+   
    UBehaviorTreeComponent* ownerBTComp;
 
-	int currentPatrolIndex = -1;
+   int currentPatrolIndex = -1;
 };

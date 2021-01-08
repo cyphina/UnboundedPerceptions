@@ -63,10 +63,10 @@ void AQuest::FindInitialItemAmount(int goalIndex)
 {
    // Figure out how much of this item we have so far
    int itemCount = 0;
-   int itemID    = FCString::Atoi(*questInfo.subgoals[goalIndex].additionalNames[0].ToString());
+   const int itemID    = FCString::Atoi(*questInfo.subgoals[goalIndex].additionalNames[0].ToString());
 
-   for (ABaseHero* hero : questManagerRef->controllerRef->GetBasePlayer()->heroes) {
-      itemCount += hero->backpack->FindItemCount(itemID);
+   for (ABaseHero* hero : questManagerRef->controllerRef->GetBasePlayer()->GetHeroes()) {
+      itemCount += hero->GetBackpack().FindItemCount(itemID);
    }
    currentAmounts[goalIndex] = itemCount;
 }
@@ -88,9 +88,9 @@ void AQuest::CompleteSubGoal(int goalIndex, bool fail)
             currentDescription = FText::Format(NSLOCTEXT("Quest", "Description", "{0}\n\n{1}"), currentDescription, completedGoal.updatedDescription);
             // If this quest is the one selected in the quest journal, update the journal
             if (questManagerRef->questJournalRef->GetSelectedQuest() == this) questManagerRef->questJournalRef->UpdateDetailWindow();
-            questManagerRef->controllerRef->GetWidgetProvider()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Quest", "DetailsUpdated", "Quest Journal Updated!"));
+            URTSIngameWidget::NativeDisplayHelpText(questManagerRef->GetWorld(), NSLOCTEXT("Quest", "DetailsUpdated", "Quest Journal Updated!"));
          } else {
-            questManagerRef->controllerRef->GetWidgetProvider()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Quest", "GoalCompleted", "Quest Goal Completed!"));
+            URTSIngameWidget::NativeDisplayHelpText(questManagerRef->GetWorld(), NSLOCTEXT("Quest", "GoalCompleted", "Quest Goal Completed!"));
          }
          completedGoal.goalState = EGoalState::completedGoal;
       } else
@@ -106,7 +106,7 @@ void AQuest::CompleteSubGoal(int goalIndex, bool fail)
       for (FGoalInfo& goal : questInfo.subgoals) {
          if (goal.goalState == EGoalState::lockedGoal) {
             // Attempt to remove this goal from any goals that required this goal as a prereq.  
-            int numRemoved = goal.requiredSubGoalIndices.Remove(goalIndex);
+            const int numRemoved = goal.requiredSubGoalIndices.Remove(goalIndex);
             // If a goal was removed and there are no more required goals, then this is OUR NEW GOAL~!
             if (numRemoved && !goal.requiredSubGoalIndices.Num()) { 
                currentGoalIndices.Add(index);

@@ -7,29 +7,32 @@
 
 class ABaseHero;
 
-/**Use this uobject to expose the interface to blueprints*/
+/**
+ * @brief UObject corresponding to interface which holds behaviors for all objects that can be interacted with.
+ */
 UINTERFACE(BlueprintType, MinimalAPI)
-class MYPROJECT_API UInteractable : public UInterface
+class UInteractable : public UInterface
 {
    GENERATED_UINTERFACE_BODY()
 };
 
-class MYPROJECT_API IInteractable
+class IInteractable
 {
    GENERATED_IINTERFACE_BODY()
 
  public:
-   /** classes using this interface must implement this function
+   /**
+    * Action that occurs when a player interacts with this interactable by clicking on it
     * @param hero - The hero who interacted with this interactable
     */
    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
-   void Interact(ABaseHero* hero);
+   void         Interact(ABaseHero* hero);
 
    /** Classes using this interface must implement this function */
    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
-   FVector GetInteractableLocation() const;
+   FVector         GetInteractableLocation() const;
 
    /**Can this interactable be used?*/
    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
-   bool CanInteract() const;
+   bool         CanInteract() const;
 };

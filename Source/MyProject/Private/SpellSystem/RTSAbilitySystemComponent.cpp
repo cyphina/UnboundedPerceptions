@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "RTSAbilitySystemComponent.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "BrainComponent.h"
 
 #include "IUnitState.h"
@@ -33,7 +35,7 @@ int URTSAbilitySystemComponent::FindSlotIndexOfSpell(TSubclassOf<UMySpell> spell
    return abilities.Find(spellToLookFor);
 }
 
-bool URTSAbilitySystemComponent::CanCast(TSubclassOf<UMySpell> spellToCheck)
+bool URTSAbilitySystemComponent::CanCast(TSubclassOf<UMySpell> spellToCheck) const
 {
    UMySpell* spell = spellToCheck.GetDefaultObject();
 
@@ -41,7 +43,7 @@ bool URTSAbilitySystemComponent::CanCast(TSubclassOf<UMySpell> spellToCheck)
          return registeredAbilitySpec.Ability == spellToCheck.GetDefaultObject();
       })) {
       if(spell->GetCost(this) <= unitOwnerRef->FindComponentByClass<UUpStatComponent>()->GetVitalCurValue(EVitals::Mana)) {
-         if(!spell->IsOnCD(this) && !USpellDataLibrary::IsStunned(*this) && !USpellDataLibrary::IsSilenced(*this)) { return true; }
+         if(!spell->IsOnCD(this) && !USpellDataLibrary::IsStunned(this) && !USpellDataLibrary::IsSilenced(this)) { return true; }
       }
    }
    return false;
@@ -233,11 +235,11 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
       FGameplayTag purgeDesc =
           Spec.Def->InheritableGameplayEffectTags.CombinedTags.Filter(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Purge"))).First();
 
-      TArray<FActiveGameplayEffectHandle> removeableEffects = GetActiveEffects(ClearQuery);
-      for(int i = 0; i < USpellFunctionLibrary::GetPurgeValue(purgeDesc) && i < removeableEffects.Num(); ++i) {
-         // do some kind of roll to see if it will be disabled
+      TArray<FActiveGameplayEffectHandle> removableEffects = GetActiveEffects(ClearQuery);
+      for(int i = 0; i < USpellDataLibrary::purgeTagMap[purgeDesc] && i < removableEffects.Num(); ++i) {
+         // TODO: Do some kind of roll to see if it the spell is successfully purged
          // GetActiveGameplayEffect(activeEffectHandle)->Spec.GetSetByCallerMagnitude()
-         RemoveActiveGameplayEffect(removeableEffects[i]);
+         RemoveActiveGameplayEffect(removableEffects[i]);
       }
    }
 
@@ -268,7 +270,7 @@ TSubclassOf<UMySpell> URTSAbilitySystemComponent::GetSpellAtSlot(int index) cons
 
 void URTSAbilitySystemComponent::SetSpellAtSlot(TSubclassOf<UMySpell> spellClassToSet, int slotIndex)
 {
-   if(slotIndex >= 0 && slotIndex < abilities.Num()) abilities[slotIndex] = spellClassToSet;
+   if(slotIndex >= 0 && slotIndex < abilities.Num()) { abilities[slotIndex] = spellClassToSet; }
 }
 
 void URTSAbilitySystemComponent::TryRemoveInvisibility()
@@ -277,14 +279,46 @@ void URTSAbilitySystemComponent::TryRemoveInvisibility()
    if(invis) RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
 }
 
-void URTSAbilitySystemComponent::ApplyDamageToSelf()
+void URTSAbilitySystemComponent::ApplyDamageToSelf(FDamageScalarStruct damageScalars, FGameplayTag attackElement)
 {
-   UGameplayEffect* e = URTSDamageEffect::StaticClass()->GetDefaultObject<UGameplayEffect>();
-   ApplyGameplayEffectToSelf(e, UGameplayEffect::INVALID_LEVEL, FGameplayEffectContextHandle());
+   const auto damageEffect = MakeDamageEffect(damageScalars, attackElement);
+   ApplyGameplayEffectSpecToSelf(*damageEffect.Data.Get(), FPredictionKey());
 }
 
-void URTSAbilitySystemComponent::ApplyDamageToTarget(URTSAbilitySystemComponent* targetComponent)
+void URTSAbilitySystemComponent::ApplyDamageToTarget(URTSAbilitySystemComponent* targetComponent, FDamageScalarStruct damageScalars, FGameplayTag attackElement)
 {
-   UGameplayEffect* e = URTSDamageEffect::StaticClass()->GetDefaultObject<UGameplayEffect>();
-   ApplyGameplayEffectToTarget(e, targetComponent);
+   const auto damageEffect = MakeDamageEffect(damageScalars, attackElement);
+   ApplyGameplayEffectSpecToTarget(*damageEffect.Data.Get(), targetComponent);
+}
+
+FGameplayAbilitySpec* URTSAbilitySystemComponent::FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass)
+{
+   return const_cast<FGameplayAbilitySpec*>(AsConst(this)->FindAbilitySpecFromClass(InAbilityClass));
+}
+
+const FGameplayAbilitySpec* URTSAbilitySystemComponent::FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass) const
+{
+   for(const FGameplayAbilitySpec& Spec : ActivatableAbilities.Items) {
+      if(Spec.Ability->GetClass() == InAbilityClass) { return &Spec; }
+   }
+   return nullptr;
+}
+
+FGameplayEffectSpecHandle URTSAbilitySystemComponent::MakeDamageEffect(FDamageScalarStruct damageScalars, FGameplayTag attackElement)
+{
+   FGameplayEffectContextHandle context = MakeEffectContext();
+   context.AddInstigator(GetOwner(), GetOwner());
+   const FGameplayEffectSpecHandle damageEffectHandle = MakeOutgoingSpec(URTSDamageEffect::StaticClass(), 1, context);
+
+   // Set all the effect's custom magnitude values else it complains
+   UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Strength"), damageScalars.strength);
+   UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Intelligence"),
+                                                                 damageScalars.intelligence);
+   UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Understanding"),
+                                                                 damageScalars.understanding);
+   UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), damageScalars.agility);
+   UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Health"), damageScalars.hitpoints);
+   UAbilitySystemBlueprintLibrary::AddAssetTag(damageEffectHandle, attackElement);
+
+   return damageEffectHandle;
 }

@@ -11,7 +11,6 @@ class AUnit;
   * To have a notification event trigger, ensure we have an event named
   * AnimNotify_<EVENTNAME> in our animation BP. We can do this in C++ too - just add
   * it to the UAnimInstance derived type. Ensure our event is a UFUNCTION.
-  * In our standard RTSUnitAnim
   */
 UCLASS()
 class MYPROJECT_API UMontageAttackAnim : public UObject, public IAttackAnim
@@ -21,10 +20,13 @@ class MYPROJECT_API UMontageAttackAnim : public UObject, public IAttackAnim
  public:
    UMontageAttackAnim();
 
+   UFUNCTION()
+   void AttackNotify() override;
+   
    void          PlayAttackAnimation(float playRate) override;
    void          StopAttackAnimation() override;
    FOnHitNotify& OnAttackNotify() override;
-
+   
  protected:
    AUnit* unitRef;
 

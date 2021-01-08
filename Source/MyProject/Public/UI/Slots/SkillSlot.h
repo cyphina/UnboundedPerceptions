@@ -20,11 +20,14 @@ class MYPROJECT_API USkillSlot : public UActionSlot
    /* Resumes cooldown effect for the new skill if a new skill is swapped into this skill slot that is on CD */
    void ShowCooldown();
 
- protected:
-   /**Used when changing the skill to a new one*/
+   /**
+    * Used when changing the skill to a new one.
+    * Can be triggered via a spell effect or via the player rearranging their actionbar
+    */
    UFUNCTION(BlueprintCallable, Category = "Update skills")
    void UpdateSkillSlot(TSubclassOf<UMySpell> spell);
 
+ protected:
    void NativeConstruct() override;
 
    // Cooldown radial coloring

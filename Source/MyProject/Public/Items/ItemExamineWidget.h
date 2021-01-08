@@ -16,9 +16,6 @@ class MYPROJECT_API UItemExamineWidget : public UMyUserWidget
 {
    GENERATED_BODY()
 
-   UPROPERTY()
-   class AHUDManager* hudManagerRef;
-
  public:
    void NativeConstruct() override;
 
@@ -34,10 +31,14 @@ class MYPROJECT_API UItemExamineWidget : public UMyUserWidget
    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
    TMap<int, TSoftObjectPtr<UTexture>> itemIDToDetailedPicture;
 
- private:
+ protected:
    UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
    UButton* btnClose;
 
+ private:
    UFUNCTION()
    void CloseMenu();
+
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
 };

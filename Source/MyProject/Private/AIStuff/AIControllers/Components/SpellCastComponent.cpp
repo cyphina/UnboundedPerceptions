@@ -1,13 +1,12 @@
 #include "AIControllers/Components/SpellCastComponent.h"
-
 #include "BrainComponent.h"
+#include "SpellDataLibrary.h"
 #include "AIControllers/Components/RTSStateComponent.h"
 #include "SpellSystem/AbilityExtensions/SpellTargeting/SpellTargetingTypes.h"
 #include "TargetComponent.h"
-
+#include "UnitMessages.h"
 #include "Unit.h"
 #include "UnitController.h"
-
 #include "SpellSystem/MySpell.h"
 #include "SpellSystem/RTSAbilitySystemComponent.h"
 
@@ -37,7 +36,7 @@ void USpellCastComponent::OnUnitStopped()
 
 void USpellCastComponent::NotifyAIAboutSpellCast() const
 {
-   FAIMessage msg(AIMessage_SpellCasted, unitOwnerRef);
+   const FAIMessage msg(UnitMessages::AIMessage_SpellCasted, unitOwnerRef);
    FAIMessage::Send(unitOwnerRef, msg);
 }
 
@@ -63,15 +62,11 @@ void USpellCastComponent::AdjustCastingPosition(TSubclassOf<UMySpell> spellClass
    }
 }
 
-bool USpellCastComponent::SpellRepositionCheckAndFix(TSubclassOf<UMySpell> spellClass)
-{
-   return unitOwnerRef->GetUnitController()->AdjustPosition(GetRange(spellClass), unitOwnerRef->GetTargetComponent()->GetTargetLocationVisit(),
-                                                            [this]() { IncantationCheck(GetCurrentSpell()); });
-}
-
 bool USpellCastComponent::BeginCastSpell(TSubclassOf<UMySpell> spellToCast)
 {
    UMySpell* spell = spellToCast.GetDefaultObject();
+
+   // TODO: Add some checks to AI spellcasting maybe so we can make sure designers don't screw up the set queries?
 
    if(IsValid(spell)) {
       if(abilityComponentRef->CanCast(spellToCast)) {
@@ -83,7 +78,7 @@ bool USpellCastComponent::BeginCastSpell(TSubclassOf<UMySpell> spellToCast)
             return true;
          }
 
-         AdjustCastingPosition(spellToCast, unitOwnerRef->GetTargetComponent()->GetTargetLocationVisit());
+         spell->GetTargeting()->AdjustCastPosition(this, spellToCast, unitOwnerRef->GetTargetComponent());
          return true;
       }
    } else {
@@ -102,24 +97,41 @@ void USpellCastComponent::CastSpell(TSubclassOf<UMySpell> spellToCast)
 
          const float channelTime = spellToCast.GetDefaultObject()->GetSecondaryTime(unitOwnerRef->GetAbilitySystemComponent());
 
-         if(!spellToCast.Get()->GetDefaultObject<UMySpell>()->AbilityTags.HasTag(FGameplayTag::RequestGameplayTag("Skill.Channeled")) && channelTime > 0)
+         if(!spellToCast.Get()->GetDefaultObject<UMySpell>()->AbilityTags.HasTag(FGameplayTag::RequestGameplayTag("Skill.Channeled")))
             unitOwnerRef->GetUnitController()->Stop();
          else {
-            unitOwnerRef->FindComponentByClass<URTSStateComponent>()->ChangeState(EUnitState::STATE_CHANNELING);
-            GetWorld()->GetTimerManager().SetTimer(
-                incantationTimer,
-                [this]() {
-                   const FGameplayTag confirmTag = FGameplayTag::RequestGameplayTag("Skill.Confirm");
-                   FGameplayEventData eD         = FGameplayEventData();
-                   eD.EventTag                   = confirmTag;
-                   unitOwnerRef->GetAbilitySystemComponent()->HandleGameplayEvent(confirmTag, &eD);
-                },
-                channelTime, false, -1.f);
+            if(channelTime > 0)
+            {
+               unitOwnerRef->FindComponentByClass<URTSStateComponent>()->ChangeState(EUnitState::STATE_CHANNELING);
+               GetWorld()->GetTimerManager().SetTimer(channelingTimer, this, &USpellCastComponent::OnChannelingFinished, channelTime, false, -1.f);
+            }
          }
 
-         TestAndPlayAnimation(castAnimation, channelTime);
+         PlayCastAnimIfValid(castAnimation, channelTime);
          if(CheckSpellCastBreakInvis(spellToCast)) abilityComponentRef->TryRemoveInvisibility();
       }
+   }
+}
+
+void USpellCastComponent::OnChannelingFinished()
+{
+   const FGameplayTag confirmTag = FGameplayTag::RequestGameplayTag("Skill.Confirm");
+   FGameplayEventData eD         = FGameplayEventData();
+   eD.EventTag                   = confirmTag;
+   unitOwnerRef->GetAbilitySystemComponent()->HandleGameplayEvent(confirmTag, &eD);
+   unitOwnerRef->GetUnitController()->Stop();
+}
+
+void USpellCastComponent::IncantationCheck(TSubclassOf<UMySpell> spellToCast)
+{
+   const float castTime = spellToCast.GetDefaultObject()->GetCastTime(unitOwnerRef->GetAbilitySystemComponent());
+   if(UNLIKELY(castTime <= 0))
+      CastSpell(spellToCast);
+   else {
+      unitOwnerRef->FindComponentByClass<URTSStateComponent>()->ChangeState(EUnitState::STATE_INCANTATION);
+      GetWorld()->GetTimerManager().SetTimer(incantationTimer, FTimerDelegate::CreateUObject(this, &USpellCastComponent::CastSpell, spellToCast), castTime, false, -1.f);
+      // TODO: Make a separate animation for this?
+      PlayCastAnimIfValid(incantationAnimation, castTime);
    }
 }
 
@@ -142,19 +154,6 @@ void USpellCastComponent::CancelChanneling()
    }
 }
 
-void USpellCastComponent::IncantationCheck(TSubclassOf<UMySpell> spellToCast)
-{
-   const float castTime = spellToCast.GetDefaultObject()->GetCastTime(unitOwnerRef->GetAbilitySystemComponent());
-   if(UNLIKELY(castTime <= 0))
-      CastSpell(spellToCast);
-   else {
-      unitOwnerRef->FindComponentByClass<URTSStateComponent>()->ChangeState(EUnitState::STATE_INCANTATION);
-      GetWorld()->GetTimerManager().SetTimer(incantationTimer, FTimerDelegate::CreateUObject(this, &USpellCastComponent::CastSpell, spellToCast), castTime, false, -1.f);
-      // TODO: Make a separate animation for i
-      TestAndPlayAnimation(incantationAnimation, castTime);
-   }
-}
-
 float USpellCastComponent::GetCurrentIncantationTime() const
 {
    return currentSpell.GetDefaultObject()->GetCastTime(unitOwnerRef->GetAbilitySystemComponent()) - GetWorld()->GetTimerManager().GetTimerRemaining(incantationTimer);
@@ -165,13 +164,13 @@ float USpellCastComponent::GetCurrentChannelingTime() const
    return currentSpell.GetDefaultObject()->GetSecondaryTime(unitOwnerRef->GetAbilitySystemComponent()) - GetWorld()->GetTimerManager().GetTimerRemaining(channelingTimer);
 }
 
-void USpellCastComponent::TestAndPlayAnimation(UAnimMontage* montageToPlay, float animPlayTime)
+void USpellCastComponent::PlayCastAnimIfValid(UAnimMontage* montageToPlay, float animPlayTime)
 {
-#if IF_WITH_EDITOR || UE_BUILD_DEVELOPMENT || UE_BUILD_TEST
+#if UE_EDITOR || UE_BUILD_DEVELOPMENT || UE_BUILD_TEST
    if(!castAnimation) {
       UE_LOG(LogTemp, Error, TEXT("Forgot to add a cast animation lol..."));
       return;
    }
 #endif
-   unitOwnerRef->PlayAnimMontage(castAnimation, 1 / castTime);
+   unitOwnerRef->PlayAnimMontage(castAnimation, 1 / animPlayTime);
 }

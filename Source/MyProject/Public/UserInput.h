@@ -20,7 +20,7 @@ class UQuestManager;
 class IWidgetToggler;
 class IHUDProvider;
 
-DECLARE_EVENT(this, FOnPlayerControllerSetup);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerControllerSetup);
 
 /**
  * This is the CameraPawnController base class.  It holds input that is common across all types of pawns.  In the RTS/RPG hybrid, there are several different pawns representing different input schemes in the case of
@@ -41,7 +41,6 @@ class MYPROJECT_API AUserInput : public APlayerController
 
    virtual void SetupInputComponent() override; // Bind functionality to input
 
-   UFUNCTION(BlueprintCallable)
    FOnPlayerControllerSetup& OnPlayerControllerSetup() const { return PlayerControllerFinishSetupEvent; }
 
 #pragma region references
@@ -72,6 +71,7 @@ class MYPROJECT_API AUserInput : public APlayerController
    UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = "true"))
    TSubclassOf<AHUDManager> hudManagerClass;
 
+   UPROPERTY(BlueprintAssignable, Meta = (AllowPrivateAccess = true))
    mutable FOnPlayerControllerSetup PlayerControllerFinishSetupEvent;
 
  public:
@@ -87,10 +87,10 @@ class MYPROJECT_API AUserInput : public APlayerController
    FORCEINLINE AHUDManager* GetHUDManager() const { return hudManagerRef; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-   IWidgetToggler* GetWidgetToggler() const;
+   TScriptInterface<IWidgetToggler> GetWidgetToggler() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-   IHUDProvider* GetWidgetProvider() const;
+   TScriptInterface<IHUDProvider> GetWidgetProvider() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    FORCEINLINE ARTSGameState* GetGameState() const { return gameState; }
@@ -112,14 +112,14 @@ class MYPROJECT_API AUserInput : public APlayerController
 
    /**Input stored in the controller can be called despite whatever pawn is possessed*/
 #pragma region input
-   void ToggleBreakMenu() const;
-   void ToggleInventory() const;
-   void ToggleQuestJournal() const;
-   void ToggleQuestList() const;
-   void ToggleCharacterMenu() const;
-   void ToggleEquipmentMenu() const;
-   void ToggleSpellbookMenu() const;
+   void ToggleBreakMenu();
+   void ToggleInventory();
+   void ToggleQuestJournal();
+   void ToggleQuestList();
+   void ToggleCharacterMenu();
+   void ToggleEquipmentMenu();
+   void ToggleSpellbookMenu();
 
-   FORCEINLINE bool NotInMinigame() const;
+   FORCEINLINE bool NotInMinigame();
 #pragma endregion
 };

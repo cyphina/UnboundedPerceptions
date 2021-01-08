@@ -10,3 +10,8 @@ UnitDetailsPanel::UnitDetailsPanel()
 UnitDetailsPanel::~UnitDetailsPanel()
 {
 }
+
+void UnitDetailsPanel::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
+{
+   
+}

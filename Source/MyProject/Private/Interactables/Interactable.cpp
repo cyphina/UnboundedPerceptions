@@ -1,7 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-#include "MyProject.h"
-#include "WorldObjects/BaseHero.h"
+﻿#include "MyProject.h"
 #include "Interactable.h"
 
 // Sets default values

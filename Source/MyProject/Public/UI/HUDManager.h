@@ -40,7 +40,7 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    void ShowConfirmationBox(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty()) override;
    void ShowInputBox(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty()) override;
 
-   void BP_AddHUD_Implementation(uint8 newState) override { AddHUD(newState); }
+   void BP_AddHUD(uint8 newState) override { AddHUD(newState); }
    void BP_AddHUDDialog(FName conversationName, EDialogBoxCloseCase dialogSource) override { ShowDialogWithSource(conversationName, dialogSource); }
    void BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, EDialogBoxCloseCase dialogSource) override { ShowDialogCustomLines(linesToDisplay, dialogSource); }
    FORCEINLINE void BP_AddConfirmationBox(const FText& newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) override
@@ -52,7 +52,7 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
       ShowInputBox(funcName, funcObject, newTitle, newDesc);
    }
 
-   bool IsWidgetOnScreen(HUDs hudToCheck) const override final { return currentlyDisplayedWidgetsBitSet[static_cast<int>(hudToCheck)]; }
+   bool IsWidgetOnScreen(EHUDs hudToCheck) const override final { return currentlyDisplayedWidgetsBitSet[static_cast<int>(hudToCheck)]; }
 
  public:
    URTSIngameWidget* GetIngameHUD() const override;
@@ -87,23 +87,6 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    UPROPERTY(BlueprintReadOnly)
    UMainWidget* mainWidget;
 
- private:
-   bool ShowHiddenWidget(UMyUserWidget* widgetToApply) const;
-   void HideWidgetOnScreen(UMyUserWidget* widgetToApply) const;
-
-   /**
-    * @brief Number of huds we have total. As long as we add new HUD types before this ENUM entry it should be properly updated
-    */
-   static const int HUDCount = static_cast<uint8>(HUDs::HS_Count);
-
-   ARTSGameMode* gameMode;
-   AUserInput*   playerControllerRef;
-
-   /**
-    * @brief Widgets that are on screen
-    */
-   static inline TBitArray<FDefaultBitArrayAllocator> currentlyDisplayedWidgetsBitSet = TBitArray<FDefaultBitArrayAllocator>(false, HUDCount);
-
    /**
     * @brief Stores references to all the widgets for easy on/off toggling via Enum indexing
     */
@@ -113,8 +96,25 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    /**
     * @brief Number of widgets that are blocking (we can't perform actions outside the UI when these are open)
     */
-   UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Widgets")
+   UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Widgets")
    int numWidgetsBlocking;
+
+ private:
+   bool ShowHiddenWidget(UMyUserWidget* widgetToApply) const;
+   void HideWidgetOnScreen(UMyUserWidget* widgetToApply) const;
+
+   /**
+    * @brief Number of huds we have total. As long as we add new HUD types before this ENUM entry it should be properly updated
+    */
+   static const int HUDCount = static_cast<uint8>(EHUDs::HS_Count);
+
+   ARTSGameMode* gameMode;
+   AUserInput*   playerControllerRef;
+
+   /**
+    * @brief Widgets that are on screen
+    */
+   static TBitArray<FDefaultBitArrayAllocator> currentlyDisplayedWidgetsBitSet;
 
    int  showMouseCursorCount   = 0;     // Counter to keep track of how many huds are on screen that want us to show the special hud cursor
    int  enableClickEventsCount = 0;     // Counter to keep track of how many huds are on screen that disable in-game click events

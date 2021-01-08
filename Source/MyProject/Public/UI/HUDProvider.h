@@ -10,33 +10,32 @@ class UConfirmationBox;
 class URTSInputBox;
 class UStartMenu;
 
-UINTERFACE(MinimalAPI)
+UINTERFACE(MinimalAPI, meta = (CannotImplementInterfaceInBlueprint))
 class UHUDProvider : public UInterface
 {
-   GENERATED_UINTERFACE_BODY()
+   GENERATED_BODY()
 };
 
 class IHUDProvider
 {
-   GENERATED_IINTERFACE_BODY()
+   GENERATED_BODY()
 
- public:
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+public:
+   UFUNCTION(BlueprintCallable, Category = "HUDManager")
    virtual URTSIngameWidget* GetIngameHUD() const = 0;
 
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+   UFUNCTION(BlueprintCallable, Category = "HUDManager")
    virtual UBreakMenu* GetBreakMenu() const = 0;
 
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+   UFUNCTION(BlueprintCallable, Category = "HUDManager")
    virtual USettingsMenu* GetSettingsMenu() const = 0;
 
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+   UFUNCTION(BlueprintCallable, Category = "HUDManager")
    virtual UConfirmationBox* GetConfirmationBox() const = 0;
 
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+   UFUNCTION(BlueprintCallable, Category = "HUDManager")
    virtual URTSInputBox* GetInputBox() const = 0;
 
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+   UFUNCTION(BlueprintCallable, Category = "HUDManager")
    virtual UStartMenu* GetStartMenu() const = 0;
 };

@@ -20,7 +20,7 @@ void USpellbookSlot::OnBtnClick()
       CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef()->GetSpellBook()->LearnSpell(slotIndex);
       CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->Update();
    } else {
-      CPCRef->GetWidgetProvider()->GetIngameHUD()->DisplayHelpText(LOCTEXT("PressUpgradeButtonSpellLevelup", "Press the upgrade button before levling up a spell!"));
+      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), LOCTEXT("PressUpgradeButtonSpellLevelup", "Press the upgrade button before levling up a spell!"));
    }
 }
 

@@ -22,6 +22,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "CombatParameters.h"
+#include "HeroInventory.h"
 #include "PartyDelegateStore.h"
 #include "RTSIngameWidget.h"
 #include "RTSSidebarWidget.h"
@@ -57,6 +58,8 @@ void ABaseHero::BeginPlay()
    GiveItemAbilities();
 
    spellbook = USpellBook::CreateSpellBook(this);
+   spellbook->OnSpellLearned().AddUObject(this, &ABaseHero::OnSpellLearned);
+   spellbook->OnSpellUpgraded().AddUObject(this, &ABaseHero::OnSpellUpgraded);
 
    OnPickupItem().BindUObject(this, &ABaseHero::OnItemPickup);
 }
@@ -87,13 +90,18 @@ void ABaseHero::SetEnabled(bool bEnabled)
 {
    Super::SetEnabled(bEnabled);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateStore>()->OnHeroActiveChanged().Broadcast(this, bEnabled);
+   if(bEnabled) {
+      controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->OnItemSelected().AddUObject(this, &ABaseHero::OnItemSelected);
+   } else {
+      controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->OnItemSelected().RemoveAll(this);
+   }
 }
 
-void ABaseHero::CheckGameOverOnDeath(const AUnit& unitThatDied) const
+void ABaseHero::CheckGameOverOnDeath() const
 {
    bool isAllDead = true;
    for(const ABaseHero* hero : controllerRef->GetBasePlayer()->GetHeroes()) {
-      if(!hero->combatInfo->isDead) {
+      if(!hero->GetCombatInfo()->isDead) {
          isAllDead = false;
          break;
       }
@@ -127,9 +135,9 @@ void ABaseHero::SetCurrentExp(int amount)
    }
 }
 
-const Equip_Slot_Arr& ABaseHero::GetEquipment() const
+const UEquipmentContainer* ABaseHero::GetEquipment() const
 {
-   return equipment->GetEquips();
+   return equipment;
 }
 
 void ABaseHero::LevelUp_Implementation()
@@ -169,15 +177,14 @@ void ABaseHero::Equip(const int backpackIndex)
       if(!ensure(backpack->AddItem(item))) UE_LOG(LogTemp, Error, TEXT("Impossible case reached no space to swap equipment"));
    }
 
-   ItemChangeEvents::OnEquipmentChangedEvent.Broadcast(this, backpackIndex);
+   ItemChangeEvents::OnEquipmentChangedEvent.Broadcast(this, backpack->GetItem(backpackIndex));
 }
 
 void ABaseHero::Unequip(const int unequipSlot) const
 {
-   if(equipment->GetEquips()[unequipSlot]) {
+   if(const int equipId = equipment->GetEquipAtSlot(unequipSlot)) {
       if(backpack->Count() < backpack->GetItemMax()) {
-         const int itemID       = equipment->GetEquips()[unequipSlot];
-         FMyItem   changedEquip = FMyItem(itemID);
+         FMyItem   changedEquip = FMyItem(equipId);
          backpack->AddItem(changedEquip);
          equipment->Unequip(unequipSlot);
          ItemChangeEvents::OnEquipmentChangedEvent.Broadcast(this, changedEquip);
@@ -189,7 +196,7 @@ void ABaseHero::Unequip(const int unequipSlot) const
 void ABaseHero::SwapEquip(int equipSlot1, int equipSlot2)
 {
    equipment->SwapEquips(equipSlot1, equipSlot2);
-   ItemChangeEvents::OnEquipmentChangedEvent.Broadcast(this, -1);
+   ItemChangeEvents::OnEquipmentChangedEvent.Broadcast(this, FMyItem(-1, 0));
 }
 
 void ABaseHero::OnSpellCasted(TSubclassOf<UMySpell> spellCasted)
@@ -198,6 +205,34 @@ void ABaseHero::OnSpellCasted(TSubclassOf<UMySpell> spellCasted)
    if(currentItemId.GetValue()) {
       if(backpack->FindItem(currentItemId.GetValue()) != INDEX_NONE) { backpack->RemoveItem(FMyItem(currentItemId.GetValue())); }
    }
+}
+
+void ABaseHero::OnItemSelected(int hIndex, int itemUsedSlotIndex)
+{
+   const FMyItem      itemUsed = GetBackpack().GetItem(itemUsedSlotIndex);
+   const FGameplayTag itemType = UItemManager::Get().GetItemInfo(itemUsed.id)->itemType;
+
+   if(this->heroIndex == hIndex) {
+      if(itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Equippable"))) {
+         Equip(itemUsedSlotIndex);
+         ItemChangeEvents::OnItemUsedEvent.Broadcast(this, itemUsed);
+      } else if(itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Consumeable"))) {
+         GetHeroController()->BeginUseItem(itemUsed.id, itemUsedSlotIndex);
+         ItemChangeEvents::OnItemUsedEvent.Broadcast(this, itemUsed);
+      } else {
+         UE_LOG(LogTemp, Log, TEXT("ERROR WITH ITEM TYPE"));
+      }
+   }
+}
+
+void ABaseHero::OnSpellLearned(TSubclassOf<UMySpell> spellLearned)
+{
+   --skillPoints;
+}
+
+void ABaseHero::OnSpellUpgraded(TSubclassOf<UMySpell> spellLearned)
+{
+   --skillPoints;
 }
 
 void ABaseHero::LoadSavedTriggers() const

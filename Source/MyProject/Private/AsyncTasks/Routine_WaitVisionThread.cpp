@@ -7,7 +7,7 @@
 
 URoutine_WaitVisionThread* URoutine_WaitVisionThread::WaitVisionAsync(UObject* worldContextObject)
 {
-   UWorld* world = GEngine->GetWorldFromContextObject(worldContextObject);
+   UWorld* world = GEngine->GetWorldFromContextObjectChecked(worldContextObject);
    if(!world) return nullptr;
 
    URoutine_WaitVisionThread* action = NewObject<URoutine_WaitVisionThread>();

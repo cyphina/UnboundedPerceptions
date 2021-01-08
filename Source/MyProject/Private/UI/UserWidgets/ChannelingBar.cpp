@@ -20,11 +20,11 @@ FText UChannelingBar::GetChannelingName()
 
 float UChannelingBar::GetSpellChannelProgress()
 {
-   // The unit could die while we have the channelbar visible so we need a nullcheck
+   // The unit could die while we have the channelingbar visible so we need a null check
    AUnit* channelingUnit = controllerRef->GetBasePlayer()->GetFocusedUnit();
    if(IsValid(channelingUnit)) {
       // TODO: Update this via timer
-      return channelingUnit->GetUnitController()->FindComponentByClass<USpellCastComponent>()->GetCurrentChannelTime() /
+      return channelingUnit->GetUnitController()->FindComponentByClass<USpellCastComponent>()->GetCurrentChannelingTime() /
              channelingUnit->GetUnitController()->FindComponentByClass<USpellCastComponent>()->GetCurrentSpell().GetDefaultObject()->GetCastTime(
                  channelingUnit->GetAbilitySystemComponent());
    }

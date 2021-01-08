@@ -57,8 +57,8 @@ void UStatgraphWidget::ShowElementalOffensive()
             writer->WriteValue("statName", statName);
             writer->WriteIdentifierPrefix("values");
             writer->WriteArrayStart();
-            writer->WriteValue(focusedUnit->statComponent->GetSkillBaseValue(stat));
-            writer->WriteValue(focusedUnit->statComponent->GetSkillAdjValue(stat));
+            writer->WriteValue(focusedUnit->GetStatComponent()->GetSkillBaseValue(stat));
+            writer->WriteValue(focusedUnit->GetStatComponent()->GetSkillAdjValue(stat));
             writer->WriteArrayEnd();
             writer->WriteObjectEnd();
          }
@@ -85,8 +85,8 @@ void UStatgraphWidget::ShowElementalDefense()
             writer->WriteValue("statName", statName);
             writer->WriteIdentifierPrefix("values");
             writer->WriteArrayStart();
-            writer->WriteValue(focusedUnit->statComponent->GetSkillBaseValue(stat));
-            writer->WriteValue(focusedUnit->statComponent->GetSkillAdjValue(stat));
+            writer->WriteValue(focusedUnit->GetStatComponent()->GetSkillBaseValue(stat));
+            writer->WriteValue(focusedUnit->GetStatComponent()->GetSkillAdjValue(stat));
             writer->WriteArrayEnd();
             writer->WriteObjectEnd();
          }
@@ -114,8 +114,8 @@ void UStatgraphWidget::ShowMechanics()
          writer->WriteValue("statName", eBonus->GetNameStringByIndex(static_cast<uint8>(mech)));
          writer->WriteIdentifierPrefix("values");
          writer->WriteArrayStart();
-         writer->WriteValue(focusedUnit->statComponent->GetMechanicBaseValue(mech));
-         writer->WriteValue(focusedUnit->statComponent->GetMechanicAdjValue(mech));
+         writer->WriteValue(focusedUnit->GetStatComponent()->GetMechanicBaseValue(mech));
+         writer->WriteValue(focusedUnit->GetStatComponent()->GetMechanicAdjValue(mech));
          writer->WriteArrayEnd();
          writer->WriteObjectEnd();
       }
@@ -126,8 +126,8 @@ void UStatgraphWidget::ShowMechanics()
             writer->WriteValue("statName", eBonus2->GetNameStringByIndex(static_cast<uint8>(stat)));
             writer->WriteIdentifierPrefix("values");
             writer->WriteArrayStart();
-            writer->WriteValue(focusedUnit->statComponent->GetSkillBaseValue(stat));
-            writer->WriteValue(focusedUnit->statComponent->GetSkillAdjValue(stat));
+            writer->WriteValue(focusedUnit->GetStatComponent()->GetSkillBaseValue(stat));
+            writer->WriteValue(focusedUnit->GetStatComponent()->GetSkillAdjValue(stat));
             writer->WriteArrayEnd();
             writer->WriteObjectEnd();
          }
@@ -152,8 +152,8 @@ void UStatgraphWidget::ShowVitals()
          writer->WriteValue("statName", eBonus->GetNameStringByIndex(static_cast<uint8>(vit)));
          writer->WriteIdentifierPrefix("values");
          writer->WriteArrayStart();
-         writer->WriteValue(focusedUnit->statComponent->GetVitalBaseValue(vit));
-         writer->WriteValue(focusedUnit->statComponent->GetVitalAdjValue(vit));
+         writer->WriteValue(focusedUnit->GetStatComponent()->GetVitalBaseValue(vit));
+         writer->WriteValue(focusedUnit->GetStatComponent()->GetVitalAdjValue(vit));
          writer->WriteArrayEnd();
          writer->WriteObjectEnd();
       }
@@ -193,7 +193,7 @@ void UStatgraphWidget::UpdateBaseStat(const FGameplayAttribute& attributeModifie
 
 void UStatgraphWidget::CreateAndSendStatUpdate(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected, const FString& keyName)
 {
-   if(cpcRef->GetWidgetToggler()->IsWidgetOnScreen(HUDs::HS_Character)) { // Only send an update to the browser if it is on screen
+   if(cpcRef->GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Character)) { // Only send an update to the browser if it is on screen
       if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit) {
          if(focusedUnit == unitAffected) { // Make sure the stat that is updated is one pertaining to the unit we are looking at information for
             FString heroInfoString;

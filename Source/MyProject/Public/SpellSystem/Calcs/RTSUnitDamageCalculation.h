@@ -10,6 +10,6 @@ class MYPROJECT_API URTSUnitDamageCalculation : public URTSDamageCalculation
    GENERATED_BODY()
 
  private:
-   void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& executionParams, FGameplayEffectCustomExecutionOutput& outExecutionOutput) override;
+   void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& executionParams, FGameplayEffectCustomExecutionOutput& outExecutionOutput) const override;
    void DamageTarget(FUpDamage& d, FGameplayTagContainer effects) const override;
 };

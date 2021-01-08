@@ -9,12 +9,12 @@ class AUnit;
 UINTERFACE(MinimalAPI)
 class UAllUnitsContext : public UInterface
 {
-   GENERATED_UINTERFACE_BODY()
+   GENERATED_BODY()
 };
 
 class IAllUnitsContext
 {
-   GENERATED_IINTERFACE_BODY()
+   GENERATED_BODY()
 
  public:
    /** Registers an ally in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */

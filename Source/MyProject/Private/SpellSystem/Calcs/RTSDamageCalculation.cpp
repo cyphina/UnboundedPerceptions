@@ -38,8 +38,8 @@ void URTSDamageCalculation::BroadcastDamageEvents(FUpDamage& d) const
    // Used for skills like soul assumption (dota)
    DamageEvents::OnDamageEvent.Broadcast(d);
    // Used to do unit specific damage tracking (including death for received)
-   d.sourceUnit->OnUnitDamageDealtEvent.Execute(d);
-   d.sourceUnit->OnUnitDamageReceivedEvent.Execute(d);
+   d.sourceUnit->OnUnitDamageDealt().Broadcast(d);
+   d.targetUnit->OnUnitDamageReceived().Broadcast(d);
 }
 
 void URTSDamageCalculation::CalculateDamage(FUpDamage& d, FGameplayTagContainer& effects) const
@@ -71,10 +71,10 @@ void URTSDamageCalculation::ReceiveEffects(FUpDamage& d, FGameplayTagContainer& 
    if(effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.NeverMiss"))) d.accuracy = 0;
 
    // This tag means that the target unit is a ward and can only take 1 damage maximum
-   if(USpellDataLibrary::IsWard(*d.targetUnit->GetAbilitySystemComponent())) d.damage = -1;
+   if(USpellDataLibrary::IsWard(d.targetUnit->GetAbilitySystemComponent())) d.damage = -1;
 
    // This tag means that
-   if(USpellDataLibrary::IsGodMode(*d.targetUnit->GetAbilitySystemComponent())) d.damage = 0;
+   if(USpellDataLibrary::IsGodMode(d.targetUnit->GetAbilitySystemComponent())) d.damage = 0;
 }
 
 void URTSDamageCalculation::PrintDamageCalcsBeforeProcessing(FUpDamage& d, const int damageRange)

@@ -2,31 +2,35 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "GameplayEffect.h"
+#include "TargetComponent.h"
+
 #include "RTSProjectile.generated.h"
 
-/**Sets what kind of targets this bullet can hit*/
-UENUM(BlueprintType)
-enum class EBulletTargettingScheme : uint8 {
-   Bullet_Ally,  // hits allies
-   Bullet_Enemy, // hits enemies
-   Bullet_Either // hits both
-};
+class URTSProjectileStrategy;
 
+/**
+ * @brief Base class for all simple projectiles that can be fired in a direction or is homing.
+ * TODO: Add some functionality for bullet patterns?
+ */
 UCLASS()
 class MYPROJECT_API ARTSProjectile : public AActor
 {
    GENERATED_BODY()
 
-   UFUNCTION()
-   void OnHit(UPrimitiveComponent* hitComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, FVector normalImpulse, const FHitResult& hit);
-
-   void SetBulletTargetting();
-
  public:
-   ARTSProjectile();
+   static ARTSProjectile* MakeRTSProjectile(UWorld* worldToSpawnIn, UTargetComponent* targetComp, FTransform initialTransform = FTransform::Identity,
+                                            TSubclassOf<ARTSProjectile>   projectileClass    = ARTSProjectile::StaticClass(),
+                                            const URTSProjectileStrategy* projectileStrategy = nullptr);
+
+   UFUNCTION(BlueprintCallable, Category = "Projectile")
+   FORCEINLINE bool IsHoming() { return projectileMovementComponent->bIsHomingProjectile; }
+
+   UPROPERTY(BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
+   TArray<FGameplayEffectSpecHandle> hitEffects;
+
+ protected:
    virtual void BeginPlay() override;
    virtual void Tick(float DeltaTime) override;
 
@@ -36,25 +40,16 @@ class MYPROJECT_API ARTSProjectile : public AActor
    UPROPERTY(VisibleAnywhere, Category = "Movement")
    UProjectileMovementComponent* projectileMovementComponent;
 
-   UPROPERTY(VisibleAnywhere, Category = "Projectile")
+   UPROPERTY(EditAnywhere, Category = "Projectile")
    UStaticMeshComponent* bulletMesh;
 
-   UPROPERTY(BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
-   TArray<FGameplayEffectSpecHandle> hitEffects;
+ private:
+   ARTSProjectile();
 
-   UPROPERTY(BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
-   EBulletTargettingScheme targetting;
+   UFUNCTION()
+   void OnHit(UPrimitiveComponent* hitComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, FVector normalImpulse, const FHitResult& hit);
 
-   /**Set this to make bullets go through walls*/
-   UPROPERTY(BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
-   bool canGoThroughWalls = false;
+   void FireInDirection(const FVector& shootDirection) const;
 
-   UFUNCTION(BlueprintCallable, Category = "Projectile")
-   FORCEINLINE bool IsHoming() { return projectileMovementComponent->bIsHomingProjectile; }
-
-   UFUNCTION(BlueprintCallable, Category = "Projectile")
-   void FireInDirection(const FVector& shootDirection);
-
-   UFUNCTION(BlueprintCallable, Category = "Projectile")
-   void FireAtTarget(const AActor* target);
+   void FireAtTarget(const AActor* target) const;
 };

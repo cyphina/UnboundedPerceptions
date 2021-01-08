@@ -18,10 +18,11 @@
 
 #include "AssetRegistryModule.h"
 
-#include "MyProject/Public/UpResourceManager.h"
+#include "Globals/UpResourceManager.h"
 
 #include "RTSGameMode.h"
 #include "MyGameInstance.h"
+#include "UpStatComponent.h"
 
 CSV_DEFINE_CATEGORY(UpLevelLoading, false);
 
@@ -66,8 +67,8 @@ void USaveLoadClass::SetupSaveControllerData()
 void USaveLoadClass::SetupSavePlayerData()
 {
    ABasePlayer* basePlayer  = controllerRef->GetBasePlayer();
-   playerSaveData.money     = basePlayer->money;
-   playerSaveData.heroNum   = basePlayer->heroes.Num();
+   playerSaveData.money     = basePlayer->GetMoney();
+   playerSaveData.heroNum   = basePlayer->GetHeroes().Num();
    playerSaveData.summonNum = basePlayer->summons.Num();
    playerSaveData.npcNum    = basePlayer->npcs.Num();
 
@@ -76,22 +77,22 @@ void USaveLoadClass::SetupSavePlayerData()
    }
 }
 
-void USaveLoadClass::SetupSaveBaseCharacterData(const FBaseCharacter& baseChar, FBaseCharacterSaveInfo& saveInfo)
+void USaveLoadClass::SetupSaveBaseCharacterData(const UUpStatComponent& statComp, FBaseCharacterSaveInfo& saveInfo)
 {
    for(int i = 0; i < CombatInfo::AttCount; ++i) {
-      saveInfo.attributes.Add(baseChar.GetAttribute(i)->GetBaseValue());
+      saveInfo.attributes.Add(statComp.GetAttributeBaseValue(static_cast<EAttributes>(i)));
    }
    for(int i = 0; i < CombatInfo::StatCount; ++i) {
-      saveInfo.skills.Add(baseChar.GetSkill(i)->GetBaseValue());
+      saveInfo.skills.Add(statComp.GetSkillBaseValue(static_cast<EUnitScalingStats>(i)));
    }
    for(int i = 0; i < CombatInfo::VitalCount; ++i) {
-      saveInfo.currentVitals.Add(baseChar.GetMechanic(i)->GetCurrentValue());
-      saveInfo.vitals.Add(baseChar.GetMechanic(i)->GetBaseValue());
+      saveInfo.currentVitals.Add(statComp.GetVitalCurValue(static_cast<EVitals>(i)));
+      saveInfo.vitals.Add(statComp.GetVitalBaseValue(static_cast<EVitals>(i)));
    }
    for(int i = 0; i < CombatInfo::MechanicCount; ++i) {
-      saveInfo.mechanics.Add(baseChar.GetMechanic(i)->GetBaseValue());
+      saveInfo.mechanics.Add(statComp.GetMechanicBaseValue(static_cast<EMechanics>(i)));
    }
-   saveInfo.level = baseChar.GetLevel();
+   saveInfo.level = statComp.GetUnitLevel();
 }
 
 void USaveLoadClass::SetupSaveAllyData(AAlly& ally, FAllySaveInfo& allyInfo)
@@ -100,7 +101,7 @@ void USaveLoadClass::SetupSaveAllyData(AAlly& ally, FAllySaveInfo& allyInfo)
    allyInfo.actorTransform = ally.GetTransform();
    // TODO: Move image data to DataAsset so we can reconfigure it when we load character
 
-   SetupSaveBaseCharacterData(ally.GetBaseCharacter(), allyInfo.baseCSaveInfo);
+   SetupSaveBaseCharacterData(*ally.GetStatComponent(), allyInfo.baseCSaveInfo);
 }
 
 void USaveLoadClass::SetupSaveSummonData()
@@ -118,23 +119,22 @@ void USaveLoadClass::SetupSaveSummonData()
 void USaveLoadClass::SetupSaveHeroData()
 {
    for(int i = 0; i < playerSaveData.heroNum; ++i) {
-      if(ABaseHero* heroRef = controllerRef->GetBasePlayer()->heroes[i]) // NULL check because heroes is always length 4 and can have some empty entries
+      if(ABaseHero* heroRef = controllerRef->GetBasePlayer()->GetHeroes()[i])
       {
          heroesSaveData.Emplace();
          SetupSaveAllyData(*heroRef, heroesSaveData[i].allyInfo);
          heroesSaveData[i].currentExp     = heroRef->GetCurrentExp();
          heroesSaveData[i].expToNextLevel = heroRef->GetExpToLevel();
-         heroesSaveData[i].attPoints      = heroRef->attPoints;
-         heroesSaveData[i].skillPoints    = heroRef->skillPoints;
+         heroesSaveData[i].attPoints      = heroRef->GetAttPoints();
+         heroesSaveData[i].skillPoints    = heroRef->GetSkillPoints();
 
-         // save our spells
-         for(TSubclassOf<UMySpell> spell : heroRef->GetAbilitySystemComponent()->abilities) {
+         for(TSubclassOf<UMySpell> spell : heroRef->GetAbilitySystemComponent()->GetAbilities()) {
             // TODO: Properly setup namespace and keys for each spell in table
             if(spell.GetDefaultObject())
                heroesSaveData[i].spellIDs.Add(spell.GetDefaultObject()->spellDefaults.id);
          }
 
-         heroRef->backpack->SaveBackpack(heroesSaveData[i].backpackInfo);
+         heroRef->GetBackpack().SaveBackpack(heroesSaveData[i].backpackInfo);
       }
    }
 
@@ -174,7 +174,6 @@ void USaveLoadClass::SetupLoad()
 
 void USaveLoadClass::SetupController()
 {
-   GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Testing to see if code can be called after level load!"));
    controllerRef = Cast<AUserInput>(GetOuter()->GetWorld()->GetFirstPlayerController());
    controllerRef->GetCameraPawn()->SetActorTransform(cameraSaveData.cameraTransform);
    controllerRef->GetCameraPawn()->camMoveSpeedMultiplier = cameraSaveData.cameraSpeed;
@@ -187,7 +186,7 @@ void USaveLoadClass::SetupPlayer()
       controllerRef->GetBasePlayer()->LearnDialogTopic(FGameplayTag::RequestGameplayTag(dialogTopic));
    }
 
-   Cast<ABasePlayer>(GetOuter()->GetWorld()->GetGameState()->PlayerArray[0])->money = playerSaveData.money;
+   Cast<ABasePlayer>(GetOuter()->GetWorld()->GetGameState()->PlayerArray[0])->SetMoney(playerSaveData.money);
 }
 
 void USaveLoadClass::SetupAlliedUnits()
@@ -213,13 +212,12 @@ void USaveLoadClass::SetupAlliedUnits()
       }
    }
 
-   // Load hero specific information
    for(FHeroSaveInfo& heroSaveData : heroesSaveData) {
       if(ABaseHero* spawnedHero = UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(*heroSaveData.allyInfo.name.ToString(), controllerRef->GetWorld())) {
          spawnedHero->SetActorTransform(heroSaveData.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedHero, heroSaveData.allyInfo.baseCSaveInfo);
          for(int i = 0; i < heroSaveData.spellIDs.Num(); ++i) {
-            spawnedHero->abilities[i] = USpellDataManager::Get().GetSpellClass(heroSaveData.spellIDs[i]);
+            spawnedHero->GetAbilitySystemComponent()->SetSpellAtSlot(USpellDataManager::GetData().GetSpellClass(heroSaveData.spellIDs[i]), i);
          }
          spawnedHero->attPoints = heroSaveData.attPoints;
          spawnedHero->SetCurrentExp(heroSaveData.currentExp);
@@ -235,7 +233,7 @@ void USaveLoadClass::SetupAlliedUnits()
          spawnedHero = controllerRef->GetWorld()->SpawnActorDeferred<ABaseHero>(heroAsset.GetAsset()->GetClass(), heroSaveData.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedHero, heroSaveData.allyInfo.baseCSaveInfo);
          for(int i = 0; i < heroSaveData.spellIDs.Num(); ++i) {
-            spawnedHero->abilities[i] = USpellDataManager::Get().GetSpellClass(heroSaveData.spellIDs[i]);
+            spawnedHero->GetAbilitySystemComponent()->SetSpellAtSlot(USpellDataManager::GetData().GetSpellClass(heroSaveData.spellIDs[i]), i);
          }
          spawnedHero->attPoints = heroSaveData.attPoints;
          spawnedHero->SetCurrentExp(heroSaveData.currentExp);
@@ -270,16 +268,16 @@ void USaveLoadClass::SetupAlliedUnits()
 void USaveLoadClass::SetupBaseCharacter(AAlly* spawnedAlly, FBaseCharacterSaveInfo& baseCSaveInfo)
 {
    for(int i = 0; i < baseCSaveInfo.attributes.Num(); ++i) {
-      spawnedAlly->baseC->GetAttribute(i)->SetBaseValue(baseCSaveInfo.attributes[i]);
+      spawnedAlly->GetStatComponent()->ModifyStats(baseCSaveInfo.attributes[i], static_cast<EAttributes>(i));
    }
    for(int i = 0; i < baseCSaveInfo.skills.Num(); ++i) {
-      spawnedAlly->baseC->GetSkill(i)->SetBaseValue(baseCSaveInfo.skills[i]);
+      spawnedAlly->GetStatComponent()->ModifyStats(baseCSaveInfo.skills[i], static_cast<EUnitScalingStats>(i));
    }
    for(int i = 0; i < baseCSaveInfo.vitals.Num(); ++i) {
-      spawnedAlly->baseC->GetVital(i)->SetBaseValue(baseCSaveInfo.vitals[i]);
+      spawnedAlly->GetStatComponent()->ModifyStats(baseCSaveInfo.vitals[i], static_cast<EVitals>(i));
    }
    for(int i = 0; i < baseCSaveInfo.mechanics.Num(); ++i) {
-      spawnedAlly->baseC->GetMechanic(i)->SetBaseValue(baseCSaveInfo.mechanics[i]);
+      spawnedAlly->GetStatComponent()->ModifyStats(baseCSaveInfo.mechanics[i], static_cast<EMechanics>(i));
    }
 }
 

@@ -26,75 +26,79 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsConte
 {
    GENERATED_BODY()
 
- public:
+public:
    ARTSGameState();
 
- public:
-   const FUpGameClock& GetGameClock() const { return clock; }
-   void                AddGameTime(FUpTime timeToAdd, FUpDate daysToAdd);
+   UFUNCTION(BlueprintCallable)
+   const TSet<AUnit*>& GetAllFriendlyUnits() const override { return allyList; }
+
+   UFUNCTION(BlueprintCallable)
+   const TSet<AUnit*>& GetAllEnemyUnits() const override { return enemyList; }
+
+   UFUNCTION(BlueprintCallable)
+   const TSet<AUnit*>& GetVisibleEnemies() const override;
+
+   UFUNCTION(BlueprintCallable)
+   const TSet<AUnit*>& GetVisiblePlayerUnits() const override;
+
+   /** Callback to update our time unit when we change game speed (done only within GameSpeedWidget */
+   UFUNCTION()
+   void UpdateGameSpeed(float newSpeedMultiplier);
+
+   /** Registers an ally in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
+   void RegisterFriendlyUnit(AAlly* friendlyUnit) override;
+   /** Registers an enemy in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
+   void RegisterEnemyUnit(AEnemy* enemyUnit) override;
+   /** Removes an ally in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
+   void UnRegisterFriendlyUnit(AAlly* friendlyUnit) override;
+   /** Removes an enemy in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
+   void UnRegisterEnemyUnit(AEnemy* enemyUnit) override;
+
+   const FUpGameClock* GetGameClock() const { return clock.Get(); }
+
+   void AddGameTime(FUpTime timeToAdd, FUpDate daysToAdd);
+   void SetGameTime(FUpTime timeToAdd, FUpDate daysToAdd);
 
    float GetGameSpeed() const override { return speedModifier; }
 
-   UFUNCTION(BlueprintCallable)
    FUpdateGameSpeed OnGameSpeedUpdated() const override { return UpdateGameSpeedDelegate; }
 
- public:
-   /** Registers an ally in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
-   FORCEINLINE void RegisterFriendlyUnit(AAlly* friendlyUnit) override;
-   /** Registers an enemy in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
-   FORCEINLINE void RegisterEnemyUnit(AEnemy* enemyUnit) override;
-   /** Removes an ally in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
-   FORCEINLINE void UnRegisterFriendlyUnit(AAlly* friendlyUnit) override;
-   /** Removes an enemy in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
-   FORCEINLINE void UnRegisterEnemyUnit(AEnemy* enemyUnit) override;
-
-   FORCEINLINE const TSet<AUnit*>& GetAllFriendlyUnits() const override { return allyList; }
-   FORCEINLINE const TSet<AUnit*>& GetAllEnemyUnits() const override { return enemyList; }
-
- public:
-   FORCEINLINE const TSet<AUnit*>& GetVisibleEnemies() const override;
-   FORCEINLINE const TSet<AUnit*>& GetVisiblePlayerUnits() const override;
-
- protected:
+protected:
    void Tick(float deltaSeconds) override;
    void BeginPlay() override;
 
- private:
-   /** Lists all party members that exist between every player (including other teammate players in co op)
-    * Faster to keep stuff in a set for quick removal (granted items are kept together so we don't
-    * suffer in terms of cache coherency.
-    */
-   UPROPERTY(BlueprintReadWrite, Category = "SharedData")
-   TSet<AUnit*> allyList;
+private:
 
-   /** Lists of all enemies in the level */
-   UPROPERTY(BlueprintReadWrite, Category = "SharedData")
-   TSet<AUnit*> enemyList;
+   void OnAllyActiveChanged(AAlly* allyRef, bool isActive);
+   void OnEnemyActiveChanged(AEnemy* enemyRef, bool isActive);
 
    /** As units get killed off due to level unload, we need to make sure these data structures are on good shape when we resume playing in the next level */
    void CleanupUnitLists();
 
- private:
    UPROPERTY(EditDefaultsOnly, Category = "Vision", Meta = (AllowPrivateAccess = true))
    TSubclassOf<AFogOfWarPlane> FOWplaneClass;
-
- private:
-   FUpGameClock clock;
 
    /** How many seconds in game does one second IRL correspond to when at 1x speed? */
    UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
    float defaultGameTimeSpeed = 60;
 
-   float                    speedModifier = 1;
+   UPROPERTY(BlueprintAssignable, Meta = (AllowPrivateAccess = true))
    mutable FUpdateGameSpeed UpdateGameSpeedDelegate;
 
-   /**Callback to update our time unit when we change game speed (done only within GameSpeedWidget*/
-   UFUNCTION()
-   void UpdateGameSpeed(float newSpeedMultiplier);
+   TUniquePtr<FUpGameClock> clock;
 
- private:
-   TUniquePtr<UVisionSubsystem> visionManager;
+   float speedModifier = 1;
 
-   void OnAllyActiveChanged(AAlly* allyRef, bool isActive);
-   void OnEnemyActiveChanged(AEnemy* enemyRef, bool isActive);
+   UPROPERTY()
+   UVisionSubsystem* visionManager;
+
+   /**
+    * Lists all party members that exist between every player (including other teammate players in co op)
+    * Faster to keep stuff in a set for quick removal (granted items are kept together so we don't
+    * suffer in terms of cache coherency.
+    */
+   TSet<AUnit*> allyList;
+
+   /** Lists of all enemies in the level */
+   TSet<AUnit*> enemyList;
 };

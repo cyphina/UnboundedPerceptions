@@ -11,6 +11,7 @@
 #include "WorldObjects/BaseHero.h"
 
 #include "ItemDelegateStore.h"
+#include "PartyDelegateStore.h"
 
 #include "AIStuff/AIControllers/HeroAIController.h"
 
@@ -24,26 +25,25 @@ void UHeroInventory::NativeOnInitialized()
    ItemChangeEvents::OnItemPickedUpEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
    ItemChangeEvents::OnItemPurchasedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
    ItemChangeEvents::OnItemUsedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+   GetOwningLocalPlayer()->GetSubsystem<UPartyDelegateStore>()->OnHeroActiveChanged().AddUObject(this, &UHeroInventory::OnHeroActiveChanged);
 }
 
 void UHeroInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)
 {
    if(!GetBackpack()->IsEmptySlot(iSlot)) {
-      const FMyItem      itemUsed = GetBackpack()->GetItem(iSlot);
-      const FGameplayTag itemType = UItemManager::Get().GetItemInfo(itemUsed.id)->itemType;
-      ABaseHero*         hero     = CPC->GetBasePlayer()->GetHeroes()[hIndex];
-
-      if(itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Equippable"))) {
-         if(hero) { hero->Equip(iSlot); }
-      } else if(itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Consumeable"))) {
-         hero->GetHeroController()->BeginUseItem(itemUsed.id, iSlot);
-      } else {
-         UE_LOG(LogTemp, Log, TEXT("ERROR WITH ITEM TYPE"));
-      }
+      OnItemSelected().Broadcast(hIndex, iSlot);
    }
 }
 
 void UHeroInventory::OnItemChangeEvent(const ABaseHero* heroUsingItem, const FMyItem& item)
 {
    if(GetVisibility() == ESlateVisibility::Visible) LoadItems();
+}
+
+void UHeroInventory::OnHeroActiveChanged(ABaseHero* heroThatChangedActivefState, bool newActiveState)
+{
+   // TODO: Refresh inventory and move from the selected page. Also change hIndex... if we plan to keep it around.
+   if(!newActiveState) {
+      LoadItems();
+   }
 }

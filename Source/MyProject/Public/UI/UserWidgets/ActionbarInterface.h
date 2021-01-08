@@ -33,6 +33,8 @@ class MYPROJECT_API UActionbarInterface : public UMyUserWidget
    UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "View")
    void DeadUnitView();
 
+   UESkillContainer* GetSkillContainer() const { return skillContainerRef; }
+
  protected:
    UPROPERTY(BlueprintReadWrite, Category = "References", meta = (BindWidget))
    UESkillContainer* skillContainerRef;

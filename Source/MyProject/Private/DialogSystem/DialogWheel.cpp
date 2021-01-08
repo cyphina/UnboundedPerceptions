@@ -34,7 +34,7 @@ bool UDialogWheel::OnWidgetAddToViewport_Implementation()
 bool UDialogWheel::HandleSelectedLeafNode()
 {
    if(currentlySelectedTopicNode->GetChildTagNodes().Num() == 0) {
-      hudManagerRef->AddHUD(static_cast<int>(HUDs::HS_Social));
+      hudManagerRef->AddHUD(static_cast<int>(EHUDs::HS_Social));
 
       const FName conversationName = socialWindowRef->GetNPC()->GetConversationName(currentlySelectedTopicNode->GetCompleteTag());
 

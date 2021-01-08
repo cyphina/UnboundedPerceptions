@@ -22,11 +22,12 @@ class MYPROJECT_API UEquipmentMenu : public UMyDraggableWidget
    UFUNCTION(BlueprintCallable)
    ABaseHero* GetEquippedHero() const { return hero; }
 
-   void NativeOnInitialized() override;
-
-   /** Call to redraw what is in equipment*/
+   /** Call to redraw what is in equipment */
    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Equipment")
    void Update();
+
+   void NativeOnInitialized() override;
+
    void Update_Implementation();
 
  protected:
@@ -34,5 +35,5 @@ class MYPROJECT_API UEquipmentMenu : public UMyDraggableWidget
    ABaseHero* hero;
 
  private:
-   void OnEquipmentChanged((const ABaseHero* heroThatChanged, const FMyItem& changedEquip);
+   void OnEquipmentChanged(const ABaseHero* heroThatChanged, const FMyItem& changedEquip);
 };

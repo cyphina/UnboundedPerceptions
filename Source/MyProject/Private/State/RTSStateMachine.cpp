@@ -3,8 +3,6 @@
 
 MovingState       RTSStateMachine::Moving = MovingState();
 IdleState         RTSStateMachine::Idle = IdleState();
-CastingState      RTSStateMachine::Casting = CastingState();
-ChannelingState   RTSStateMachine::Channeling = ChannelingState();
 IncantationState   RTSStateMachine::Incanting = IncantationState();
 ChasingState      RTSStateMachine::Chasing = ChasingState();
 

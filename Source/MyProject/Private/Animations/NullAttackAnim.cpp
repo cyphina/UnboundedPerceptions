@@ -49,7 +49,7 @@ void UNullAttackAnim::SetAttackEventTime(float newTime)
    SetupNotifyEvent(newTime);
 }
 
-void UNullAttackAnim::AttackNotify() const
+void UNullAttackAnim::AttackNotify()
 {
    OnAttackNotifyEvent.Broadcast();
 }

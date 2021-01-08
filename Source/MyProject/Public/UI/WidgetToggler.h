@@ -1,23 +1,23 @@
 ﻿// Created 9/6/20 5:27 PM
 
 #pragma once
+#include "HUDTypes.h"
+#include "DialogStructs.h"
 #include "WidgetToggler.generated.h"
 
-enum class HUDs : unsigned char;
-struct FDialogData;
 enum class EDialogBoxCloseCase : uint8;
 
-UINTERFACE(MinimalAPI)
+UINTERFACE(MinimalAPI, meta = (CannotImplementInterfaceInBlueprint))
 class UWidgetToggler : public UInterface
 {
-   GENERATED_UINTERFACE_BODY()
+   GENERATED_BODY()
 };
 
 class IWidgetToggler
 {
-   GENERATED_IINTERFACE_BODY()
+   GENERATED_BODY()
 
- public:
+public:
    /**Toggle a hud on the screen on/off.  C++ version.*/
    virtual void AddHUD(uint8 newState) = 0;
 
@@ -51,13 +51,12 @@ class IWidgetToggler
    virtual void ShowInputBox(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty()) = 0;
 
    /**Toggle a hud on the screen on/off.  BP_Version.  Do not call with huds that require open parameters, instead call their respective AddHUD function.*/
-   UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "HUD Toggle", meta = (DisplayName = "Add HUD"))
-   void         BP_AddHUD(uint8 newState);
-   virtual void BP_AddHUD_Implementation(uint8 newState) = 0;
+   UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add HUD"))
+   virtual void BP_AddHUD(uint8 newState) = 0;
 
    /**Add dialog HUD by passing in a conversation name*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Hud Dialog with Topic"))
-   virtual void BP_AddHUDDialog(FName conversationName, EDialogBoxCloseCase dialogSource);
+   virtual void BP_AddHUDDialog(FName conversationName, EDialogBoxCloseCase dialogSource) = 0;
 
    /**Add dialog HUD by passing in dialogLines rather than reading off dialogTable*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Hud Dialog with Dialog Lines"))
@@ -72,5 +71,5 @@ class IWidgetToggler
    virtual void BP_AddInputBox(FText newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) = 0;
 
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle")
-   virtual bool IsWidgetOnScreen(HUDs hudToCheck) const = 0;
+   virtual bool IsWidgetOnScreen(EHUDs hudToCheck) const = 0;
 };

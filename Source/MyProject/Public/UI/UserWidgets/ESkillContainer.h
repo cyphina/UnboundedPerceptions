@@ -9,6 +9,7 @@
 class USkillSlot;
 class UMySpell;
 class AAlly;
+class AUnit;
 class UManualSpellComponent;
 
 /**
@@ -21,24 +22,26 @@ class MYPROJECT_API UESkillContainer : public UUserWidget
    GENERATED_BODY()
 
  public:
-   void NativeConstruct() override;
-
-   UPROPERTY(BlueprintReadWrite, Category = "Properties")
-   TArray<USkillSlot*> skillSlots;
-
-   /**Get a skillslot from this container*/
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-   USkillSlot* GetSkillSlot(int index) const;
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors") AAlly* GetAllyRef() const { return allyRef; }
-
-   UFUNCTION(BlueprintSetter, Category = "Accessors")
+   UFUNCTION(Category = "Accessors")
    void SetManualSpellComponentRef(UManualSpellComponent* spellComp) { manualSpellComponent = spellComp; }
 
    UFUNCTION(BlueprintCallable)
    void UseSkill(int skillToUseIndex);
 
+   void NativeConstruct() override;
+
+   UPROPERTY(BlueprintReadWrite, Category = "Properties")
+   TArray<USkillSlot*> skillSlots;
+
+   /**Get a skill slot from this container*/
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
+   USkillSlot* GetSkillSlot(int index) const;
+
  private:
-   UPROPERTY(BlueprintSetter = SetAllyRef)
+   void OnFocusedUnitSpellCasted(AUnit* focusedUnit, int spellIndex);
+
+   AUnit* focusedUnitRef;
+
+   UPROPERTY()
    UManualSpellComponent* manualSpellComponent;
 };

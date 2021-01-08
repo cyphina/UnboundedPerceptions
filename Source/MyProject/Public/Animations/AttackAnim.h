@@ -8,21 +8,21 @@ DECLARE_EVENT(UAttackAnim, FOnHitNotify);
 UINTERFACE(MinimalAPI)
 class UAttackAnim : public UInterface
 {
-   GENERATED_UINTERFACE_BODY()
+   GENERATED_BODY()
 };
 
 class IAttackAnim
 {
-   GENERATED_IINTERFACE_BODY()
+   GENERATED_BODY()
 
  public:
    virtual void PlayAttackAnimation(float playRate = 1) = 0;
 
    virtual void StopAttackAnimation() = 0;
 
-   /** Attack animations have a notify (like when the sword swing connects with the enemy) in which this function should fire off */
+   /** Attack animations have a notify (like when the sword swing connects with the enemy) in which this function should fire off. The animation blueprint should trigger this function */
    virtual void AttackNotify() = 0;
 
-   /** Bind to this to set a function to execute when the animation time corresponding to the damage proc occurs*/
+   /** Bind to this to set a function in C++ to execute when the animation time corresponding to the damage proc occurs */
    virtual FOnHitNotify& OnAttackNotify() = 0;
 };

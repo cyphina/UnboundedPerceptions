@@ -1,9 +1,11 @@
 #pragma once
 
 #include "GameplayTagContainer.h"
+#include "PriorityStructs.h"
 #include "Components/ActorComponent.h"
-#include "UUpPriorityComponent.generated.h"
+#include "PriorityComponent.generated.h"
 
+class UPriorityCalculation;
 struct FSpellTargetCriteria;
 struct FGameplayTag;
 class AUnitController;
@@ -30,35 +32,36 @@ class MYPROJECT_API UUpPriorityComponent : public UActorComponent
 {
    GENERATED_BODY()
 
- public:
+public:
    void FindBestTargetForSpell(TSubclassOf<UMySpell> spell);
 
- protected:
+protected:
    void BeginPlay() override;
 
- private:
+   /** Holds criteria used to pick targets for different kinds of spells. Depending on the type of spell
+    * and the spell's purpose, a different set of tests stored within this object will be picked */
+   UPROPERTY(EditAnywhere)
+   FSpellTargetCriteria targetingCriteria;
+
+private:
+   class UTargetComponent* GetTargetComp() const;
+   UBehaviorTreeComponent* GetBehaviorTreeComp() const;
+   void                    StopBehaviorTreeTargetTask() const;
+   void                    GetCurrentlySelectedSpell() const;
+   void                    CastCurrentlySelectedSpell() const;
+
    AUnitController* unitControllerRef;
 
    /** The class which groups calculations for a particular type of targeting scheme.
     * Different types of targeting requires AI to generate different target types, thus the
     * calculation pipeline needs to be customized for each targeting scheme.*/
-   TUniquePtr<IPriorityCalculation> priorityCalculation;
+   UPROPERTY()
+   TScriptInterface<IPriorityCalculation> priorityCalculation;
 
-   /** Holds criteria used to pick targets for different kinds of spells. Depending on the type of spell
-    * and the spell's purpose, a different set of tests stored within this object will be picked */
-   UPROPERTY(EditAnywhere)
-   const FSpellTargetCriteria* targetingCriteria;
-
-   TUniquePtr<IPriorityCalculation> MakePriorityCalculation(FGameplayTag targetingTag) const;
+   UPriorityCalculation* MakePriorityCalculation(FGameplayTag targetingTag) const;
 
    void OnTargetFound(TSharedPtr<FEnvQueryResult> envQuery);
 
    FGameplayTag          GetManualTag(TSubclassOf<UMySpell> spell) const;
    FGameplayTagContainer GetDescriptorTags(TSubclassOf<UMySpell> spell) const;
-
-   FORCEINLINE class UTargetComponent* GetTargetComp() const;
-   FORCEINLINE UBehaviorTreeComponent* GetBehaviorTreeComp() const;
-   FORCEINLINE void                    StopBehaviorTreeTargetTask() const;
-   FORCEINLINE void                    GetCurrentlySelectedSpell() const;
-   FORCEINLINE void                    CastCurrentlySelectedSpell() const;
 };

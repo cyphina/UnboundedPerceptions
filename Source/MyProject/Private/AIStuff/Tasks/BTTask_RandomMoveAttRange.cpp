@@ -3,6 +3,7 @@
 #include "MyProject.h"
 #include "BTTask_RandomMoveAttRange.h"
 #include "Unit.h"
+#include "UpStatComponent.h"
 #include "AIModule/Classes/BehaviorTree/BlackboardComponent.h"
 #include "NavigationSystem/Public/NavigationSystem.h"
 
@@ -12,10 +13,10 @@ EBTNodeResult::Type UBTTask_RandomMoveAttRange::ExecuteTask(UBehaviorTreeCompone
    AUnit* owner  = Cast<AUnit>(ownerComp.GetAIOwner()->GetPawn());
 
    if (target && owner) {
-      FVector targetLocation = target->GetActorLocation();
+      const FVector targetLocation = target->GetActorLocation();
 
-      float   attackRange  = owner->GetMechanicAdjValue(EMechanics::AttackRange);
-      FVector pointInRange = FVector(FMath::RandPointInCircle(attackRange), 0);
+      const float   attackRange  = owner->GetStatComponent()->GetMechanicAdjValue(EMechanics::AttackRange);
+      const FVector pointInRange = FVector(FMath::RandPointInCircle(attackRange), 0);
 
       UNavigationSystemV1* navSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
       FPathFindingQuery    q(ownerComp.GetOwner(), *navSys->GetDefaultNavDataInstance(), ownerComp.GetOwner()->GetActorLocation(), targetLocation + pointInRange);

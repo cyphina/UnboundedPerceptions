@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 
 #include "UserInput.h"
@@ -7,7 +5,6 @@
 #include "RTSPawn.h"
 
 #include "Unit.h"
-#include "Enemy.h"
 
 #include "UpResourceManager.h"
 
@@ -15,29 +12,52 @@
 
 #include "AIStuff/AIControllers/UnitController.h"
 
-#include "NullAttackAnim.h"
-
-#include "UI/DamageIndicator/DIRender.h"
 #include "UI/Healthbar/HealthbarComp.h"
 #include "UI/HUDManager.h"
-#include "UI/UserWidgets/ActionbarInterface.h"
 
 #include "SpellSystem/RTSAbilitySystemComponent.h"
 #include "SpellSystem/MySpell.h"
-#include "Stats/MyAttributeSet.h"
-#include "SpellSystem/GameplayEffects/RTSDamageEffect.h"
+
 #include "AbilitySystemBlueprintLibrary.h"
-#include "BasePlayer.h"
 
 #include "MyCharacterMovementComponent.h"
 
 #include "BrainComponent.h"
-#include "CombatParameters.h"
 #include "RTSStateComponent.h"
 #include "RTSVisionComponent.h"
 
-#include "TargetComponent.h"
 #include "UpStatComponent.h"
+
+AUnit::AUnit(const FObjectInitializer& objectInitializer) :
+    Super(objectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
+{
+   PrimaryActorTick.bCanEverTick = true;
+   AutoPossessAI                 = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+   RemoveArrowComponent();
+
+   abilitySystemComponent = CreateDefaultSubobject<URTSAbilitySystemComponent>(TEXT("AbilitySystem"));
+
+   visionComponent = CreateDefaultSubobject<URTSVisionComponent>(FName("VisionRadius"));
+   visionComponent->SetupAttachment(RootComponent);
+
+   selectionCircleDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));
+   selectionCircleDecal->SetupAttachment(RootComponent);
+
+   SetupHealthbarComponent();
+
+   SetupCharacterCollision();
+
+   SetupMovementComponent();
+
+   combatInfo                  = MakeUnique<UpCombatInfo>();
+   combatInfo->combatStyle     = ECombatType::Melee;
+   
+   // Turn this off to make sure the unit highlights when hovered over
+   GetMesh()->SetRenderCustomDepth(false);
+}
+
+AUnit::~AUnit() = default;
 
 void AUnit::SetupHealthbarComponent()
 {
@@ -71,34 +91,6 @@ void AUnit::RemoveArrowComponent() const
 {
    // Destroy arrow component so there isn't some random arrow sticking out of our units
    GetComponentByClass(UArrowComponent::StaticClass())->DestroyComponent();
-}
-
-AUnit::AUnit(const FObjectInitializer& objectInitializer) :
-    Super(objectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
-{
-   PrimaryActorTick.bCanEverTick = true;
-   AutoPossessAI                 = EAutoPossessAI::PlacedInWorldOrSpawned;
-   combatInfo                  = MakeUnique<UpCombatInfo>();
-   combatInfo->combatStyle     = ECombatType::Melee;
-
-   RemoveArrowComponent();
-
-   abilitySystemComponent = CreateDefaultSubobject<URTSAbilitySystemComponent>(TEXT("AbilitySystem"));
-
-   visionComponent = CreateDefaultSubobject<URTSVisionComponent>(FName("VisionRadius"));
-   visionComponent->SetupAttachment(RootComponent);
-
-   selectionCircleDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));
-   selectionCircleDecal->SetupAttachment(RootComponent);
-
-   SetupHealthbarComponent();
-
-   SetupCharacterCollision();
-
-   SetupMovementComponent();
-
-   // Turn this off to make sure the unit highlights when hovered over
-   GetMesh()->SetRenderCustomDepth(false);
 }
 
 void AUnit::SetupAbilitiesAndStats()
@@ -141,8 +133,8 @@ void AUnit::BeginPlay()
 
    AlignSelectionCircleWithGround();
 
-   if(auto gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState())) { gameStateRef->OnGameSpeedUpdated().AddUObject(this, &AUnit::OnUpdateGameSpeed); }
-
+   if(auto gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState())) { gameStateRef->OnGameSpeedUpdated().AddDynamic(this, &AUnit::OnUpdateGameSpeed); }
+   
    SetupAbilitiesAndStats();
 
    visionComponent->SetRelativeLocation(FVector::ZeroVector);

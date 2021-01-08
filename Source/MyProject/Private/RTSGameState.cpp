@@ -25,7 +25,8 @@ void ARTSGameState::BeginPlay()
 {
    Super::BeginPlay();
    visionManager = UVisionSubsystem::Create(this);
-   OnGameSpeedUpdated().AddUObject(this, &ARTSGameState::UpdateGameSpeed);
+   clock = MakeUnique<FUpGameClock>(*this, FUpTime(), FUpDate());
+   OnGameSpeedUpdated().AddDynamic(this, &ARTSGameState::UpdateGameSpeed);
 
    // Don't really use this ATM but it's there if we want to play around with it and actually make it a thing we can increase the precision of the model by adding more polygons to the plane
    // and performing more line traces. However it is quite inefficient since we would have to do this for every ally...
@@ -80,18 +81,25 @@ const TSet<AUnit*>& ARTSGameState::GetVisiblePlayerUnits() const
 
 void ARTSGameState::AddGameTime(FUpTime timeToAdd, FUpDate daysToAdd)
 {
-   clock.AddGameTime(timeToAdd, daysToAdd);
+   clock->AddGameTime(timeToAdd, daysToAdd);
+}
+
+void ARTSGameState::SetGameTime(FUpTime timeToAdd, FUpDate daysToAdd)
+{
+   clock->SetGameTime(timeToAdd, daysToAdd);
 }
 
 void ARTSGameState::Tick(float deltaSeconds)
 {
    Super::Tick(deltaSeconds);
-   clock.TickClock(deltaSeconds);
+   clock->TickClock(deltaSeconds);
 }
 
 void ARTSGameState::UpdateGameSpeed(float newSpeedMultiplier)
 {
+   UE_LOG(LogTemp, Warning, TEXT("Setting game speed to: %f"), newSpeedMultiplier);
    speedModifier = newSpeedMultiplier;
+   UGameplayStatics::SetGlobalTimeDilation(GetWorld(), newSpeedMultiplier);
 }
 
 void ARTSGameState::OnAllyActiveChanged(AAlly* allyRef, bool isActive)

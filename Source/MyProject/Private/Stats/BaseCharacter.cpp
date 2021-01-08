@@ -43,9 +43,9 @@ void FBaseCharacter::InitialStatUpdate()
 void FBaseCharacter::InitializeAttributeBaseValues()
 {
    float minVal = MIN_STARTING_ATT_VALUE;
-   for(FGameplayAttribute& att : baseAttributes) {
-      att.GetGameplayAttributeData(attSet)->SetBaseValue(MIN_STARTING_ATT_VALUE);
-      att.SetNumericValueChecked(minVal, attSet);
+   for(FGameplayAttribute* att : baseAttributes) {
+      att->GetGameplayAttributeData(attSet)->SetBaseValue(MIN_STARTING_ATT_VALUE);
+      att->SetNumericValueChecked(minVal, attSet);
    }
 
    for(auto& vital : vitals) {

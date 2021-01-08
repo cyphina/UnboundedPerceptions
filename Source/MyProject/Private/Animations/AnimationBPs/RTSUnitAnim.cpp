@@ -9,11 +9,8 @@
 void URTSUnitAnim::UpdateAnimationProperties()
 {
    if(unitRef) {
-      if(unitRef->GetMovementComponent())
-         bIsFalling = unitRef->GetMovementComponent()->IsFalling();
+      if(unitRef->GetMovementComponent()) bIsFalling = unitRef->GetMovementComponent()->IsFalling();
       movementSpeed = unitRef->GetVelocity().Size();
-      if(attackAnimation)
-         unitRef->OnUnitAttackEvent.AddUObject(this, &URTSUnitAnim::PlayAttackAnimation);
    }
 }
 
@@ -21,9 +18,7 @@ void URTSUnitAnim::NativeBeginPlay()
 {
    Super::NativeBeginPlay();
    APawn* pawn = TryGetPawnOwner();
-   if(pawn) {
-      unitRef = Cast<AUnit>(pawn);
-   }
+   if(pawn) { unitRef = Cast<AUnit>(pawn); }
 }
 
 void URTSUnitAnim::NativeUpdateAnimation(float deltaSeconds)
@@ -37,11 +32,13 @@ void URTSUnitAnim::AttackNotify()
    OnAttackNotifyEvent.Broadcast();
 }
 
-void URTSUnitAnim::PlayAttackAnimation()
+void URTSUnitAnim::PlayAttackAnimation(float playRate)
 {
    //! Scale the animation time based on our attack speed
-   if(!unitRef->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
-      unitRef->PlayAnimMontage(attackAnimation, 2 / unitRef->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Attack_Speed) + 100 * 0.01);
-   }
+   if(!unitRef->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) { unitRef->PlayAnimMontage(attackAnimation, playRate); }
 }
 
+void URTSUnitAnim::StopAttackAnimation()
+{
+   unitRef->StopAnimMontage(attackAnimation);
+}

@@ -50,12 +50,19 @@ class MYPROJECT_API UUpStatComponent : public UActorComponent
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
    FORCEINLINE int GetUnitLevel() const { return baseC->GetLevel(); }
 
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
-   FORCEINLINE void SetUnitLevel(int newLevel) const { return baseC->SetLevel(newLevel); }
+   UFUNCTION(BlueprintCallable, Category = "StatAccessors")
+   void SetUnitLevel(int newLevel) const { return baseC->SetLevel(newLevel); }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
    FORCEINLINE UMyAttributeSet* GetAttSet() const { return baseC->GetAttSet(); }
 
+   /**
+   * Call whenever we want stats to get recalculated. Typically done after a stat change
+   * @param updatedStat - Attribute that was changed
+   */
+   UFUNCTION(BlueprintCallable, Category = "Stats")
+   void UpdateStats(const FGameplayAttribute& updatedStat) const;
+   
    /**
     * @brief Allows us to apply some bonuses to this hero's stat
     * @tparam bModifyBase - Modify the base stat or the adjusted value
@@ -94,15 +101,9 @@ class MYPROJECT_API UUpStatComponent : public UActorComponent
             baseC->SetMechanicBase(specificStatTypeVal, value);
          }
       } else {
-         static_assert(std::is_same_v<StatType*, void>, "Wee");
+         static_assert(std::is_same_v<StatType*, void>, "Error, please ensure you're passing in one of the correct stat enums");
       }
    }
-
-   /** Call whenever we want stats to get recalculated. Typically done after a stat change
-    * @param updatedStat - Attribute that was changed
-    */
-   UFUNCTION(BlueprintCallable, Category = "Stats")
-   void UpdateStats(const FGameplayAttribute& updatedStat) const;
 
  protected:
    void BeginPlay() override;

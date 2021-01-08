@@ -13,24 +13,29 @@
 
 #include "SaveLoadClass.h"
 #include "SpellCastComponent.h"
-#include "UnitCallbacks.h"
-#include "UnitMessages.h"
 #include "State/IUnitState.h"
 
 #include "State/RTSStateMachine.h"
+#include "CombatParameters.h"
 
 #include "WorldObject.h"
 #include "Unit.generated.h"
 
 class URTSDamageEffect;
-class UpCombatInfo;
 class UUpStatComponent;
 class URTSVisionComponent;
 class UTargetComponent;
 class IAttackAnim;
+struct UpCombatInfo;
 struct FUpDamage;
 
 DECLARE_STATS_GROUP(TEXT("RTSUnits"), STATGROUP_RTSUnits, STATCAT_Advanced);
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDamageReceived, const FUpDamage&);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDamageDealt, const FUpDamage&);
+DECLARE_EVENT(AUnitController, FOnUnitDie);
+
+DECLARE_EVENT(URTSUnitAnimController, FOnUnitAttackSwingHit); // When a unit initiates an attack (animation begins)
 
 /**
  * @brief Base class for all things in the world that fights!
@@ -39,11 +44,10 @@ DECLARE_STATS_GROUP(TEXT("RTSUnits"), STATGROUP_RTSUnits, STATCAT_Advanced);
  * - Functionality on this class will be used to expose access to its data, but no manipulation
  */
 UCLASS(Abstract, HideCategories = (Movement, Optimization, Character, Camera, CharacterMovement, Lighting, Rendering, Input, Actor))
-class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbilitySystemInterface, public IUnitCallbacks
+class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbilitySystemInterface
 {
    GENERATED_BODY()
 
-   friend class AUnitController;
    friend void USaveLoadClass::SetupBaseCharacter(AAlly* spawnedAlly, FBaseCharacterSaveInfo& baseCSaveInfo);
    friend class IncantationState;
    friend class ChannelingState;
@@ -53,8 +57,9 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    friend class AttackMoveState;
    friend class ChasingState;
 
- public:
+public:
    AUnit(const FObjectInitializer& oI);
+   ~AUnit();
 
    /**
     * @brief Gets current state in state machine
@@ -85,10 +90,10 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    virtual bool GetSelected() const { return unitProperties.isSelected; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   FORCEINLINE virtual bool GetIsEnemy() const PURE_VIRTUAL(AUnit::GetIsEnemy, return false; );
+   virtual bool GetIsEnemy() const PURE_VIRTUAL(AUnit::GetIsEnemy, return false;);
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   FORCEINLINE bool GetIsDead() const;
+   bool GetIsDead() const;
 
    /**
     * Function to find the bounds of a unit (screen space points)
@@ -104,20 +109,31 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    UFUNCTION(BlueprintCallable, Category = "Functionality")
    virtual void SetEnabled(bool bEnabled);
 
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   const TSet<AUnit*>& GetVisibleEnemies() const { return *GetVisibleEnemies_Impl(); }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   const TSet<AUnit*>& GetAllies() const { return *GetAllies_Impl(); }
+   
    URTSAbilitySystemComponent* GetAbilitySystemComponent() const override { return abilitySystemComponent; }
-   URTSVisionComponent*        GetVisionComponent() const { return visionComponent; }
-   UUpStatComponent*           GetStatComponent() const { return statComponent; }
-   UTargetComponent*           GetTargetComponent() const { return targetComponent; }
 
-   UpCombatInfo*           GetCombatInfo() const { return combatInfo.Get(); }
+   URTSVisionComponent* GetVisionComponent() const { return visionComponent; }
 
-   FOnUnitDie&            OnUnitDie() const { return OnUnitDieEvent; }
+   UUpStatComponent* GetStatComponent() const { return statComponent; }
+
+   UTargetComponent* GetTargetComponent() const { return targetComponent; }
+
+   UpCombatInfo* GetCombatInfo() const { return combatInfo.Get(); }
+
+   FOnUnitDie& OnUnitDie() const { return OnUnitDieEvent; }
+
    FOnUnitDamageReceived& OnUnitDamageReceived() const { return OnUnitDamageReceivedEvent; }
-   FOnUnitDamageDealt&    OnUnitDamageDealt() const { return OnUnitDamageDealtEvent; }
-   FOnUnitStop&           OnUnitStop() const { return OnUnitStopEvent; }
-   FOnUnitHit&            OnUnitHit() const { return OnUnitHitEvent; }
 
- protected:
+   FOnUnitDamageDealt& OnUnitDamageDealt() const { return OnUnitDamageDealtEvent; }
+
+   FOnUnitAttackSwingHit& OnUnitAttackSwingHit() const { return OnUnitAttackSwingHitEvent; }
+
+protected:
    UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
    class UHealthbarComp* healthBar;
 
@@ -153,7 +169,7 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
 
    class AUserInput* controllerRef;
 
- private:
+private:
    /** Change speed-based parameters when time multiplier changes */
    UFUNCTION(Category = "Callback")
    void OnUpdateGameSpeed(float speedMultiplier);
@@ -167,6 +183,9 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    void AlignSelectionCircleWithGround() const;
    void StoreUnitHeight();
 
+   virtual const TSet<AUnit*>* GetVisibleEnemies_Impl() const PURE_VIRTUAL(AUnit::GetVisibleEnemies, return nullptr; );
+   virtual const TSet<AUnit*>* GetAllies_Impl() const PURE_VIRTUAL(AUnit::GetAllies, return nullptr; );
+   
    class AUnitController* unitController = nullptr;
 
    // Reference to combat parameters kept in pointer since these values are barely used much (cold splitting)
@@ -175,7 +194,5 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    mutable FOnUnitDie            OnUnitDieEvent;
    mutable FOnUnitDamageReceived OnUnitDamageReceivedEvent;
    mutable FOnUnitDamageDealt    OnUnitDamageDealtEvent;
-
-   mutable FOnUnitStop OnUnitStopEvent;
-   mutable FOnUnitHit  OnUnitHitEvent;
+   mutable FOnUnitAttackSwingHit OnUnitAttackSwingHitEvent;
 };

@@ -69,7 +69,7 @@ void AUnitController::BeginPlay()
       SetupTurnActorTimeline();
    }
 
-   GetUnitOwner()->OnUnitDamageReceivedEvent.BindUObject(this, &AUnitController::OnDamageReceived);
+   GetUnitOwner()->OnUnitDamageReceived().AddUObject(this, &AUnitController::OnDamageReceived);
 }
 
 void AUnitController::Tick(float deltaSeconds)
@@ -96,22 +96,22 @@ void AUnitController::Attack()
 
 void AUnitController::OnDamageReceived(const FUpDamage& d)
 {
-   GetUnitOwner()->statComponent->ModifyStats<false>(GetUnitOwner()->statComponent->GetVitalCurValue(EVitals::Health) - d.damage, EVitals::Health);
-   if(GetUnitOwner()->statComponent->GetVitalAdjValue(EVitals::Health) < 0) { Die(); }
+   GetUnitOwner()->GetStatComponent()->ModifyStats<false>(GetUnitOwner()->GetStatComponent()->GetVitalCurValue(EVitals::Health) - d.damage, EVitals::Health);
+   if(GetUnitOwner()->GetStatComponent()->GetVitalAdjValue(EVitals::Health) < 0) { Die(); }
 }
 
 void AUnitController::Die()
 {
    customDeathLogic.GetDefaultObject()->Execute();
    GetUnitOwner()->SetSelected(false);
-   GetUnitOwner()->OnUnitDieEvent.Broadcast(*GetUnitOwner());
+   GetUnitOwner()->OnUnitDie().Broadcast();
    // Eventually this object will get GC'd. If we have something like resurrection, store unit data in the OnUnitDieEvent as opposed to keeping around a deactivated copy.
    SetLifeSpan(5.f);
 }
 
 EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation)
 {
-   if(USpellDataLibrary::IsStunned(*GetUnitOwner()->GetAbilitySystemComponent())) {
+   if(USpellDataLibrary::IsStunned(GetUnitOwner()->GetAbilitySystemComponent())) {
       Stop();
       // Shift location a little bit if we're moving multiple units so they can group together ok
       const FVector shiftedLocation = newLocation - ownerRef->GetActorLocation().GetSafeNormal() * ownerRef->GetCapsuleComponent()->GetScaledCapsuleRadius() / 2;
@@ -128,7 +128,7 @@ EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation)
 
 EPathFollowingRequestResult::Type AUnitController::MoveActor(AActor* targetActor)
 {
-   if(!USpellDataLibrary::IsStunned(*GetUnitOwner()->GetAbilitySystemComponent())) {
+   if(!USpellDataLibrary::IsStunned(GetUnitOwner()->GetAbilitySystemComponent())) {
       Stop();
       ownerRef->GetTargetComponent()->SetTarget(targetActor);
       EPathFollowingRequestResult::Type result = MoveToActor(targetActor);
@@ -147,7 +147,7 @@ void AUnitController::Stop()
    turnActorTimeline.Stop();
    turnTimeline.Stop();
    ownerRef->GetTargetComponent()->ResetTarget();
-   ownerRef->unitController->StopMovement();
+   StopMovement();
    ownerRef->StopAnimMontage();
 }
 
@@ -161,7 +161,7 @@ void AUnitController::StopAutomation() const
 void AUnitController::TurnTowardsPoint(FVector targetLocation)
 {
    startRotation = ownerRef->GetActorRotation().Quaternion();
-   turnRotator   = UUpAIHelperLibrary::FindLookRotation(*GetUnitOwner(), targetLocation);
+   turnRotator   = UUpAIHelperLibrary::FindLookRotation(GetUnitOwner(), targetLocation);
    turnTimeline.SetPlayRate(rotationRate * ownerRef->GetCharacterMovement()->RotationRate.Yaw / FMath::Abs(ownerRef->GetActorQuat().AngularDistance(turnRotator)));
    turnTimeline.PlayFromStart();
 }
@@ -169,7 +169,7 @@ void AUnitController::TurnTowardsPoint(FVector targetLocation)
 void AUnitController::TurnTowardsActor(AActor* targetActor)
 {
    startRotation = ownerRef->GetActorRotation().Quaternion();
-   turnRotator   = UUpAIHelperLibrary::FindLookRotation(*GetUnitOwner(), targetActor->GetActorLocation());
+   turnRotator   = UUpAIHelperLibrary::FindLookRotation(GetUnitOwner(), targetActor->GetActorLocation());
    turnActorTimeline.SetPlayRate(rotationRate * ownerRef->GetCharacterMovement()->RotationRate.Yaw / FMath::Abs(ownerRef->GetActorQuat().AngularDistance(turnRotator)));
    turnActorTimeline.PlayFromStart();
 }
@@ -178,7 +178,7 @@ void AUnitController::OnActorTurnFinished()
 {
    // If we didn't successfully turn towards the actor, try again (this happens if they moved)
    AActor* targetActor = ownerRef->GetTargetComponent()->GetTargetActorOrUnit();
-   if(!UUpAIHelperLibrary::IsFacingTarget(*GetUnitOwner(), targetActor->GetActorLocation())) {
+   if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetActor->GetActorLocation())) {
       TurnTowardsActor(targetActor);
    } else
       onPosAdjDoneAct();
@@ -192,7 +192,7 @@ void AUnitController::OnPointTurnFinished()
 void AUnitController::TurnActor(float turnValue)
 {
    if(AActor* targetActor = ownerRef->GetTargetComponent()->GetTargetActorOrUnit()) {
-      if(!UUpAIHelperLibrary::IsFacingTarget(*GetUnitOwner(), targetActor->GetActorLocation())) {
+      if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetActor->GetActorLocation())) {
          const FQuat rotation = FQuat::Slerp(startRotation, turnRotator, turnValue);
          ownerRef->SetActorRelativeRotation(rotation);
       } else {
@@ -212,7 +212,7 @@ void AUnitController::Turn(float turnValue)
 void AUnitController::QueueTurnAfterMovement(FVector targetLoc)
 {
    queuedTurnAction = [this, &targetLoc]() {
-      if(!UUpAIHelperLibrary::IsFacingTarget(*GetUnitOwner(), targetLoc))
+      if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetLoc))
          TurnTowardsPoint(targetLoc);
       else
          onPosAdjDoneAct();
@@ -222,7 +222,7 @@ void AUnitController::QueueTurnAfterMovement(FVector targetLoc)
 void AUnitController::QueueTurnAfterMovement(AActor* targetActor)
 {
    queuedTurnAction = [this, &targetActor]() {
-      if(!UUpAIHelperLibrary::IsFacingTarget(*GetUnitOwner(), targetActor->GetActorLocation()))
+      if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetActor->GetActorLocation()))
          TurnTowardsActor(targetActor);
       else
          onPosAdjDoneAct();
@@ -231,12 +231,12 @@ void AUnitController::QueueTurnAfterMovement(AActor* targetActor)
 
 bool AUnitController::AdjustPosition(float range, FVector targetLoc)
 {
-   if(!UUpAIHelperLibrary::IsTargetInRange(*GetUnitOwner(), targetLoc, range)) {
+   if(!UUpAIHelperLibrary::IsTargetInRange(GetUnitOwner(), targetLoc, range)) {
       MoveToLocation(targetLoc, range);
       QueueTurnAfterMovement(targetLoc);
       return false;
    } else {
-      if(!UUpAIHelperLibrary::IsFacingTarget(*GetUnitOwner(), targetLoc, .02f)) {
+      if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetLoc, .02f)) {
          TurnTowardsPoint(targetLoc);
          return false;
       }
@@ -246,13 +246,13 @@ bool AUnitController::AdjustPosition(float range, FVector targetLoc)
 
 bool AUnitController::AdjustPosition(float range, AActor* targetActor)
 {
-   if(!UUpAIHelperLibrary::IsTargetInRange(*GetUnitOwner(), targetActor->GetActorLocation(), range)) {
+   if(!UUpAIHelperLibrary::IsTargetInRange(GetUnitOwner(), targetActor->GetActorLocation(), range)) {
       MoveToActor(targetActor, range);
       QueueTurnAfterMovement(targetActor);
       return false;
    }
 
-   if(!UUpAIHelperLibrary::IsFacingTarget(*GetUnitOwner(), targetActor->GetActorLocation())) {
+   if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetActor->GetActorLocation())) {
       TurnTowardsActor(targetActor);
       return false;
    }

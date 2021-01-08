@@ -20,28 +20,35 @@ class MYPROJECT_API UStoreInventory : public UInventory
 {
    GENERATED_BODY()
 
- public:
+public:
+   UStoreInventory();
+
    UFUNCTION()
    AShopNPC* GetShopkeeper() const { return shopkeeper; }
 
    void UseItemAtInventorySlot_Implementation(int32 iSlot) override;
 
- private:
+protected:
+   void NativeOnInitialized() override;
+   
+private:
+   /** The player bought a single item */
    UFUNCTION()
    bool OnItemPurchased() const;
 
+   /** The player bought a multiple of the same item (confirmation box opens and player inputs number they would like to buy) */
    UFUNCTION()
    bool OnItemsPurchased(FString howManyItems);
 
    bool EnoughFunds(int numPurchasing) const;
    bool OnWidgetAddToViewport_Implementation() override;
 
-   UPROPERTY()
-   AShopNPC* shopkeeper;
+   AShopNPC*   shopkeeper;
+   ABaseHero** interactingHero;
 
-   UPROPERTY()
-   UBackpack* interactingHeroPack = nullptr;
-
+   UFUNCTION()
+   UBackpack* const GetInteractingHeroBackpack() const;
+   
    UPROPERTY()
    class AHUDManager* hudManagerRef;
 

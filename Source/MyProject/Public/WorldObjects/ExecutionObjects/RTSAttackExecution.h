@@ -4,11 +4,10 @@
 #include "RTSAttackExecution.generated.h"
 
 UCLASS(BlueprintType, Blueprintable, Abstract)
-class GAMEPLAYABILITIES_API URTSAttackExecution : public UObject, public IRTSExecution
+class URTSAttackExecution : public UObject, public IRTSExecution
 {
-   GENERATED_UCLASS_BODY()
+   GENERATED_BODY()
 
  public:
-   void Execute() override;
    void Execute_Implementation() override;
 };

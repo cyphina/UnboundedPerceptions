@@ -8,14 +8,16 @@
 #include "UserInput.h"
 #include "BasePlayer.h"
 #include "RTSIngameWidget.h"
+#include "RTSVisionComponent.h"
 
 #include "UpResourceManager.h"
+#include "UpStatComponent.h"
 #include "Quests/QuestManager.h"
 #include "Quests/Quest.h"
 
 #include "UI/HUDManager.h"
 #include "UI/UserWidgets/ActionbarInterface.h"
-#include "UI/ESkillContainer.h"
+#include "UI/UserWidgets/ESkillContainer.h"
 #include "UI/Slots/SkillSlot.h"
 
 #include "SpellSystem/SpellDataManager.h"
@@ -38,13 +40,13 @@ void URTSCheatManager::InitCheatManager()
 void URTSCheatManager::LevelUp(FString heroName)
 {
    GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("Leveling Up via Cheats!"));
-   if (ABaseHero* heroRef = *userInputRef->GetBasePlayer()->heroes.FindByPredicate([heroName](ABaseHero* hero) { return hero->GetGameName().ToString() == heroName; })) { heroRef->LevelUp(); }
+   if (ABaseHero* heroRef = *userInputRef->GetBasePlayer()->GetHeroes().FindByPredicate([heroName](ABaseHero* hero) { return hero->GetGameName().ToString() == heroName; })) { heroRef->LevelUp(); }
 }
 
 void URTSCheatManager::LevelUpToLevel(FString heroName, int level)
 {
-   if (ABaseHero* heroRef = *userInputRef->GetBasePlayer()->heroes.FindByPredicate([heroName](ABaseHero* hero) { return hero->GetGameName().ToString() == heroName; })) {
-      while (heroRef->GetUnitLevel() < level)
+   if (ABaseHero* heroRef = *userInputRef->GetBasePlayer()->GetHeroes().FindByPredicate([heroName](ABaseHero* hero) { return hero->GetGameName().ToString() == heroName; })) {
+      while (heroRef->GetStatComponent()->GetUnitLevel() < level)
          heroRef->LevelUp();
    }
 }
@@ -82,9 +84,9 @@ void URTSCheatManager::FinishQuest(FString questName, int isSucessful)
 
 void URTSCheatManager::EquipSpell(FString heroName, int spellID, int slot)
 {
-   if (ABaseHero* heroRef = *userInputRef->GetBasePlayer()->heroes.FindByPredicate([heroName](ABaseHero* hero) { return hero->GetGameName().ToString() == heroName; })) {
-      if (slot >= 0 && slot < heroRef->GetAbilitySystemComponent()->abilities.Num())
-         userInputRef->GetWidgetProvider()->GetIngameHUD()->GetActionHUD()->skillContainerRef->skillSlots[slot]->UpdateSkillSlot(USpellDataManager::GetData().GetSpellClass(spellID));
+   if (ABaseHero* heroRef = *userInputRef->GetBasePlayer()->GetHeroes().FindByPredicate([heroName](ABaseHero* hero) { return hero->GetGameName().ToString() == heroName; })) {
+      if (slot >= 0 && slot < heroRef->GetAbilitySystemComponent()->GetAbilities().Num())
+         userInputRef->GetWidgetProvider()->GetIngameHUD()->GetActionHUD()->GetSkillContainer()->skillSlots[slot]->UpdateSkillSlot(USpellDataManager::GetData().GetSpellClass(spellID));
    }
 }
 
@@ -99,37 +101,37 @@ void URTSCheatManager::RefreshSpells()
 void URTSCheatManager::RefreshHeroSpells(FString heroName)
 {
    if (!heroName.IsEmpty()) {
-      if (ABaseHero* heroRef = *userInputRef->GetBasePlayer()->heroes.FindByPredicate([heroName](ABaseHero* hero) { return hero->GetGameName().ToString() == heroName; })) {
+      if (ABaseHero* heroRef = *userInputRef->GetBasePlayer()->GetHeroes().FindByPredicate([heroName](ABaseHero* hero) { return hero->GetGameName().ToString() == heroName; })) {
          heroRef->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Name")));
       }
    } else {
-      for (ABaseHero* hero : userInputRef->GetBasePlayer()->heroes)
+      for (ABaseHero* hero : userInputRef->GetBasePlayer()->GetHeroes())
          hero->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Name")));
    }
 }
 
 void URTSCheatManager::PauseGameTimer() { gameStateRef->UpdateGameSpeed(0); }
 
-void URTSCheatManager::SetGameTime(int seconds, int minutes, int hours) { gameStateRef->UpdateGameTime(seconds, minutes, hours); }
+void URTSCheatManager::SetGameTime(int seconds, int minutes, int hours) { gameStateRef->SetGameTime(FUpTime(seconds, minutes, hours), FUpDate()); }
 
-void URTSCheatManager::SetGameDay(int day, int month, int year) { gameStateRef->UpdateGameDay(day, month, year); }
+void URTSCheatManager::SetGameDay(int day, int month, int year) { gameStateRef->SetGameTime(FUpTime(), FUpDate(day, month, year)); }
 
 void URTSCheatManager::SetUnitCurHP(FString unitName, int hpVal)
 {
-   if (AUnit* unit = UpResourceManager::FindTriggerObjectInWorld<AUnit>(unitName, GetWorld())) { unit->SetVitalCurValue(static_cast<uint8>(EVitals::Health), hpVal); }
+   if (AUnit* unit = UpResourceManager::FindTriggerObjectInWorld<AUnit>(unitName, GetWorld())) { unit->GetStatComponent()->ModifyStats(hpVal, EVitals::Health); }
 }
 
 void URTSCheatManager::SeeAll()
 {
-   for (AEnemy* e : gameStateRef->enemyList) {
-      e->IncVisionCount();
+   for (AUnit* e : gameStateRef->GetAllEnemyUnits()) {
+      e->GetVisionComponent()->IncVisionCount();
       e->GetCapsuleComponent()->SetVisibility(true, true);
    }
 }
 
 void URTSCheatManager::LearnAllTopics()
 {
-   TSharedPtr<FGameplayTagNode>         rootDialogNode = UGameplayTagsManager::Get().FindTagNode("Dialog");
+   const TSharedPtr<FGameplayTagNode>         rootDialogNode = UGameplayTagsManager::Get().FindTagNode("Dialog");
    TSet<TSharedPtr<FGameplayTagNode>>   leafNodes{};
    TSet<TSharedPtr<FGameplayTagNode>>   newLeafNodes{};
    TArray<TSharedPtr<FGameplayTagNode>> childNodes{};

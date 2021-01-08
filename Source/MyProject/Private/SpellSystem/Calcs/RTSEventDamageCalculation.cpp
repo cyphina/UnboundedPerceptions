@@ -32,7 +32,7 @@ void URTSEventDamageCalculation::DamageTarget(FUpDamage& d, FGameplayTagContaine
 
    // Kill the unit if its hp falls below 0, else update information
    if(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) <= 0) {
-      if(USpellDataLibrary::IsImmortal(*d.targetUnit->GetAbilitySystemComponent())) { d.targetUnit->GetUnitController()->Die(); }
+      if(USpellDataLibrary::IsImmortal(d.targetUnit->GetAbilitySystemComponent())) { d.targetUnit->GetUnitController()->Die(); }
    }
 
    BroadcastDamageEvents(d);

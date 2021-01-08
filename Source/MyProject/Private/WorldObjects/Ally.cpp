@@ -103,3 +103,15 @@ const TSet<AUnit*>& AAlly::GetSeenEnemies() const
 {
    return possibleEnemiesInRadius;
 }
+
+const TSet<AUnit*>* AAlly::GetVisibleEnemies_Impl() const
+{
+   const auto& gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
+   return &gameStateRef->GetVisibleEnemies();
+}
+
+const TSet<AUnit*>* AAlly::GetAllies_Impl() const
+{
+   const auto& gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
+   return &gameStateRef->GetAllFriendlyUnits();
+}

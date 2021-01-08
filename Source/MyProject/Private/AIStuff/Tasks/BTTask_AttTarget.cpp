@@ -2,32 +2,31 @@
 
 #include "MyProject.h"
 #include "BTTask_AttTarget.h"
+#include "SpellDataLibrary.h"
+#include "TargetedAttackComponent.h"
 #include "WorldObjects/Unit.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIControllers/UnitController.h"
-#include "State/AttackState.h"
+#include "UnitMessages.h"
 
 UBTTask_AttTarget::UBTTask_AttTarget()
 {
-   NodeName = "Attack Target";
+   NodeName    = "Attack Target";
    bNotifyTick = false;
 }
 
 EBTNodeResult::Type UBTTask_AttTarget::ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory)
 {
    AUnitController* AICon = Cast<AUnitController>(ownerComp.GetAIOwner());
-   if (AICon) {
+   if(AICon) {
       AUnit* target = Cast<AUnit>(ownerComp.GetBlackboardComponent()->GetValueAsObject("target"));
-      if (target && target->GetCanTarget()) {
-         // AICon->GetUnitOwner()->SetTarget(target);
-         // if we aren't already attacking this target
-         AICon->BeginAttack(target);
-         WaitForMessage(ownerComp, AUnit::AIMessage_TargetLoss);
-         WaitForMessage(ownerComp, AUnit::AIMessage_Stunned);
+      if(target && USpellDataLibrary::IsAttackable(target->GetAbilitySystemComponent())) {
+         AICon->FindComponentByClass<UTargetedAttackComponent>()->BeginAttack(target);
+         WaitForMessage(ownerComp, UnitMessages::AIMessage_TargetLoss);
+         WaitForMessage(ownerComp, UnitMessages::AIMessage_Stunned);
          return EBTNodeResult::InProgress;
       }
-   }
-   else {
+   } else {
       ownerComp.GetBlackboardComponent()->SetValueAsObject("target", nullptr);
    }
 
@@ -36,6 +35,6 @@ EBTNodeResult::Type UBTTask_AttTarget::ExecuteTask(UBehaviorTreeComponent& owner
 
 void UBTTask_AttTarget::OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FName Message, int32 RequestID, bool bSuccess)
 {
-   bSuccess = Message != AUnit::AIMessage_Stunned & Message != AUnit::AIMessage_TargetLoss;
+   bSuccess = Message != UnitMessages::AIMessage_Stunned & Message != UnitMessages::AIMessage_TargetLoss;
    Super::OnMessage(OwnerComp, NodeMemory, Message, RequestID, bSuccess);
 }

@@ -7,7 +7,8 @@
 struct FBackpackSaveInfo;
 
 /**
- * @brief 
+ * @brief Contains all the items a hero is holding. \n
+ * TODO: Maybe in the future we'll use the dirty flag pattern and update the inventory the frame after things get dirtied.
  */
 UCLASS(Blueprintable, BlueprintType)
 class MYPROJECT_API UBackpack : public UObject
@@ -34,18 +35,18 @@ class MYPROJECT_API UBackpack : public UObject
    /**
     * @brief Adds item to first available slot.  Returns number of items left (if new item is stackable and a place isn't found for it)
     * @param newItem - Data about new item that will be added
-    * @return Returns the index (or indices for stackable items) of the slot(s) the item was added to if successful, or returns a unset optional value
+    * @return Returns the index (or indices for stackable items) of the slot(s) the item was added to if successful, or returns an empty array.
     */
    UFUNCTION(BlueprintCallable)
-   TOptional<TArray<int>> AddItem(FMyItem& newItem);
-   TOptional<TArray<int>> AddItem(FMyItem&& newItem);
+   bool AddItem(FMyItem& newItem);
+   bool AddItem(FMyItem&& newItem);
 
    /**Add several items to the backpack.  On sucess, the array passed in will be full of 0 count items. On fail there will be items with remaining counts > 0
     * @param newItems - Data about each new item to be added
-    * @return - Returns the index (or indices for stackable items) of the slot(s) the item was added to if successful, or returns a unset optional value
+    * @return - Returns the index (or indices for stackable items) of the slot(s) the item was added to if successful, or returns an empty array.
     */
    UFUNCTION(BlueprintCallable)
-   TOptional<TArray<int>> AddItems(TArray<FMyItem>& newItems);
+   bool AddItems(TArray<FMyItem>& newItems);
 
    /**Remove an item at a certain slot
     * @param slot - Slot of the item to be removed
@@ -156,8 +157,8 @@ class MYPROJECT_API UBackpack : public UObject
    /**Find the first empty slot in the backpack*/
    int FindEmptySlot() const;
 
-   int AddStackableItem(FMyItem& newItem);
-   int AddUnstackableItem(FMyItem& newItem);
+   bool AddStackableItem(FMyItem& newItem);
+   bool AddUnstackableItem(FMyItem& newItem);
 
-   void OnItemUsed(ABaseHero* heroUsingItem, int itemID);
+   void OnItemUsed(const ABaseHero* heroUsingItem, const FMyItem& itemID);
 };

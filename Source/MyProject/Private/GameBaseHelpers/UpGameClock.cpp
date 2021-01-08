@@ -16,7 +16,6 @@ FUpGameClock::FUpGameClock(const IGameSpeedContext& gameSpeedContext, const FUpT
 {
    calendar  = clockStartDate;
    clockwork = clockStartTime.TimeToClockwork();
-   gameSpeedContext.OnGameSpeedUpdated().AddWeakLambda(this, [this](float newSpeedMultiplier) { speedMultiplier = newSpeedMultiplier; });
 }
 
 void FUpGameClock::TickClock(float deltaTime)
@@ -31,6 +30,14 @@ void FUpGameClock::TickClock(float deltaTime)
 
 void FUpGameClock::AddGameTime(FUpTime timeToAdd, FUpDate daysToAdd)
 {
+}
+
+void FUpGameClock::SetGameTime(FUpTime newTime, FUpDate newDate)
+{
+   hours = newTime.hours;
+   calendar.days = newDate.days;
+   calendar.months = newDate.months;
+   calendar.years = newDate.years;
 }
 
 void FUpGameClock::IncrementHour()
@@ -97,7 +104,7 @@ FText FUpGameClock::GetDay() const
 
 FText FUpGameClock::GetMonth() const
 {
-   switch(time.months) {
+   switch(calendar.months) {
       case 1: return FText(LOCTEXT("TimeOfDay", "January")); break;
       case 2: return FText(LOCTEXT("TimeOfDay", "February")); break;
       case 3: return FText(LOCTEXT("TimeOfDay", "March")); break;

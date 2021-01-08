@@ -5,6 +5,7 @@
 #include "RTSGameMode.h"
 #include "UserInput.h"
 #include "BasePlayer.h"
+#include "RTSIngameWidget.h"
 #include "UpStatComponent.h"
 #include "UI/HUDManager.h"
 #include "Quests/Quest.h"
@@ -183,7 +184,7 @@ void UTriggerManager::DisplayConversation(const FTriggerData& tdata)
 
 void UTriggerManager::DestroyNPC(const FTriggerData& tdata)
 {
-   hudManagerRef->GetDialogBox()->SetDialogSource(EDialogBoxCloseCase::none); // ensure we don't go back to any social menus afterwards
+   hudManagerRef->GetIngameHUD()->GetDialogBox()->SetDialogSource(EDialogBoxCloseCase::none); // ensure we don't go back to any social menus afterwards
    UpResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld())->Destroy();
    // in case this npc destroyed itself while we're talking, set the interactedHero to nullptr
    cpcRef->GetBasePlayer()->heroInBlockingInteraction = nullptr;

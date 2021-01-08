@@ -14,7 +14,7 @@ void UMinigameManager::Init()
 }
 void UMinigameManager::StartMiniGame(EMinigameType minigameType, const FMinigameData& minigameData)
 {
-   hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Ingame));
+   hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Ingame));
    // Spawn the game pawn.  The game pawn will create a hud for itself
    switch(minigameType) {
       case EMinigameType::DrawingMiniGame: StartDrawingGame(minigameData); break;
@@ -53,7 +53,7 @@ void UMinigameManager::EndMiniGame()
 
       minigamePawn->Destroy();
       minigamePawn = nullptr;
-      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Ingame));
+      hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Ingame));
    }
 }
 
@@ -64,7 +64,7 @@ void UMinigameManager::AbortMinigame()
       minigamePawn->Destroy();
       minigamePawn = nullptr;
 
-      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Ingame));
+      hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Ingame));
       controllerRef->Possess(controllerRef->GetCameraPawn());
    }
 }

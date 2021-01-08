@@ -8,6 +8,11 @@ UMontageAttackAnim::UMontageAttackAnim()
 {
 }
 
+void UMontageAttackAnim::AttackNotify()
+{
+   OnAttackNotify().Broadcast();
+}
+
 void UMontageAttackAnim::PlayAttackAnimation(float playRate)
 {
    Cast<ACharacter>(GetOuter())->PlayAnimMontage(attackMontage, playRate);

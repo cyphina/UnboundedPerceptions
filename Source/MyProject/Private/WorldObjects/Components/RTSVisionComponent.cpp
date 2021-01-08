@@ -49,13 +49,13 @@ void URTSVisionComponent::OnVisionSphereOverlap(UPrimitiveComponent* overlappedC
       }
    }
 }
-}
+
 
 void URTSVisionComponent::OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex)
 {
    if(GetOwnerRole() == ROLE_Authority) {
       if(otherActor) {
-         if(AUnit* collidedUnit = Cast<AUnit>(otherActor);) {
+         if(AUnit* collidedUnit = Cast<AUnit>(otherActor)) {
             if(AUnit* ownerRef = Cast<AUnit>(GetOwner())) {
                if(collidedUnit->GetIsEnemy() != ownerRef->GetIsEnemy()) {
                   possibleVisibleEnemies.Remove(collidedUnit);

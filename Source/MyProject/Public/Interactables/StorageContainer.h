@@ -51,8 +51,8 @@ class MYPROJECT_API AStorageContainer : public AInteractableBase
 
    AUserInput* GetPlayerControllerRef() const;
 
-   IWidgetToggler* GetWidgetToggler() const;
-   IHUDProvider*   GetHUDProvider() const;
+   TScriptInterface<IWidgetToggler> GetWidgetToggler() const;
+   TScriptInterface<IHUDProvider>   GetHUDProvider() const;
 
    UPROPERTY()
    UBackpack* backpack = nullptr;

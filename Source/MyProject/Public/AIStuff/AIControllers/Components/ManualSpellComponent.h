@@ -47,20 +47,17 @@ class MYPROJECT_API UManualSpellComponent : public UActorComponent, public IManu
     * Used when we activate items. Items are a variant of spell casting.
     * @param spellToCast - Ability we are trying to cast
     */
-   bool UManualSpellComponent::PressedCastSpell(TSubclassOf<UMySpell> spellToCast);
+   bool PressedCastSpell(TSubclassOf<UMySpell> spellToCast);
 
-   static inline const FText NOT_ENOUGH_MANA_TEXT = NSLOCTEXT("HelpMessages", "Mana", "Not Enough Mana!");
-   static inline const FText INVALID_TARGET_TEXT  = NSLOCTEXT("HelpMessages", "Target", "Invalid Target!");
-   static inline const FText ON_COOLDOWN_TEXT     = NSLOCTEXT("HelpMessages", "CD", "Spell is on Cooldown!");
+   static const FText NOT_ENOUGH_MANA_TEXT;
+   static const FText INVALID_TARGET_TEXT;
+   static const FText ON_COOLDOWN_TEXT;
 
  protected:
    void BeginPlay() override;
 
  private:
-   /** Helper to setup currentSpell in our regular Spell Cast Component since we have to stop - possibly reestablish our target - then start the spell casting process */
-   FORCEINLINE void SetupDelayedSpellProps(TSubclassOf<UMySpell> spellToCast) const;
-
-  void OnUnitStopped();
+   void OnUnitStopped();
 
    void FinalizeSpellTargeting(const FUpSpellTargeting* spellTargeting, TSubclassOf<UMySpell> spellClass, const FHitResult&) override;
 
@@ -74,9 +71,6 @@ class MYPROJECT_API UManualSpellComponent : public UActorComponent, public IManu
    void OnSpellCasted(TSubclassOf<UMySpell> spellCasted);
 
    void OnSpellSlotReplaced(int dropSlotindex, TSubclassOf<UMySpell> spellClass);
-
-   /** Called once we finally select our spell target via a click */
-   void FinalizeSpellTargetingOnSelf(const FUpSpellTargeting* spellTargeting, TSubclassOf<UMySpell> spellClass, const FHitResult&) override;
 
    bool IsTargetingSelf() override;
 

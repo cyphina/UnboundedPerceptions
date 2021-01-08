@@ -125,7 +125,7 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    int GetMoney() const { return money; }
 
    UFUNCTION(BlueprintCallable)
-   int SetMoney(int newMoneyVal) const { money = newMoneyVal; }
+   void SetMoney(int newMoneyVal) { money = newMoneyVal; }
 
  protected:
    /**
@@ -150,7 +150,7 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    void OnHeroActiveChanged(ABaseHero* heroRef, bool isActive);
    void OnSummonActiveChanged(ASummon* summonRef, bool isActive);
 
-   /** How much squeezies we have*/
+   /** How much squeezies we have (that's the currency name... for now) */
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (AllowPrivateAccess = true))
    int money;
 };

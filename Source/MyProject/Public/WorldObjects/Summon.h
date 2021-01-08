@@ -10,7 +10,8 @@
  * Base class for all unit summoned by heroes
  */
 UCLASS(Blueprintable)
-class MYPROJECT_API ASummon : public AAlly {
+class MYPROJECT_API ASummon : public AAlly
+{
    GENERATED_BODY()
 
 public:
@@ -21,7 +22,8 @@ public:
    int timeLeft;
 
    void BeginPlay() override final;
-   void EndPlay(const EEndPlayReason::Type EndPlayReason) override final;
    void SetEnabled(bool bEnabled) override final;
-   void Die_Implementation() override;
+
+private:
+   void HandleOnUnitDie();
 };

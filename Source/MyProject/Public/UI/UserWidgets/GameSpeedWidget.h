@@ -22,6 +22,12 @@ class MYPROJECT_API UGameSpeedWidget : public UUserWidget
    void NativeOnInitialized() override;
 
  private:
+   UFUNCTION()
+   void IncreaseGameSpeed();
+
+   UFUNCTION()
+   void DecreaseGameSpeed();
+
    UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true))
    ARTSGameState* gameStateRef;
 
@@ -34,16 +40,10 @@ class MYPROJECT_API UGameSpeedWidget : public UUserWidget
    UPROPERTY(meta = (BindWidget))
    UButton* Btn_DecGameSpeed;
 
+   /**Used to index what speed to go at in our predefined game speeds*/
+   UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+   int speedIndex = 0;
+
    /** Array with possible speed multipliers the game can run off of */
    const TArray<float, TFixedAllocator<5>> gameSpeeds = {0, 0.5, 1, 1.5, 2, 5};
-
-   UFUNCTION()
-   void IncreaseGameSpeed();
-
-   UFUNCTION()
-   void DecreaseGameSpeed();
-
-   /**Used to index what speed to go at in our predefined game speeds*/
-   UPROPERTY(BlueprintReadWrite)
-   int speedIndex = 0;
 };

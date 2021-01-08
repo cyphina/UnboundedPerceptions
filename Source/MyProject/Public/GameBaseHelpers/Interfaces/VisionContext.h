@@ -8,12 +8,12 @@ class AUnit;
 UINTERFACE(MinimalAPI)
 class UVisionContext : public UInterface
 {
-   GENERATED_UINTERFACE_BODY()
+   GENERATED_BODY()
 };
 
 class IVisionContext
 {
-   GENERATED_IINTERFACE_BODY()
+   GENERATED_BODY()
 
  public:
    FORCEINLINE virtual const TSet<AUnit*>& GetVisibleEnemies() const     = 0;

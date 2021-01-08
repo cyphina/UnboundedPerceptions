@@ -4,40 +4,41 @@
 #include "BTTask_AttackWhileMove.h"
 #include "WorldObjects/Unit.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "UnitMessages.h"
 #include "AIStuff/AIControllers/UnitController.h"
 
 UBTTask_AttackWhileMove::UBTTask_AttackWhileMove()
 {
-   NodeName = "Attack While Moving";
+   NodeName    = "Attack While Moving";
    bNotifyTick = false;
 }
 
 EBTNodeResult::Type UBTTask_AttackWhileMove::ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory)
 {
-   FBTAttackMoveMemory* myMemory         = (FBTAttackMoveMemory*)nodeMemory;
-   myMemory->AICon                       = Cast<AUnitController>(ownerComp.GetAIOwner());
+   FBTAttackMoveMemory* myMemory = (FBTAttackMoveMemory*)nodeMemory;
+   myMemory->AICon               = Cast<AUnitController>(ownerComp.GetAIOwner());
 
    EPathFollowingRequestResult::Type res = myMemory->AICon->Move(ownerComp.GetBlackboardComponent()->GetValueAsVector("moveToLocation"));
-   if (res == EPathFollowingRequestResult::RequestSuccessful) { //if we sent a successful move request
-      //
-      //Listen for these kinds of messages to figure out if we're finished with this task
-      WaitForMessage(ownerComp, UBrainComponent::AIMessage_MoveFinished); 
-      WaitForMessage(ownerComp, UBrainComponent::AIMessage_RepathFailed);
-      WaitForMessage(ownerComp, AUnit::AIMessage_AttackReady);
+   if(res == EPathFollowingRequestResult::RequestSuccessful) { //if we sent a successful move request
 
-      // We set a function to be called periodically 
-      TFunction<void(void)> attackFunc = [myMemory]()
-      {
-         myMemory->AICon->BeginAttack(Cast<AUnit>(myMemory->AICon->blackboardComp->GetValueAsObject("target")));
+      WaitForMessage(ownerComp, UBrainComponent::AIMessage_MoveFinished);
+      WaitForMessage(ownerComp, UBrainComponent::AIMessage_RepathFailed);
+      WaitForMessage(ownerComp, UnitMessages::AIMessage_Hit);
+
+      // We set a function to be called periodically
+      TFunction<void(void)> attackFunc = [myMemory]() {
+         myMemory->AICon->Attack();
          myMemory->AICon->PauseMove(myMemory->AICon->GetCurrentMoveRequestID());
       };
-      myMemory->AICon->GetWorld()->GetTimerManager().SetTimer(myMemory->attackTime, MoveTemp(attackFunc), attackDelay, false, 0.f);
+
+      FMath::FRandRange(0, delayVariance);
+      myMemory->AICon->GetWorld()->GetTimerManager().SetTimer(myMemory->attackTime, MoveTemp(attackFunc), attackDelay + delayVariance, false, 0.f);
 
       return EBTNodeResult::InProgress;
 
       // If we requested to move somewhere but we are already at there
-   } else if (res == EPathFollowingRequestResult::AlreadyAtGoal) { 
-      myMemory->AICon->BeginAttack(Cast<AUnit>(ownerComp.GetBlackboardComponent()->GetValueAsObject("target")));
+   } else if(res == EPathFollowingRequestResult::AlreadyAtGoal) {
+      myMemory->AICon->Attack();
       return EBTNodeResult::Succeeded;
    }
    // If something else happens, that's not what we intend so just fail the ai task
@@ -51,16 +52,16 @@ uint16 UBTTask_AttackWhileMove::GetInstanceMemorySize() const
 
 void UBTTask_AttackWhileMove::OnMessage(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory, FName message, int32 requestID, bool bSuccess)
 {
-   //This attack message means that we should move again because we just initiated an attack
-   if (message == AUnit::AIMessage_AttackReady) {
+   // This attack message means that we should move again because we just initiated an attack
+   if(message == UnitMessages::AIMessage_Hit) {
       FBTAttackMoveMemory* myMemory = (FBTAttackMoveMemory*)nodeMemory;
       myMemory->AICon->ResumeMove(myMemory->AICon->GetCurrentMoveRequestID());
-   } 
-   else { //finishes task when we get a message that our move finished
+   }
+   //Finish the task when we get a message that our move finished
+   else { 
       bSuccess &= (message != UBrainComponent::AIMessage_RepathFailed);
-      FBTAttackMoveMemory* myMemory         = (FBTAttackMoveMemory*)nodeMemory;
+      FBTAttackMoveMemory* myMemory = (FBTAttackMoveMemory*)nodeMemory;
       myMemory->attackTime.Invalidate();
       Super::OnMessage(ownerComp, nodeMemory, message, requestID, bSuccess);
    }
 }
-

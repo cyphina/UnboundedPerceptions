@@ -1,5 +1,6 @@
 ﻿#include "SpellDataLibrary.h"
 #include "GameplayTagAssetInterface.h"
+#include "RTSAbilitySystemComponent.h"
 
 const TMap<FGameplayTag, FColor> USpellDataLibrary::elementalMap = {
     {FGameplayTag::RequestGameplayTag("Combat.Element.None"), FColor::White},        {FGameplayTag::RequestGameplayTag("Combat.Element.Arcane"), FColor::Cyan},
@@ -15,42 +16,84 @@ const TMap<FGameplayTag, int> USpellDataLibrary::purgeTagMap = {
     {FGameplayTag::RequestGameplayTag("Combat.Effect.Purge.Three"), 3}, {FGameplayTag::RequestGameplayTag("Combat.Effect.Purge.Four"), 4},
     {FGameplayTag::RequestGameplayTag("Combat.Effect.Purge.Five"), 5},  {FGameplayTag::RequestGameplayTag("Combat.Effect.Purge.Six"), 6},
     {FGameplayTag::RequestGameplayTag("Combat.Effect.Purge.All"), 100}};
+
 const FGameplayTagContainer USpellDataLibrary::supportTags   = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Category.Support"));
 const FGameplayTagContainer USpellDataLibrary::offensiveTags = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Category.Offensive"));
 
-bool USpellDataLibrary::IsStunned(const IGameplayTagAssetInterface& abilityComponent)
+bool USpellDataLibrary::BP_IsStunned(const URTSAbilitySystemComponent* abilityComponent)
 {
-   return abilityComponent.HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff.Stunned")) ? true : false;
+   return IsStunned(abilityComponent);
 }
 
-bool USpellDataLibrary::IsSilenced(const IGameplayTagAssetInterface& abilityComponent)
+bool USpellDataLibrary::BP_IsSilenced(const URTSAbilitySystemComponent* abilityComponent)
 {
-   return abilityComponent.HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff.Silenced")) ? true : false;
+   return IsSilenced(abilityComponent);
+
 }
 
-bool USpellDataLibrary::IsInvisible(const IGameplayTagAssetInterface& abilityComponent)
+bool USpellDataLibrary::BP_IsInvisible(const URTSAbilitySystemComponent* abilityComponent)
 {
-   return abilityComponent.HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")) &&
-          !abilityComponent.HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Marked"));
+   return IsInvisible(abilityComponent);
+
 }
 
-bool USpellDataLibrary::IsImmortal(const IGameplayTagAssetInterface& abilityComponent)
+bool USpellDataLibrary::BP_IsImmortal(const URTSAbilitySystemComponent* abilityComponent)
 {
-   return abilityComponent.HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Immortality"));
+   return IsImmortal(abilityComponent);
+
 }
 
-bool USpellDataLibrary::IsWard(const IGameplayTagAssetInterface& abilityComponent)
+bool USpellDataLibrary::BP_IsWard(const URTSAbilitySystemComponent* abilityComponent)
 {
-   return abilityComponent.HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Ward"));
+   return IsWard(abilityComponent);
+
 }
 
-bool USpellDataLibrary::IsGodMode(const IGameplayTagAssetInterface& abilityComponent)
+bool USpellDataLibrary::BP_IsGodMode(const URTSAbilitySystemComponent* abilityComponent)
 {
-   return abilityComponent.HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.GodMode"));
+   return IsGodMode(abilityComponent);
+
 }
 
-bool USpellDataLibrary::IsAttackable(const IGameplayTagAssetInterface& abilityComponent)
+bool USpellDataLibrary::BP_IsAttackable(const URTSAbilitySystemComponent* abilityComponent)
 {
-   return abilityComponent.HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Phased")) ||
-          abilityComponent.HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Ghost"));
+   return IsStunned(abilityComponent);
+
+}
+
+bool USpellDataLibrary::IsStunned(const IGameplayTagAssetInterface* abilityComponent)
+{
+   return abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff.Stunned")) ? true : false;
+}
+
+bool USpellDataLibrary::IsSilenced(const IGameplayTagAssetInterface* abilityComponent)
+{
+   return abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff.Silenced")) ? true : false;
+}
+
+bool USpellDataLibrary::IsInvisible(const IGameplayTagAssetInterface* abilityComponent)
+{
+   return abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")) &&
+          !abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Marked"));
+}
+
+bool USpellDataLibrary::IsImmortal(const IGameplayTagAssetInterface* abilityComponent)
+{
+   return abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Immortality"));
+}
+
+bool USpellDataLibrary::IsWard(const IGameplayTagAssetInterface* abilityComponent)
+{
+   return abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Ward"));
+}
+
+bool USpellDataLibrary::IsGodMode(const IGameplayTagAssetInterface* abilityComponent)
+{
+   return abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.GodMode"));
+}
+
+bool USpellDataLibrary::IsAttackable(const IGameplayTagAssetInterface* abilityComponent)
+{
+   return abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Phased")) ||
+          abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Ghost"));
 }

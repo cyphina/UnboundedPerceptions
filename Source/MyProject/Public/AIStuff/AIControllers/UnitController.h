@@ -17,6 +17,7 @@ class UMySpell;
 class URTSAttackExecution;
 class URTSDeathExecution;
 class URTSMoveExecution;
+struct FUpDamage;
 
 using FAIMessageObserverHandle = TSharedPtr<struct FAIMessageObserver, ESPMode::Fast>;
 
@@ -77,7 +78,18 @@ class MYPROJECT_API AUnitController : public AAIController
    UFUNCTION(BlueprintCallable, Category = "Action")
    void Attack();
 
-   FOnUnitStopped& OnUnitStopped() { return OnUnitStopped(); }
+   /**
+    * Function to move to appropriate distance from target and face direction*
+    * This variant is used when initiating some kind of BeginAction() operation we have to move to a closer location before we can start our action
+    * @param range - Distance away from target we can be to stop moving closer
+    * @param targetLocation - Actual location of target point we're attempting to move closer to
+    * @param finishedTurnAction - What should we tell this unit to do after we finished moving and turn towards our target?
+    */
+   bool AdjustPosition(float range, FVector targetLocation, TFunction<void()> finishedTurnAction);
+
+   bool AdjustPosition(float range, AActor* targetActor, TFunction<void()> finishedTurnAction);
+
+   FOnUnitStopped& OnUnitStopped() { return OnUnitStoppedEvent; }
 
    static const int CHASE_RANGE = 100;
 
@@ -89,7 +101,10 @@ class MYPROJECT_API AUnitController : public AAIController
     * on how they use their blackboards as well as starting the tree*/
    void OnPossess(APawn* InPawn) override;
 
-   /** Holds logic for basic auto attacks */
+   /**
+    * Holds logic for basic auto attacks. By default this requires a targeted attack component but some units have custom attacks which may not require them to undergo
+    * the targeting procedure.
+    */
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<URTSAttackExecution> customAttackLogic;
 
@@ -110,9 +125,6 @@ class MYPROJECT_API AUnitController : public AAIController
 
  private:
    UFUNCTION()
-   void OnDamageReceived(const FUpDamage& d);
-
-   UFUNCTION()
    void OnActorTurnFinished();
 
    UFUNCTION()
@@ -125,6 +137,8 @@ class MYPROJECT_API AUnitController : public AAIController
    void TurnActor(float turnValue);
 
    void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
+
+   void OnDamageReceived(const FUpDamage& d);
 
    /** This timeline is for when we have to turn towards a point (FVector)*/
    void SetupTurnPointTimeline();
@@ -146,17 +160,6 @@ class MYPROJECT_API AUnitController : public AAIController
     * Function to move to appropriate distance from target and face the target
     */
    bool AdjustPosition(const float range, AActor* targetActor);
-
-   /**
-    * Function to move to appropriate distance from target and face direction*
-    * This variant is used when initiating some kind of BeginAction() operation we have to move to a closer location before we can start our action
-    * @param range - Distance away from target we can be to stop moving closer
-    * @param targetLocation - Actual location of target point we're attempting to move closer to
-    * @param finishedTurnAction - What should we tell this unit to do after we finished moving and turn towards our target?
-    */
-   bool AdjustPosition(float range, FVector targetLocation, TFunction<void()> finishedTurnAction);
-
-   bool AdjustPosition(float range, AActor* targetActor, TFunction<void()> finishedTurnAction);
 
    /**
     * @brief Used in adjust position to setup turning after we finished moving, else we trigger the finish move action.

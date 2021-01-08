@@ -1,8 +1,8 @@
 #include "WorldObjects/Components/UpDamageTrackingComponent.h"
 
+#include "DamageStructs.h"
 #include "Unit.h"
 #include "UpStatComponent.h"
-#include "SpellSystem/Calcs/RTSDamageCallbacks.h"
 
 UUpDamageTrackingComponent::UUpDamageTrackingComponent()
 {
@@ -12,8 +12,9 @@ UUpDamageTrackingComponent::UUpDamageTrackingComponent()
 void UUpDamageTrackingComponent::BeginPlay()
 {
    AUnit* unitOwner = Cast<AUnit>(GetOwner());
-   unitOwner->OnUnitDamageDealtEvent //OnDamageEvent.AddUObject(this, &UUpDamageTrackingComponent::RecordDataOnDamageOrHealingEvent);
-   unitOwner->OnUnitDamageReceivedEvent
+   // TODO: Implement this!
+   //unitOwner->OnUnitDamageDealt() //OnDamageEvent.AddUObject(this, &UUpDamageTrackingComponent::RecordDataOnDamageOrHealingEvent);
+   //unitOwner->OnUnitDamageReceived()
 }
 
 void UUpDamageTrackingComponent::TrackNonUnitDamageEvent(const FUpDamage& d, float worldTime)
@@ -41,7 +42,7 @@ void UUpDamageTrackingComponent::TrackUnitDamageEvent(const FUpDamage& d, float 
 void UUpDamageTrackingComponent::RecordDataOnDamageOrHealingReceivedEvent(const FUpDamage& d)
 {
    // Store timestamp of when damage was taken for informative purposes
-   float worldTime = GetWorld()->GetTimeSeconds();
+   const float worldTime = GetWorld()->GetTimeSeconds();
    if(d.sourceUnit) {
       TrackUnitDamageEvent(d, worldTime);
    } else {

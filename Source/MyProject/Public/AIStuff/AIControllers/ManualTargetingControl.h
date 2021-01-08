@@ -3,6 +3,7 @@
 #include "ManualTargetingControl.generated.h"
 
 struct FUpSpellTargeting;
+class UMySpell;
 
 UINTERFACE(MinimalAPI)
 class UManualTargetingController : public UInterface
@@ -16,7 +17,5 @@ class IManualTargetingController
 
  public:
    virtual void FinalizeSpellTargeting(const FUpSpellTargeting* spellTargeting, TSubclassOf<UMySpell> spellClass, const FHitResult&)       = 0;
-   virtual void FinalizeSpellTargetingOnSelf(const FUpSpellTargeting* spellTargeting, TSubclassOf<UMySpell> spellClass, const FHitResult&) = 0;
    virtual bool IsTargetingSelf()                                                                                                          = 0;
-   virtual void CastSpellOnSelf(TSubclassOf<UMySpell> spellClass)                                                                          = 0;
 };

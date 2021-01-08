@@ -126,7 +126,7 @@ FVector ARTSDoor::GetInteractableLocation_Implementation() const
 {
    // Figure out what side of the door we are on by checking the coordinates of the actor relative to the door
    ABaseHero* heroRef = nullptr;
-   for(auto hero : cpcRef->GetBasePlayer()->heroes) {
+   for(auto hero : cpcRef->GetBasePlayer()->GetHeroes()) {
       if(hero->GetCurrentInteractable() == this) {
          heroRef = hero;
          break;

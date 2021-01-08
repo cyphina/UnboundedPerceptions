@@ -27,6 +27,9 @@ class MYPROJECT_API AAlly : public AUnit
    UFUNCTION(BlueprintCallable)
    bool GetOverlappingObjects(TArray<FHitResult>& hits);
 
+   UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
+   AAllyAIController* GetAllyAIController() const { return allyController; }
+   
    /** Polymorphic selection override for caching units in basePlayer */
    void SetSelected(bool value) override;
 
@@ -38,6 +41,9 @@ class MYPROJECT_API AAlly : public AUnit
    const TSet<AUnit*>& GetSeenEnemies() const;
 
    bool GetIsEnemy() const override final { return false; }
+
+   const TSet<AUnit*>* GetVisibleEnemies_Impl() const override;
+   const TSet<AUnit*>* GetAllies_Impl() const override;
 
    UPROPERTY()
    AAllyAIController* allyController;
@@ -53,9 +59,6 @@ class MYPROJECT_API AAlly : public AUnit
    void EndPlay(const EEndPlayReason::Type eReason) override;
    void PossessedBy(AController* newAllyControllerRef) override;
    void SetEnabled(bool bEnabled) override;
-
-   UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
-   FORCEINLINE AAllyAIController* GetAllyAIController() const { return allyController; }
 
  private:
    /** What enemies are in our radius determined via sphere overlap events */

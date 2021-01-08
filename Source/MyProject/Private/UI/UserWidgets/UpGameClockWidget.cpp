@@ -8,11 +8,11 @@
 
 void UUpGameClockWidget::NativeOnInitialized()
 {
-   gameClockRef = &Cast<ARTSGameState>(UGameplayStatics::GetGameState(GetOwningPlayer()))->GetGameClock();
-   gameClockRef->GetOnHourPassedEvent().AddUObject(this, UpdateHour);
-   gameClockRef->GetOnDayPassedEvent().AddUObject(this, UpdateDay);
-   gameClockRef->GetOnMonthPassedEvent().AddUObject(this, UpdateMonth);
-   gameClockRef->GetOnYearPassedEvent().AddUObject(this, UpdateYear);
+   gameClockRef = Cast<ARTSGameState>(UGameplayStatics::GetGameState(GetOwningPlayer()))->GetGameClock();
+   gameClockRef->GetOnHourPassedEvent().AddUObject(this, &UUpGameClockWidget::UpdateHour);
+   gameClockRef->GetOnDayPassedEvent().AddUObject(this, &UUpGameClockWidget::UpdateDay);
+   gameClockRef->GetOnMonthPassedEvent().AddUObject(this, &UUpGameClockWidget::UpdateMonth);
+   gameClockRef->GetOnYearPassedEvent().AddUObject(this, &UUpGameClockWidget::UpdateYear);
    SetInitialClockDisplay();
 }
 

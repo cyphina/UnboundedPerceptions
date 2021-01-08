@@ -1,11 +1,13 @@
 #pragma once
 #include "Engine/DataTable.h"
-#include "Engine/Texture2D.h"
+#include "UnitinfoRow.generated.h"
+
+class UTexture2D;
 
 /** Used so we can store enemy unit data in a table*/
 USTRUCT(BlueprintType)
 struct FUnitInfoRow : public FTableRowBase {
-   GENERATED_BODY()
+   GENERATED_USTRUCT_BODY()
 
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
    FText name;

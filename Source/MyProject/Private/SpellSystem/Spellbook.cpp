@@ -30,7 +30,7 @@ USpellBook* USpellBook::CreateSpellBook(ABaseHero* heroRef)
 {
    USpellBook* spellbook = NewObject<USpellBook>(heroRef);
    spellbook->Init();
-   spellbook->heroRef = &heroRef;
+   spellbook->heroRef = heroRef;
    return spellbook;
 }
 
@@ -110,61 +110,94 @@ void USpellBook::Init()
 
 void USpellBook::Respec()
 {
+   // TODO: Implement this
+}
+
+bool USpellBook::LearnNewSpell(UMySpell* spellObject) {
+   URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Spellbook", "LearnNewSpell", "Learned a new spell"));
+   learnedSpells.AddTail(spellNodes[spellObject->spellDefaults.id]);
+   OnSpellLearned().Broadcast(spellObject->GetClass());
+
+   for(SpellNode s : spellNodes[spellObject->spellDefaults.id].unlockedSpellNodes) 
+   {
+      if(IsLearnable(s))
+         learnableSpells.AddTail(s);
+   }
+   return true;
+}
+
+bool USpellBook::TryUpgradeSpellLevel(UMySpell* spellObject, FGameplayAbilitySpec* abilityInfo)
+{
+   if(!CheckIfSpellMaxLevel(abilityInfo, spellObject))
+   {
+      ++abilityInfo->Level;
+      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Spellbook", "Upgrade", "Upgraded Ability!"));
+      heroRef->GetAbilitySystemComponent()->MarkAbilitySpecDirty(*abilityInfo);
+      OnSpellUpgraded().Broadcast(spellObject->GetClass());
+      return true;
+   } else {
+      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Spellbook", "UpgradeFailMax", "Ability Already at Max Level!"));
+   }
+   return false;
 }
 
 bool USpellBook::LearnSpell(int index)
 {
    check(index >= 0 && index < availableSpells.Num());
    UMySpell* spellObject = availableSpells[index].GetDefaultObject();
-   // if we haven't learned this spell yet
 
    if(spellObject) {
-      if(heroRef->GetSkillPoints() <= 0) {
-         cpcRef->GetWidgetProvider()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Spellbook", "OutOfPoints", "Need more skill points!"));
-         return false;
-      }
-
-      if(heroRef->GetStatComponent()->GetUnitLevel() < spellObject->GetReqLevel(heroRef->GetAbilitySystemComponent())) {
-         cpcRef->GetWidgetProvider()->GetIngameHUD()->DisplayHelpText(
-             NSLOCTEXT("Spellbook", "LevelRequirementNotMet", "You are not high enough level to learn this spell"));
-         return false;
-      }
-
-      for(int i : spellObject->GetPreReqs()) // if we have the prereqs go on
-      {
-         if(!GetLearnableSpells().Contains(i)) {
-            cpcRef->GetWidgetProvider()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Spellbook", "PrereqsNotMet", "You're missing some prerequisite skill(s)"));
-            return false;
-         }
-      }
-
+      if(!CheckLevel(spellObject)) return false;
+      if(!CheckPoints()) return false;
+      if(!CheckPrereqs(spellObject)) return false;
+ 
       FGameplayAbilitySpec* abilityInfo = heroRef->GetAbilitySystemComponent()->FindAbilitySpecFromClass(spellNodes[spellObject->spellDefaults.id].spellRef);
-      if(!GetLearnedSpells().Contains(index)) // this spell has not been learned yet
+      
+      if(!GetLearnedSpells().Contains(index)) 
       {
-         cpcRef->GetWidgetProvider()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Spellbook", "LearnNewSpell", "Learned a new spell"));
-         learnedSpells.AddTail(spellNodes[spellObject->spellDefaults.id]);
-         --heroRef->skillPoints;
-         // Don't have to increment level since we start off abilities at level 1 anyways
-         for(SpellNode s : spellNodes[spellObject->spellDefaults.id].unlockedSpellNodes) // if this spell unlocked new ones, then add those new ones to the learnable list
-         {
-            if(IsLearnable(s)) learnableSpells.AddTail(s);
-         }
-         return true;
-      } else // if we already learned this spell, level it up
+         return LearnNewSpell(spellObject);
+      } else
       {
-         if(abilityInfo->Level <
-            USpellDataManager::GetData().GetSpellInfo(availableSpells[index].GetDefaultObject()->spellDefaults.id)->maxLevel) // if we aren't at the max level already
-         {
-            ++abilityInfo->Level; // increment the level by 1
-            cpcRef->GetWidgetProvider()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Spellbook", "Upgrade", "Upgraded Ability!"));
-            heroRef->GetAbilitySystemComponent()->MarkAbilitySpecDirty(*abilityInfo);
-            --heroRef->skillPoints;
-            return true;
-         } else
-            cpcRef->GetWidgetProvider()->GetIngameHUD()->DisplayHelpText(NSLOCTEXT("Spellbook", "UpgradeFailMax", "Ability Already at Max Level!"));
+         return TryUpgradeSpellLevel(spellObject, abilityInfo);
       }
    }
    return false;
+}
+
+bool USpellBook::CheckLevel(UMySpell* spellObject) const
+{
+   if(heroRef->GetStatComponent()->GetUnitLevel() < spellObject->GetReqLevel(heroRef->GetAbilitySystemComponent())) {
+      URTSIngameWidget::NativeDisplayHelpText(GetWorld(),
+                                              NSLOCTEXT("Spellbook", "LevelRequirementNotMet", "You are not high enough level to learn this spell"));
+      return false;
+   }
+   return true;
+}
+
+bool USpellBook::CheckPoints() const
+{
+   if(heroRef->GetSkillPoints() <= 0) {
+      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Spellbook", "OutOfPoints", "Need more skill points!"));
+      return false;
+   }
+   return true;
+}
+
+bool USpellBook::CheckPrereqs(UMySpell* spellObject) const
+{
+   for(int i : spellObject->GetPreReqs()) {
+      if(!GetLearnableSpells().Contains(i)) {
+         URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Spellbook", "PrereqsNotMet", "You're missing some prerequisite skill(s)"));
+         return false;
+      }
+   }
+   return true;
+}
+
+bool USpellBook::CheckIfSpellMaxLevel(FGameplayAbilitySpec* abilityInfo, UMySpell* spellObject) const
+{
+   return abilityInfo->Level >
+            USpellDataManager::GetData().GetSpellInfo(spellObject->spellDefaults.id)->maxLevel;
 }
 
 void USpellBook::Update(int index)

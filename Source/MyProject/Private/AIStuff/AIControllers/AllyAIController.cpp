@@ -6,27 +6,21 @@
 
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
-#include "BehaviorTree/BlackboardComponent.h"
 
 #include "UserInput.h"
 #include "RTSPawn.h"
 
 #include "UI/HUDManager.h"
-#include "UI/UserWidgets/RTSIngameWidget.h"
 
 #include "WorldObjects/Ally.h"
 #include "WorldObjects/Unit.h"
 
-#include "InteractableBase.h"
-
-#include "SpellSystem/MySpell.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "ManualSpellComponent.h"
+
 #include "RTSStateComponent.h"
-#include "SpellDataLibrary.h"
-#include "SpellTargetingTypes.h"
+
 #include "TargetComponent.h"
-#include "UpStatComponent.h"
+#include "PatrolComponent.h"
 
 AAllyAIController::AAllyAIController()
 {
@@ -59,18 +53,4 @@ void AAllyAIController::SwitchAIModes(AllyBehavioralMode newMode)
       behaviorTreeComp->StartTree(*behaviorTrees[static_cast<uint8>(newMode)]);
    }
    currentAllyBehavior = newMode;
-}
-
-void AAllyAIController::BeginAttack(AUnit* target)
-{
-   if(IsValid(target) && USpellDataLibrary::IsAttackable(*target->GetAbilitySystemComponent())) {
-      if(USpellDataLibrary::IsStunned(*allyRef->GetAbilitySystemComponent())) {
-         Stop();
-         GetStateComponent()->ChangeState(EUnitState::STATE_ATTACKING);
-         allyRef->targetComponent->SetTarget(target);
-         AdjustPosition(allyRef->statComponent->GetMechanicAdjValue(EMechanics::AttackRange), target, [this]() { PrepareAttack(); });
-      }
-   } else {
-      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), INVALID_TARGET_TEXT);
-   }
 }

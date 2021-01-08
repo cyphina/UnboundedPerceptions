@@ -6,7 +6,7 @@
 
 class AUnit;
 
-/** Holds vision related information and doubles as a collision component to check if units fall withiin the vision radius*/
+/** Holds vision related information and doubles as a collision component to check if units fall within the vision radius*/
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class MYPROJECT_API URTSVisionComponent : public USphereComponent
 {

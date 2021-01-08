@@ -6,6 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "RTSAbilitySystemComponent.generated.h"
 
+struct FDamageScalarStruct;
 class UMySpell;
 
 /**
@@ -28,13 +29,12 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
 
    void SetSpellAtSlot(TSubclassOf<UMySpell> spellClassToSet, int slotIndex);
 
-   const TArray<TSubclassOf<class UMySpell>>& GetAbilities() const { return abilities; }
+   const TArray<TSubclassOf<UMySpell>>& GetAbilities() const { return abilities; }
 
    int FindSlotIndexOfSpell(TSubclassOf<UMySpell> spellToLookFor) const;
 
-
    /** Do we have the resources necessary to cast this spell; also make sure we don't have any status effects preventing us*/
-   bool CanCast(TSubclassOf<UMySpell> spellToCheck);
+   bool CanCast(TSubclassOf<UMySpell> spellToCheck) const;
 
    /** Attempts to removes invisibility effect. Usually called when a unit performs an action when they are invisible, thus breaking the invisibility*/
    void TryRemoveInvisibility();
@@ -42,8 +42,12 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
    /** Overriden to allow us to add things like purging buffs*/
    FActiveGameplayEffectHandle ApplyGameplayEffectSpecToSelf(const FGameplayEffectSpec& Spec, FPredictionKey PredictionKey) override;
 
-   void ApplyDamageToSelf();
-   void ApplyDamageToTarget(URTSAbilitySystemComponent* targetComponent);
+   FGameplayEffectSpecHandle MakeDamageEffect(FDamageScalarStruct damageScalars, FGameplayTag attackElement);
+   void                      ApplyDamageToSelf(FDamageScalarStruct damageScalars, FGameplayTag attackElement);
+   void                      ApplyDamageToTarget(URTSAbilitySystemComponent* targetComponent, FDamageScalarStruct damageScalars, FGameplayTag attackElement);
+
+   FGameplayAbilitySpec* FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass);
+   const FGameplayAbilitySpec* FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass) const;
 
  protected:
    /** List of abilities that are in unit's skill slots */

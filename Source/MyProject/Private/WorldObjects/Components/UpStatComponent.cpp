@@ -10,6 +10,11 @@ UUpStatComponent::UUpStatComponent()
    PrimaryComponentTick.bCanEverTick = false;
 }
 
+void UUpStatComponent::UpdateStats(const FGameplayAttribute& updatedStat) const
+{
+   baseC->StatUpdate(updatedStat);
+}
+
 void UUpStatComponent::BeginPlay()
 {
    Super::BeginPlay();

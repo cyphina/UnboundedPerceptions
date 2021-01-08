@@ -82,7 +82,7 @@ void UNPCSocialMenu::Psychosis()
 
 void UNPCSocialMenu::Shop()
 {
-   hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Shop_General));
+   hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Shop_General));
 }
 
 bool UNPCSocialMenu::OnWidgetAddToViewport_Implementation()
@@ -91,8 +91,8 @@ bool UNPCSocialMenu::OnWidgetAddToViewport_Implementation()
    // SetMainView();
 
    // Hide the ingame widget so we just see social options
-   if(hudManagerRef->IsWidgetOnScreen(HUDs::HS_Actionbar))
-      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Actionbar));
+   if(hudManagerRef->IsWidgetOnScreen(EHUDs::HS_Actionbar))
+      hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Actionbar));
 
    dialogWheel->OnWidgetAddToViewport();
 
@@ -101,9 +101,9 @@ bool UNPCSocialMenu::OnWidgetAddToViewport_Implementation()
 
 void UNPCSocialMenu::Leave()
 {
-   hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Social));
-   if(!hudManagerRef->IsWidgetOnScreen(HUDs::HS_Actionbar))
-      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Actionbar));
+   hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Social));
+   if(!hudManagerRef->IsWidgetOnScreen(EHUDs::HS_Actionbar))
+      hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Actionbar));
    // Reactivate patrolling and remove global reference to current blocking interactable
    npcRef->OnDoneTalking();
 }

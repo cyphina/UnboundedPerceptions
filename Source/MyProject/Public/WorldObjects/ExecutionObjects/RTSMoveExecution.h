@@ -1,4 +1,4 @@
-﻿// Created 7/30/20 4:5 AM
+﻿// Created 7/30/20 4:53 AM
 
 #pragma once
 
@@ -6,11 +6,10 @@
 #include "RTSMoveExecution.generated.h"
 
 UCLASS(BlueprintType, Blueprintable, Abstract)
-class MYPROJECT_API URTSMoveExecution : public public UObject, public IRTSExecution
+class URTSMoveExecution : public UObject, public IRTSExecution
 {
-   GENERATED_UCLASS_BODY()
+   GENERATED_BODY()
 
  public:
-   void Execute() override;
    void Execute_Implementation() override;
 };

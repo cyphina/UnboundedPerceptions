@@ -12,6 +12,7 @@
 #include "DialogSystem/NPCSocialMenu.h"
 #include "Quests/QuestManager.h"
 #include "LevelSaveStructs.h"
+#include "RTSIngameWidget.h"
 #include "AIStuff/AIControllers/NPCAIController.h"
 #include "AIModule/Classes/BrainComponent.h"
 
@@ -25,7 +26,7 @@ ANPC::ANPC()
    onDialogEndTriggerData.enabled     = true;
 
    TArray<FString> triggerValues;
-   triggerValues.Add(FString::FromInt(static_cast<uint8>(HUDs::HS_Social)));
+   triggerValues.Add(FString::FromInt(static_cast<uint8>(EHUDs::HS_Social)));
    onDialogEndTriggerData.triggerValues = triggerValues;
    onDialogEndTriggerData.numCalls      = -1;
 
@@ -118,7 +119,7 @@ void ANPC::Interact_Implementation(ABaseHero* hero)
 
    // If this npc wants to converse, we go to another screen after the initial conversation where we can interact more
    if(Execute_CanInteract(this)) {
-      hudManagerRef->GetSocialWindow()->SetNPC(this);
+      hudManagerRef->GetIngameHUD()->GetSocialWindow()->SetNPC(this);
       SetupAppropriateView();
       // If they have a conversation starter
       if(conversationStarterName != "") {
@@ -145,7 +146,7 @@ void ANPC::OnDoneInitialTalk()
       controllerRef->GetBasePlayer()->heroInBlockingInteraction = nullptr;
    } else {
       // If NPC does want to talk, open up the conversation screen
-      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Social));
+      hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Social));
    }
 }
 
@@ -159,7 +160,7 @@ void ANPC::OnDoneTalking()
 
 void ANPC::SetupAppropriateView()
 {
-   hudManagerRef->GetSocialWindow()->SetConversationView();
+   hudManagerRef->GetIngameHUD()->GetSocialWindow()->SetConversationView();
 }
 
 FVector ANPC::GetInteractableLocation_Implementation() const

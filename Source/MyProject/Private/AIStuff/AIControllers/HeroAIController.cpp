@@ -56,7 +56,7 @@ void AHeroAIController::BeginInteract(AActor* interactable)
             // If we can't reach the target location component, move towards the actor
             FNavLocation resLocation;
             if(UNavigationSystemV1::GetCurrent(GetWorld())->GetRandomReachablePointInRadius(interactableLoc, ABaseHero::INTERACT_RANGE, resLocation))
-               AdjustPosition(10, resLocation);
+               AdjustPosition(10, resLocation, [this]() { IInteractable::Execute_Interact(heroRef->currentInteractable, heroRef); });
          }
       } else {
          // If our target actor can move, we'll starting walking towards the actor.  If it is blocked off lets hope the designer put it in a path where we can walk towards it eventually
@@ -84,12 +84,12 @@ void AHeroAIController::BeginUseItem(int itemToUseID, int slotIndex)
 void AHeroAIController::Stop()
 {
    Super::Stop();
-   // If we are the hero not blocking interaction (we need to store this since we don't want any other heros performing blocking interactions)
    const AUserInput* PC = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
    if(ABasePlayer* basePlayer = PC ? PC->GetBasePlayer() : nullptr) {
-      basePlayer->heroInBlockingInteraction != heroRef;
-      heroRef->currentInteractable = nullptr;
-      heroRef->currentItemId.Reset();
-      heroRef->currentItemSlotIndex.Reset();
+      if(basePlayer->heroInBlockingInteraction != heroRef) {
+         heroRef->currentInteractable = nullptr;
+         heroRef->currentItemId.Reset();
+         heroRef->currentItemSlotIndex.Reset();
+      }
    }
 }

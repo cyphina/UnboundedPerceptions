@@ -43,6 +43,8 @@
 #include "Minigames/MinigameManager.h"
 #include "Quests/QuestManager.h"
 
+TBitArray<FDefaultBitArrayAllocator> AHUDManager::currentlyDisplayedWidgetsBitSet = TBitArray<FDefaultBitArrayAllocator>(false, HUDCount);
+
 AHUDManager::AHUDManager() : Super()
 {
    PrimaryActorTick.bCanEverTick = false;
@@ -90,31 +92,31 @@ void AHUDManager::AddHUD(uint8 newState)
 {
    if(!bBlocked || currentlyDisplayedWidgetsBitSet[newState] == true) {
       switch(newState) {
-         case HUDs::HS_Ingame: ApplyHUD(newState, true, true, false); break;
-         case HUDs::HS_Inventory: ApplyHUD(newState, true, true, false); break;
-         case HUDs::HS_Equipment: ApplyHUD(newState, true, true, false); break;
-         case HUDs::HS_Character: ApplyHUD(newState, true, false, true); break;
-         case HUDs::HS_QuestJournal: ApplyHUD(newState, true, false, true); break;
-         case HUDs::HS_QuestList: ApplyHUD(newState, true, true, false); break;
-         case HUDs::HS_Spellbook: ApplyHUD(newState, true, true, false); break;
-         case HUDs::HS_Shop_General: ApplyHUD(static_cast<int>(HUDs::HS_Shop_General), true, false, false); break;
-         case HUDs::HS_Storage: ApplyHUD(newState, true, true, false); break;
-         case HUDs::HS_Dialog:
-         case HUDs::HS_Confirmation:
-         case HUDs::HS_InputBox: {
+         case EHUDs::HS_Ingame: ApplyHUD(newState, true, true, false); break;
+         case EHUDs::HS_Inventory: ApplyHUD(newState, true, true, false); break;
+         case EHUDs::HS_Equipment: ApplyHUD(newState, true, true, false); break;
+         case EHUDs::HS_Character: ApplyHUD(newState, true, false, true); break;
+         case EHUDs::HS_QuestJournal: ApplyHUD(newState, true, false, true); break;
+         case EHUDs::HS_QuestList: ApplyHUD(newState, true, true, false); break;
+         case EHUDs::HS_Spellbook: ApplyHUD(newState, true, true, false); break;
+         case EHUDs::HS_Shop_General: ApplyHUD(static_cast<int>(EHUDs::HS_Shop_General), true, false, false); break;
+         case EHUDs::HS_Storage: ApplyHUD(newState, true, true, false); break;
+         case EHUDs::HS_Dialog:
+         case EHUDs::HS_Confirmation:
+         case EHUDs::HS_InputBox: {
             UE_LOG(LogTemp, Verbose, TEXT("Don't call AddHUD(uint8) for widgets with parameters.  Call their respective AddHUD"));
             GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("Don't call AddHUD(uint8) for widgets with parameters.  Call their respective AddHUD"));
             ensure(false);
             return;
             break;
          }
-         case HUDs::HS_ExamineMenu: ApplyHUD(newState, true, false, false);
-         case HUDs::HS_Social: ApplyHUD(newState, true, false, false); break;
-         case HUDs::HS_Break: ApplyHUD(newState, true, false, false); break;
-         case HUDs::HS_Settings: ApplyHUD(newState, true, false, true); break;
-         case HUDs::HS_SaveLoad: ApplyHUD(newState, true, false, true); break;
-         case HUDs::HS_ChatBox: ApplyHUD(newState, true, true, false); break;
-         case HUDs::HS_KeyMap: ApplyHUD(newState, true, false, false); break;
+         case EHUDs::HS_ExamineMenu: ApplyHUD(newState, true, false, false);
+         case EHUDs::HS_Social: ApplyHUD(newState, true, false, false); break;
+         case EHUDs::HS_Break: ApplyHUD(newState, true, false, false); break;
+         case EHUDs::HS_Settings: ApplyHUD(newState, true, false, true); break;
+         case EHUDs::HS_SaveLoad: ApplyHUD(newState, true, false, true); break;
+         case EHUDs::HS_ChatBox: ApplyHUD(newState, true, true, false); break;
+         case EHUDs::HS_KeyMap: ApplyHUD(newState, true, false, false); break;
          default: break;
       }
    }
@@ -122,47 +124,47 @@ void AHUDManager::AddHUD(uint8 newState)
 
 void AHUDManager::ShowDialogWithSource(FName conversationName, EDialogBoxCloseCase dialogSource)
 {
-   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)] && conversationName != "") {
+   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_Dialog)] && conversationName != "") {
       GetIngameHUD()->GetDialogBox()->SetConversation(conversationName);
       GetIngameHUD()->GetDialogBox()->SetDialogSource(dialogSource);
    }
-   ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false);
+   ApplyHUD(static_cast<int>(EHUDs::HS_Dialog), true, true, false);
 }
 
 void AHUDManager::ShowDialogCustomLines(TArray<FDialogData> linesToDisplay, EDialogBoxCloseCase dialogSource)
 {
-   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Dialog)] && linesToDisplay.Num() > 0) {
+   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_Dialog)] && linesToDisplay.Num() > 0) {
       GetIngameHUD()->GetDialogBox()->SetDialogLines(linesToDisplay);
       GetIngameHUD()->GetDialogBox()->SetDialogSource(dialogSource);
-      ApplyHUD(static_cast<int>(HUDs::HS_Dialog), true, true, false);
+      ApplyHUD(static_cast<int>(EHUDs::HS_Dialog), true, true, false);
    }
 }
 
 void AHUDManager::ShowConfirmationBox(FName funcName, UObject* funcObject, FText newTitle, FText newDesc)
 {
-   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_Confirmation)]) {
+   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_Confirmation)]) {
       if(funcObject) {
          GetConfirmationBox()->OnConfirmationMade().BindUFunction(funcObject, funcName);
          GetConfirmationBox()->SetTitle(newTitle);
          GetConfirmationBox()->SetDesc(newDesc);
-         ApplyHUD(static_cast<int>(HUDs::HS_Confirmation), true, false, false);
+         ApplyHUD(static_cast<int>(EHUDs::HS_Confirmation), true, false, false);
       }
    } else {
-      ApplyHUD(static_cast<int>(HUDs::HS_Confirmation), true, false, false);
+      ApplyHUD(static_cast<int>(EHUDs::HS_Confirmation), true, false, false);
    }
 }
 
 void AHUDManager::ShowInputBox(FName funcName, UObject* funcObject, FText newTitle, FText newDesc)
 {
-   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(HUDs::HS_InputBox)]) {
+   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_InputBox)]) {
       if(funcObject) {
          GetInputBox()->OnInputConfirmed().BindUFunction(funcObject, funcName);
          GetInputBox()->SetTitle(newTitle);
          GetInputBox()->SetDesc(newDesc);
-         ApplyHUD(static_cast<int>(HUDs::HS_InputBox), true, false, false);
+         ApplyHUD(static_cast<int>(EHUDs::HS_InputBox), true, false, false);
       }
    } else {
-      ApplyHUD(static_cast<int>(HUDs::HS_InputBox), true, false, false);
+      ApplyHUD(static_cast<int>(EHUDs::HS_InputBox), true, false, false);
    }
 }
 
@@ -249,32 +251,32 @@ void AHUDManager::UpdateWidgetTracking(int updateIndex, bool enableClickEvents, 
 
 URTSIngameWidget* AHUDManager::GetIngameHUD() const
 {
-   return Cast<URTSIngameWidget>(widgetReferences[static_cast<int>(HUDs::HS_Ingame)]);
+   return Cast<URTSIngameWidget>(widgetReferences[static_cast<int>(EHUDs::HS_Ingame)]);
 }
 
 UBreakMenu* AHUDManager::GetBreakMenu() const
 {
-   return Cast<UBreakMenu>(widgetReferences[static_cast<int>(HUDs::HS_Break)]);
+   return Cast<UBreakMenu>(widgetReferences[static_cast<int>(EHUDs::HS_Break)]);
 }
 
 USettingsMenu* AHUDManager::GetSettingsMenu() const
 {
-   return Cast<USettingsMenu>(widgetReferences[static_cast<int>(HUDs::HS_Settings)]);
+   return Cast<USettingsMenu>(widgetReferences[static_cast<int>(EHUDs::HS_Settings)]);
 }
 
 UConfirmationBox* AHUDManager::GetConfirmationBox() const
 {
-   return Cast<UConfirmationBox>(widgetReferences[static_cast<int>(HUDs::HS_Confirmation)]);
+   return Cast<UConfirmationBox>(widgetReferences[static_cast<int>(EHUDs::HS_Confirmation)]);
 }
 
 URTSInputBox* AHUDManager::GetInputBox() const
 {
-   return Cast<URTSInputBox>(widgetReferences[static_cast<int>(HUDs::HS_InputBox)]);
+   return Cast<URTSInputBox>(widgetReferences[static_cast<int>(EHUDs::HS_InputBox)]);
 }
 
 UStartMenu* AHUDManager::GetStartMenu() const
 {
-   return Cast<UStartMenu>(widgetReferences[static_cast<int>(HUDs::HS_Start)]);
+   return Cast<UStartMenu>(widgetReferences[static_cast<int>(EHUDs::HS_Start)]);
 }
 
 void AHUDManager::InjectDependentClasses()

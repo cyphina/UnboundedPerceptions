@@ -9,6 +9,7 @@
 #include "SettingsMenu.h"
 #include "RTSIngameWidget.h"
 #include "DialogBox.h"
+#include "RTSGameState.h"
 #include "EventSystem/EventManager.h"
 #include "EventSystem/Trigger.h"
 
@@ -25,10 +26,12 @@ bool UStartMenu::CheckIfSaveFileExists(FString saveFileName)
 {
    FString        saveFilesPath = FPaths::ProjectDir().Append("\\SavedGames\\");
    IPlatformFile& platformFile  = FPlatformFileManager::Get().GetPlatformFile();
-   if(!platformFile.DirectoryExists(*saveFilesPath)) {
+   if(!platformFile.DirectoryExists(*saveFilesPath))
+   {
       platformFile.CreateDirectory(*saveFilesPath);
    }
-   if(platformFile.FileExists(*(saveFilesPath + "\\" + saveFileName))) {
+   if(platformFile.FileExists(*(saveFilesPath + "\\" + saveFileName)))
+   {
       return true;
    }
    return false;
@@ -41,13 +44,16 @@ void UStartMenu::StartGameLevelTransition()
    // Renable ticks that are stopped in the level script
    controllerRef->SetActorTickEnabled(true);
    gameModeRef->SetActorTickEnabled(true);
-   GetWorld()->GetGameState()->SetActorTickEnabled(true);
+
+   if(ARTSGameState* gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState()))
+   {
+      gameStateRef->UpdateGameSpeed(2.f);
+      gameStateRef->SetActorTickEnabled(true);
+   }
 
    controllerRef->EnableInput(controllerRef);
    controllerRef->GetPawn()->EnableInput(controllerRef);
    // Change our game speed to default
-   hudManagerRef->GetIngameHUD()->speedIndex = 2;
-   hudManagerRef->GetIngameHUD()->SetGameSpeed();
 
    GameEventStartSetup();
 

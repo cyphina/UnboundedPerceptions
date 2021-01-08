@@ -18,8 +18,6 @@ UMyGameInstance::UMyGameInstance() {}
 void UMyGameInstance::Init()
 {
    Super::Init();
-   // Set up UpResourceManager globals
-   UpResourceManager::InitUpResourceManager();
 }
 
 void UMyGameInstance::Shutdown() { Super::Shutdown(); }

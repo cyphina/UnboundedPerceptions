@@ -34,7 +34,7 @@ void URTSSidebarWidget::UpdatePartyInformation()
       int index = 0;
       for(auto& handles : subscribedAttributeSetDelegateHandles) {
          if(handles.Key.IsValid() && handles.Value.IsValid()) {
-            UMyAttributeSet* attributeSet = const_cast<UMyAttributeSet*>(cpcRef->GetBasePlayer()->heroes[index]->GetAbilitySystemComponent()->GetSet<UMyAttributeSet>());
+            UMyAttributeSet* attributeSet = const_cast<UMyAttributeSet*>(cpcRef->GetBasePlayer()->GetHeroes()[index]->GetAbilitySystemComponent()->GetSet<UMyAttributeSet>());
             attributeSet->statUpdatedEvent.Remove(handles.Key);
             attributeSet->baseStatUpdatedEvent.Remove(handles.Value);
          } else
@@ -47,13 +47,13 @@ void URTSSidebarWidget::UpdatePartyInformation()
 
       writer->WriteArrayStart();
       // Create JSON for each hero object which is used to update the sidebar browser
-      for(auto hero : cpcRef->GetBasePlayer()->heroes) {
+      for(auto hero : cpcRef->GetBasePlayer()->GetHeroes()) {
          TSharedPtr<FJsonObject> heroObj = MakeShareable(new FJsonObject);
          heroObj->SetStringField("name", hero->GetGameName().ToString());
-         heroObj->SetNumberField("hitpoints", hero->statComponent->GetVitalCurValue(EVitals::Health));
-         heroObj->SetNumberField("maxHitpoints", hero->statComponent->GetVitalBaseValue(EVitals::Health));
-         heroObj->SetNumberField("mana", hero->statComponent->GetVitalCurValue(EVitals::Mana));
-         heroObj->SetNumberField("maxMana", hero->statComponent->GetVitalBaseValue(EVitals::Mana));
+         heroObj->SetNumberField("hitpoints", hero->GetStatComponent()->GetVitalCurValue(EVitals::Health));
+         heroObj->SetNumberField("maxHitpoints", hero->GetStatComponent()->GetVitalBaseValue(EVitals::Health));
+         heroObj->SetNumberField("mana", hero->GetStatComponent()->GetVitalCurValue(EVitals::Mana));
+         heroObj->SetNumberField("maxMana", hero->GetStatComponent()->GetVitalBaseValue(EVitals::Mana));
          heroObj->SetBoolField("bSelected", hero->GetSelected());
 
          // Start listening to the health values
@@ -195,7 +195,7 @@ void URTSSidebarWidget::HandleBluEvent(const FString& eventName, const FString& 
       cpcRef->GetCameraPawn()->clickedOnBrowserHud = true;
       UBluJsonObj* jsonObj                         = UBluBlueprintFunctionLibrary::ParseJSON(eventMessage);
       int          heroIndex                       = jsonObj->getNumValue("value");
-      ABaseHero*   selectedHeroRef                 = cpcRef->GetBasePlayer()->heroes[heroIndex];
+      ABaseHero*   selectedHeroRef                 = cpcRef->GetBasePlayer()->GetHeroes()[heroIndex];
       if(!cpcRef->IsInputKeyDown(EKeys::LeftShift)) {
          cpcRef->GetBasePlayer()->ClearSelectedAllies();
          selectedHeroRef->SetSelected(true);

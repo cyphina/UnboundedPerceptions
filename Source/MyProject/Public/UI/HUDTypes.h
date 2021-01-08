@@ -1,11 +1,12 @@
 ﻿#pragma once
+#include "EnumRange.h"
 
 /**
  * All the toggleable HUDs or HUDs that need some callback when added or hidden
  * in the game should be listed here.
  */
 UENUM(BlueprintType)
-enum class HUDs : uint8 {
+enum class EHUDs : uint8 {
    /** Used to be used to display all the hero information simultaneously, in a sidebar but replaced by actionbar*/
    HS_Ingame,
    /** Inventory for all heroes in party*/
@@ -51,7 +52,7 @@ enum class HUDs : uint8 {
    /** Widget which has buttons we can use to map our keys*/
    HS_KeyMap,
    /** Number of widgets managed by the HUDManager*/
-   HS_Count
+   HS_Count UMETA(Hidden)
 };
 
-ENUM_RANGE_BY_COUNT(HUDs, static_cast<uint8>(HUDs::HS_Count));
+ENUM_RANGE_BY_COUNT(EHUDs, static_cast<uint8>(EHUDs::HS_Count));

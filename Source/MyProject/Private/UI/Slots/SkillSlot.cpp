@@ -3,7 +3,6 @@
 #include "MyProject.h"
 #include "SkillSlot.h"
 #include "ActionSlot.h"
-#include "../ESkillContainer.h"
 #include "UserInput.h"
 #include "../HUDManager.h"
 #include "SpellSystem/MySpell.h"
@@ -125,7 +124,7 @@ void USkillSlot::UpdateSkillSlot(TSubclassOf<UMySpell> spellClass)
 void USkillSlot::ResetSkillSlot()
 {
    if(auto ownerAbilityComp = GetOwningAbilityComponent()) {
-      ownerAbilityComp->SetSpellAtSlot(nullptr, slotIndex);
+      SpellHUDEvents::OnSpellSlotReplacedEvent.Execute(slotIndex, nullptr);
       SetSlotImage(nullptr);
       OnCDFinished();
    }

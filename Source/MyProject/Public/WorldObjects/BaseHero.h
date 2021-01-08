@@ -4,9 +4,8 @@
 
 #include "Ally.h"
 #include "Items/Backpack.h"
+#include "Stats/StatEnums.h"
 #include "BaseHero.generated.h"
-
-enum class EAttributes : uint8;
 
 class ABasePlayer;
 class ABaseHero;
@@ -77,7 +76,7 @@ class MYPROJECT_API ABaseHero : public AAlly
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Interactable")
    AActor* GetCurrentInteractable() const { return Cast<AActor>(currentInteractable); }
 
-   /** Allows us to change this character's base attributes, which can modify their other stats which scale off that attribute */
+   /** Allows us to change this character's base attributes (PERMANENTLY), which can modify their other stats which scale off that attribute */
    UFUNCTION(BlueprintCallable)
    void ChangeAttribute(EAttributes att, bool isIncrementing);
 
@@ -88,6 +87,9 @@ class MYPROJECT_API ABaseHero : public AAlly
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
    int GetSkillPoints() const { return skillPoints; }
 
+   UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
+   int GetAttPoints() const { return attPoints; }
+   
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
    AHeroAIController* GetHeroController() const { return heroController; }
 
@@ -102,9 +104,9 @@ class MYPROJECT_API ABaseHero : public AAlly
 
    FOnPickupItem& OnPickupItem() { return OnPickupItemEvent; }
 
-   const Equip_Slot_Arr& GetEquipment() const;
+   const UEquipmentContainer* GetEquipment() const;
 
-   const UBackpack& GetBackpack() const { return *backpack; }
+   UBackpack& GetBackpack() const { return *backpack; }
 
    int  GetHeroIndex() const { return heroIndex; }
    void SetHeroIndex(int newHeroIndex) { heroIndex = newHeroIndex; }
@@ -127,18 +129,18 @@ class MYPROJECT_API ABaseHero : public AAlly
    void EndPlay(const EEndPlayReason::Type epr) override final;
    void PossessedBy(AController* newController) override final;
    void UnPossessed() override;
-   void CheckGameOverOnDeath(const AUnit& unitThatDied) const;
+   void CheckGameOverOnDeath() const;
 
    /**Index inside party.  -1 means we're not in the party*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hero Props")
    int heroIndex = -1;
 
    /**Attribute points to divy up*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hero Props")
+   UPROPERTY(EditAnywhere, Category = "Hero Props")
    int attPoints = 100;
 
    /**Skill (spellbook) points to divy up*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hero Props")
+   UPROPERTY(EditAnywhere, Category = "Hero Props")
    int skillPoints = 5;
 
    UPROPERTY(EditDefaultsOnly)
@@ -156,6 +158,11 @@ class MYPROJECT_API ABaseHero : public AAlly
     * @param itemID ItemID of the item we want to use
     */
    void OnSpellCasted(TSubclassOf<UMySpell> spellCasted);
+
+   void OnItemSelected(int hIndex, int itemUsedSlotIndex);
+
+   void OnSpellLearned(TSubclassOf<UMySpell> spellLearned);
+   void OnSpellUpgraded(TSubclassOf<UMySpell> spellLearned);
 
    /**
     * @brief Activates triggers that were supposed to fire off on this hero if it were alive

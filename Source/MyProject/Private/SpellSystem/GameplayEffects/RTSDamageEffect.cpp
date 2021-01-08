@@ -6,6 +6,8 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "RTSDamageEffect.h"
 
+#include "RTSUnitDamageCalculation.h"
+
 URTSDamageEffect::URTSDamageEffect()
 {
    strength.DataName      = "Strength";
@@ -53,7 +55,7 @@ URTSDamageEffect::URTSDamageEffect()
    modifierInfo5.ModifierMagnitude                    = FGameplayEffectModifierMagnitude(health);
 
    FGameplayEffectExecutionDefinition e;
-   e.CalculationClass = URTSDamageCalculation::StaticClass();
+   e.CalculationClass = URTSUnitDamageCalculation::StaticClass();
    e.CalculationModifiers.Append({modifierInfo, modifierInfo2, modifierInfo3, modifierInfo4, modifierInfo5});
    Executions.Add(e);
 }

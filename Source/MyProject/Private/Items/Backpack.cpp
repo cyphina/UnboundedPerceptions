@@ -21,7 +21,7 @@ UBackpack* UBackpack::CreateBackpack(UObject* outer, const int itemMax)
    return backpack;
 }
 
-int UBackpack::AddItem(FMyItem& newItem)
+bool UBackpack::AddItem(FMyItem& newItem)
 {
    check(newItem.id > 0);
 
@@ -33,21 +33,25 @@ int UBackpack::AddItem(FMyItem& newItem)
    }
 }
 
-TOptional<TArray<int>> UBackpack::AddItem(FMyItem&& newItem)
+bool UBackpack::AddItem(FMyItem&& newItem)
 {
    return AddItem(newItem);
 }
 
 bool UBackpack::AddStackableItem(FMyItem& newItem)
 {
+   // Loop through the items we have
    for(FMyItem& i : items) {
       if(i.id == newItem.id && i.count != STACK_MAX) {
+         // If this item slot's stack is not filled up by our new additions
          if(i.count + newItem.count <= STACK_MAX) {
             i.count += newItem.count;
             newItem.count = 0;
             ItemChangeEvents::OnItemAddedToInventoryEvent.Broadcast(GetOuter(), newItem);
             return true;
-         } else {
+         }
+         // Else fill up the slot and find another one to try and fill
+         else {
             newItem.count -= STACK_MAX - i.count;
             i.count = STACK_MAX;
          }
@@ -323,6 +327,11 @@ void UBackpack::LoadBackpack(FBackpackSaveInfo& backpackInfo)
       FMyItem item{backpackInfo.itemIDs[i], backpackInfo.itemCounts[i]};
       AddItemToSlot(item, backpackInfo.itemSlots[i]);
    }
+}
+
+void UBackpack::OnItemUsed(const ABaseHero* heroUsingItem, const FMyItem& itemID)
+{
+
 }
 
 void UBackpack::BeginDestroy()

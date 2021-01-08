@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
-#include "UUpPhaseComponent.generated.h"
+#include "PhaseComponent.generated.h"
 
 /*
  * This component is very important for more complex AI

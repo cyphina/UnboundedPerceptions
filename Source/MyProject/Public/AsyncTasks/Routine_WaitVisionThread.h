@@ -12,7 +12,7 @@
 UCLASS()
 class MYPROJECT_API URoutine_WaitVisionThread : public UBlueprintAsyncActionBase
 {
-   GENERATED_UCLASS_BODY()
+   GENERATED_BODY()
 
  public:
    UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject", BlueprintInternalUseOnly = "true"))

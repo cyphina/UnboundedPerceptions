@@ -37,6 +37,8 @@ class MYPROJECT_API UInventory : public UMyDraggableWidget
    UFUNCTION(BlueprintCallable, Category = "Inventory Functions")
    void SetBackPack(UBackpack* bPack) { backpack = bPack; }
 
+   UInventoryView* GetInventoryView() const { return inventoryView; }
+   
  protected:
    void NativeConstruct() override;
    bool OnWidgetAddToViewport_Implementation() override;

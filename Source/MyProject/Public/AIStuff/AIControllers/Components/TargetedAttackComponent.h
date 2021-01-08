@@ -1,9 +1,13 @@
 ﻿// Created 12/26/20 5:59 PM
 
 #pragma once
+#include "GameplayEffectTypes.h"
 #include "Components/ActorComponent.h"
 #include "TargetedAttackComponent.generated.h"
 
+struct FDamageScalarStruct;
+class URTSProjectileStrategy;
+class UMySpell;
 class IGameSpeedContext;
 class IAttackAnim;
 class AUnit;
@@ -47,12 +51,20 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
    UFUNCTION(BlueprintCallable, Category = "Action")
    virtual void BeginAttack(AUnit* target);
 
-	
    /**
     * @brief Moves a unit to a location and attacks any enemies that is in range along the way
-    * @param targetLocation - 
+    * @param targetLocation - Location to move to
     */
+   UFUNCTION(BlueprintCallable, Category = "Action")
    void BeginAttackMove(FVector targetLocation);
+
+   /**
+   * @brief Allows us to replace the next attack with a spell (allows for effects like AA's chilling touch or Viper Strike). \n
+   * Can have charges also like flak cannon.
+   * TODO: Implement this
+   */
+   UFUNCTION(BlueprintCallable)
+   virtual void OverrideAttackWithSpell(TSubclassOf<UMySpell> overridingSpell);
 
  protected:
    void BeginPlay() override;
@@ -60,17 +72,45 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<IAttackAnim> attackAnimClass = nullptr;
 
+   UPROPERTY(EditDefaultsOnly)
+   URTSProjectileStrategy* projectileStrategy = nullptr;
+
+   UPROPERTY(EditDefaultsOnly)
+   TScriptInterface<IAttackAnim> attackAnim;
+   
  private:
    void OnUnitStopped();
 
-   /** When initiating an attack, a target needs to face the enemy before it can even reach this state. However, once the unit reaches this state
+   /**
+    * When initiating an attack, a target needs to face the enemy before it can even reach this state. However, once the unit reaches this state
     * and is in range of the enemy, it will keep locked onto the enemy (keep facing the enemy without having any turn animation).
     */
    void LockOnTarget() const;
 
-   bool CheckAndHandleTargetOutsideAnimationRange();
+   /**
+    * @brief Logic called after the "necessary part" of the attack animation finishes (meaning the player can animation cancel the remaining and still pull off the damage)
+    */
+   void OnUnitAttackSwingDone();
 
-   void OnHitEvent();
+   /**
+    * @brief Applies damage or generates a projectile when the attack animation finishes
+    */
+   void OnAttackSwingDoneEffect();
+
+   /**
+    * @brief TODO: System for special effects whenever we auto attack (maybe like passive attack modifiers, ability chance triggers, etc.)
+    */
+   void HandleAutoAttackModifierTags();
+
+   FGameplayTag GetAttackElement() const;
+
+   /**
+    * @brief Logic to generate a projectile after the animation for the attack finishes (like an arrow after a bowstring draw)
+    * @param projectileDamageScalars Values which determine how much damage this projectile will inflict
+    */
+   void CreateRangedProjectile(FDamageScalarStruct projectileDamageScalars);
+
+   bool CheckAndHandleTargetOutsideAnimationRange();
 
    void FollowAndTryAttackTarget();
 
@@ -123,7 +163,6 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
    AUnit*                  agent;                   // Unit whose behavior is specified through the behavioral logic within this state
    static const int        shortAttRngBuff = 25.f;  // Distance that an attack in progress will cancel since it is out of range
    static const int        attRngCnclBuff  = 350.f; // Distance that an attack in progress will cancel since it is out of range
-   TUniquePtr<IAttackAnim> attackAnim;
    FTimerHandle            targetSearchHandle;
    FTimerHandle            attackUpdateHandle;
 };
