@@ -5,15 +5,19 @@
 class AUnit;
 
 struct UnitTargetData {
-   TVariant<FEmptyVariantState, AActor*, AUnit*, FVector> target; // Used for any targetting required when a user issues some command
+   /** Discriminated union of all the types used for targeting:
+    * AActor* - Used for interactable related targeting and manual interactable spell targeting
+    * AUnit* - Used for regular auto attack based targeting and manual spell targeting
+    * FVector - Used for movement and manual spell targeting
+    * FGameplayAbilityTargetDataHandle* - Used for spell targeting and AI spell targeting
+    */
+   TVariant<FEmptyVariantState, AActor*, AUnit*, FVector, FGameplayAbilityTargetDataHandle> target;
 
-   AUnit* followTarget; // A target that we can follow.  We can still target something else to attack it while following this unit perhaps?
-
-   void ResetTarget(); // Resets all this unit's targetting information
+   /** Resets all this unit's targetting information */
+   void ResetTarget();
 };
 
 inline void UnitTargetData::ResetTarget()
 {
    target.Set<FEmptyVariantState>(FEmptyVariantState());
-   followTarget = nullptr;
 }

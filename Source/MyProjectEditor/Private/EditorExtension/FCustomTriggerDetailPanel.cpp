@@ -11,6 +11,7 @@
 #include "GameplayTagContainer.h"
 #include "IDetailChildrenBuilder.h"
 #include "IPropertyUtilities.h"
+#include "HUDTypes.h"
 #include "MultiBoxBuilder.h"
 
 #define LOCTEXT_NAMESPACE "TriggerStructCustomization"
@@ -39,8 +40,8 @@ void FTriggerDataCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> st
    triggerValues  = structPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FTriggerData, triggerValues));
    triggerObjects = structPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FTriggerData, triggerValues));
    triggerType    = structPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FTriggerData, triggerType));
-   auto bEnabled = structPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FTriggerData, enabled));
-   auto numCalls = structPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FTriggerData, numCalls));
+   const auto bEnabled = structPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FTriggerData, enabled));
+   const auto numCalls = structPropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FTriggerData, numCalls));
 
 
    // Add existing properties to the struct so we get those slate widgets
@@ -105,7 +106,7 @@ TSharedRef<SWidget> FTriggerDataCustomization::SetupEnumCbtnContent()
 {
    // Build a menu item for each value in the hud enum that modifies the values array when we select it
    FMenuBuilder MenuBuilder(true, NULL);
-   for(HUDs val : TEnumRange<HUDs>()) {
+   for(EHUDs val : TEnumRange<EHUDs>()) {
       // When changing our item, modify the corresponding value in our value array
       FUIAction itemAction(FExecuteAction::CreateSP(this, &FTriggerDataCustomization::OnEnumChanged, static_cast<uint8>(val)));
       MenuBuilder.AddMenuEntry(GetEnumName(static_cast<uint8>(val)), TAttribute<FText>(), FSlateIcon(), itemAction);

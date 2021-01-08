@@ -126,7 +126,7 @@ FVector ARTSDoor::GetInteractableLocation_Implementation() const
 {
    // Figure out what side of the door we are on by checking the coordinates of the actor relative to the door
    ABaseHero* heroRef = nullptr;
-   for(auto hero : cpcRef->GetBasePlayer()->heroes) {
+   for(auto hero : cpcRef->GetBasePlayer()->GetHeroes()) {
       if(hero->GetCurrentInteractable() == this) {
          heroRef = hero;
          break;
@@ -144,9 +144,9 @@ FVector ARTSDoor::GetInteractableLocation_Implementation() const
    const FVector2D heroDoorCoords = changeOfBasisM.TransformVector(heroLocation);
    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, heroDoorCoords.ToString());
    if(heroDoorCoords.Y > 0)
-      return GetActorForwardVector() * ABaseHero::interactRange + GetActorLocation();
+      return GetActorForwardVector() * ABaseHero::INTERACT_RANGE + GetActorLocation();
    else
-      return GetActorForwardVector() * ABaseHero::interactRange * -1 + GetActorLocation();
+      return GetActorForwardVector() * ABaseHero::INTERACT_RANGE * -1 + GetActorLocation();
 }
 
 bool ARTSDoor::CanInteract_Implementation() const

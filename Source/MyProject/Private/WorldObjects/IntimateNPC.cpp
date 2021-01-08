@@ -5,8 +5,9 @@
 #include "RTSGameMode.h"
 #include "UserInput.h"
 #include "UI/HUDManager.h"
-#include "DialogSystem/DialogUI.h"
+#include "DialogSystem/NPCSocialMenu.h"
 #include "LevelSaveStructs.h"
+#include "RTSIngameWidget.h"
 
 AIntimateNPC::AIntimateNPC() : ANPC()
 {
@@ -31,7 +32,7 @@ void AIntimateNPC::Interact_Implementation(ABaseHero* hero)
 
 void AIntimateNPC::SetupAppropriateView()
 {
-   controllerRef->GetHUDManager()->GetSocialWindow()->SetIntimateView();
+   controllerRef->GetWidgetProvider()->GetIngameHUD()->GetSocialWindow()->SetIntimateView();
 }
 
 void AIntimateNPC::SaveNPCData(FMapSaveInfo& mapInfo)

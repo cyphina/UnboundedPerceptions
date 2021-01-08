@@ -6,6 +6,7 @@
 #include "BTTask_CastSpell.generated.h"
 
 class UMySpell;
+class UEnvQuery;
 
 /**
  * Spell casting task where the spell and target is chosen by the designer.  The spell is a property where the target is the blackboard key
@@ -17,6 +18,9 @@ class MYPROJECT_API UBTTask_CastSpell : public UBTTask_BlackboardBase
 
    UPROPERTY(EditAnywhere)
    TSubclassOf<UMySpell> spellToCast;
+
+   UPROPERTY(EditAnywhere)
+   UEnvQuery* targetFindingLogic;
 
    EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) override;
    virtual void        OnMessage(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory, FName message, int32 requestID, bool bSuccess) override;

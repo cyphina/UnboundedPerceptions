@@ -9,8 +9,10 @@
 #include "BaseHero.h"
 #include "BasePlayer.h"
 #include "BluEye.h"
-#include "HUDManager.h"
+#include "HUDTypes.h"
+#include "WidgetToggler.h"
 #include "Unit.h"
+#include "UpStatComponent.h"
 #include "UserInput.h"
 
 void UStatgraphWidget::NativeConstruct()
@@ -55,8 +57,8 @@ void UStatgraphWidget::ShowElementalOffensive()
             writer->WriteValue("statName", statName);
             writer->WriteIdentifierPrefix("values");
             writer->WriteArrayStart();
-            writer->WriteValue(focusedUnit->GetSkillBaseValue(stat));
-            writer->WriteValue(focusedUnit->GetSkillAdjValue(stat));
+            writer->WriteValue(focusedUnit->GetStatComponent()->GetSkillBaseValue(stat));
+            writer->WriteValue(focusedUnit->GetStatComponent()->GetSkillAdjValue(stat));
             writer->WriteArrayEnd();
             writer->WriteObjectEnd();
          }
@@ -83,8 +85,8 @@ void UStatgraphWidget::ShowElementalDefense()
             writer->WriteValue("statName", statName);
             writer->WriteIdentifierPrefix("values");
             writer->WriteArrayStart();
-            writer->WriteValue(focusedUnit->GetSkillBaseValue(stat));
-            writer->WriteValue(focusedUnit->GetSkillAdjValue(stat));
+            writer->WriteValue(focusedUnit->GetStatComponent()->GetSkillBaseValue(stat));
+            writer->WriteValue(focusedUnit->GetStatComponent()->GetSkillAdjValue(stat));
             writer->WriteArrayEnd();
             writer->WriteObjectEnd();
          }
@@ -112,8 +114,8 @@ void UStatgraphWidget::ShowMechanics()
          writer->WriteValue("statName", eBonus->GetNameStringByIndex(static_cast<uint8>(mech)));
          writer->WriteIdentifierPrefix("values");
          writer->WriteArrayStart();
-         writer->WriteValue(focusedUnit->GetMechanicBaseValue(mech));
-         writer->WriteValue(focusedUnit->GetMechanicAdjValue(mech));
+         writer->WriteValue(focusedUnit->GetStatComponent()->GetMechanicBaseValue(mech));
+         writer->WriteValue(focusedUnit->GetStatComponent()->GetMechanicAdjValue(mech));
          writer->WriteArrayEnd();
          writer->WriteObjectEnd();
       }
@@ -124,8 +126,8 @@ void UStatgraphWidget::ShowMechanics()
             writer->WriteValue("statName", eBonus2->GetNameStringByIndex(static_cast<uint8>(stat)));
             writer->WriteIdentifierPrefix("values");
             writer->WriteArrayStart();
-            writer->WriteValue(focusedUnit->GetSkillBaseValue(stat));
-            writer->WriteValue(focusedUnit->GetSkillAdjValue(stat));
+            writer->WriteValue(focusedUnit->GetStatComponent()->GetSkillBaseValue(stat));
+            writer->WriteValue(focusedUnit->GetStatComponent()->GetSkillAdjValue(stat));
             writer->WriteArrayEnd();
             writer->WriteObjectEnd();
          }
@@ -150,8 +152,8 @@ void UStatgraphWidget::ShowVitals()
          writer->WriteValue("statName", eBonus->GetNameStringByIndex(static_cast<uint8>(vit)));
          writer->WriteIdentifierPrefix("values");
          writer->WriteArrayStart();
-         writer->WriteValue(focusedUnit->GetVitalBaseValue(vit));
-         writer->WriteValue(focusedUnit->GetVitalAdjValue(vit));
+         writer->WriteValue(focusedUnit->GetStatComponent()->GetVitalBaseValue(vit));
+         writer->WriteValue(focusedUnit->GetStatComponent()->GetVitalAdjValue(vit));
          writer->WriteArrayEnd();
          writer->WriteObjectEnd();
       }
@@ -191,7 +193,7 @@ void UStatgraphWidget::UpdateBaseStat(const FGameplayAttribute& attributeModifie
 
 void UStatgraphWidget::CreateAndSendStatUpdate(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected, const FString& keyName)
 {
-   if(cpcRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Character)) { // Only send an update to the browser if it is on screen
+   if(cpcRef->GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Character)) { // Only send an update to the browser if it is on screen
       if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit) {
          if(focusedUnit == unitAffected) { // Make sure the stat that is updated is one pertaining to the unit we are looking at information for
             FString heroInfoString;
@@ -222,7 +224,7 @@ FReply UStatgraphWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FP
 
 const AUnit* UStatgraphWidget::CheckIfFocusedUnitHero() const
 {
-   auto focusedUnit = cpcRef->GetBasePlayer()->focusedUnit;
+   const auto focusedUnit = cpcRef->GetBasePlayer()->GetFocusedUnit();
    if(LIKELY(focusedUnit && focusedUnit->GetClass()->IsChildOf(ABaseHero::StaticClass())))
       return focusedUnit;
    return nullptr;

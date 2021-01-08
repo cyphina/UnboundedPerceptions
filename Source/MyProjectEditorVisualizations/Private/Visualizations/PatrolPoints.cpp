@@ -3,7 +3,7 @@
 #include "MyProjectEditorVisualizations.h"
 #include "Visualizations/PatrolPoints.h"
 #include "SceneManagement.h"
-#include "WorldObjects/Components/PatrolComponent.h"
+#include "AIControllers/Components/PatrolComponent.h"
 #include "RTSHitProxy.h"
 #include "Commands.h"
 #include "EditorStyle.h"
@@ -44,8 +44,8 @@ void FPatrolVisualizer::DrawVisualization(const UActorComponent* component, cons
 {
 	if (const UPatrolComponent* patrolComponent = Cast<const UPatrolComponent>(component))
 	{
-		const FLinearColor selectedColor = patrolComponent->editorSelectedColor;
-		const FLinearColor unselectedColor = patrolComponent->editorUnselectedColor;
+		const FLinearColor selectedColor = patrolComponent->EDITOR_SELECTED_PATROL_COLOR;
+		const FLinearColor unselectedColor = patrolComponent->EDITOR_UNSELECTED_PATROL_COLOR;
 
 		const FVector location = patrolComponent->GetComponentLocation();
 

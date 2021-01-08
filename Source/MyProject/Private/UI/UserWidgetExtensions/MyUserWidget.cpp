@@ -4,9 +4,13 @@
 #include "MyUserWidget.h"
 #include "UserInput.h"
 
+void UMyUserWidget::OnWidgetRemovedFromViewport_Implementation()
+{
+}
+
 void UMyUserWidget::NativeConstruct()
 {
-   CPC = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+   CPC = Cast<AUserInput>(GetOwningPlayer());
    Super::NativeConstruct();
 }
 

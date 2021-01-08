@@ -1,14 +1,36 @@
-Refactored large amount of the spellcasting system
-Replaced some of the targetting variables with a TVariant
-Replaced OnMoveCompleted logic with a Visitor
-Fixed some spells in blueprints to rely only on the new TVariant rather than TargetData which is still filled by AI but then it fills the Variant
-Removed TargetDataHandle (but added functionality to convert our varaint into a TargetDataHandle for the ability system which uses it to apply gameplay effects)
-Refactored some movement logic to complement the spell casting refactor
-Modified death logic to work with target variant.
-Will perform more tests on spellcast system before next refactoring updates
-Refactored FireStorm spell and Cure Spell and fixed handling both actor and location targetting
-TODO: Refactor rest of spells?
---
+Started the massive refactor which will be known as Unbounded Perceptions Reborn aka the Solid/Component refactor
+Focused on redesigning several systems including:
+- Unit
+- Unit Controller
+And almost every system that interacted with those classes (to see more details look at the history section of the Game Design Document):
+
+Here are the big changes:
+
+Unit class is now considered a data class. Removed all behavioral members to UnitController.
+Separated the data in unit class into several components. Doing this makes some of the data optional. This allows for more flexible plug and play functionality on enemies.
+    - All units are still required to have things like stat components and ability components (even if the unit doesn't use abilites since it still can be stunned)
+    - Targeting is an optional functionality for Units, not for Allies (turned it into a component that can be attached)
+
+Also separated behavioral logic in UnitController to have its own logic components. ALl the functionality is pretty much the same (maybe some of it has been reorganized)
+but there are some additions
+    - Moved state machine to a UnitController component (AI should be handled on server only actor's for future multiplayer)
+    - 
+
+Added states for AttackMove and Patrol
+Fixed up logic for attack move so that it emulates dota better but also so that it can handle chasing
+
+Moved logic out of ResourceManager global class and into some BlueprintFunctionLibraries that more explicitly organize the functionality into its purposes
+
+A lot of refactoring, breaking logic down into smaller better named comments, removing redundant comments, writing concise but better comments.
+Tried to leverage techniques in the refactoring book I just finished.
+
+Huge changes to AI system. Refactored tasks and state machine to allow behavior trees to more clearly specify the flow of logic instead of having to finely adjust tasks
+Updated the game design document with a lot of new information pertaining to these changes
+
+Changes besides refactor:
+- Fixed attack logic to mimic that of Dota 2's (relying on animation to trigger notifications that lead to the damage being applied)
+- Added a null object for the attack animation 
+- Split out the manual targeting logic within UnitController
 
 TOOD: Move logic of unit to derive from pawn class and add separate component logic
 TODO: Document skill actionbar stuff some more
@@ -16,7 +38,7 @@ TODO: Clamp Vitals
 TODO: Add more combat room testing options
 TODO: Add 3D widgets to some of the FVector properties
 TODO: Fix Health Overflow (when healing) or when equipping weapons
-TODO: Fix multithreading issues when moving to a new level
+TODO: Find a better solution for multithreading issue when moving to a new level
 TODO: Set enemy unselectable by click trace initially (works when they get out of vision)
 TODO: Set interactables unselectable by click trace unless we've overlapped them in the visionSphere once
 TODO: Fix Attack Moves and Chasing
@@ -33,6 +55,5 @@ TODO: Manual enemy debug controls to test some combat cases
 TODO: Limitation of the targetting system - AI targetting can't target units with AOE spells?
 
 Improvement TODOs:
-Unify target inside blackboard with target data target? (not possible since we use that one for ai stuff, and the targetData everywhere else)
 How to handle attack move queueing? (using patrol in which case we need to stop the tree once we move to the destination however we don't want to do this when not queueing)
 

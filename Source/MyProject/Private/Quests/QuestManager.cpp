@@ -15,8 +15,11 @@
 #include "WorldObjects/NPC.h"
 #include "UserInput.h"
 #include "GoalActor.h"
+#include "RTSIngameWidget.h"
 #include "Interactables/NamedInteractableDecorator.h"
 #include "Items/ItemManager.h"
+#include "ItemDelegateStore.h"
+#include "DialogSystem/NPCDelegateStore.h"
 #include "Runtime/AssetRegistry/Public/AssetRegistryModule.h"
 
 #if WITH_EDITOR
@@ -31,10 +34,9 @@ void UQuestManager::UpdateQuestClassList()
 {
    UE_LOG(LogTemp, Display, TEXT("Quest Class Map Updated"));
 
-   // Updates the questclasslist automatically (or whenever this class is recompiled after changes I believe)
    FAssetRegistryModule& assetReg        = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
    IAssetRegistry&       assetRegistry   = assetReg.Get();
-   FString               questFolderPath = TEXT("/Game/RTS_Tutorial/Blueprints/Quest/Blueprints/Quests");
+   const FString         questFolderPath = TEXT("/Game/RTS_Tutorial/Blueprints/Quest/Blueprints/Quests");
    assetRegistry.AddPath(questFolderPath);
    assetRegistry.ScanPathsSynchronous({questFolderPath});
    TArray<FAssetData> questAssets;
@@ -57,11 +59,17 @@ void UQuestManager::Init()
    /// Quest manager setup is done in PlayerController after huds are made
    // questListRef = controllerRef->GetHUDManager()->GetQuestList();
    // questJournalRef = controllerRef->GetHUDManager()->GetQuestJournal();
-   //
+
    //! Triggers and conditionals may want to access this before they are initialized with FindByPredicate so give them some initial values
    completedQuests.Reserve(4);
    failedQuests.Reserve(4);
    quests.Reserve(4);
+
+   ItemChangeEvents::OnItemPickedUpEvent.AddUObject(this, &UQuestManager::OnItemPickedUp);
+   ItemChangeEvents::OnItemDroppedEvent.AddUObject(this, &UQuestManager::OnItemPickedUp);
+   ItemChangeEvents::OnItemPurchasedEvent.AddUObject(this, &UQuestManager::OnItemPickedUp);
+   ItemChangeEvents::OnItemUsedEvent.AddUObject(this, &UQuestManager::OnItemPickedUp);
+   NPCEvents::OnNPCTalkedEvent.AddUObject(this, &UQuestManager::OnTalkNPC);
 }
 
 void UQuestManager::SelectNewQuest(AQuest* quest)
@@ -75,7 +83,9 @@ void UQuestManager::SelectNewQuest(AQuest* quest)
 
 bool UQuestManager::AddNewQuest(TSubclassOf<AQuest> questClassToSpawn, bool forcedStart)
 {
-   auto condition = [questClassToSpawn](AQuest* quest) { return questClassToSpawn == quest->GetClass(); };
+   auto condition = [questClassToSpawn](AQuest* quest) {
+      return questClassToSpawn == quest->GetClass();
+   };
    if(IsValid(questClassToSpawn) && !quests.ContainsByPredicate(condition)) {
       AQuest* quest =
           questListRef->GetWorld()->SpawnActorDeferred<AQuest>(questClassToSpawn.Get(), FTransform(), nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
@@ -91,9 +101,7 @@ bool UQuestManager::AddNewQuest(TSubclassOf<AQuest> questClassToSpawn, bool forc
          SelectNewQuest(quest);
          questListRef->GetQuestListSlot(questListRef->currentlySelectedQuest)->SelectSubGoal(0);
       }
-      if(questListRef->GetVisibility() == ESlateVisibility::Hidden) {
-         hudManagerRef->AddHUD(static_cast<int>(HUDs::HS_QuestList));
-      }
+      if(questListRef->GetVisibility() == ESlateVisibility::Hidden) { hudManagerRef->AddHUD(static_cast<int>(EHUDs::HS_QuestList)); }
       return true;
    }
    return false;
@@ -102,9 +110,7 @@ bool UQuestManager::AddNewQuest(TSubclassOf<AQuest> questClassToSpawn, bool forc
 void UQuestManager::OnSwitchSubGoal()
 {
    if(questListRef->currentlySelectedQuest) {
-      if(currentGoalActor) {
-         currentGoalActor->Destroy();
-      }
+      if(currentGoalActor) { currentGoalActor->Destroy(); }
    }
 
    if(questListRef->currentlySelectedQuest->questInfo.subgoals[questListRef->GetQuestListSlot(questListRef->currentlySelectedQuest)->GetSelectedGoalIndex()]
@@ -119,20 +125,20 @@ void UQuestManager::OnSwitchSubGoal()
 
    currentDistance = GetDistanceToGoal();
    questListRef->SetDistanceText(currentDistance);
-   controllerRef->GetHUDManager()->GetMinimap()->UpdateDirectionArrow(FMath::RadiansToDegrees(
-       FMath::Acos(FVector::ForwardVector.CosineAngle2D(controllerRef->GetBasePlayer()->heroes[0]->GetActorLocation() - currentGoalActor->GetActorLocation()))));
+   controllerRef->GetWidgetProvider()->GetIngameHUD()->GetMinimap()->UpdateDirectionArrow(FMath::RadiansToDegrees(
+       FMath::Acos(FVector::ForwardVector.CosineAngle2D(controllerRef->GetBasePlayer()->GetHeroes()[0]->GetActorLocation() - currentGoalActor->GetActorLocation()))));
    questListRef->ToggleDistanceIndicatorVisibility(true);
    if(currentDistance > 10)
-      controllerRef->GetHUDManager()->GetMinimap()->ToggleDirectionArrowVisibility(true);
+      controllerRef->GetWidgetProvider()->GetIngameHUD()->GetMinimap()->ToggleDirectionArrowVisibility(true);
    else
-      controllerRef->GetHUDManager()->GetMinimap()->ToggleDirectionArrowVisibility(false);
+      controllerRef->GetWidgetProvider()->GetIngameHUD()->GetMinimap()->ToggleDirectionArrowVisibility(false);
 }
 
 int UQuestManager::GetDistanceToGoal()
 {
-   FVector partyLeaderLocationXY =
-       FVector(controllerRef->GetBasePlayer()->heroes[0]->GetActorLocation().X, controllerRef->GetBasePlayer()->heroes[0]->GetActorLocation().Y, 0);
-   FVector goalActorLocationXY = FVector(currentGoalActor->GetActorLocation().X, currentGoalActor->GetActorLocation().Y, 0);
+   const FVector partyLeaderLocationXY =
+       FVector(controllerRef->GetBasePlayer()->GetHeroes()[0]->GetActorLocation().X, controllerRef->GetBasePlayer()->GetHeroes()[0]->GetActorLocation().Y, 0);
+   const FVector goalActorLocationXY = FVector(currentGoalActor->GetActorLocation().X, currentGoalActor->GetActorLocation().Y, 0);
    return FMath::RoundToInt((partyLeaderLocationXY - goalActorLocationXY).Size2D() / 100);
 }
 
@@ -149,8 +155,7 @@ void UQuestManager::EndQuest(AQuest* questToEnd)
    questJournalRef->AddEntry(questToEnd);
 
    // remove from quest list if we added it to the quest list
-   if(questListRef->GetQuestListSlot(questToEnd))
-      questListRef->RemoveFromQuestList(questToEnd);
+   if(questListRef->GetQuestListSlot(questToEnd)) questListRef->RemoveFromQuestList(questToEnd);
 
    // If it is selected in the questlistwidget
    if(questToEnd == questListRef->currentlySelectedQuest) {
@@ -160,19 +165,17 @@ void UQuestManager::EndQuest(AQuest* questToEnd)
       if(IsValid(currentGoalActor)) {
          currentGoalActor->Destroy();
          questListRef->ToggleDistanceIndicatorVisibility(false);
-         controllerRef->GetHUDManager()->GetMinimap()->ToggleDirectionArrowVisibility(false);
+         controllerRef->GetWidgetProvider()->GetIngameHUD()->GetMinimap()->ToggleDirectionArrowVisibility(false);
       }
    }
 
    // questJournalRef->RemoveFromQuestJournal(questToEnd);
 
    // if we have another quest, then select it
-   if(quests.Num() > 0 && IsValid(quests[0]))
-      SelectNewQuest(quests[0]);
+   if(quests.Num() > 0 && IsValid(quests[0])) SelectNewQuest(quests[0]);
 
    // if we selected this quest in the journal as it ends, deselect4 it
-   if(questJournalRef->GetSelectedQuest() == questToEnd)
-      questJournalRef->OnQuestEntryClicked(nullptr, nullptr);
+   if(questJournalRef->GetSelectedQuest() == questToEnd) questJournalRef->OnQuestEntryClicked(nullptr, nullptr);
 
    // if this quest was completed sucessfully, give us the rewards!
    if(questToEnd->GetQuestState() == EQuestState::completedQuests) {
@@ -195,11 +198,11 @@ void UQuestManager::OnPartyLeaderMove()
       currentDistance = GetDistanceToGoal();
       questListRef->SetDistanceText(currentDistance);
       if(currentDistance < 10) {
-         controllerRef->GetHUDManager()->GetMinimap()->ToggleDirectionArrowVisibility(false);
+         controllerRef->GetWidgetProvider()->GetIngameHUD()->GetMinimap()->ToggleDirectionArrowVisibility(false);
       } else {
-         controllerRef->GetHUDManager()->GetMinimap()->UpdateDirectionArrow(FMath::RadiansToDegrees(
-             FMath::Acos(FVector::ForwardVector.CosineAngle2D(controllerRef->GetBasePlayer()->heroes[0]->GetActorLocation() - currentGoalActor->GetActorLocation()))));
-         controllerRef->GetHUDManager()->GetMinimap()->ToggleDirectionArrowVisibility(true);
+         controllerRef->GetWidgetProvider()->GetIngameHUD()->GetMinimap()->UpdateDirectionArrow(FMath::RadiansToDegrees(
+             FMath::Acos(FVector::ForwardVector.CosineAngle2D(controllerRef->GetBasePlayer()->GetHeroes()[0]->GetActorLocation() - currentGoalActor->GetActorLocation()))));
+         controllerRef->GetWidgetProvider()->GetIngameHUD()->GetMinimap()->ToggleDirectionArrowVisibility(true);
       }
    }
 }
@@ -224,14 +227,12 @@ void UQuestManager::OnEnemyDie(const AEnemy* enemy)
          }
 
          // Regardless if whether this goal finishes the quest or not, update the quest journal
-         if(quest == questJournalRef->GetSelectedQuest()) {
-            questJournalRef->UpdateDetailWindow();
-         }
+         if(quest == questJournalRef->GetSelectedQuest()) { questJournalRef->UpdateDetailWindow(); }
       }
    });
 }
 
-void UQuestManager::OnTalkNPC(const ANPC* talkedToNPC, FGameplayTag conversationTopic)
+void UQuestManager::OnTalkNPC(ANPC* talkedToNPC, const FGameplayTag& conversationTopic)
 {
    auto talkFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, talkedToNPC, conversationTopic]() {
       for(AQuest* quest : quests) {
@@ -240,16 +241,12 @@ void UQuestManager::OnTalkNPC(const ANPC* talkedToNPC, FGameplayTag conversation
                goal.goalType == EGoalType::Talk && talkedToNPC->GetGameName().EqualTo(goal.additionalNames[0])) {
                if(goal.additionalNames.Num() == 1 || conversationTopic.GetTagName() == *goal.additionalNames[1].ToString()) {
                   quest->CompleteSubGoal(goalIndex, false);
-                  if(quest == questJournalRef->GetSelectedQuest()) {
-                     questJournalRef->UpdateDetailWindow();
-                  }
+                  if(quest == questJournalRef->GetSelectedQuest()) { questJournalRef->UpdateDetailWindow(); }
                   return;
                }
             } else if(goal.goalType == EGoalType::Find && quest->currentAmounts[goalIndex] >= goal.amount) {
                quest->CompleteSubGoal(goalIndex, false);
-               if(quest == questJournalRef->GetSelectedQuest()) {
-                  questJournalRef->UpdateDetailWindow();
-               }
+               if(quest == questJournalRef->GetSelectedQuest()) { questJournalRef->UpdateDetailWindow(); }
                return;
             }
          }
@@ -257,10 +254,8 @@ void UQuestManager::OnTalkNPC(const ANPC* talkedToNPC, FGameplayTag conversation
    });
 }
 
-void UQuestManager::OnItemPickup(const FMyItem& newItem)
+void UQuestManager::OnItemPickedUp(const ABaseHero* heroPickingItem, const FMyItem& newItem)
 {
-   // TODO: Update this when player drops items
-
    auto itemPickupFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, newItem]() {
       int  questIndex = 0;
       bool changed    = false; // Flag to know if we modified this goal's item or completed this goal so update it in the quest entry
@@ -269,13 +264,12 @@ void UQuestManager::OnItemPickup(const FMyItem& newItem)
 
       for(AQuest* quest : quests) {
          for(const int& goalIndex : quest->currentGoalIndices) {
-            if(const FGoalInfo& goal = quest->questInfo.subgoals[goalIndex];
-               goal.goalType == EGoalType::Find && goal.amount > 1 && newItem.id == FCString::Atoi(*goal.additionalNames[0].ToString())) {
+            const FGoalInfo& goal = quest->questInfo.subgoals[goalIndex];
+            if(goal.goalType == EGoalType::Find && goal.amount > 1 && newItem.id == FCString::Atoi(*goal.additionalNames[0].ToString())) {
                // Store the quest and goal index for now of the relevant quest goal
                quest->currentAmounts[goalIndex] = FMath::Min(goal.amount, newItem.count);
                if(goal.additionalNames.Num() == 1) // If we don't have to turn in the items
-                  if(quest->currentAmounts[goalIndex] == goal.amount)
-                     quest->CompleteSubGoal(goalIndex, false);
+                  if(quest->currentAmounts[goalIndex] == goal.amount) quest->CompleteSubGoal(goalIndex, false);
                changed = true;
             }
          }
@@ -302,9 +296,7 @@ void UQuestManager::OnInteracted(const UNamedInteractableDecorator* finishedInte
                // If we have interacted with enough of these objects, complete the goal
                if(goal.amount < 2) {
                   quest->CompleteSubGoal(goalIndex, false);
-                  if(quest == questJournalRef->GetSelectedQuest()) {
-                     questJournalRef->UpdateDetailWindow();
-                  }
+                  if(quest == questJournalRef->GetSelectedQuest()) { questJournalRef->UpdateDetailWindow(); }
                   return;
                }
                // If we haven't just update the count
@@ -313,9 +305,7 @@ void UQuestManager::OnInteracted(const UNamedInteractableDecorator* finishedInte
                   if(quest->interactedActors[goalIndex].Find(finishedInteractableDialog) == INDEX_NONE) {
                      if(quest->currentAmounts[goalIndex] + 1 >= goal.amount) {
                         quest->CompleteSubGoal(goalIndex, false);
-                        if(quest == questJournalRef->GetSelectedQuest()) {
-                           questJournalRef->UpdateDetailWindow();
-                        }
+                        if(quest == questJournalRef->GetSelectedQuest()) { questJournalRef->UpdateDetailWindow(); }
                         return;
                      } else {
                         ++quest->currentAmounts[goalIndex];

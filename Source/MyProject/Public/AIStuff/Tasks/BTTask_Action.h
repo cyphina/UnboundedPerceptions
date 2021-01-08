@@ -6,10 +6,9 @@
 #include "BTTask_Action.generated.h"
 
 /**
- * Randomly pick a number and set the blackboard key to that value.  Numbers picked based on the numberCap, which is the number the dice (0-100) has to roll lower than to 
- * pick that number 
+ * Used to choose between a set of actions.
+ * Rolls a dice (0-100). Sets the value of the selected key to be an action index based on the roll
  */
-
 UCLASS()
 class MYPROJECT_API UBTTask_Action : public UBTTask_BlackboardBase
 {

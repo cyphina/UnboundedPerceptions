@@ -24,5 +24,8 @@ class MYPROJECT_API UConfirmationBox : public UPopupWidget
 
  public:
    void            Confirm() override;
-   FOnConfirmation onConfirmationMade;
+   FOnConfirmation& OnConfirmationMade() const { return OnConfirmationMadeEvent; }
+
+private:
+   mutable FOnConfirmation OnConfirmationMadeEvent;
 };

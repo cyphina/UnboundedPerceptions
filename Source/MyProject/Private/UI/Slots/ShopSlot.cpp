@@ -13,8 +13,8 @@
 
 void UShopSlot::OnBtnClick()
 {
-   auto widgetRef         = CPCRef->GetHUDManager()->GetShopHUD();
-   int  adjustedSlotIndex = CPCRef->GetHUDManager()->GetShopHUD()->inventoryView->GetCorrespondingBackpackIndex(slotIndex);
+   auto widgetRef         = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetShopHUD();
+   int  adjustedSlotIndex = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetShopHUD()->GetInventoryView()->GetCorrespondingBackpackIndex(slotIndex);
    int  itemId            = widgetRef->GetBackpack()->GetItem(adjustedSlotIndex).id;
 
    // Buy the item
@@ -25,8 +25,8 @@ void UShopSlot::OnBtnClick()
 
 void UShopSlot::ShowDesc(UToolTipWidget* tooltip)
 {
-   const auto widgetRef         = CPCRef->GetHUDManager()->GetShopHUD();
-   const int  adjustedSlotIndex = CPCRef->GetHUDManager()->GetShopHUD()->inventoryView->GetCorrespondingBackpackIndex(slotIndex);
+   const auto widgetRef         = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetShopHUD();
+   const int  adjustedSlotIndex = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetShopHUD()->GetInventoryView()->GetCorrespondingBackpackIndex(slotIndex);
    const int  itemId            = widgetRef->GetBackpack()->GetItem(adjustedSlotIndex).id;
 
    if(itemId > 0) {

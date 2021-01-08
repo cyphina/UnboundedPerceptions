@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 
 #include "UserInput.h"
@@ -7,156 +5,139 @@
 #include "RTSPawn.h"
 
 #include "Unit.h"
-#include "Enemy.h"
 
 #include "UpResourceManager.h"
 
-#include "State/StateMachine.h"
+#include "State/RTSStateMachine.h"
 
 #include "AIStuff/AIControllers/UnitController.h"
-#include "RTSUnitAnim.h"
 
-#include "UI/DamageIndicator/DIRender.h"
 #include "UI/Healthbar/HealthbarComp.h"
 #include "UI/HUDManager.h"
-#include "UI/UserWidgets/ActionbarInterface.h"
 
-#include "SpellSystem/MyAbilitySystemComponent.h"
+#include "SpellSystem/RTSAbilitySystemComponent.h"
 #include "SpellSystem/MySpell.h"
-#include "Stats/MyAttributeSet.h"
-#include "SpellSystem/GameplayEffects/DamageEffect.h"
+
 #include "AbilitySystemBlueprintLibrary.h"
 
 #include "MyCharacterMovementComponent.h"
 
 #include "BrainComponent.h"
+#include "RTSStateComponent.h"
+#include "RTSVisionComponent.h"
 
-const FName AUnit::AIMessage_AttackReady    = TEXT("AttackReady");
-const FName AUnit::AIMessage_SpellCasted    = TEXT("SpellCasted!");
-const FName AUnit::AIMessage_SpellInterrupt = TEXT("SpellInterrupted!");
-const FName AUnit::AIMessage_Stunned        = TEXT("Stunned!");
-const FName AUnit::AIMessage_Silenced       = TEXT("Silenced!");
-const FName AUnit::AIMessage_TargetLoss     = TEXT("TargetLoss");  // When target dies or we stopped chasing it
-const FName AUnit::AIMessage_FoundTarget    = TEXT("FoundTarget"); // When AI searches for a target and finds one
-
-const float                   AUnit::diminishParam = 1.8f;
-const TFunction<float(float)> AUnit::diminishFunc  = [](float x) { return UpResourceManager::DiminishFunc(x, diminishParam); };
-//AUserInput*                   AUnit::controllerRef = nullptr;
+#include "UpStatComponent.h"
 
 AUnit::AUnit(const FObjectInitializer& objectInitializer) :
     Super(objectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
-   // Setup variables
    PrimaryActorTick.bCanEverTick = true;
    AutoPossessAI                 = EAutoPossessAI::PlacedInWorldOrSpawned;
-   combatParams.combatStyle      = ECombatType::Melee;
 
-   //--Destroy arrow component so there isn't some random arrow sticking out of our units--
-   auto components = GetComponents();
-   for(auto& component : components) {
-      if(auto arrowComponent = Cast<UArrowComponent>(component)) {
-         arrowComponent->DestroyComponent();
-         break;
-      }
-   }
+   RemoveArrowComponent();
 
-   // Setup basic collision responses universal to all unit types
-   GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECR_Block);
+   abilitySystemComponent = CreateDefaultSubobject<URTSAbilitySystemComponent>(TEXT("AbilitySystem"));
 
-   // Setup components can only happen in the constructor
-   unitSpellData.abilitySystem = CreateDefaultSubobject<UMyAbilitySystemComponent>(TEXT("AbilitySystem"));
-   selectionCircleDecal        = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));
+   visionComponent = CreateDefaultSubobject<URTSVisionComponent>(FName("VisionRadius"));
+   visionComponent->SetupAttachment(RootComponent);
+
+   selectionCircleDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));
    selectionCircleDecal->SetupAttachment(RootComponent);
 
-   healthBar = CreateDefaultSubobject<UHealthbarComp>(FName("Healthbar"));
+   SetupHealthbarComponent();
+
+   SetupCharacterCollision();
+
+   SetupMovementComponent();
+
+   combatInfo                  = MakeUnique<UpCombatInfo>();
+   combatInfo->combatStyle     = ECombatType::Melee;
+   
+   // Turn this off to make sure the unit highlights when hovered over
+   GetMesh()->SetRenderCustomDepth(false);
+}
+
+AUnit::~AUnit() = default;
+
+void AUnit::SetupHealthbarComponent()
+{
+   healthBar = CreateDefaultSubobject<UHealthbarComp>("Healthbar");
    healthBar->SetRelativeLocation(FVector(0, 0, 180));
    healthBar->SetPivot(FVector2D(0.5, 1));
    healthBar->SetupAttachment(RootComponent);
    healthBar->SetDrawAtDesiredSize(true);
 
-   damageComponent = CreateDefaultSubobject<UUpDamageComponent>(FName("DamageComponent"));
-   damageComponent->OnDamageTaken.AddUObject(this, &AUnit::ShowDamageDealt);
-
-   //--Find healthbar widget to set it as our default healthbar's widget class
    ConstructorHelpers::FClassFinder<UUserWidget> healthBarWig(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/Hitpoints/HealthbarWidget"));
-   if(healthBarWig.Succeeded()) {
-      healthBar->SetWidgetClass(healthBarWig.Class);
-   }
+   if(healthBarWig.Succeeded()) { healthBar->SetWidgetClass(healthBarWig.Class); }
+}
 
+void AUnit::SetupCharacterCollision() const
+{
    // Mesh needs an offset because it isn't aligned with capsule component at the beginning.  Offset by the mesh size
    GetMesh()->SetRelativeLocation(FVector(0, 0, -GetMesh()->Bounds.BoxExtent.Z));
    GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
+   GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECR_Block);
+}
 
-   visionSphere = CreateDefaultSubobject<USphereComponent>(FName("VisionRadius"));
-   visionSphere->SetupAttachment(RootComponent);
-   visionSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-   visionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-   visionSphere->bUseAttachParentBound = true;
-   visionSphere->SetCollisionObjectType(TRIGGER_CHANNEL); // see this in defaultengine.ini
-
+void AUnit::SetupMovementComponent() const
+{
    // Allows units to step up stairs.  The height of the stairs they can step is set in some navmesh params
    GetCharacterMovement()->SetWalkableFloorAngle(90.f);
    GetCharacterMovement()->RotationRate              = FRotator(0, 300.f, 0);
    GetCharacterMovement()->bOrientRotationToMovement = true;
-
-   // Turn this off to make sure the unit highlights when hovered over
-   GetMesh()->SetRenderCustomDepth(false);
 }
 
-void AUnit::BeginPlay()
+void AUnit::RemoveArrowComponent() const
 {
-   /// Setup initial parameters
-   if(UNLIKELY(!IsValid(controllerRef)))
-      controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+   // Destroy arrow component so there isn't some random arrow sticking out of our units
+   GetComponentByClass(UArrowComponent::StaticClass())->DestroyComponent();
+}
 
-   auto gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
-
-   animRef = Cast<URTSUnitAnim>(GetMesh()->GetAnimInstance());
-
-   FVector origin, extent;
-   GetActorBounds(true, origin, extent);
-   unitProperties.height = FMath::Abs(origin.Z) + extent.Z - FMath::Abs(GetActorLocation().Z); // manually setup height informatoin for other things to read it
-
-   if(selectionCircleDecal) {
-      selectionCircleDecal->DecalSize = FVector(GetCapsuleComponent()->GetScaledCapsuleRadius());
-      selectionCircleDecal->SetRelativeRotation(FRotator(90, 0, 0));
-      selectionCircleDecal->SetRelativeLocation(FVector(0, 0, -90));
-   }
-
-   // Delegate Callback Setup
-   if(unitController) {
-      // Bind our event dispatcher with a function to change our state machine to idle when we are done moving
-      unitController->ReceiveMoveCompleted.AddDynamic(this, &AUnit::OnMoveCompleted);
-   }
-
-   gameStateRef->UpdateGameSpeedDelegate.AddDynamic(this, &AUnit::OnUpdateGameSpeed);
-
-   // Setup AbilitySystem attributes
+void AUnit::SetupAbilitiesAndStats()
+{
    if(GetAbilitySystemComponent()) {
-      // Make sure owner is player controller else the whole ability systme fails to function
+      // ! Make sure owner is player controller else the whole ability system fails to function (maybe it should be set to RTSPawn I'll have to double check)
       GetAbilitySystemComponent()->InitAbilityActorInfo(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(), this); // setup owner and avatar
-      baseC = TUniquePtr<FBaseCharacter>(new FBaseCharacter(GetAbilitySystemComponent()->AddSet<UMyAttributeSet>()));
-      baseC->InitializeAttributeBaseValues();
-      GetCharacterMovement()->MaxWalkSpeed = GetMechanicAdjValue(EMechanics::MovementSpeed);
+      GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed);
 
-      for(TSubclassOf<UMySpell> ability : abilities) {
+      for(TSubclassOf<UMySpell> ability : GetAbilitySystemComponent()->GetAbilities()) {
          if(ability.GetDefaultObject()) // if client tries to give himself ability assert fails
          {
             GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(ability.GetDefaultObject(), 1));
          }
       }
    }
+}
 
-   if(animRef)
-      animRef->OnFinishSwingEvent.AddUFunction(this, "Attack");
+void AUnit::AlignSelectionCircleWithGround() const
+{
+   if(selectionCircleDecal) {
+      selectionCircleDecal->DecalSize = FVector(GetCapsuleComponent()->GetScaledCapsuleRadius());
+      selectionCircleDecal->SetRelativeRotation(FRotator(90, 0, 0));
+      selectionCircleDecal->SetRelativeLocation(FVector(0, 0, -90));
+   }
+}
 
-   // Every unit should have the confirm abilities
-   GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(USpellManager::Get().GetSpellClass(CONFIRM_SPELL_ID)));
-   GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(USpellManager::Get().GetSpellClass(CONFIRM_SPELL_TARGET_ID)));
+void AUnit::StoreUnitHeight()
+{
+   FVector origin, extent;
+   GetActorBounds(true, origin, extent);
+   unitProperties.height = FMath::Abs(origin.Z) + extent.Z - FMath::Abs(GetActorLocation().Z);
+}
 
-   // Setup vision parameters
-   visionSphere->SetSphereRadius(unitProperties.visionRadius);
-   visionSphere->SetRelativeLocation(FVector::ZeroVector);
+void AUnit::BeginPlay()
+{
+   if(UNLIKELY(!IsValid(controllerRef))) controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+
+   StoreUnitHeight();
+
+   AlignSelectionCircleWithGround();
+
+   if(auto gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState())) { gameStateRef->OnGameSpeedUpdated().AddDynamic(this, &AUnit::OnUpdateGameSpeed); }
+   
+   SetupAbilitiesAndStats();
+
+   visionComponent->SetRelativeLocation(FVector::ZeroVector);
 
    Super::BeginPlay();
 }
@@ -170,67 +151,16 @@ void AUnit::PossessedBy(AController* newController)
 void AUnit::Tick(float deltaSeconds)
 {
    Super::Tick(deltaSeconds);
-   state->Update(deltaSeconds);
 }
 
 EUnitState AUnit::GetState() const
 {
-   return state->GetCurrentState();
-}
-
-void AUnit::UpdateStats(const FGameplayAttribute& updatedAtt)
-{
-   if(baseC)
-      baseC->StatUpdate(updatedAtt);
-}
-
-UAbilitySystemComponent* AUnit::GetAbilitySystemComponent() const
-{
-   return unitSpellData.abilitySystem;
-}
-
-void AUnit::Die_Implementation()
-{
-   // TODO: Spawn a corpse
-
-   // Disable alive features
-   SetEnabled(false);
-   SetCanTarget(false);
-   combatParams.isDead = true;
-
-   // If this unit's info is being watched on the actionbar, remove it for now until I find a better fix
-   if(controllerRef->GetBasePlayer()->focusedUnit == this)
-      controllerRef->GetHUDManager()->GetActionHUD()->DeadUnitView();
-
-   // Trigger "Death Events" in all skills that need them like Soul Catcher
-   FGameplayEventData eD = FGameplayEventData();
-   eD.EventTag           = FGameplayTag::RequestGameplayTag("Event.Death");
-   eD.TargetData         = GetTargetData();
-   if(GetAbilitySystemComponent()->HandleGameplayEvent(FGameplayTag::RequestGameplayTag("Event.Death"), &eD)) {
-      // GEngine->AddOnScreenDebugMessage(1, 1.0f, FColor::Emerald, FString("Wee") + FString::FromInt(currentSpellIndex));
-   }
-
-   // Stop any enemy and allied units that we're targetting us with any channeled spells by sending the AI a notification
-   for(auto& enemy : controllerRef->GetGameState()->enemyList) {
-      if(GetTargetUnitValid() && enemy->GetTargetUnit() == this) {
-         enemy->GetUnitController()->Stop();
-         FAIMessage msg(AUnit::AIMessage_TargetLoss, enemy);
-         FAIMessage::Send(enemy->GetUnitController(), msg);
-      }
-   }
-   for(auto& ally : controllerRef->GetGameState()->allyList) {
-      if(GetTargetUnitValid() && ally->GetTargetUnit() == this) {
-         ally->GetUnitController()->Stop();
-         FAIMessage msg(AUnit::AIMessage_TargetLoss, ally);
-         FAIMessage::Send(ally->GetUnitController(), msg);
-      }
-   }
+   return FindComponentByClass<URTSStateComponent>()->GetState();
 }
 
 void AUnit::SetEnabled(bool bEnabled)
 {
    if(bEnabled) {
-      SetCanTarget(true);
       SetSelected(false);
       GetCapsuleComponent()->SetVisibility(true, true);
       SetActorEnableCollision(true);
@@ -240,7 +170,7 @@ void AUnit::SetEnabled(bool bEnabled)
       GetCapsuleComponent()->SetSimulatePhysics(false); // can't move w/o physics
       bCanAffectNavigationGeneration = true;
    } else {
-      SetCanTarget(false);
+      GetUnitController()->Stop();
       GetCapsuleComponent()->SetVisibility(false, true);
       SetActorEnableCollision(false);
       SetActorTickEnabled(false);
@@ -252,287 +182,14 @@ void AUnit::SetEnabled(bool bEnabled)
    }
 }
 
-void AUnit::PlayAttackEffects()
-{
-   // If the animation is set and another animation is not playing, play the attack montage and let notifications handle the damage events
-   if(attackAnimation) {
-      if(!GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
-         PlayAnimMontage(attackAnimation, 2 / GetSkillAdjValue(EUnitScalingStats::Attack_Speed) + 100 * 0.01);
-      }
-   }
-   // If there is no attack animation we handle the damage events ourselves
-   else {
-      Attack();
-   }
-}
-
-void AUnit::Attack_Implementation()
-{
-   // If we're not stunned and our attack rate is filled
-   if(!IsStunned() && GetTargetUnit()) {
-      // Create a gameplay effect for this
-      FGameplayEffectContextHandle context = GetAbilitySystemComponent()->MakeEffectContext();
-      context.AddInstigator(this, this);
-      FGameplayEffectSpecHandle damageEffectHandle = GetAbilitySystemComponent()->MakeOutgoingSpec(UDamageEffect::StaticClass(), 1, context);
-
-      // Set all the effect's custom magnitude values else error is triggered
-      UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Strength"), 0);
-      UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Intelligence"), 0);
-      UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), 0);
-      UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Understanding"), 0);
-      UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Health"), 0);
-
-      // Stat used to determine damage depends on attack style
-      switch(combatParams.combatStyle) {
-         case ECombatType::Melee:
-            UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Strength"), 100);
-            break;
-         case ECombatType::Magic:
-            UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Intelligence"), 100);
-         case ECombatType::Ranged:
-            UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), 100);
-            break;
-         default: UE_LOG(LogTemp, Warning, TEXT("Error, combatstyle tag is not what it should be!")); return;
-      }
-
-      // TODO: Should add weapon element here
-      UAbilitySystemBlueprintLibrary::AddAssetTag(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Element.Force"));
-      GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*damageEffectHandle.Data.Get(), GetTargetUnit()->GetAbilitySystemComponent());
-   }
-
-   // Remove invisibility if you attack somebody
-   GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
-}
-
-UMySpell* AUnit::GetSpellCDO(TSubclassOf<UMySpell> spellClass) const
-{
-   if(spellClass) {
-      if(GetAbilitySystemComponent()->FindAbilitySpecFromClass(spellClass)->Ability)
-         return spellClass->GetDefaultObject<UMySpell>();
-   }
-   return nullptr;
-}
-
-bool AUnit::CanCast(TSubclassOf<UMySpell> spellToCheck)
-{
-   UMySpell* spell = spellToCheck.GetDefaultObject();
-   if(IsValid(spell)) {
-      // Make sure we have enough mana
-      if(spell->GetCost(GetAbilitySystemComponent()) <= GetVitalCurValue(EVitals::Mana)) // Enough Mana?
-      {
-         // Make sure the spell isn't on CD and we don't have any status preventing us from using spells
-         if(!spell->isOnCD(GetAbilitySystemComponent()) && !IsStunned() && !IsSilenced()) // Spell on CD and we aren't affected by any status that prevents us
-         {
-            return true;
-         }
-      }
-   }
-   return false;
-}
-
-bool AUnit::CastSpell(TSubclassOf<UMySpell> spellToCast)
-{
-   // Cast the spell and send the controller's brain a message
-   if(GetAbilitySystemComponent()->TryActivateAbilityByClass(spellToCast)) {
-      FAIMessage msg(AUnit::AIMessage_SpellCasted, this);
-      FAIMessage::Send(unitController, msg);
-
-      // If this spell has a channeling component after it is casted, change the state to channeling
-      if(!spellToCast.Get()->GetDefaultObject<UMySpell>()->AbilityTags.HasTag(FGameplayTag::RequestGameplayTag("Skill.Channeled")))
-         unitController->Stop();
-      else {
-         unitSpellData.channelTime = spellToCast.GetDefaultObject()->GetSecondaryTime(GetAbilitySystemComponent());
-         state->ChangeState(EUnitState::STATE_CHANNELING);
-      }
-      return true;
-   }
-   return false;
-}
-
-void AUnit::OnMoveCompleted(FAIRequestID RequestID, const EPathFollowingResult::Type Result)
-{
-   // Check to see if we need to turn towards a point or a target after we're done moving.
-   // Moving naturally rotates us to our desired point/target, but it doesn't finish if we stop moving
-   if(Result == EPathFollowingResult::Success) {
-      // Handle's logic about turning to the proper target and thus prompts any turn actions after it completes
-      Visit(MoveCompletedVisitor(this), targetData.target);
-
-      // TODO: Remove this logic and place it somewhere better
-      if(GetState() == EUnitState::STATE_CHASING)
-         if(unitController->ChasingQuit()) {
-            unitController->Stop();
-            FAIMessage msg(AUnit::AIMessage_TargetLoss, this);
-            FAIMessage::Send(unitController, msg);
-         } else
-            unitController->Chase();
-   }
-}
-
-void AUnit::ShowDamageDealt(const FUpDamage& d)
-{
-   // Auto attach makes the new component the root for the sucessive components
-   UDIRender* tRC = NewObject<UDIRender>(this, controllerRef->GetHUDManager()->damageIndicatorClass);
-   if(tRC) {
-      tRC->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
-      tRC->RegisterComponent();
-
-      if(d.accuracy > 100)
-         tRC->Text = (NSLOCTEXT("Combat", "Dodge", "Dodged!"));
-      else
-         tRC->Text = FText::FromString(FString::FromInt(d.damage));
-
-      if(d.crit)
-         tRC->SetWorldSize(tRC->textSize * 2);
-      else
-         tRC->SetWorldSize(tRC->textSize);
-
-      tRC->SetTextRenderColor(UpResourceManager::elementalMap[d.element]);
-      tRC->SetHorizontalAlignment(EHorizTextAligment::EHTA_Center);
-      tRC->SetVerticalAlignment(EVerticalTextAligment::EVRTA_TextBottom);
-   }
-}
-
-float AUnit::GetDPS(float timespan)
-{
-   return combatParams.GetDPS(timespan, GetWorld()->GetTimeSeconds());
-}
-
-float AUnit::GetDamageReceivedPerSecond(float timespan)
-{
-   return combatParams.GetDamageRecievedPerSecond(timespan, GetWorld()->GetTimeSeconds());
-}
-
-float AUnit::GetHealingPerSecond(float timespan)
-{
-   return combatParams.GetHealingPerSecond(timespan, GetWorld()->GetTimeSeconds());
-}
-
-float AUnit::GetHealingReceivedPerSecond(float timespan)
-{
-   return combatParams.GetHealingRecievedPerSecond(timespan, GetWorld()->GetTimeSeconds());
-}
-
-float AUnit::CalculateRisk()
-{
-   // Calculate score based on how much health is missing
-   const float currentHealth = GetVitalCurValue(EVitals::Health);
-   const float totalHealth   = GetVitalAdjValue(EVitals::Health);
-   const float healthPer     = (totalHealth - currentHealth) / totalHealth;
-
-   // Calculate score based on how many debuffs we have
-   FGameplayEffectQuery debuffTagQuery =
-       FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff")));
-   int         debuffNum       = GetAbilitySystemComponent()->GetActiveEffects(debuffTagQuery).Num();
-   const float debuffRiskValue = FMath::Clamp(diminishFunc(debuffNum), 0.f, 1.f);
-
-   // Calculate score based on how many units are targetting us
-   const float targetRiskValue = CalculateTargetRisk();
-
-   // Calculate score based on how much damage we are taking per second
-   const float damageIntake = GetDamageReceivedPerSecond(1), healingIntake = GetHealingReceivedPerSecond(1);
-   const float netIntake = (damageIntake - healingIntake) / currentHealth;
-
-   GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Silver, FString::Printf(TEXT("Target, Debuff, NetIntake: %f, %f, %f"), targetRiskValue, debuffRiskValue, netIntake));
-   return healthPer + targetRiskValue + debuffRiskValue + netIntake;
-}
-
-float AUnit::CalculateThreat()
-{
-   const float damageDealt = GetDPS(1), healingDealt = GetHealingPerSecond(1);
-   // Calculate score based on how much damage we're dealing
-   // Should be done differently for enemies and allies float avgDPS = 0, avgHealing = 0;
-   for(AAlly* ally : controllerRef->GetBasePlayer()->allies) {
-      ally->GetDPS(1);
-   }
-
-   // Calculate score based on how many buffs we have
-   FGameplayEffectQuery buffTagQuery = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff")));
-   int                  buffNum      = GetAbilitySystemComponent()->GetActiveEffects(buffTagQuery).Num();
-   const float          buffThreatValue = FMath::Clamp(diminishFunc(buffNum), 0.f, 1.f);
-
-   // Calculate score based on how many castable spells we have left (we might not have the mana to cast them though...)
-   int numAvailableSpells = 0;
-   for(TSubclassOf<UMySpell> ability : abilities) {
-      if(CanCast(ability))
-         ++numAvailableSpells;
-   }
-   const float availableSpellsThreatValue = FMath::Clamp(diminishFunc(numAvailableSpells), 0.f, 1.f);
-
-   return buffThreatValue + availableSpellsThreatValue;
-}
-
-void AUnit::MoveCompletedVisitor::operator()(FEmptyVariantState)
-{
-   unitRef->GetUnitController()->Stop();
-}
-
-void AUnit::MoveCompletedVisitor::operator()(FVector v)
-{
-   !unitRef->GetUnitController()->IsFacingTarget(v) ? unitRef->GetUnitController()->TurnTowardsTarget(v) : unitRef->unitProperties.turnAction.ExecuteIfBound();
-}
-
-void AUnit::MoveCompletedVisitor::operator()(AActor* a)
-{
-   if(IsValid(a)) // Ensure the actor wasn't destroyed after we finished our movement
-      !unitRef->GetUnitController()->IsFacingTarget(a->GetActorLocation()) ? unitRef->GetUnitController()->TurnTowardsActor(a)
-                                                                           : unitRef->unitProperties.turnAction.ExecuteIfBound();
-}
-
-void AUnit::MoveCompletedVisitor::operator()(AUnit* u)
-{
-   if(IsValid(u)) // Ensure the actor wasn't destroyed after we finished our movement
-      !unitRef->GetUnitController()->IsFacingTarget(u->GetActorLocation()) ? unitRef->GetUnitController()->TurnTowardsActor(u)
-                                                                           : unitRef->unitProperties.turnAction.ExecuteIfBound();
-}
-
-FVector AUnit::TargetLocationVisitor::operator()(FEmptyVariantState)
-{
-   checkf(false, TEXT("Should never call this!"));
-   return FVector::ZeroVector;
-}
-
-FVector AUnit::TargetLocationVisitor::operator()(FVector v)
-{
-   return v;
-}
-
-FVector AUnit::TargetLocationVisitor::operator()(AActor* a)
-{
-   return a->GetActorLocation();
-}
-
-FVector AUnit::TargetLocationVisitor::operator()(AUnit* u)
-{
-   return u->GetActorLocation();
-}
-
-FGameplayAbilityTargetDataHandle AUnit::TargetDataVisitor::operator()(FEmptyVariantState)
-{
-   // If we call BeginCastSpell for a spell that requires no targetting
-   return FGameplayAbilityTargetDataHandle();
-}
-
-FGameplayAbilityTargetDataHandle AUnit::TargetDataVisitor::operator()(FVector v)
-{
-   FGameplayAbilityTargetingLocationInfo tInfo;
-   tInfo.LocationType     = EGameplayAbilityTargetingLocationType::LiteralTransform;
-   tInfo.LiteralTransform = FTransform(v);
-   return UAbilitySystemBlueprintLibrary::AbilityTargetDataFromLocations(tInfo, tInfo);
-}
-
-FGameplayAbilityTargetDataHandle AUnit::TargetDataVisitor::operator()(AActor* a)
-{
-   return UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(a);
-}
-
-FGameplayAbilityTargetDataHandle AUnit::TargetDataVisitor::operator()(AUnit* u)
-{
-   return UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(u);
-}
-
 void AUnit::OnUpdateGameSpeed(float speedMultiplier)
 {
-   GetCharacterMovement()->MaxWalkSpeed = GetMechanicAdjValue(EMechanics::MovementSpeed) * speedMultiplier;
+   GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed) * speedMultiplier;
+}
+
+bool AUnit::GetIsDead() const
+{
+   return combatInfo->isDead;
 }
 
 FBox2D AUnit::FindBoundary() const
@@ -541,6 +198,7 @@ FBox2D AUnit::FindBoundary() const
    FBox2D  boundary = FBox2D(ForceInit);
    FVector origin, extent;
    GetActorBounds(true, origin, extent);
+
    FVector2D                                        screenLocation;
    static const int                                 CORNER_COUNT = 8;
    TArray<FVector2D, TFixedAllocator<CORNER_COUNT>> corners; // Get 8 corners of box
@@ -551,20 +209,4 @@ FBox2D AUnit::FindBoundary() const
       boundary += corners[i];
    }
    return boundary;
-}
-
-bool AUnit::IsStunned() const
-{
-   return GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff.Stunned")) ? true : false;
-}
-
-bool AUnit::IsSilenced() const
-{
-   return GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Debuff.Silenced")) ? true : false;
-}
-
-bool AUnit::IsInvisible() const
-{
-   return GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")) &&
-          !GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Marked"));
 }

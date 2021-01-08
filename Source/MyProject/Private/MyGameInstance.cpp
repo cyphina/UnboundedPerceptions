@@ -18,8 +18,6 @@ UMyGameInstance::UMyGameInstance() {}
 void UMyGameInstance::Init()
 {
    Super::Init();
-   // Set up UpResourceManager globals
-   UpResourceManager::InitUpResourceManager();
 }
 
 void UMyGameInstance::Shutdown() { Super::Shutdown(); }
@@ -29,13 +27,6 @@ void UMyGameInstance::SaveLevelData(FName levelName)
    CSV_SCOPED_TIMING_STAT(UpLevelLoading, MapSaveTime);
 
    if (GetWorld()) {
-
-      // Things that need to be called when transitioning levels that can be conveniently called here (remove slack from unit lists)
-      Cast<ARTSGameState>(GetWorld()->GetGameState())->enemyList.Shrink();
-      Cast<ARTSGameState>(GetWorld()->GetGameState())->enemyList.Compact();
-      Cast<ARTSGameState>(GetWorld()->GetGameState())->allyList.Shrink();
-      Cast<ARTSGameState>(GetWorld()->GetGameState())->allyList.Compact();
-
       if (mapInfo.Contains(levelName)) // if we've already been here
       {
          FMapSaveInfo& mapData = mapInfo[levelName];

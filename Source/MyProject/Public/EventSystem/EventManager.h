@@ -15,7 +15,7 @@ class MYPROJECT_API UEventManager : public UObject
 {
    GENERATED_BODY()
 
-   friend class UMyCheatManager;
+   friend class URTSCheatManager;
 
    UEventManager();
 

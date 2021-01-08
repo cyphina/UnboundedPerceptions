@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -8,6 +6,7 @@
 
 /**
  * Service to continuously update AI parameters as long as it is in combat
+ * TODO: Make this relevant one day lol...
  */
 
 class AUserInput;

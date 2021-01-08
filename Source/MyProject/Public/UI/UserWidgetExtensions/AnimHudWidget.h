@@ -15,6 +15,11 @@ class MYPROJECT_API UAnimHudWidget : public UMyUserWidget
    GENERATED_BODY()
 
  public:
+   UWidgetAnimation* GetAnim() const { return anim; }
+
+ protected:
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
    UWidgetAnimation* anim;
+
+   void OnAnimationFinished_Implementation(const UWidgetAnimation* Animation) override;
 };

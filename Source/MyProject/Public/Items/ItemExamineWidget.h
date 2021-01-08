@@ -16,15 +16,14 @@ class MYPROJECT_API UItemExamineWidget : public UMyUserWidget
 {
    GENERATED_BODY()
 
-   UPROPERTY()
-   class AHUDManager* hudManagerRef;
-
  public:
    void NativeConstruct() override;
 
    bool OnWidgetAddToViewport_Implementation() override;
 
-   /**ID of the item who's picture should be examined when the item is used*/
+   /**
+    * @brief ID of the item who's picture should be examined when the item is used. Only set in the Examine spell's BP.
+    */
    UPROPERTY(BlueprintReadWrite)
    int itemToDisplayID = -1;
 
@@ -36,6 +35,10 @@ class MYPROJECT_API UItemExamineWidget : public UMyUserWidget
    UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
    UButton* btnClose;
 
+ private:
    UFUNCTION()
    void CloseMenu();
+
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
 };

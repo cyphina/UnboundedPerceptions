@@ -32,7 +32,7 @@ bool USpellbookHUD::OnWidgetAddToViewport_Implementation()
 
 void USpellbookHUD::CloseWidget()
 {
-   hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Spellbook));
+   hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Spellbook));
 }
 
 void USpellbookHUD::ChangeBackgroundColorWhenLeveling()
@@ -51,9 +51,9 @@ void USpellbookHUD::Update()
 
    // Setup the images and display some text telling us what level we have to be below the icon
    for(int i = 0; i < numSpellsToUpdate; ++i) {
-      if(TSubclassOf<UMySpell> spell = heroRef->spellbook->availableSpells[i]; IsValid(spell)) {
+      if(TSubclassOf<UMySpell> spell = heroRef->GetSpellBook()->availableSpells[i]; IsValid(spell)) {
          const auto spellDefaultObj = spell.GetDefaultObject();
-         spellbookSlots[i]->SetImage(spellDefaultObj->spellDefaults.image);
+         spellbookSlots[i]->SetSlotImage(spellDefaultObj->spellDefaults.image);
          const int spellLevel = spellDefaultObj->GetLevel(heroRef->GetAbilitySystemComponent());
          if(spellLevel != 0)
             spellbookSlots[i]->UpdateSlotLevelText(spellLevel);

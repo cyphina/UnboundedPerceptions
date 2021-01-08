@@ -18,9 +18,9 @@ void ANPCAIController::BeginPlay()
    UseBlackboard(npcBB, blackboardComp);
 }
 
-void ANPCAIController::Follow(ABaseHero* heroToFollow)
+void ANPCAIController::Follow(const ABaseHero* heroToFollow)
 {
-   blackboardComp->SetValueAsObject(targetKeyName, heroToFollow);
+   blackboardComp->SetValueAsObject(targetKeyName, const_cast<ABaseHero*>(heroToFollow));
    RunBehaviorTree(followTree);
 }
 

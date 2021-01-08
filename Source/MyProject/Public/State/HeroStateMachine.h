@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "StateMachine.h"
+#include "RTSStateMachine.h"
 
 /**
  * State machine specifically for heroes
@@ -10,9 +10,9 @@
 
 class ABaseHero;
 
-class MYPROJECT_API HeroStateMachine : public StateMachine {
+class MYPROJECT_API HeroStateMachine : public RTSStateMachine {
 public:
-   HeroStateMachine(ABaseHero* hero);
+   explicit HeroStateMachine(ABaseHero* hero);
    virtual ~HeroStateMachine();
 
    InteractState Interacting;
@@ -22,4 +22,5 @@ public:
 
 private:
    virtual IUnitState* getStateFromEnum(EUnitState enumVal) override;
+
 };

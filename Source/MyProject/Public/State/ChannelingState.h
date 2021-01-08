@@ -16,5 +16,5 @@ class MYPROJECT_API ChannelingState : public IUnitState
    virtual void       Exit(AUnit& unit) override;
    virtual void       Update(AUnit& unit, float deltaSeconds) override;
    virtual EUnitState GetName() const override { return EUnitState::STATE_CHANNELING; }
-   ~ChannelingState();
+   virtual ~ChannelingState();
 };

@@ -13,7 +13,7 @@
 
 class AUserInput;
 class ABasePlayer;
-struct FBaseCharacter;
+class UUpStatComponent;
 
 class AAlly;
 class ASummon;
@@ -63,7 +63,7 @@ class MYPROJECT_API USaveLoadClass : public UObject
    /**Save data about player*/
    void SetupSavePlayerData();
    /**Save data about unit's stats*/
-   void SetupSaveBaseCharacterData(const FBaseCharacter& baseChar, FBaseCharacterSaveInfo& saveInfo);
+   void SetupSaveBaseCharacterData(const UUpStatComponent& baseChar, FBaseCharacterSaveInfo& saveInfo);
    /**Save Ally data inside heroes, summons, and NPC esorts*/
    void SetupSaveAllyData(AAlly& ally, FAllySaveInfo& allyInfo);
    /**Save data about summons in party*/

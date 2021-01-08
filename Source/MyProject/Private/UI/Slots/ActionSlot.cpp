@@ -19,7 +19,7 @@ UActionSlot::UActionSlot(const FObjectInitializer& o) : UUserWidget(o)
    toolTipWidgetClass = tooltipClass.Class;
 }
 
-void UActionSlot::SetImage(UTexture2D* image)
+void UActionSlot::SetSlotImage(UTexture2D* image)
 {
    actionImage->SetBrushFromTexture(image, false);
 }
@@ -39,17 +39,17 @@ UTexture2D* UActionSlot::GetImage() const
    return Cast<UTexture2D>(actionImage->Brush.GetResourceObject());
 }
 
-void UActionSlot::NativeConstruct()
+void UActionSlot::NativeOnInitialized()
 {
-   Super::NativeConstruct();
+   Super::NativeOnInitialized();
    btnAction->OnClicked.AddDynamic(this, &UActionSlot::OnBtnClick);
    btnAction->OnHovered.AddDynamic(this, &UActionSlot::OnBtnHover);
-   CPCRef                           = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
+   CPCRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
 }
 
 void UActionSlot::OnBtnHover()
 {
-   TWeakObjectPtr<UToolTipWidget> tooltipWidgetRef = CreateWidget<UToolTipWidget>(CPCRef, toolTipWidgetClass);
+   const TWeakObjectPtr<UToolTipWidget> tooltipWidgetRef = CreateWidget<UToolTipWidget>(CPCRef, toolTipWidgetClass);
    ShowDesc(tooltipWidgetRef.Get());
    btnAction->SetToolTip(tooltipWidgetRef.Get());
 }

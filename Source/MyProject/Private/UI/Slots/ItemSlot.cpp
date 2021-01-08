@@ -11,22 +11,21 @@
 
 void UItemSlot::OnBtnClick()
 {
-   int backpackIndex = inventoryRef->inventoryView->GetCorrespondingBackpackIndex(slotIndex);
-   int itemId        = inventoryRef->GetBackpack()->GetItem(backpackIndex).id;
+   const int backpackIndex = inventoryRef->GetInventoryView()->GetCorrespondingBackpackIndex(slotIndex);
+   const int itemId        = inventoryRef->GetBackpack()->GetItem(backpackIndex).id;
    if(itemId > 0)
       inventoryRef->UseItemAtInventorySlot(backpackIndex);
 }
 
 void UItemSlot::ShowDesc(UToolTipWidget* tooltip)
 {
-   int backpackIndex = inventoryRef->inventoryView->GetCorrespondingBackpackIndex(slotIndex);
+   const int backpackIndex = inventoryRef->GetInventoryView()->GetCorrespondingBackpackIndex(slotIndex);
    if(inventoryRef->GetBackpack()->IsEmptySlot(backpackIndex))
       return;
-   int itemId = inventoryRef->GetBackpack()->GetItem(backpackIndex).id;
+   const int itemId = inventoryRef->GetBackpack()->GetItem(backpackIndex).id;
 
    if(itemId > 0) {
-      // If this item is an equippable
-      auto itemInfo = UItemManager::Get().GetItemInfo(itemId);
+      const auto itemInfo = UItemManager::Get().GetItemInfo(itemId);
       if(itemInfo->itemType.MatchesTag(FGameplayTag::RequestGameplayTag("Item.Equippable", false))) {
          const FText rarityName = UItemFunctionLibrary::GetRarityText(itemInfo->rarity);
          const FText bonusDesc  = UItemFunctionLibrary::GetBonusDescription(itemId);

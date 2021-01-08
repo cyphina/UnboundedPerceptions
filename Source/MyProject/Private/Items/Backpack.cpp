@@ -4,78 +4,107 @@
 #include "Backpack.h"
 #include "ItemManager.h"
 #include "LevelSaveStructs.h"
+#include "BaseHero.h"
+#include "ItemDelegateStore.h"
+#include "RTSIngameWidget.h"
 
 UBackpack::UBackpack()
 {
-   items = TSparseArray<FMyItem>();
    items.Reserve(INIT_CAPACITY);
+}
+
+UBackpack* UBackpack::CreateBackpack(UObject* outer, const int itemMax)
+{
+   UBackpack* backpack = NewObject<UBackpack>(outer);
+   backpack->SetItemMax(itemMax);
+   ItemChangeEvents::OnItemUsedEvent.AddUObject(backpack, &UBackpack::OnItemUsed);
+   return backpack;
 }
 
 bool UBackpack::AddItem(FMyItem& newItem)
 {
-#if UE_EDITOR
    check(newItem.id > 0);
-#endif
 
    const bool bIsNewItemStackable = UItemManager::Get().GetItemInfo(newItem.id)->isStackable;
-   if(bIsNewItemStackable) // If this is a stackable item
-   {
-      for(FMyItem& i : items) // loop through items and see if there's one already inside
-      {
-         if(i.id == newItem.id && i.count != STACK_MAX) // If there's a matching slot with this type of item and it's not already full
-         {
-            if(i.count + newItem.count <= STACK_MAX) // If the slot has enough room to add these additional items
-            {
-               i.count += newItem.count; // Add the count of the newitems to our original item count
-               newItem.count = 0;
-               return true;
-            } else // If this slot doesn't have enough room for all the additional item amount we're trying to add, add as many as we can to this slot and then look for other ones
-            {
-               newItem.count -= STACK_MAX - i.count; // Lower the item count since we added some items
-               i.count = STACK_MAX;                  // Fill up the slot
-            }
-         }
-      }
-
-      while(newItem.count > 0) {
-         if(items.Num() >= backpack_max_items) // If there are extra slots in the backpack
-            return false;
-
-         if(const int emptySlotIndex = FindEmptySlot(); emptySlotIndex != -1) { // KEep adding stacsk to the new slot until we fill up the backpack or run down the count
-            int howManyItemsAdded = FMath::Min(STACK_MAX, newItem.count);
-            items.Insert(emptySlotIndex, FMyItem(newItem.id, howManyItemsAdded));
-            newItem.count -= howManyItemsAdded;
-         }
-      }
-      return true;
-   } else {                     // If item is not stackable
-      if(items.Num() < backpack_max_items) // If there are extra slots in the backpack
-      {
-         // Add each unstackable item to a new slot
-         while(newItem.count > 0) {
-            if(const int emptySlotIndex = FindEmptySlot(); emptySlotIndex != -1) {
-               items.Insert(emptySlotIndex, FMyItem(newItem.id, 1));
-               newItem.count -= 1;
-            } else
-               return false;
-         }
-         return true;
-      }
-      // Not enough space to add all the unstackable items
-      return false;
+   if(bIsNewItemStackable) {
+      return AddStackableItem(newItem);
+   } else {
+      return AddUnstackableItem(newItem);
    }
+}
+
+bool UBackpack::AddItem(FMyItem&& newItem)
+{
+   return AddItem(newItem);
+}
+
+bool UBackpack::AddStackableItem(FMyItem& newItem)
+{
+   // Loop through the items we have
+   for(FMyItem& i : items) {
+      if(i.id == newItem.id && i.count != STACK_MAX) {
+         // If this item slot's stack is not filled up by our new additions
+         if(i.count + newItem.count <= STACK_MAX) {
+            i.count += newItem.count;
+            newItem.count = 0;
+            ItemChangeEvents::OnItemAddedToInventoryEvent.Broadcast(GetOuter(), newItem);
+            return true;
+         }
+         // Else fill up the slot and find another one to try and fill
+         else {
+            newItem.count -= STACK_MAX - i.count;
+            i.count = STACK_MAX;
+         }
+      }
+   }
+
+   // We filled up existing slots, so now we check for empty slots
+   while(newItem.count > 0) {
+      if(items.Num() >= backpack_max_items) // If there are extra slots in the backpack
+      {
+         ItemChangeEvents::OnItemOverflowEvent.Broadcast(GetOuter(), newItem);
+         return false;
+      }
+
+      if(const int emptySlotIndex = FindEmptySlot(); emptySlotIndex != -1) {
+         const int howManyItemsAdded = FMath::Min(STACK_MAX, newItem.count);
+         items.Insert(emptySlotIndex, FMyItem(newItem.id, howManyItemsAdded));
+         newItem.count -= howManyItemsAdded;
+      }
+   }
+
+   ItemChangeEvents::OnItemAddedToInventoryEvent.Broadcast(GetOuter(), newItem);
+   return true;
+}
+
+bool UBackpack::AddUnstackableItem(FMyItem& newItem)
+{
+   if(items.Num() < backpack_max_items) {
+      while(newItem.count > 0) {
+         if(const int emptySlotIndex = FindEmptySlot(); emptySlotIndex != -1) {
+            items.Insert(emptySlotIndex, FMyItem(newItem.id, 1));
+            newItem.count -= 1;
+         } else {
+            ItemChangeEvents::OnItemOverflowEvent.Broadcast(GetOuter(), newItem);
+            return false;
+         }
+      }
+      ItemChangeEvents::OnItemAddedToInventoryEvent.Broadcast(GetOuter(), newItem);
+      return true;
+   }
+
+   ItemChangeEvents::OnItemOverflowEvent.Broadcast(GetOuter(), newItem);
+   return false;
 }
 
 bool UBackpack::AddItemToSlot(FMyItem& newItem, int slot)
 {
    const bool bIsNewItemStackable = UItemManager::Get().GetItemInfo(newItem.id)->isStackable;
 
-#if UE_EDITOR
    check(newItem.id > 0);
    check(newItem.count <= STACK_MAX);
-   check(bIsNewItemStackable || newItem.count == 1) // Ensure this item is stackable or is just a single item
-       check(slot >= 0 && slot <= backpack_max_items);
-#endif
+   check(bIsNewItemStackable || newItem.count == 1); // Ensure this item is stackable or it is just a single item
+   check(slot >= 0 && slot <= backpack_max_items);
 
    // Check if this slot has something in it already
    const bool isSlotAllocated = items.IsAllocated(slot);
@@ -109,26 +138,22 @@ bool UBackpack::AddItems(TArray<FMyItem>& newItems)
 {
    // Don't need to check for size of our backpack since newItems may contain stackable items
    for(FMyItem& newIt : newItems) {
-      if(!AddItem(newIt))
-         return false;
+      if(!AddItem(newIt)) return false;
    }
    return true;
 }
 
 bool UBackpack::RemoveItem(const FMyItem& itemToRemove)
 {
-   int newID    = itemToRemove.id;
-   int newCount = itemToRemove.count;
+   const int newID    = itemToRemove.id;
+   const int newCount = itemToRemove.count;
 
-#if UE_EDITOR
    check(newID > 0);
-#endif
 
    if(items.Num() > 0) {
       int index = FindItem(newID);
 
-      if(index == -1)
-         return false;
+      if(index == -1) return false;
 
       if(items[index].count > newCount) {
          items[index].count -= newCount;
@@ -139,17 +164,19 @@ bool UBackpack::RemoveItem(const FMyItem& itemToRemove)
    return false;
 }
 
-bool UBackpack::RemoveItemAtSlot(int slot, int removeCount)
+bool UBackpack::RemoveItemAtSlot(const int slot, const int removeCount)
 {
    if(items.Num() > 0) {
       if(items.IsAllocated(slot)) {
+         FMyItem removedItem = FMyItem(items[slot].id, 0);
          if(UItemManager::Get().GetItemInfo(items[slot].id)->isStackable && items[slot].count > removeCount) {
+            removedItem.count = removeCount;
             items[slot].count -= removeCount;
-            if(items[slot].count < 0)
-               items.RemoveAt(slot);
          } else {
+            removedItem.count = removeCount - items[slot].count;
             items.RemoveAt(slot);
          }
+         ItemChangeEvents::OnItemRemovedFromInventoryEvent.Broadcast(GetOuter(), removedItem);
          return true;
       }
    }
@@ -160,13 +187,12 @@ bool UBackpack::RemoveItems(const TArray<FMyItem>& itemsToRemove)
 {
    bool success = true;
    for(const FMyItem& newIt : itemsToRemove) {
-      if(!RemoveItem(newIt))
-         success = false;
+      if(!RemoveItem(newIt)) success = false;
    }
    return success;
 }
 
-void UBackpack::EmptySlot(int slot)
+void UBackpack::EmptySlot(const int slot)
 {
    items.RemoveAtUninitialized(slot);
 }
@@ -197,14 +223,14 @@ bool UBackpack::TransferItems(UBackpack* otherPack, int transferSlot)
    return false;
 }
 
-void UBackpack::SwapItems(UBackpack* otherPack, int slot1, int slot2)
+void UBackpack::SwapItems(UBackpack* otherPack, const int slot1, const int slot2)
 {
    if(otherPack->items.IsAllocated(slot2)) {
       if(items.IsAllocated(slot1)) // if there's an item in the slot we want to swap
       {
-         FMyItem itemFromOtherPack = otherPack->items[slot2];
-         otherPack->items[slot2]   = items[slot1];
-         items[slot1]              = itemFromOtherPack;
+         const FMyItem itemFromOtherPack = otherPack->items[slot2];
+         otherPack->items[slot2]         = items[slot1];
+         items[slot1]                    = itemFromOtherPack;
       } else // if not, just insert an item there
       {
          items.Insert(slot1, otherPack->items[slot2]);
@@ -213,12 +239,10 @@ void UBackpack::SwapItems(UBackpack* otherPack, int slot1, int slot2)
    }
 }
 
-FMyItem UBackpack::GetItem(int slot) const
+FMyItem UBackpack::GetItem(const int slot) const
 {
    check(slot >= 0 && slot < backpack_max_items);
-   if(items.IsAllocated(slot)) {
-      return items[slot];
-   }
+   if(items.IsAllocated(slot)) { return items[slot]; }
    return FMyItem();
 }
 
@@ -248,41 +272,36 @@ TArray<int> UBackpack::GetItemIndices()
 int UBackpack::FindEmptySlot() const
 {
    for(int i = 0; i < items.GetMaxIndex(); i++) {
-      if(!items.IsAllocated(i)) {
-         return i;
-      }
+      if(!items.IsAllocated(i)) { return i; }
    }
    return -1;
 }
 
-bool UBackpack::IsEmptySlot(int slotIndex) const
+bool UBackpack::IsEmptySlot(const int slotIndex) const
 {
-   check((unsigned)slotIndex < (unsigned)GetItemMax())
-   return !items.IsAllocated(slotIndex) ? true : false;
+   check((unsigned)slotIndex < (unsigned)GetItemMax()) return !items.IsAllocated(slotIndex) ? true : false;
 }
 
-void UBackpack::SetItemMax(int newMax)
+void UBackpack::SetItemMax(const int newMax)
 {
    check(newMax >= backpack_max_items);
    backpack_max_items = newMax;
    items.Reserve(backpack_max_items);
 }
 
-int UBackpack::FindItem(int itemID)
+int UBackpack::FindItem(const int itemID) const
 {
-   for(auto it = items.CreateIterator(); it; ++it) {
-      if((*it).id == itemID)
-         return it.GetIndex();
+   for(auto it = items.CreateConstIterator(); it; ++it) {
+      if((*it).id == itemID) return it.GetIndex();
    }
    return -1;
 }
 
-int UBackpack::FindItemCount(int itemID)
+int UBackpack::FindItemCount(int itemID) const
 {
    int itemCount = 0;
-   for(auto it = items.CreateIterator(); it; ++it) {
-      if((*it).id == itemID)
-         itemCount += (*it).count;
+   for(auto it = items.CreateConstIterator(); it; ++it) {
+      if((*it).id == itemID) itemCount += (*it).count;
    }
    return itemCount;
 }
@@ -308,4 +327,14 @@ void UBackpack::LoadBackpack(FBackpackSaveInfo& backpackInfo)
       FMyItem item{backpackInfo.itemIDs[i], backpackInfo.itemCounts[i]};
       AddItemToSlot(item, backpackInfo.itemSlots[i]);
    }
+}
+
+void UBackpack::OnItemUsed(const ABaseHero* heroUsingItem, const FMyItem& itemID)
+{
+
+}
+
+void UBackpack::BeginDestroy()
+{
+   ItemChangeEvents::OnItemUsedEvent.RemoveAll(this);
 }

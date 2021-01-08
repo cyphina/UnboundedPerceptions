@@ -22,9 +22,12 @@ class MYPROJECT_API UBTTask_AttackWhileMove : public UBTTaskNode
 {
    GENERATED_BODY()
 
-   UPROPERTY(EditAnywhere)
-   float attackDelay;
+   UPROPERTY(EditAnywhere, Meta=(ClampMin ="0", ClampMax="120"))
+   float attackDelay = 1.f;
 
+   UPROPERTY(EditAnywhere, Meta=(ClampMin ="0", ClampMax="20"))
+   float delayVariance = 0.5f;
+   
    UBTTask_AttackWhileMove();
 
    EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) override;

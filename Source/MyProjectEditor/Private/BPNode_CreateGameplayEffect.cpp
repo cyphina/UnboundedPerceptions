@@ -13,7 +13,7 @@
 #include "EdGraphSchema_K2_Actions.h"
 #include "K2Node_CallFunction.h"
 
-#include "GameplayEffects/DamageEffect.h"
+#include "GameplayEffects/RTSDamageEffect.h"
 #include "GameplayEffects/CoolDownEffect.h"
 
 #include "GameplayTagContainer.h"
@@ -141,7 +141,7 @@ void UBPNode_CreateGameplayEffect::ExpandNode(FKismetCompilerContext& compilerCo
 
    ///SETUP NAMES
    //Look for static function in BP Library depending on class type (factory pattern)
-   if(GetClassToSpawn()->IsChildOf(UDamageEffect::StaticClass()))
+   if(GetClassToSpawn()->IsChildOf(URTSDamageEffect::StaticClass()))
       createFunctionName = GET_FUNCTION_NAME_CHECKED(USpellFunctionLibrary, MakeDamageEffect);
    else if(GetClassToSpawn()->IsChildOf(UStatChangeEffect::StaticClass()))
       createFunctionName = GET_FUNCTION_NAME_CHECKED(USpellFunctionLibrary, MakeStatChangeEffect);

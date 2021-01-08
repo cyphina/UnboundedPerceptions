@@ -1,19 +1,19 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "UI/UserWidgetExtensions/MyUserWidget.h"
 #include "MainWidget.generated.h"
 
-/**
- * Holds all the other widgets including widgets that can be opened from the main menu (settings) or other menus disabled during minigames
- */
-
 class URTSIngameWidget;
 class USettingsMenu;
 class UBreakMenu;
 
+/**
+ * The root widget of Up. It contains:
+ * - All the widgets for the base game
+ * - All the widgets specific to minigames
+ * - Widgets that can be accessed even within the main menu or widgets common across minigames.
+ */
 UCLASS()
 class MYPROJECT_API UMainWidget : public UMyUserWidget
 {
@@ -21,8 +21,6 @@ class MYPROJECT_API UMainWidget : public UMyUserWidget
 
    UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
    class AHUDManager* hudManagerRef;
-
-#pragma region CallbacksAndReferences
 
  protected:
    UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))

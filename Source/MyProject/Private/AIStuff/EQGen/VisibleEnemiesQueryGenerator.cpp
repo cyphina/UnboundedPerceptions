@@ -16,7 +16,7 @@ void UVisibleEnemiesQueryGenerator::GenerateItems(FEnvQueryInstance& queryInstan
    ARTSGameState*  gameStateRef = Cast<ARTSGameState>(GEngine->GetWorldFromContextObject(queryInstance.Owner.Get(), EGetWorldErrorMode::LogAndReturnNull)->GetGameState());
    TArray<AActor*> matchingActors;
 
-   for (AUnit* enemy : gameStateRef->visibleEnemies) {
+   for (AUnit* enemy : gameStateRef->GetVisibleEnemies()) {
       matchingActors.Add(enemy);
    }
 

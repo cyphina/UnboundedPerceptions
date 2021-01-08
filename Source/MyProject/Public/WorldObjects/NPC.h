@@ -67,10 +67,10 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
    void CountQuestDialogs();
 
    /**Checks if a dialog is a quest dialog by checking if its name starts with Quest*/
-   bool IsQuestDialog(FName conversationName);
+   bool IsQuestDialog(FName conversationName) const;
 
    /**Checks to see if this topic is already learned by the player*/
-   inline bool IsTopicLearned(FGameplayTag topic);
+   inline bool IsTopicLearned(FGameplayTag topic) const;
 
    /**Bound to OnTopicLearned delegate in BasePlayer to check if the questCount changes*/
    UFUNCTION()

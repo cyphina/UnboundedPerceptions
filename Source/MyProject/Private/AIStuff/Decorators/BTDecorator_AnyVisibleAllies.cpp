@@ -6,5 +6,5 @@
 
 bool UBTDecorator_AnyVisibleAllies::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
-   return (bool)Cast<ARTSGameState>(GetWorld()->GetGameState())->visiblePlayerUnits.Num();
+   return static_cast<bool>(Cast<ARTSGameState>(GetWorld()->GetGameState())->GetVisiblePlayerUnits().Num());
 }

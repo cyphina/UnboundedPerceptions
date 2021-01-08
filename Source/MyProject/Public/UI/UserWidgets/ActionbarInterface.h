@@ -21,34 +21,33 @@ class MYPROJECT_API UActionbarInterface : public UMyUserWidget
    GENERATED_BODY()
 
  public:
-   UPROPERTY(BlueprintReadWrite, Category = "References")
-   UESkillContainer* skillContainerRef;
-
-   UPROPERTY(BlueprintReadWrite, Category = "References")
-   UChannelingBar* channelingBarRef;
-
-   /** Can we drag this actionbar around or (*EVENTUALLY*) lock it from changing units?*/
-   UPROPERTY(BlueprintReadWrite, Category = "Properties")
-   bool isLocked;
-
-   /**Start to activate a skill on selected unit.  May not activate skill, but request targetting first*/
+   /** Start to activate a skill on selected unit. May not activate skill, but request targeting first. */
    UFUNCTION(BlueprintCallable, Category = "Skills")
    void UseSkill(int skillIndex);
 
-   /**Triggered when skill actually casted*/
-   UFUNCTION(BlueprintCallable, Category = "Skills")
-   void ShowSkillVisualCD(int skillIndex);
-
-#pragma region views
-
- public:
-   /**View when tabbing through multiple selected allies.  (Index free since we don't tab based off the index in the party, but rather their selection index)*/
+   /** View when tabbing through multiple selected allies */
    UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "View")
    void SingleAllyViewIndexFree(AAlly* allyToFocus);
 
-   /**View when the focused unit dies*/
+   /** View when the focused unit dies. */
    UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "View")
    void DeadUnitView();
 
-#pragma endregion
+   UESkillContainer* GetSkillContainer() const { return skillContainerRef; }
+
+ protected:
+   UPROPERTY(BlueprintReadWrite, Category = "References", meta = (BindWidget))
+   UESkillContainer* skillContainerRef;
+
+   UPROPERTY(BlueprintReadWrite, Category = "References", meta = (BindWidget))
+   UChannelingBar* channelingBarRef;
+
+   /** Can we drag this action bar around or (*EVENTUALLY*) lock it from changing units? */
+   UPROPERTY(BlueprintReadWrite, Category = "Properties")
+   bool isLocked;
+
+   void NativeOnInitialized() override;
+
+ private:
+   void OnFocusedUnitChanged(AUnit* newFocusedUnit);
 };

@@ -11,24 +11,29 @@
 class UEquip;
 class UWeapon;
 class ABaseHero;
+struct FMyItem;
 
 UCLASS()
 class MYPROJECT_API UEquipmentMenu : public UMyDraggableWidget
 {
    GENERATED_BODY()
 
- protected:
-   UPROPERTY(BlueprintReadWrite, Category = "References")
-   ABaseHero* hero;
-
  public:
    UFUNCTION(BlueprintCallable)
    ABaseHero* GetEquippedHero() const { return hero; }
 
-   bool OnWidgetAddToViewport_Implementation() override;
-
-   /**Call to redraw what is in equipment*/
+   /** Call to redraw what is in equipment */
    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Equipment")
    void Update();
+
+   void NativeOnInitialized() override;
+
    void Update_Implementation();
+
+ protected:
+   UPROPERTY(BlueprintReadWrite, Category = "References")
+   ABaseHero* hero;
+
+ private:
+   void OnEquipmentChanged(const ABaseHero* heroThatChanged, const FMyItem& changedEquip);
 };

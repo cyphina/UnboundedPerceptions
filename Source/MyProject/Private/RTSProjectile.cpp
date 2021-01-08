@@ -2,22 +2,21 @@
 #include "RTSProjectile.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "RTSProjectileStrategy.h"
+#include "TargetComponent.h"
+#include "Unit.h"
 
-// Sets default values
 ARTSProjectile::ARTSProjectile()
 {
    PrimaryActorTick.bCanEverTick = true;
    collisionComponent            = CreateDefaultSubobject<USphereComponent>("CollisionSphere");
-   collisionComponent->InitSphereRadius(10.f);
-   RootComponent = collisionComponent;
+   RootComponent                 = collisionComponent;
 
    projectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>("ProjectileComponent");
    projectileMovementComponent->SetUpdatedComponent(collisionComponent);
-   projectileMovementComponent->InitialSpeed             = 3000.0f;
-   projectileMovementComponent->MaxSpeed                 = 3000.f;
+
    projectileMovementComponent->bRotationFollowsVelocity = true;
    projectileMovementComponent->bShouldBounce            = false;
-   InitialLifeSpan                                       = 3.0f;
 
    collisionComponent->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
    collisionComponent->OnComponentHit.AddDynamic(this, &ARTSProjectile::OnHit);
@@ -26,46 +25,86 @@ ARTSProjectile::ARTSProjectile()
    bulletMesh->SetupAttachment(RootComponent);
 }
 
-// Called when the game starts or when spawned
 void ARTSProjectile::BeginPlay()
 {
    Super::BeginPlay();
-   switch (targetting) {
-      case EBulletTargettingScheme::Bullet_Ally:
-         collisionComponent->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Block);
-         break;
-      case EBulletTargettingScheme::Bullet_Enemy:
-         collisionComponent->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Block); 
-         break;
-      case EBulletTargettingScheme::Bullet_Either:
-         collisionComponent->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Block); 
-         collisionComponent->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Block); 
-         break;
-   }
-
-   if (canGoThroughWalls) {
-      collisionComponent->SetCollisionResponseToChannel(VISION_BLOCKER_CHANNEL, ECR_Ignore); 
-      collisionComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);       
-   } else {
-      collisionComponent->SetCollisionResponseToChannel(VISION_BLOCKER_CHANNEL, ECR_Block); 
-      collisionComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);       
-   }
-
    collisionComponent->IgnoreActorWhenMoving(Cast<AActor>(GetOwner()), true);
 }
 
-// Called every frame
 void ARTSProjectile::Tick(float DeltaTime)
 {
    Super::Tick(DeltaTime);
 }
 
-void ARTSProjectile::FireInDirection(const FVector& shootDirection)
+ARTSProjectile* ARTSProjectile::MakeRTSProjectile(UWorld* worldToSpawnIn, UTargetComponent* targetComp, FTransform initialTransform,
+                                                  TSubclassOf<ARTSProjectile> projectileClass, const URTSProjectileStrategy* projectileStrategy)
+{
+   if(!projectileStrategy) {
+      projectileStrategy = NewObject<URTSProjectileStrategy>();
+   }
+
+   if(AUnit* unitShooter = Cast<AUnit>(targetComp->GetOwner())) {
+      ARTSProjectile* projectile                            = worldToSpawnIn->SpawnActorDeferred<ARTSProjectile>(projectileClass, initialTransform);
+      projectile->projectileMovementComponent->InitialSpeed = projectileStrategy->bulletInitSpeed;
+      projectile->projectileMovementComponent->MaxSpeed     = projectileStrategy->bulletMaxSpeed;
+      projectile->InitialLifeSpan                           = projectileStrategy->bulletLifeSpan;
+
+      projectile->collisionComponent->InitSphereRadius(projectileStrategy->bulletSphereRadius);
+      projectile->hitEffects.Append(projectileStrategy->defaultHitEffects);
+      if(!projectile->bulletMesh) {
+         if(projectileStrategy->defaultBulletMesh) projectile->bulletMesh = projectileStrategy->defaultBulletMesh;
+      }
+
+      switch(projectileStrategy->targeting) {
+         case EBulletTargetingScheme::Bullet_Ally: {
+            if(unitShooter->GetIsEnemy()) {
+               projectile->collisionComponent->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Block);
+            } else {
+               projectile->collisionComponent->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Block);
+            }
+            break;
+         }
+         case EBulletTargetingScheme::Bullet_Enemy: {
+            if(unitShooter->GetIsEnemy()) {
+               projectile->collisionComponent->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Block);
+            } else {
+               projectile->collisionComponent->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Block);
+            }
+            break;
+         }
+         case EBulletTargetingScheme::Bullet_Either:
+            projectile->collisionComponent->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Block);
+            projectile->collisionComponent->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Block);
+            break;
+      }
+
+      if(projectileStrategy->canGoThroughWalls) {
+         projectile->collisionComponent->SetCollisionResponseToChannel(VISION_BLOCKER_CHANNEL, ECR_Ignore);
+         projectile->collisionComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);
+      } else {
+         projectile->collisionComponent->SetCollisionResponseToChannel(VISION_BLOCKER_CHANNEL, ECR_Block);
+         projectile->collisionComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+      }
+
+      projectile->FinishSpawning(initialTransform);
+
+      if(projectileStrategy->isHoming)
+         projectile->FireAtTarget(targetComp->GetTargetActorOrUnit());
+      else
+         projectile->FireInDirection((targetComp->GetTargetActorOrUnit()->GetActorLocation() -
+                                      FVector(initialTransform.GetLocation().X, initialTransform.GetLocation().Y, initialTransform.GetLocation().Z))
+                                         .GetSafeNormal());
+      return projectile;
+   }
+   return nullptr;
+}
+
+void ARTSProjectile::FireInDirection(const FVector& shootDirection) const
 {
    projectileMovementComponent->Velocity = shootDirection * projectileMovementComponent->InitialSpeed;
 }
 
-void ARTSProjectile::FireAtTarget(const AActor* target)
+void ARTSProjectile::FireAtTarget(const AActor* target) const
 {
    projectileMovementComponent->bIsHomingProjectile   = true;
    projectileMovementComponent->HomingTargetComponent = target->GetRootComponent();
@@ -73,10 +112,10 @@ void ARTSProjectile::FireAtTarget(const AActor* target)
 
 void ARTSProjectile::OnHit(UPrimitiveComponent* hitComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, FVector normalImpulse, const FHitResult& hit)
 {
-   UAbilitySystemComponent* abilitySystemComp = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(otherActor);
-   if (abilitySystemComp) {
-      for (FGameplayEffectSpecHandle eff : hitEffects) {
-         abilitySystemComp->ApplyGameplayEffectSpecToSelf(*eff.Data.Get());
+   UAbilitySystemComponent* collidedActorAbilityComp = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(otherActor);
+   if(collidedActorAbilityComp) {
+      for(FGameplayEffectSpecHandle eff : hitEffects) {
+         collidedActorAbilityComp->ApplyGameplayEffectSpecToSelf(*eff.Data.Get());
       }
    }
 }

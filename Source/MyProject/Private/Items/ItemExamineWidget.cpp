@@ -21,5 +21,5 @@ bool UItemExamineWidget::OnWidgetAddToViewport_Implementation()
 void UItemExamineWidget::CloseMenu()
 {
   itemToDisplayID = 0;
-  hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_ExamineMenu));
+  hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_ExamineMenu));
 }

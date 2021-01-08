@@ -2,144 +2,103 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "AllUnitsContext.h"
 #include "GameFramework/GameStateBase.h"
+#include "UpGameClock.h"
+#include "VisionContext.h"
+#include "Interfaces/GameSpeedContext.h"
 #include "RTSGameState.generated.h"
-
-/**
- * Game State has information that is replicated to all clients.  Put here things that all players need to know.
- * Keep track of the state of the game (connected players).  1 Game State has many Player States, while each player states reference the 1 Game State
- */
 
 class URTSIngameWidget;
 class AEnemy;
 class AAlly;
 class AUnit;
 class AFogOfWarPlane;
+class UVisionSubsystem;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUpdateGameSpeed, float, speedMultiplier);
-
+/**
+ * Game State has information that is replicated to all clients.
+ * Put here things that all players need to know about how the current game is progression (as opposed to GameMode which has game information that should be exclusive to the server)
+ * Keep track of the state of the game (connected players).  1 Game State has many Player States, while each player states reference the 1 Game State
+ */
 UCLASS()
-class MYPROJECT_API ARTSGameState : public AGameStateBase
+class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsContext, public IGameSpeedContext, public IVisionContext
 {
    GENERATED_BODY()
 
-   static constexpr int arraySize      = 3;
-   const float          SECONDS_IN_DAY = 86400;
-
-   // how many seconds in game does one second IRL correspond to when at 1x speed?
-   float defaultGameTimeSpeed = 60;
-   // rate at which our clock counts seconds.  By default defaultGameTimeSpeed but can be modified by speed modifiers
-   float timeUnit;
-
-   // accumulates in-game seconds
-   double clockwork;
-
-   int seconds{0}, minutes{0}, hours{0};
-   int days{0}, months{0}, years{0};
-
-   TArray<int> gameTime;
-   TArray<int> gameDate;
-
-   // Let this only update clock
-   void Clock();
-   // Let this only update game calendar
-   void Calendar();
-
- public:
+public:
    ARTSGameState();
+
+   UFUNCTION(BlueprintCallable)
+   const TSet<AUnit*>& GetAllFriendlyUnits() const override { return allyList; }
+
+   UFUNCTION(BlueprintCallable)
+   const TSet<AUnit*>& GetAllEnemyUnits() const override { return enemyList; }
+
+   UFUNCTION(BlueprintCallable)
+   const TSet<AUnit*>& GetVisibleEnemies() const override;
+
+   UFUNCTION(BlueprintCallable)
+   const TSet<AUnit*>& GetVisiblePlayerUnits() const override;
+
+   /** Callback to update our time unit when we change game speed (done only within GameSpeedWidget */
+   UFUNCTION()
+   void UpdateGameSpeed(float newSpeedMultiplier);
+
+   /** Registers an ally in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
+   void RegisterFriendlyUnit(AAlly* friendlyUnit) override;
+   /** Registers an enemy in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
+   void RegisterEnemyUnit(AEnemy* enemyUnit) override;
+   /** Removes an ally in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
+   void UnRegisterFriendlyUnit(AAlly* friendlyUnit) override;
+   /** Removes an enemy in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
+   void UnRegisterEnemyUnit(AEnemy* enemyUnit) override;
+
+   const FUpGameClock* GetGameClock() const { return clock.Get(); }
+
+   void AddGameTime(FUpTime timeToAdd, FUpDate daysToAdd);
+   void SetGameTime(FUpTime timeToAdd, FUpDate daysToAdd);
+
+   float GetGameSpeed() const override { return speedModifier; }
+
+   FUpdateGameSpeed OnGameSpeedUpdated() const override { return UpdateGameSpeedDelegate; }
+
+protected:
    void Tick(float deltaSeconds) override;
    void BeginPlay() override;
 
-   /** Stops any updates to the game state while level transitioning*/
-   UFUNCTION(BlueprintCallable)
-   void StopUpdate();
+private:
 
-   /** Resumes timers that need to be called when a level is being played*/
-   UFUNCTION(BlueprintCallable)
-   void ResumeUpdate() const;
+   void OnAllyActiveChanged(AAlly* allyRef, bool isActive);
+   void OnEnemyActiveChanged(AEnemy* enemyRef, bool isActive);
 
-   /**Set by CPC*/
-   UPROPERTY(BlueprintReadWrite, Category = "References")
-   URTSIngameWidget* ingameWidget;
+   /** As units get killed off due to level unload, we need to make sure these data structures are on good shape when we resume playing in the next level */
+   void CleanupUnitLists();
 
-   ///---Game Time and Speed---
-   UPROPERTY(BlueprintReadWrite, Category = "Speed")
-   float speedModifier = 1;
-
-   /**Collection of callbacks when game speed updated*/
-   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Speed")
-   FUpdateGameSpeed UpdateGameSpeedDelegate;
-
-   /**Callback to update our timeunit when we change game speed*/
-   UFUNCTION()
-   void UpdateGameSpeed(float speedMultiplier);
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Time")
-   TArray<int> GetGameTime() const { return gameTime; }
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Time")
-   TArray<int> GetGameDate() const { return gameDate; }
-
-   /**Set the game time to some time*/
-   UFUNCTION(BlueprintCallable, Category = "Time")
-   void UpdateGameTime(int second = 0, int minute = 0, int hour = 0);
-   /**Set the game date to some date*/
-   UFUNCTION(BlueprintCallable, Category = "Time")
-   void UpdateGameDay(int days = 0, int months = 0, int years = 0);
-   /**Add game time*/
-   UFUNCTION(BlueprintCallable, Category = "Time")
-   void AddGameTime(FDateTime timeToAdd);
-
-   ///---Unit Lists and Vision---
-   FHitResult                  visionHitResult;
-   FCollisionObjectQueryParams queryParamVision;
-
-   FTimerHandle allyVisionUpdateTimerHandle;
-   FTimerHandle enemyVisionUpdateTimerHandle;
-
-   FWindowsRWLock   visibleMutex; // Guards visibleEnemies
-   FWindowsRWLock visiblePlayersMutex; // Guard visiblePlayers
-
-   /**Lists all party members that exist between every player (necessary for computing co op vision).  Faster to keep stuff in a set for quick removal
-    * Also it holds all of the references to allies (across all players) if there ever is multiplayer*/
-   UPROPERTY(BlueprintReadWrite, Category = "SharedData")
-   TSet<AAlly*> allyList;
-
-   /**Lists of all enemies in the level*/
-   UPROPERTY(BlueprintReadWrite, Category = "SharedData")
-   TSet<AEnemy*> enemyList;
-
-   /**Lists what enemies are visible so we don't have to keep doing line traces which is an expensive op*/
-   UPROPERTY(BlueprintReadOnly, Category = "Vision")
-   TSet<AUnit*> visibleEnemies;
-
-   /**Lists what allies are visible so we don't have to keep doing line traces which is an expensive op*/
-   UPROPERTY(BlueprintReadOnly, Category = "Vision")
-   TSet<AUnit*> visiblePlayerUnits;
-
-   UPROPERTY(EditDefaultsOnly, Category = "Vision")
+   UPROPERTY(EditDefaultsOnly, Category = "Vision", Meta = (AllowPrivateAccess = true))
    TSubclassOf<AFogOfWarPlane> FOWplaneClass;
 
-   UPROPERTY(BlueprintReadOnly, Category = "Vision")
-   AFogOfWarPlane* FOWplane;
+   /** How many seconds in game does one second IRL correspond to when at 1x speed? */
+   UPROPERTY(EditAnywhere, meta = (AllowPrivateAccess))
+   float defaultGameTimeSpeed = 60;
+
+   UPROPERTY(BlueprintAssignable, Meta = (AllowPrivateAccess = true))
+   mutable FUpdateGameSpeed UpdateGameSpeedDelegate;
+
+   TUniquePtr<FUpGameClock> clock;
+
+   float speedModifier = 1;
+
+   UPROPERTY()
+   UVisionSubsystem* visionManager;
 
    /**
-    * *** !!! ALso handles killing of units to prevent data races !!! ***
-    * Visiblity of enemies is like a state machine which has six states
-    * Enemy enters vision range and we can see it - Add to possible enemies in radius and add to visible units
-    * Enemy enters vision range but is behind a wall - Add to possible enemies in radius but not to visible units
-    * Enemy leaves vision range - Remove from possible enemies in radius and from visible units
-    * Enemy leaves vision range but was behind a wall so we never saw it - Remove from possible enemies in radius but not from visible units
-    * Enemy peaks a wall and is now in vision - Add to visible enemies but not to possible enemies in radius
-    * Enemy walks behind a wall and is not in vision - Remove from visible enemies but not from possible enemies in radius
+    * Lists all party members that exist between every player (including other teammate players in co op)
+    * Faster to keep stuff in a set for quick removal (granted items are kept together so we don't
+    * suffer in terms of cache coherency.
     */
-   UFUNCTION()
-   void UpdateVisibleEnemies();
+   TSet<AUnit*> allyList;
 
-   /**For more info look at comments of UpdateVisibleEnemies.  Used to list all the player units (units player controlls) that
-    * are visible to according to enemies.
-    */
-   UFUNCTION()
-   void UpdateVisiblePlayerUnits();
+   /** Lists of all enemies in the level */
+   TSet<AUnit*> enemyList;
 };

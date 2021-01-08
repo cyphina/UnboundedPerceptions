@@ -10,36 +10,40 @@
 
 #include "WorldObjects/BaseHero.h"
 
+#include "ItemDelegateStore.h"
+#include "PartyDelegateStore.h"
+
 #include "AIStuff/AIControllers/HeroAIController.h"
 
 #include "ItemManager.h"
 
 #include "Backpack.h"
 
+void UHeroInventory::NativeOnInitialized()
+{
+   ItemChangeEvents::OnEquipmentChangedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+   ItemChangeEvents::OnItemPickedUpEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+   ItemChangeEvents::OnItemPurchasedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+   ItemChangeEvents::OnItemUsedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+   GetOwningLocalPlayer()->GetSubsystem<UPartyDelegateStore>()->OnHeroActiveChanged().AddUObject(this, &UHeroInventory::OnHeroActiveChanged);
+}
+
 void UHeroInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)
 {
-   if (!GetBackpack()->IsEmptySlot(iSlot)) {
-      FMyItem      itemUsed = GetBackpack()->GetItem(iSlot);
-      FGameplayTag itemType = UItemManager::Get().GetItemInfo(itemUsed.id)->itemType;
-      ABaseHero*   hero     = CPC->GetBasePlayer()->heroes[hIndex];
+   if(!GetBackpack()->IsEmptySlot(iSlot)) {
+      OnItemSelected().Broadcast(hIndex, iSlot);
+   }
+}
 
-      if (itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Equippable"))) {
-         GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Magenta, TEXT("USED AN EQUIP"));
-         if (hero) { hero->Equip(iSlot); }
-      }
+void UHeroInventory::OnItemChangeEvent(const ABaseHero* heroUsingItem, const FMyItem& item)
+{
+   if(GetVisibility() == ESlateVisibility::Visible) LoadItems();
+}
 
-      // if we're using a consumeable
-      else if (itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Consumeable"))) {
-#if UE_EDITOR
-         GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Magenta, TEXT("USED A CONSUMEABLE"));
-#endif
-         // set it as the item the hero is going to be using, so we can now target the target which the consumeable is to be used upon
-         hero->GetHeroController()->BeginUseItem(itemUsed.id);
-      } else // some item type that isnt specified
-      {
-#if UE_EDITOR
-         GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Magenta, TEXT("ERROR WITH ITEM TYPE"));
-#endif
-      }
+void UHeroInventory::OnHeroActiveChanged(ABaseHero* heroThatChangedActivefState, bool newActiveState)
+{
+   // TODO: Refresh inventory and move from the selected page. Also change hIndex... if we plan to keep it around.
+   if(!newActiveState) {
+      LoadItems();
    }
 }

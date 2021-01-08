@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "GameFramework/GameModeBase.h"
@@ -8,6 +6,7 @@
 #include "RTSGameMode.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLevelLoaded);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLevelAboutToUnload);
 
 /**
  * Game mode only exists on server.  Put things that only the server needs to know and use.  Can't replicate variables here, but calls here apply to server logic
@@ -26,52 +25,29 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
 {
    GENERATED_BODY()
 
-   ///< summary> Level Names </summary>
-
-   const FString startingLevelName = "StartMap";
-   const FString sylphiaApartment  = "SylphiaApartment";
-   const FString roadToWubville    = "RoadToWubville";
-   const FString blockadeCity      = "BlockadeCity";
-   const FString factory           = "Factory";
-
-   /**Stores the currently loaded level name*/
-   UPROPERTY(BlueprintReadWrite, Category = "Levels", Meta = (AllowPrivateAccess = "true"))
-   FString currentLevelName;
-
-   /**Did we just load a new level because we loaded a game load?*/
-   bool bLoading;
-
-   void BeginPlay() override;
-
-   // Injects this dependency in the classes it spawnss
-   UPROPERTY()
-   class AHUDManager* hudManagerRef;
-
  public:
    ARTSGameMode();
 
-   ///---Expose these classes so we can spawn a more derived blueprint class version of each manager in the code---
-
    /**
-    * EventManager - Handles progressing in story and activating story based triggers
+    * Handles progressing in story and activating story based triggers
     */
    UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
    TSubclassOf<UEventManager> eventManagerClass;
 
    /**
-    * TriggerManager - Handles activating and storing of trigger data across levels
+    * Handles activating and storing of trigger data across levels
     */
    UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
    TSubclassOf<UTriggerManager> triggerManagerClass;
 
    /**
-    * QuestManager - Handles everything quest related
+    *  Handles everything quest related
     */
    UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
    TSubclassOf<UQuestManager> questManagerClass;
 
    /**
-    * MinigameManager - Handles starting and stopping of minigames
+    * Handles starting and stopping of minigames
     */
    UPROPERTY(EditDefaultsOnly, Category = "Manager Class")
    TSubclassOf<UMinigameManager> minigameManagerClass;
@@ -94,8 +70,13 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
    UPROPERTY(BlueprintGetter = GetMinigameManager)
    UMinigameManager* minigameManager;
 
+   /** Called right after a level is loaded*/
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnLevelLoaded OnLevelLoaded;
+
+   /** Called right after before we unload the current level*/
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+   FOnLevelAboutToUnload OnLevelAboutToUnload;
 
    ///---Manager class accessors---
    UFUNCTION(BlueprintGetter, BlueprintPure, Category = "Managers")
@@ -176,4 +157,21 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
    /**Trigger a gameover screeen*/
    UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "LevelLoading")
    void GameOver();
+
+ protected:
+   void BeginPlay() override;
+
+ private:
+   const FString startingLevelName = "StartMap";
+   const FString sylphiaApartment  = "SylphiaApartment";
+   const FString roadToWubville    = "RoadToWubville";
+   const FString blockadeCity      = "BlockadeCity";
+   const FString factory           = "Factory";
+
+   /** Stores the currently loaded level name */
+   UPROPERTY(BlueprintReadWrite, Category = "Levels", Meta = (AllowPrivateAccess = "true"))
+   FString currentLevelName;
+
+   /** Did we just load a new level because we loaded a game load? */
+   bool bLoading;
 };

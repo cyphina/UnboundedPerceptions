@@ -2,39 +2,27 @@
 
 #pragma once
 
+#include "ECursorStates.h"
 #include "GameFramework/Pawn.h"
 #include "GameBaseHelpers/CursorClickFunctionality.h"
 #include "RTSPawn.generated.h"
 
-UENUM(BlueprintType)
-enum class ECursorStateEnum : uint8 {
-   Select UMETA(DisplayName = "Select"),
-   Moving,
-   Attack,
-   PanUp,
-   PanDown,
-   PanLeft,
-   PanRight,
-   Interact,
-   Talking,
-   Item,
-   Magic,
-   UI,
-   AttackMove
-};
-
+class ABaseHero;
 class AUnit;
 class AUserInput;
 class AAlly;
 class ICursorClickFunctionality;
+class UCameraComponent;
 
-// Callback delegates for handling events when units are selected
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllySelected, bool, ToggleSelect);       // ToggleAllySelect, SelectAllyUnit, SelectionRect
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllyDeselected, AAlly*, DeselectedAlly); // ToggleAllyDeselect,
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGroundSelected);                                  // SelectGround,
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);                                    // SelectEnemy
 
-/**Pawn that is associated with the main RPG/RTS gameplay input*/
+/**
+ * @brief The RTS Pawn holds controls related to main gameplay. Contrast this to the UserInput which holds control logic for all gameplay types (it's consistent even if we
+ * swap out pawn.
+ */
 UCLASS()
 class MYPROJECT_API ARTSPawn : public APawn
 {
@@ -43,6 +31,16 @@ class MYPROJECT_API ARTSPawn : public APawn
  public:
    ARTSPawn();
 
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helper")
+   bool IsAnyAllySelected() const;
+
+   UCameraComponent* GetCameraComponent() const { return camera; }
+
+   void DisableInput(APlayerController* PlayerController) override;
+
+ protected:
+   void BeginPlay() override;
+
    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    class USceneComponent* scene;
 
@@ -50,23 +48,15 @@ class MYPROJECT_API ARTSPawn : public APawn
    class USpringArmComponent* cameraArm;
 
    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-   class UCameraComponent* camera;
+   UCameraComponent* camera;
 
    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    class USpringArmComponent* mapArm;
 
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helper")
-   bool IsAnyAllySelected() const;
-
- protected:
-   virtual void BeginPlay() override;
-
- public:
-   virtual void Tick(float DeltaTime) override;
-   virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-   virtual void PossessedBy(AController* newController) override;
-   virtual void UnPossessed() override;
-   virtual void DisableInput(APlayerController* PlayerController) override; //Null hitActor so it recalculates when renabled else hover won't activate
+   void Tick(float DeltaTime) override;
+   void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+   void PossessedBy(AController* newController) override;
+   void UnPossessed() override;
 
  private:
    UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true"))
@@ -74,7 +64,7 @@ class MYPROJECT_API ARTSPawn : public APawn
 
 #pragma region mouse
  public:
-   /** Length of the line we check when we line trace during a click event to query what is under the cursor */
+   /** Scales length of the line we check when we line trace during a click event to query what is under the cursor */
    static const int CLICK_TRACE_LENGTH_MULTIPLIER = 5;
 
    UPROPERTY(BlueprintReadWrite)
@@ -104,7 +94,7 @@ class MYPROJECT_API ARTSPawn : public APawn
    TArray<TEnumAsByte<EObjectTypeQuery>> rightClickQueryObjects;
 
    /**Similar to change cursor but used for changing to secondary cursors.  If cursorType is not a secondary cursor, toggles off secondary cursors*/
-   void SetSecondaryCursor(ECursorStateEnum cursorType = ECursorStateEnum::Select);
+   void SetSecondaryCursor(const ECursorStateEnum cursorType = ECursorStateEnum::Select);
 
    // Changes cursor to be a different picture.  Called when hovering over different objects.  Changes hardware cursor and cursorState
    UFUNCTION(BlueprintCallable, Category = "Cursor")
@@ -149,8 +139,6 @@ class MYPROJECT_API ARTSPawn : public APawn
    bool bQuickCast;
 
  private:
-   // These references store information about hit in member so we don't have to reconstruct every tick
-
    /**Stores last actor hit by the cursor hover trace.  Used so we don't retrace if we hit the same actor, but sometimes canceling actions like clicking the ground should
     *reset this*/
    UPROPERTY()
@@ -260,11 +248,15 @@ class MYPROJECT_API ARTSPawn : public APawn
    void RightClick();
    void RightClickShift();
    void LeftClick();
+   void LeftClickReleased();
    void LeftClickShift();
 
-   void TabNextAlly();
+   void TabThroughSelection();
+   void TabThroughGroup() const;
+   void TabSingleSelection() const;
 
    void UseAbility(int abilityIndex);
+
    /** Delegate to pass to BindAction so we can have a parameter for useability*/
    DECLARE_DELEGATE_OneParam(FAbilityUseDelegate, int);
 
@@ -274,13 +266,18 @@ class MYPROJECT_API ARTSPawn : public APawn
    void SelectControlGroup(int controlIndex);
    DECLARE_DELEGATE_OneParam(FSelectControlGroupDelegate, int);
 
-   /** -1 when rest, 0-4 to signify what control group button was last pressed*/
+   /**
+    *-1 when reset, 0-4 to signify what control group button was last pressed
+    * Used to check when we double tap to move our camera to the control group
+    */
    uint8 lastControlTappedIndex = 0;
+
    /** The index of the control group key being held down*/
    uint8 controlBeingHeldIndex = 0;
 
    FTimerHandle ControlGroupDoupleTapHandle;
    /** Pans the camera to the first unit in the control group if we double tap the control select button*/
+
    UFUNCTION()
    void ControlGroupDoubleTapTimer();
 
@@ -296,9 +293,8 @@ class MYPROJECT_API ARTSPawn : public APawn
 
 #pragma endregion
 
- public:
 #pragma region selection
-
+ public:
    /* If we need the ally that ws just selected, we can get it from baseplayer selectedAllies last */
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnAllySelected OnAllySelectedDelegate;

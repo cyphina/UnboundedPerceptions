@@ -12,7 +12,10 @@ void AUPLevelScript::BeginPlay()
 {
    controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
 
-   if (shouldTimePass) Cast<ARTSGameState>(GetWorld()->GetGameState())->AddGameTime(timeToPass);
+   if(shouldTimePass)
+      Cast<ARTSGameState>(GetWorld()->GetGameState())
+          ->AddGameTime(FUpTime(timeToPass.GetSecond(), timeToPass.GetMinute(), timeToPass.GetHour()),
+                        FUpDate(timeToPass.GetDay(), timeToPass.GetMonth(), timeToPass.GetYear()));
 
    ARTSGameMode* gameMode = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
    Super::BeginPlay(); // remember this calls blueprint BeginPlay()

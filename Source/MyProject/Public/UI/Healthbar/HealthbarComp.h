@@ -24,7 +24,7 @@ class MYPROJECT_API UHealthbarComp : public UWidgetComponent {
 
    TSubclassOf<UUserWidget> widgetClass;
 
-   void SetWidgetHealth(const FUpDamage& damage);
+   void OnDamageReceived(const FUpDamage& damage);
 
 public:
    UPROPERTY(BlueprintReadWrite)

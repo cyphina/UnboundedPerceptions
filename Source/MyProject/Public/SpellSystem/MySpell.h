@@ -1,15 +1,14 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameplayAbility.h"
 #include "GameplayTagsManager.h"
-#include "SpellManager.h"
+#include "SpellDataManager.h"
 #include "GameplayEffect.h"
 #include "SpellSystem/DamageStructs.h"
 #include "MySpell.generated.h"
 
+class URTSAbilitySystemComponent;
 class AUnit;
 
 USTRUCT(BlueprintType)
@@ -19,6 +18,7 @@ struct FSpellDefaults {
  public:
    FSpellDefaults() = default;
    FSpellDefaults(int id, UTexture2D* image) : id(id), image(image) {}
+   
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
    int id; // set id to same as in table
 
@@ -41,31 +41,43 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
 
    AUnit* unitRef;
 
- public:
-   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
-   FSpellDefaults spellDefaults;
-
-   FGameplayTagContainer cooldownTags;
-   static const int      NUM_SCALING_DAMAGE_ATT = 4; // Number of attributes damage effects can scale on
-
+public:
    UMySpell();
-   void PostInitProperties() override;
-   void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
-                        const FGameplayEventData* TriggerEventData) override;
-   bool CheckCooldown(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, OUT FGameplayTagContainer* OptionalRelevantTags) const override;
-   ///---!!!---we want to make the avatar actor the source of the spell since owner is our playercontroller---!!!---
+
+   UFUNCTION(BlueprintCallable, Category = "SpellChecks")
+   bool IsOnCD(const UAbilitySystemComponent* abilityComponent) const;
+
+   void ActivateAbility
+   (const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+    const FGameplayEventData*        TriggerEventData) override;
+
+   bool CheckCooldown
+   (const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+    OUT FGameplayTagContainer*       OptionalRelevantTags) const override;
+
+   // ! We want to make the avatar actor the source of the spell since owner is our player controller 
    FGameplayEffectContextHandle MakeEffectContext(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo) const override;
-   void                         CommitExecute(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
-   void                         OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
+
+   void CommitExecute(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
+
+   void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 
    float GetCooldownTimeRemaining(const FGameplayAbilityActorInfo* ActorInfo) const override;
 
-   UFUNCTION(BlueprintCallable, Category = "SpellChecks")
-   bool isOnCD(UAbilitySystemComponent* abilityComponent) const;
+   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
+   FSpellDefaults spellDefaults;
+
+   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
+   FGameplayTagContainer descriptionTags;
+
+   FGameplayTagContainer cooldownTags;
+
+   // TODO: Maybe have a better way to set this because we have 5 now...
+   static const int NUM_SCALING_DAMAGE_ATT = 4;
 
 #pragma region accessors
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   int GetMaxLevel() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->maxLevel; }
+   int GetMaxLevel() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->maxLevel; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    float GetCDDuration(UAbilitySystemComponent* abilityComponent) const;
@@ -77,34 +89,33 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
    int GetReqLevel(UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   int GetCost(UAbilitySystemComponent* abilityComponent) const;
+   int GetCost(const URTSAbilitySystemComponent* abilityComponent) const;
+
+   const FUpSpellTargeting* GetTargeting() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->targeting; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   FGameplayTag GetTargetting() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->targetting; }
+   FText GetDescription() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->desc; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   FText GetDescription() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->desc; }
-
-   UFUNCTION(BlueprintCallable, Category = "Spell")
-   FText GetName() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->name; }
-
-   /**Get the name of the primary element this spell is associated with*/
-   UFUNCTION(BlueprintCallable, Category = "Spell")
-   FText GetElem() const { return FText::FromString(USpellManager::Get().GetSpellInfo(spellDefaults.id)->elem.ToString().RightChop(15)); }
+   FText GetName() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->name; }
 
    /**Get the name of the primary element this spell is associated with*/
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   FGameplayTag GetElemTag() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->elem; }
+   FText GetElem() const { return FText::FromString(USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->elem.ToString().RightChop(15)); }
+
+   /**Get the name of the primary element this spell is associated with*/
+   UFUNCTION(BlueprintCallable, Category = "Spell")
+   FGameplayTag GetElemTag() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->elem; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   TArray<int> GetPreReqs() const { return USpellManager::Get().GetSpellInfo(spellDefaults.id)->preReqs; }
+   TArray<int> GetPreReqs() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->preReqs; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    TArray<FText> GetPreReqNames() const
    {
       TArray<FText> preReqNames;
-      for (int i : USpellManager::Get().GetSpellInfo(spellDefaults.id)->preReqs) {
-         preReqNames.Add(USpellManager::Get().GetSpellInfo(i)->name);
+      for(int i : USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->preReqs) {
+         preReqNames.Add(USpellDataManager::GetData().GetSpellInfo(i)->name);
       }
       return preReqNames;
    }
@@ -141,9 +152,12 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
    UFUNCTION(BlueprintCallable, Category = "Spell Creation Helper")
    struct FGameplayEffectSpecHandle CreateGameplayEffectFromTableValues(TSubclassOf<UGameplayEffect> effectClass, FGameplayTag name, FGameplayTagContainer assetTags);
 
+   UFUNCTION(BlueprintCallable)
+   UEnvQuery* GetDefaultQueryForSpell(UWorld* worldRef);
+
 #pragma endregion
 
- private:
+private:
    UFUNCTION(BlueprintCallable, Category = "Helper")
    UAbilitySystemComponent* GetOwnerAbilitySystemComponent() const;
 
@@ -156,7 +170,8 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
    inline int GetIndex(int currentLevel, int numCategories, int maxLevel) const
    {
       int denom = maxLevel * currentLevel;
-      if (denom != 0) return FMath::CeilToInt((float)numCategories / denom) - 1;
+      if(denom != 0)
+         return FMath::CeilToInt((float)numCategories / denom) - 1;
       return 0;
    }
 };

@@ -9,21 +9,27 @@
 #include "WorldObjects/Unit.h"
 #include "AIStuff/AIControllers/UnitController.h"
 #include "BrainComponent.h"
+#include "UnitMessages.h"
 
-void UStunEffectCalc::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& executionParams, FGameplayEffectCustomExecutionOutput& outExecutionOutput) const
+void UStunEffectCalc::Execute_Implementation
+(const FGameplayEffectCustomExecutionParameters& executionParams, FGameplayEffectCustomExecutionOutput& outExecutionOutput) const
 {
    UAbilitySystemComponent* ownerComponent  = executionParams.GetSourceAbilitySystemComponent();
    UAbilitySystemComponent* targetComponent = executionParams.GetTargetAbilitySystemComponent();
-   AUnit *                  sourceUnit = nullptr, *targetUnit = nullptr;
+   AUnit*                   sourceUnit      = nullptr,* targetUnit = nullptr;
    // if our components exist
-   if (ownerComponent)
-      sourceUnit = Cast<AUnit>(ownerComponent->AvatarActor); // If our AbilitySystemComponents are valid, we get each their owning actors and put them in variables. This is mostly to prevent crashing
-                                                             // by trying to get the AvatarActor variable from
-   if (targetComponent) targetUnit = Cast<AUnit>(targetComponent->AvatarActor); // a null pointer.
+   if(ownerComponent)
+   {
+      sourceUnit = Cast<AUnit>(ownerComponent->AvatarActor);
+   }
+   if(targetComponent)
+   {
+      targetUnit = Cast<AUnit>(targetComponent->AvatarActor);
+   }
 
    if(targetUnit)
    {
-      FAIMessage msg(AUnit::AIMessage_Stunned, targetUnit);
+      const FAIMessage msg(UnitMessages::AIMessage_Stunned, targetUnit);
       FAIMessage::Send(targetUnit->GetUnitController(), msg);
    }
 }

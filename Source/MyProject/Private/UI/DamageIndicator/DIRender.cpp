@@ -40,6 +40,7 @@ void UDIRender::BeginPlay()
 
 void UDIRender::TickComponent(float deltaSeconds, ELevelTick tickType, FActorComponentTickFunction* thisTickFunction)
 {
+   // TODO: Make this look better and remove tick and replace with timer?
    Super::TickComponent(deltaSeconds, tickType, thisTickFunction);
    // Ensure damage values always facing camera even when camera is rotated
    SetWorldRotation(FRotator(0, -180, 0) + cameraPawnRef->GetActorRotation());
@@ -48,7 +49,7 @@ void UDIRender::TickComponent(float deltaSeconds, ELevelTick tickType, FActorCom
 
 void UDIRender::TimelineEffect(float val)
 {
-   FVector newLocation = FMath::Lerp(start, end, val);
+   const FVector newLocation = FMath::Lerp(start, end, val);
    SetRelativeLocation(newLocation);
 }
 

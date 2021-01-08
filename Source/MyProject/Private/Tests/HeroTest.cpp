@@ -27,19 +27,19 @@ using namespace BaseHeroTest;
 bool FHeroAttTest::RunTest(const FString& params)
 {
    if (BaseHeroTest::Setup()) {
-      TestNotNull(TEXT("GEngine is not null"), GEngine);
-
-      int        initialHeroAttPoints = testHero->attPoints;
-      EAttributes attToTest            = EAttributes::Agility;
-      int        initialAttValue      = testHero->GetAttributeAdjValue(attToTest);
-
-      testHero->ChangeAttribute(EAttributes::Agility, true);
-      TestEqual("AttributePoints", testHero->attPoints, initialHeroAttPoints - 1);
-      TestEqual("AttributeValue", testHero->GetAttributeAdjValue(attToTest), initialAttValue + 1);
-      testHero->ChangeAttribute(EAttributes::Agility, false);
-      TestEqual("AttributePoints", testHero->attPoints, initialHeroAttPoints);
-      TestEqual("AttributeValue", testHero->GetAttributeAdjValue(attToTest), initialAttValue);
-      return true;
+      // TestNotNull(TEXT("GEngine is not null"), GEngine);
+      //
+      // int        initialHeroAttPoints = testHero->attPoints;
+      // EAttributes attToTest            = EAttributes::Agility;
+      // int        initialAttValue      = testHero->GetAttributeAdjValue(attToTest);
+      //
+      // testHero->ChangeAttribute(EAttributes::Agility, true);
+      // TestEqual("AttributePoints", testHero->attPoints, initialHeroAttPoints - 1);
+      // TestEqual("AttributeValue", testHero->GetAttributeAdjValue(attToTest), initialAttValue + 1);
+      // testHero->ChangeAttribute(EAttributes::Agility, false);
+      // TestEqual("AttributePoints", testHero->attPoints, initialHeroAttPoints);
+      // TestEqual("AttributeValue", testHero->GetAttributeAdjValue(attToTest), initialAttValue);
+      // return true;
    }
    return false;
 }

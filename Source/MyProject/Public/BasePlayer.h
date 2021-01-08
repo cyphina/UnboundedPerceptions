@@ -17,7 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogTopicLearned, FGameplayTag,
 DECLARE_EVENT(ABasePlayer, OnPartyUpdated);
 
 /**
- * Class for data specific to the player that everyone needs ot know.
+ * Class for data specific to the player that everyone needs to know.
  * Holds information that is replicated amongst clients about other clients
  */
 UCLASS()
@@ -29,16 +29,15 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Meta = (AllowPrivateAccess = true), Category = "Dialog")
    FGameplayTagContainer dialogTopics = FGameplayTagContainer();
 
-   void         BeginPlay() override;
+   void BeginPlay() override;
 
  public:
-#pragma region PartyInfo
-
    static const int MAX_NUM_HEROES = 4;
 
-   /**Party leader should always be at slot 0*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-   TArray<ABaseHero*> heroes;
+   const TArray<ABaseHero*>& GetHeroes() const { return heroes; }
+
+   AUnit* GetFocusedUnit() const { return focusedUnit; }
+   void   SetFocusedUnit(AUnit* newFocusedUnit);
 
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    TArray<ABaseHero*> selectedHeroes;
@@ -47,8 +46,8 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    UPROPERTY(BlueprintReadOnly, Category = "Party")
    TArray<ABaseHero*> allHeroes;
 
-   /**If there's any hero that is interacting currently with something blocking (preventing other actions).  Also needed in the case of storage because we need to know
-    * who opened it
+   /**
+    * If there's any hero that is interacting currently with something blocking (e.g., storage or dialog)
     */
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    ABaseHero* heroInBlockingInteraction;
@@ -65,25 +64,9 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    TArray<ASummon*> summons;
 
-   /*List of NPCs that joined the party (usually on escort missions)*/
+   /*List of NPCs that joined the party (usually on escort missions) */
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    TArray<AAlly*> npcs;
-
-#pragma endregion
-
-   /** Enemy or hero unit that we see detailed information in our actionbar.*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
-   AUnit* focusedUnit;
-
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Units")
-   int unitIndex;
-
-   UPROPERTY(BlueprintReadWrite, Category = "Quest")
-   UQuestManager* questManager;
-
-   /** How much squeezies we have*/
-   UPROPERTY(BlueprintReadWrite, EditAnywhere)
-   int money;
 
    /** Callback when we learn a new dialog topic*/
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
@@ -98,8 +81,9 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    UFUNCTION(BlueprintCallable, Category = "Player Unit Management")
    void ClearSelectedAllies();
 
-   /**Change a party around
-    *@param newparty - This is an array with the new heroes that will be in the party.  Must be of sizes 1-4
+   /**
+    *Change a party around
+    *@param newHeroes - This is an array with the new heroes that will be in the party.  Must be of sizes 1-4
     */
    UFUNCTION(BlueprintCallable, Category = "Player Unit Management")
    void UpdateParty(TArray<ABaseHero*> newHeroes);
@@ -108,29 +92,65 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    UFUNCTION(BlueprintCallable, Category = "Player Unit Management")
    void JoinParty(ABaseHero* newHero);
 
-   /**Update the coins
-   @param amount - this is the amount to update the coins by, and can be positive or negative
+   /**
+   *Update the coins
+   *@param amount - this is the amount to update the coins by, and can be positive or negative
    */
    UFUNCTION(BlueprintCallable, Category = "Player")
    void UpdateGold(int32 amount);
 
-   /**Update the exp gained by every party member
-   @param amount - this is the amount every party member gains as exp. Can only be positive.
+   /**
+   *Update the exp gained by every party member
+   *@param amount - this is the amount every party member gains as exp. Can only be positive.
    */
    UFUNCTION(BlueprintCallable, Category = "Player")
    void UpdateEXP(int32 amount);
 
-   /**When Cyphina or whoever is the MC at the moment learns of something new to talk about
+   /**
+    *When Cyphina or whoever is the MC at the moment learns of something new to talk about
     *@param topic - This is the new conversation topic learned by MC
     */
    UFUNCTION(BlueprintCallable, Category = "DialogAccessor")
    void LearnDialogTopic(FGameplayTag topic);
 
-   /** Retrieves a list of all dialog topics this player knows*/
-   UFUNCTION(BlueprintCallable, Category = "DialogAccessor")
-   FGameplayTagContainer GetDialogTopics() const { return dialogTopics; }
+   /** Retrieves a list of all dialog topics this player knows */
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "DialogAccessor")
+   const FGameplayTagContainer& GetDialogTopics() const { return dialogTopics; }
 
-   /**Check to see if the player has learned this topic*/
+   /**Check to see if the player has learned this topic */
    UFUNCTION(BlueprintCallable, Category = "DialogAccessor")
    FORCEINLINE bool HasDialogTopic(FGameplayTag tagToCheck) const { return dialogTopics.HasTagExact(tagToCheck); }
+
+   UFUNCTION(BlueprintCallable)
+   int GetMoney() const { return money; }
+
+   UFUNCTION(BlueprintCallable)
+   void SetMoney(int newMoneyVal) { money = newMoneyVal; }
+
+ protected:
+   /**
+    * List of active heroes.
+    * Party leader should always be at slot 0.
+    */
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
+   TArray<ABaseHero*> heroes;
+
+   /** Enemy or hero unit that we see detailed information in our actionbar */
+   AUnit* focusedUnit = nullptr;
+
+ private:
+   void OnHeroSelected(ABaseHero* heroRef);
+   void OnAllySelected(AAlly* allyRef);
+   void OnUnitSelected(AUnit* unitRef);
+   void OnHeroDeselected(ABaseHero* heroRef);
+   void OnAllyDeselected(AAlly* allyRef);
+   void OnUnitDeselected(AUnit* unitRef);
+
+   void OnAllyActiveChanged(AAlly* allyRef, bool isActive);
+   void OnHeroActiveChanged(ABaseHero* heroRef, bool isActive);
+   void OnSummonActiveChanged(ASummon* summonRef, bool isActive);
+
+   /** How much squeezies we have (that's the currency name... for now) */
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (AllowPrivateAccess = true))
+   int money;
 };

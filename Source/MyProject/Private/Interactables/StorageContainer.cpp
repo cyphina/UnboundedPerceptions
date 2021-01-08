@@ -13,17 +13,16 @@
 #include "WorldObjects/BaseHero.h"
 
 #include "LevelSaveStructs.h"
+#include "RTSIngameWidget.h"
 
-AHUDManager* AStorageContainer::hudManagerRef = nullptr;
-
-AStorageContainer::AStorageContainer() : AInteractableBase()
+AStorageContainer::AStorageContainer() :
+   AInteractableBase()
 {
    sphereCollision = CreateDefaultSubobject<USphereComponent>(FName("InteractRange"));
-
    sphereCollision->SetupAttachment(sceneLocation);
    sphereCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-   sphereCollision->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-   sphereCollision->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Overlap); 
+   sphereCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+   sphereCollision->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Overlap);
    sphereCollision->SetSphereRadius(200.f);
    sphereCollision->SetUsingAbsoluteScale(true);
 }
@@ -32,29 +31,28 @@ void AStorageContainer::BeginPlay()
 {
    Super::BeginPlay();
 
-   controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
-   backpack      = NewObject<UBackpack>(this);
+   backpack = NewObject<UBackpack>(this);
    backpack->SetItemMax(maxStorage);
 
    if(!backpack->AddItems(initialItems))
-      UE_LOG(LogTemp, Error, TEXT("Problem setting up initial items for storage container %s. Not enough space to add all items."), *GetName());
+   UE_LOG(LogTemp, Error, TEXT("Problem setting up initial items for storage container %s. Not enough space to add all items."), *GetName());
 
    sphereCollision->OnComponentEndOverlap.AddDynamic(this, &AStorageContainer::OnLeaveRange);
 }
 
 void AStorageContainer::Interact_Implementation(ABaseHero* hero)
 {
-   if (CanInteract_Implementation()) {
-      controllerRef->GetHUDManager()->GetStorageHUD()->SetBackPack(backpack);
-      // Typically we don't let anything modify the HUDManager singleton without being dependency injected but we have too many instances of this class to dependency inject
-      controllerRef->GetHUDManager()->AddHUD(static_cast<uint8>(HUDs::HS_Storage));
-      controllerRef->GetBasePlayer()->heroInBlockingInteraction = hero;
+   if(CanInteract_Implementation())
+   {
+      GetHUDProvider()->GetIngameHUD()->GetStorageHUD()->SetBackPack(backpack);
+      GetWidgetToggler()->AddHUD(static_cast<uint8>(EHUDs::HS_Storage));
+      GetPlayerControllerRef()->GetBasePlayer()->heroInBlockingInteraction = hero;
    }
 }
 
 bool AStorageContainer::CanInteract_Implementation() const
 {
-   return Super::CanInteract_Implementation() && !controllerRef->GetBasePlayer()->heroInBlockingInteraction;
+   return Super::CanInteract_Implementation() && !GetPlayerControllerRef()->GetBasePlayer()->heroInBlockingInteraction;
 }
 
 FVector AStorageContainer::GetInteractableLocation_Implementation() const
@@ -64,10 +62,11 @@ FVector AStorageContainer::GetInteractableLocation_Implementation() const
 
 void AStorageContainer::OnLeaveRange(UPrimitiveComponent* overlappedComp, AActor* otherActor, UPrimitiveComponent* otherComp, int otherBodyIndex)
 {
-   if (controllerRef->GetHUDManager()->IsWidgetOnScreen(HUDs::HS_Storage) && controllerRef->GetBasePlayer()->heroInBlockingInteraction == otherActor) {
-      controllerRef->GetHUDManager()->GetStorageHUD()->SetBackPack(nullptr);
-      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Storage));
-      controllerRef->GetBasePlayer()->heroInBlockingInteraction = nullptr;
+   if(GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Storage) && GetPlayerControllerRef()->GetBasePlayer()->heroInBlockingInteraction == otherActor)
+   {
+      GetHUDProvider()->GetIngameHUD()->GetStorageHUD()->SetBackPack(nullptr);
+      GetWidgetToggler()->AddHUD(static_cast<uint8>(EHUDs::HS_Storage));
+      GetPlayerControllerRef()->GetBasePlayer()->heroInBlockingInteraction = nullptr;
    }
 }
 
@@ -82,10 +81,26 @@ void AStorageContainer::SaveInteractable(FMapSaveInfo& mapData)
 void AStorageContainer::LoadInteractable(FMapSaveInfo& mapData)
 {
    FStorageContainerSaveInfo* storageInfo = mapData.wardrobeInteractables.FindByHash<AStorageContainer*>(GetTypeHash(*this), this);
-   if (storageInfo) {
+   if(storageInfo)
+   {
       LoadInteractableData(storageInfo->interactableInfo);
       backpack->EmptyAll();
       backpack->LoadBackpack(storageInfo->backpackInfo);
       GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Storage container named %s found with %d items"), *GetName(), backpack->Count()));
    }
+}
+
+TScriptInterface<IWidgetToggler> AStorageContainer::GetWidgetToggler() const
+{
+   return GetPlayerControllerRef()->GetWidgetToggler();
+}
+
+TScriptInterface<IHUDProvider> AStorageContainer::GetHUDProvider() const
+{
+   return GetPlayerControllerRef()->GetWidgetProvider();
+}
+
+AUserInput* AStorageContainer::GetPlayerControllerRef() const
+{
+   return Cast<AUserInput>(UGameplayStatics::GetGameInstance(GetWorld())->GetFirstLocalPlayerController());
 }

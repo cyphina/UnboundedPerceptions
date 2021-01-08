@@ -2,7 +2,11 @@
 #pragma once
 
 /**
- * Interface for UnitStates
+ * Interface for UnitStates, which are classes of states inside an FSM.
+ * The state machines along with the behavior trees define a unit's behavior
+ * The state machine provides looping functionality, while the trees describe the flow and set transitions
+ * between the states.
+ * For player controlled units, the player's actions will manually change states.
  */
 
 UENUM(BlueprintType)

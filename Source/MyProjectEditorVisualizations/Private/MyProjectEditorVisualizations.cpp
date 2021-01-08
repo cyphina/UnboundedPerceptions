@@ -1,5 +1,5 @@
 #include "MyProjectEditorVisualizations.h"
-#include "WorldObjects/Components/PatrolComponent.h"
+#include "AIStuff/AIControllers/Components/PatrolComponent.h"
 #include "Visualizations/PatrolPoints.h"
 #include "UnrealEd/Classes/Editor/UnrealEdEngine.h"
 #include "UnrealEd.h"

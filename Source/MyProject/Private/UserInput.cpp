@@ -7,7 +7,7 @@
 #include "RTSGameState.h"
 #include "RTSPawn.h"
 #include "UI/HUDManager.h"
-#include "MyCheatManager.h"
+#include "RTSCheatManager.h"
 
 AUserInput::AUserInput()
 {
@@ -20,7 +20,7 @@ AUserInput::AUserInput()
    DefaultMouseCursor = EMouseCursor::Type::GrabHandClosed;
    // HitResultTraceDistance = 100000.f; set in parent
 
-   CheatClass = UMyCheatManager::StaticClass();
+   CheatClass = URTSCheatManager::StaticClass();
 }
 
 void AUserInput::BeginPlay()
@@ -55,52 +55,56 @@ void AUserInput::SetupInputComponent()
    InputComponent->BindAction("ToggleQuestJournal", IE_Pressed, this, &AUserInput::ToggleQuestJournal);
 }
 
+FORCEINLINE TScriptInterface<IWidgetToggler> AUserInput::GetWidgetToggler() const
+{
+   return hudManagerRef;
+}
+
+FORCEINLINE TScriptInterface<IHUDProvider> AUserInput::GetWidgetProvider() const
+{
+   return hudManagerRef;
+}
+
 void AUserInput::ToggleBreakMenu()
 {
-   hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Break));
+   hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Break));
 }
 
 void AUserInput::ToggleInventory()
 {
-   int numSelectedHeroes = GetBasePlayer()->selectedHeroes.Num();
-   if(numSelectedHeroes > 0 && GetPawn() == GetCameraPawn()) {
-      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Inventory));
-   }
+   if(GetBasePlayer()->selectedHeroes.Num() > 0 && NotInMinigame()) { hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Inventory)); }
 }
 
 void AUserInput::ToggleQuestJournal()
 {
-   if(GetPawn() == GetCameraPawn())
-      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_QuestJournal));
+   if(NotInMinigame()) hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_QuestJournal));
 }
 
 void AUserInput::ToggleQuestList()
 {
-   if(GetPawn() == GetCameraPawn())
-      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_QuestList));
+   if(NotInMinigame()) hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_QuestList));
 }
 
 void AUserInput::ToggleCharacterMenu()
 {
-   int numSelectedHeroes = GetBasePlayer()->selectedHeroes.Num();
-   if(numSelectedHeroes > 0 || GetHUDManager()->widgetReferences[static_cast<uint8>(HUDs::HS_Character)]->IsVisible()) {
-      if(GetPawn() == GetCameraPawn())
-         hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Character));
+   if(GetBasePlayer()->selectedHeroes.Num() > 0 || GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Character)) {
+      if(NotInMinigame()) hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Character));
    }
 }
 
 void AUserInput::ToggleEquipmentMenu()
 {
    int numSelectedHeroes = GetBasePlayer()->selectedHeroes.Num();
-   if(numSelectedHeroes > 0 && GetPawn() == GetCameraPawn()) {
-      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Equipment));
-   }
+   if(numSelectedHeroes > 0 && NotInMinigame()) { hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Equipment)); }
 }
 
 void AUserInput::ToggleSpellbookMenu()
 {
    int numSelectedHeroes = GetBasePlayer()->selectedHeroes.Num();
-   if(numSelectedHeroes > 0 && GetPawn() == GetCameraPawn()) {
-      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Spellbook));
-   }
+   if(numSelectedHeroes > 0 && NotInMinigame()) { hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Spellbook)); }
+}
+
+bool AUserInput::NotInMinigame()
+{
+   return GetPawn() == GetCameraPawn();
 }

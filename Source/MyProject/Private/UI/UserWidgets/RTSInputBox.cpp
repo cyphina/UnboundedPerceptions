@@ -7,6 +7,6 @@
 
 void URTSInputBox::Confirm()
 {
-   if(onInputConfirmed.Execute(txtInput))
+   if(OnInputConfirmed().Execute(txtInput))
       hudManagerRef->ShowInputBox();
 }

@@ -10,9 +10,12 @@ class ARTSGameState;
 class ABasePlayer;
 class UProceduralMeshComponent;
 
-/**Creates visualizations of the visibility polygons for all allied actors*/
-UCLASS()
-class MYPROJECT_API AFogOfWarPlane : public AActor
+/**
+ * @brief Creates visualizations of the visibility polygons for all allied actors.
+ * First attempt at FOW based off https://www.redblobgames.com/articles/visibility/.
+ * Is only a visual effect - the actual system which turns off interactivity for units outside range is in the vision system.
+ */
+UCLASS() class MYPROJECT_API AFogOfWarPlane : public AActor
 {
    GENERATED_BODY()
 
@@ -22,7 +25,6 @@ class MYPROJECT_API AFogOfWarPlane : public AActor
  public:
    AFogOfWarPlane();
    virtual void BeginPlay() override;
-   virtual void Tick(float DeltaTime) override;
 
    TArray<ABasePlayer*> basePlayerRefs;
 
@@ -32,7 +34,8 @@ class MYPROJECT_API AFogOfWarPlane : public AActor
  private:
    ARTSGameState* gameStateRef;
    TArray<int32>  triangles;
+   TSet<FVector>  visionBlockerCorners;
 
    // Adds a triangle from 3 vertex ids
-   void AddTriangle(int32 v1, int32 v2, int32 v3);
+   void AddTriangle(const int32 v1, const int32 v2, const int32 v3);
 };

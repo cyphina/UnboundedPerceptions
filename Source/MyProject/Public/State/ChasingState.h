@@ -15,4 +15,7 @@ class MYPROJECT_API ChasingState : public IUnitState
 
    EUnitState GetName() const override { return EUnitState::STATE_CHASING; }
    ~ChasingState() = default;
+
+ private:
+   float currentChaseTime = 0.f; // time the enemy has been attempting to chase us
 };

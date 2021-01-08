@@ -1,22 +1,36 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "MyProject.h"
-#include "../ESkillContainer.h"
+#include "UserWidgets/ESkillContainer.h"
 #include "ActionbarInterface.h"
-#include "../Slots/SkillSlot.h"
-#include "MySpell.h"
 
-#include "Ally.h"
+#include "BasePlayer.h"
+#include "../Slots/SkillSlot.h"
+#include "PartyDelegateStore.h"
+#include "Unit.h"
+#include "UserInput.h"
 
 void UActionbarInterface::UseSkill(int skillIndex)
 {
-   if (this->IsVisible()) skillContainerRef->UseSkill(skillIndex);
+   if(this->IsVisible()) skillContainerRef->UseSkill(skillIndex);
 }
 
-void UActionbarInterface::ShowSkillVisualCD(int skillIndex)
+void UActionbarInterface::NativeOnInitialized()
 {
-   //Make sure we choose an active skill slot and make sure the spell has a cooldown to show
-   if (skillContainerRef->GetSkillSlot(skillIndex) && skillContainerRef->GetAllyRef()->abilities[skillIndex].GetDefaultObject()->
-      GetCDDuration(skillContainerRef->GetAllyRef()->GetAbilitySystemComponent()) > 0) 
-      skillContainerRef->GetSkillSlot(skillIndex)->PlayTimeline(0);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateStore>()->OnFocusedUnitChanged().AddUObject(this,
+                                                                                                                           &UActionbarInterface::OnFocusedUnitChanged);
+}
+
+void UActionbarInterface::OnFocusedUnitChanged(AUnit* newFocusedUnit)
+{
+   if(newFocusedUnit->GetIsEnemy()) {
+      // TODO: Set enemy view
+      return;   
+   }
+
+   if(CPC->GetBasePlayer()->selectedAllies.Num() > 1) {
+      // TODO: Set multi ally view
+   }
+   else {
+      // TODO: Set single ally view
+   }
 }

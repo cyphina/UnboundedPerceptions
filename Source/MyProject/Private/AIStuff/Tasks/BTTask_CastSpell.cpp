@@ -12,6 +12,14 @@
 
 #include "BTTask_CastSpell.h"
 
+#include "UnitMessages.h"
+#include "UpAIHelperLibrary.h"
+#include "EnvironmentQuery/EnvQuery.h"
+#include "EnvironmentQuery/EnvQueryGenerator.h"
+#include "EnvironmentQuery/EnvQueryManager.h"
+#include "EnvironmentQuery/EnvQueryOption.h"
+#include "EnvironmentQuery/Items/EnvQueryItemType_ActorBase.h"
+
 UBTTask_CastSpell::UBTTask_CastSpell(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
    NodeName    = "Cast Spell";
@@ -20,38 +28,46 @@ UBTTask_CastSpell::UBTTask_CastSpell(const FObjectInitializer& ObjectInitializer
 
 EBTNodeResult::Type UBTTask_CastSpell::ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory)
 {
-   AUnitController* unitController = Cast<AUnitController>(ownerComp.GetAIOwner());
-   UMySpell*        spell          = spellToCast.GetDefaultObject();
+   AUnitController*     unitController     = Cast<AUnitController>(ownerComp.GetAIOwner());
+   USpellCastComponent* spellCastComponent = unitController->GetUnitOwner()->FindComponentByClass<USpellCastComponent>();
 
-   if(spell->GetTargetting() == FGameplayTag::RequestGameplayTag("Skill.Targetting.Area")) {
-      unitController->GetUnitOwner()->SetTargetLocation(ownerComp.GetBlackboardComponent()->GetValueAsVector(BlackboardKey.SelectedKeyName));
+   if(!spellCastComponent) {
+      UE_LOG(LogTemp, Error, TEXT("%s No Spell Cast Component on Unit %s trying to perform task involving casting spells!"),
+             *unitController->GetUnitOwner()->GetGameName().ToString());
+      return EBTNodeResult::Failed;
+   }
 
-      if(unitController->BeginCastSpell(spellToCast)) {
-         WaitForMessage(ownerComp, AUnit::AIMessage_SpellCasted);
-         WaitForMessage(ownerComp, AUnit::AIMessage_SpellInterrupt);
-         return EBTNodeResult::InProgress;
-      }
-   } else if(spell->GetTargetting() == FGameplayTag::RequestGameplayTag("Skill.Targetting.None")) {
-      if(unitController->BeginCastSpell(spellToCast)) {
-         WaitForMessage(ownerComp, AUnit::AIMessage_SpellCasted);
-         WaitForMessage(ownerComp, AUnit::AIMessage_SpellInterrupt);
-         return EBTNodeResult::InProgress;
-      }
-   } else if(spell->GetTargetting() == FGameplayTag::RequestGameplayTag("Skill.Targetting.Single")) {
-      unitController->GetUnitOwner()->SetTargetUnit(Cast<AUnit>(ownerComp.GetBlackboardComponent()->GetValueAsObject(BlackboardKey.SelectedKeyName)));
-      if(unitController->BeginCastSpell(spellToCast)) {
-         WaitForMessage(ownerComp, AUnit::AIMessage_SpellCasted);
-         WaitForMessage(ownerComp, AUnit::AIMessage_SpellInterrupt);
-         WaitForMessage(ownerComp, AUnit::AIMessage_TargetLoss);
-         return EBTNodeResult::InProgress;
+   if(!spellToCast) {
+      UE_LOG(LogTemp, Error, TEXT("%s Unit %s has spell task without any spell set!"),
+             *unitController->GetUnitOwner()->GetGameName().ToString());
+      return EBTNodeResult::Failed;
+   }
+
+   UMySpell* spell = spellToCast.GetDefaultObject();
+
+   if(targetFindingLogic->GetOptionsMutable()[0]->Generator->ItemType == UEnvQueryItemType_VectorBase::StaticClass()) {
+      if(spell->GetTargeting()->GetTargetTag().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Single"))) {
+         UE_LOG(LogTemp, Error, TEXT("%s tried to cast a spell %s with the wrong targeting!"), *unitController->GetUnitOwner()->GetGameName().ToString(),
+                *spell->GetName().ToString());
+         return EBTNodeResult::Failed;
       }
    }
-   return EBTNodeResult::Failed;
+
+   WaitForMessage(ownerComp, UnitMessages::AIMessage_SpellCasted);
+   WaitForMessage(ownerComp, UnitMessages::AIMessage_SpellCastFail);
+   WaitForMessage(ownerComp, UnitMessages::AIMessage_SpellInterrupt);
+   WaitForMessage(ownerComp, UnitMessages::AIMessage_TargetLoss);
+
+   if(!targetFindingLogic)
+      targetFindingLogic = spell->GetDefaultQueryForSpell(unitController->GetWorld());
+
+   UUpAIHelperLibrary::AIBeginCastSpell(targetFindingLogic, spellToCast, spellCastComponent);
+
+   return EBTNodeResult::InProgress;
 }
 
 void UBTTask_CastSpell::OnMessage(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory, FName message, int32 requestID, bool bSuccess)
 {
-   //Relies on messaging to complete or abort the task.  If we've been stunned or we lost our target (see TargetLoss AIMessage)
-   bSuccess = message != AUnit::AIMessage_Stunned & message != AUnit::AIMessage_TargetLoss;
+   bSuccess = message != UnitMessages::AIMessage_SpellInterrupt & message != UnitMessages::AIMessage_TargetLoss & message != UnitMessages::AIMessage_SpellCastFail;
    Super::OnMessage(ownerComp, nodeMemory, message, requestID, bSuccess);
 }

@@ -16,5 +16,7 @@ UBTDecorator_IsReadyToAttack::UBTDecorator_IsReadyToAttack()
 
 bool UBTDecorator_IsReadyToAttack::CalculateRawConditionValue(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) const
 {
-   return Cast<AUnitController>(ownerComp.GetAIOwner())->GetUnitOwner()->GetIsReadyToAttack();
+   // TODO: Fix this
+   // return Cast<AUnitController>(ownerComp.GetAIOwner())->GetUnitOwner()->GetIsReadyToAttack();
+   return true;
 }

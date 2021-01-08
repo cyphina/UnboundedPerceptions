@@ -17,9 +17,6 @@ class IDetailPropertyRow;
  */
 class FTriggerDataCustomization : public IPropertyTypeCustomization
 {
- private:
-   TArray<TWeakObjectPtr<UObject>> selectedObjects;
-
  public:
    /** Used when setting up editor module to create an instance of this custom panel class and register it to display whenever we have a trigger type object being viewed*/
    static TSharedRef<IPropertyTypeCustomization> MakeInstance();
@@ -29,8 +26,10 @@ class FTriggerDataCustomization : public IPropertyTypeCustomization
    void CustomizeChildren(TSharedRef<IPropertyHandle> PropertyHandle, IDetailChildrenBuilder& ChildBuilder, IPropertyTypeCustomizationUtils& CustomizationUtils) override;
 
  private:
+   TArray<TWeakObjectPtr<UObject>> selectedObjects;
+
    // Property handles that are part of TriggerData
-   TSharedPtr<IPropertyHandle> triggerType;          // Reference to TriggerType property so we can reuse in the delegate
+   TSharedPtr<IPropertyHandle> triggerType;            // Reference to TriggerType property so we can reuse in the delegate
    TSharedPtr<IPropertyHandle> triggerValues;          // Reference to TriggerValues property so we can set this depending on the custom slate widgets
    TSharedPtr<IPropertyHandle> triggerObjects;         // Reference to TriggerObjects property so we can set this depending on the custom slate widgets
    uint8                       triggerHandleValue = 0; // This is the property value of the TriggerType property reference
@@ -64,7 +63,7 @@ class FTriggerDataCustomization : public IPropertyTypeCustomization
 
    // Used to convert the data in our struct into data for the slate widgets
    FName GetTagNameFromValues();
-   bool GetTriggerBoolFromValues();
+   bool  GetTriggerBoolFromValues();
    // Ensures the value in triggervalues and the selected enum value in the combobox is equivalent
    FText GetDefaultEnumVal() const;
 

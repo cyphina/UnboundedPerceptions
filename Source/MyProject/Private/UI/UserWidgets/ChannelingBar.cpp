@@ -5,24 +5,28 @@
 #include "UserInput.h"
 #include "BasePlayer.h"
 #include "Unit.h"
+#include "UnitController.h"
 #include "SpellSystem/MySpell.h"
 
 FText UChannelingBar::GetChannelingName()
 {
-   AUnit* channelingUnit = controllerRef->GetBasePlayer()->focusedUnit;
-   if (IsValid(channelingUnit)) {
-      TSubclassOf<UMySpell> channeledSpellClass = channelingUnit->GetCurrentSpell();
-      if (IsValid(channeledSpellClass)) { return channeledSpellClass.GetDefaultObject()->GetName(); }
+   AUnit* channelingUnit = controllerRef->GetBasePlayer()->GetFocusedUnit();
+   if(IsValid(channelingUnit)) {
+      const TSubclassOf<UMySpell> channeledSpellClass = channelingUnit->GetUnitController()->FindComponentByClass<USpellCastComponent>()->GetCurrentSpell();
+      if(IsValid(channeledSpellClass)) { return channeledSpellClass.GetDefaultObject()->GetName(); }
    }
    return FText();
 }
 
 float UChannelingBar::GetSpellChannelProgress()
 {
-   // The unit could die while we have the channelbar visible so we need a nullcheck
-   AUnit* channelingUnit = controllerRef->GetBasePlayer()->focusedUnit;
-   if (IsValid(channelingUnit)) {  
-      return channelingUnit->GetCurrentChannelTime() / channelingUnit->GetChannelTime();
+   // The unit could die while we have the channelingbar visible so we need a null check
+   AUnit* channelingUnit = controllerRef->GetBasePlayer()->GetFocusedUnit();
+   if(IsValid(channelingUnit)) {
+      // TODO: Update this via timer
+      return channelingUnit->GetUnitController()->FindComponentByClass<USpellCastComponent>()->GetCurrentChannelingTime() /
+             channelingUnit->GetUnitController()->FindComponentByClass<USpellCastComponent>()->GetCurrentSpell().GetDefaultObject()->GetCastTime(
+                 channelingUnit->GetAbilitySystemComponent());
    }
    SetVisibility(ESlateVisibility::Hidden);
    return 0;
@@ -30,8 +34,8 @@ float UChannelingBar::GetSpellChannelProgress()
 
 ESlateVisibility UChannelingBar::IsFocusedUnitChanneling()
 {
-   AUnit* channelingUnit = controllerRef->GetBasePlayer()->focusedUnit;
-   if (IsValid(channelingUnit) && (channelingUnit->GetState() == EUnitState::STATE_CHANNELING || channelingUnit->GetState() == EUnitState::STATE_INCANTATION)) 
+   AUnit* channelingUnit = controllerRef->GetBasePlayer()->GetFocusedUnit();
+   if(IsValid(channelingUnit) && (channelingUnit->GetState() == EUnitState::STATE_CHANNELING || channelingUnit->GetState() == EUnitState::STATE_INCANTATION))
       return ESlateVisibility::SelfHitTestInvisible;
 
    return ESlateVisibility::Hidden;
