@@ -55,6 +55,8 @@ class MYPROJECT_API UQuestJournal : public UMyDraggableWidget
    TArray<UQuestJournalEntry*> questJournalEntries;
 
  private:
+   void OnHeroLevelUp(ABaseHero* levelingHero);
+   
    UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "References")
    ARTSGameMode* gameModeRef;
 

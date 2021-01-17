@@ -1,6 +1,5 @@
 #include "AIControllers/Components/SpellCastComponent.h"
 #include "BrainComponent.h"
-#include "SpellDataLibrary.h"
 #include "AIControllers/Components/RTSStateComponent.h"
 #include "SpellSystem/AbilityExtensions/SpellTargeting/SpellTargetingTypes.h"
 #include "TargetComponent.h"
@@ -67,18 +66,18 @@ bool USpellCastComponent::BeginCastSpell(TSubclassOf<UMySpell> spellToCast)
    UMySpell* spell = spellToCast.GetDefaultObject();
 
    // TODO: Add some checks to AI spellcasting maybe so we can make sure designers don't screw up the set queries?
-
+   
    if(IsValid(spell)) {
       if(abilityComponentRef->CanCast(spellToCast)) {
          unitOwnerRef->GetUnitController()->Stop();
          currentSpell = spellToCast;
 
-         if(!spell->GetTargeting()->ShouldTryAdjustPosition(unitOwnerRef)) {
+         if(!spell->GetTargeting().GetDefaultObject()->ShouldTryAdjustPosition(unitOwnerRef)) {
             IncantationCheck(GetCurrentSpell());
             return true;
          }
 
-         spell->GetTargeting()->AdjustCastPosition(this, spellToCast, unitOwnerRef->GetTargetComponent());
+         spell->GetTargeting().GetDefaultObject()->AdjustCastPosition(this, spellToCast, unitOwnerRef->GetTargetComponent());
          return true;
       }
    } else {

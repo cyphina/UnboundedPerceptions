@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -23,13 +21,7 @@ class MYPROJECT_API URTSCheatManager : public UCheatManager
 {
    GENERATED_BODY()
 
-   AUserInput*    userInputRef;
-   ARTSGameMode*  gameModeRef;
-   ARTSGameState* gameStateRef;
-
- public:
-   virtual void InitCheatManager() override;
-
+public:
    /** Level up hero once
     * @param heroName - Name of the hero in the party
     */
@@ -63,13 +55,13 @@ class MYPROJECT_API URTSCheatManager : public UCheatManager
    UFUNCTION(exec, Category = "Cheats")
    virtual void FinishQuest(FString questName, int isSucessful);
 
-   /** Completes a quest that is accepted
-    * @param heroName - Hero which this spell should be equipped to
-    * @param spellID - ID of the spell which should be added
+   /**
+    * Gives the unit that is selected a spell, granted it has a spell slot to hold that spell.
+    * @param spellNameTag - Spell gameplay tag suffix (e.g. if the spell's nametag is "Skill.Name.Snipe" then input "Snipe")
     * @param slot - What slot should this spell go in
     */
    UFUNCTION(exec, Category = "Cheats")
-   virtual void EquipSpell(FString heroName, int spellID, int slot);
+   virtual void EquipSpell(FString spellNameTag, int slot);
 
    /** Refreshes the spells of all units (puts them off CD) */
    UFUNCTION(exec, Category = "Cheats")
@@ -116,7 +108,18 @@ class MYPROJECT_API URTSCheatManager : public UCheatManager
    UFUNCTION(exec, Category = "Cheats")
    virtual void SpawnEnemies(FName id, int level, int numberToSpawn, FVector spawnLocation);
 
-   /**Allows us to toggle on categories for CSV profiling*/
+   /**
+    * Allows us to toggle on categories for CSV
+    * Probably best to use Superluminal or FramePro
+   */
    UFUNCTION(exec, Category = "Debugging")
    void EnableCSVCategories(FString csvCategories);
+
+protected:
+   void InitCheatManager() override;
+
+private:
+   AUserInput*    userInputRef;
+   ARTSGameMode*  gameModeRef;
+   ARTSGameState* gameStateRef;
 };

@@ -1,13 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "NPCSocialMenu.h"
-
 #include "DialogWheel.h"
 #include "WorldObjects/NPC.h"
 #include "UMG/Public/Components/Button.h"
 #include "UI/HUDManager.h"
-#include "Algo/RemoveIf.h"
 
 void UNPCSocialMenu::NativeConstruct()
 {
@@ -53,7 +49,7 @@ void UNPCSocialMenu::SetMainView()
 
 void UNPCSocialMenu::HideOrShowAllButtons(bool bHide) const
 {
-   ESlateVisibility visibilitySettingForButtons = bHide ? ESlateVisibility::Collapsed : ESlateVisibility::Visible;
+   const ESlateVisibility visibilitySettingForButtons = bHide ? ESlateVisibility::Collapsed : ESlateVisibility::Visible;
    // Iterate through properties to find buttons
    btnGift->SetVisibility(visibilitySettingForButtons);
    btnLeave->SetVisibility(visibilitySettingForButtons);

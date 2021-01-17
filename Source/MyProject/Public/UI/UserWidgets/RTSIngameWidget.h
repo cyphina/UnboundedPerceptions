@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
+
+#include "HUDTypes.h"
 #include "UI/UserWidgetExtensions/MyUserWidget.h"
 #include "RTSIngameWidget.generated.h"
 
@@ -90,7 +92,7 @@ class MYPROJECT_API URTSIngameWidget : public UMyUserWidget
 
  protected:
    void NativeOnInitialized() override;
-
+   
    UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Help")
    void DisplayHelpText(const FText& hText);
 

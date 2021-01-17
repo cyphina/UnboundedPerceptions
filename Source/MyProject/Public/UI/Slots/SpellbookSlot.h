@@ -11,12 +11,21 @@ UCLASS()
 class MYPROJECT_API USpellbookSlot : public UActionSlot
 {
    GENERATED_BODY()
-
-   void OnBtnClick() override;
-   void ShowDesc(UToolTipWidget* tooltip) override;
-
+   
 public:
+   /** Updates the color of this slot to indicate whether we can learn the spell in this slot or we cannot or we have already learned it */
+   void UpdateSlotColor();
 
    /** Updates the level indicator text (telling us what level this spell is at)*/
-   void UpdateSlotLevelText(int newLevel) const;
+   void UpdateSlotLevelText();
+   
+private:
+   void OnSpellSlotSelected();
+   void OnBtnClick() override;
+   void ShowDesc(UToolTipWidget* tooltip) override;
+   
+   static const inline FLinearColor tooHighLevelSpellColor = FLinearColor(0.6, 0, 0.02, 1.0);
+   static const inline FLinearColor canLearnSpellColor    = FLinearColor(0.62, 0.61, 0, 1.0);
+   static const inline FLinearColor learnedSpellColor = FLinearColor::White;
+   
 };

@@ -42,6 +42,27 @@ void USkillSlot::NativeConstruct()
    Image_CD->SetBrushFromMaterial(cdDMatInst);
 }
 
+void USkillSlot::UpdateSkillSlot(TSubclassOf<UMySpell> spellClass)
+{
+   if(IsValid(spellClass)) {
+      UMySpell* spellObject = spellClass.GetDefaultObject();
+
+      SetSlotImage(spellObject->GetSpellDefaults().image);
+
+      if(URTSAbilitySystemComponent* ownerAbilitySystemComp = GetOwningAbilityComponent()) {
+         const bool bIsSpellOffCooldown = spellObject->GetCooldownTimeRemaining(ownerAbilitySystemComp->AbilityActorInfo.Get()) > SMALL_NUMBER;
+
+         if(bIsSpellOffCooldown) {
+            ShowCooldown();
+         } else {
+            OnCDFinished();
+         }
+      }
+   } else {
+      ResetSkillSlot();
+   }
+}
+
 void USkillSlot::UpdateCD()
 {
    const auto  abilityComponent = GetOwningAbilityComponent();
@@ -99,32 +120,9 @@ void USkillSlot::SetSlotImage(UTexture2D* image)
    }
 }
 
-void USkillSlot::UpdateSkillSlot(TSubclassOf<UMySpell> spellClass)
-{
-   SpellHUDEvents::OnSpellSlotReplacedEvent.Execute(slotIndex, spellClass);
-   if(IsValid(spellClass)) {
-      UMySpell* spellObject = spellClass.GetDefaultObject();
-
-      SetSlotImage(spellObject->spellDefaults.image);
-
-      if(URTSAbilitySystemComponent* ownerAbilitySystemComp = GetOwningAbilityComponent()) {
-         const bool bIsSpellOffCooldown = spellObject->GetCooldownTimeRemaining(ownerAbilitySystemComp->AbilityActorInfo.Get()) > SMALL_NUMBER;
-
-         if(bIsSpellOffCooldown) {
-            ShowCooldown();
-         } else {
-            OnCDFinished();
-         }
-      }
-   } else {
-      ResetSkillSlot();
-   }
-}
-
 void USkillSlot::ResetSkillSlot()
 {
    if(auto ownerAbilityComp = GetOwningAbilityComponent()) {
-      SpellHUDEvents::OnSpellSlotReplacedEvent.Execute(slotIndex, nullptr);
       SetSlotImage(nullptr);
       OnCDFinished();
    }
@@ -138,7 +136,7 @@ void USkillSlot::ShowDesc(UToolTipWidget* tooltip)
          const FString relevantSpellInfo = "Costs " + FString::FromInt(spellAtSlot->GetCost(ownerAbilityComp)) + " mana\r\n" +
                                            FString::FromInt(spellAtSlot->GetCDDuration(ownerAbilityComp)) + " second CD \r\n" +
                                            FString::FromInt(spellAtSlot->GetRange(ownerAbilityComp)) + " range";
-         tooltip->SetupTTBoxText(spellAtSlot->GetName(), spellAtSlot->GetDescription(), spellAtSlot->GetElem(), FText::FromString(relevantSpellInfo), FText::GetEmpty());
+         tooltip->SetupTTBoxText(spellAtSlot->GetSpellName(), spellAtSlot->GetDescription(), spellAtSlot->GetElem(), FText::FromString(relevantSpellInfo), FText::GetEmpty());
       }
    }
 }

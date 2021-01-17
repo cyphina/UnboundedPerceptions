@@ -7,7 +7,7 @@
 class USpellCastComponent;
 class AUnit;
 class AUnitController;
-struct FUpSpellTargeting;
+class UUpSpellTargeting;
 class UMySpell;
 
 /**
@@ -55,11 +55,14 @@ class MYPROJECT_API UManualSpellComponent : public UActorComponent, public IManu
 
  protected:
    void BeginPlay() override;
-
+   void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+   
  private:
    void OnUnitStopped();
 
-   void FinalizeSpellTargeting(const FUpSpellTargeting* spellTargeting, TSubclassOf<UMySpell> spellClass, const FHitResult&) override;
+   void OnSkillSlotPressed(int spellIndex);
+   
+   void FinalizeSpellTargeting(const UUpSpellTargeting* spellTargeting, TSubclassOf<UMySpell> spellClass, const FHitResult&) override;
 
    /** Called when we target something we're not suppsoed to. Returns false and prints a message. */
    bool InvalidTarget() const;

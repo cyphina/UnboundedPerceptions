@@ -1,8 +1,8 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "RTSIngameWidget.h"
 
+
+#include "HUDManager.h"
 #include "HUDProvider.h"
 #include "RTSGameState.h"
 #include "RTSSidebarWidget.h"
@@ -21,4 +21,6 @@ void URTSIngameWidget::NativeDisplayHelpText(UWorld* worldRef, const FText& hTex
 void URTSIngameWidget::NativeOnInitialized()
 {
    Super::NativeOnInitialized();
+   StaticClass();
 }
+

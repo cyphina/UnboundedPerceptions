@@ -9,21 +9,16 @@
 #include "BasePlayer.h"
 #include "UI/HUDManager.h"
 #include "UI/UserWidgets/RTSIngameWidget.h"
-#include "AbilitySystemComponent.h"
-#include "AbilitySystemBlueprintLibrary.h"
-#include "CombatParameters.h"
 #include "AIStuff/AIControllers/AllyAIController.h"
-#include "PatrolComponent.h"
 #include "Enemy.h"
 #include "RTSVisionComponent.h"
-#include "PartyDelegateStore.h"
+#include "PartyDelegateContext.h"
 
 AAlly::AAlly(const FObjectInitializer& oI) : AUnit(oI)
 {
    GetCapsuleComponent()->SetCollisionProfileName("Ally");
    GetMesh()->CustomDepthStencilValue = 254; // Green Highlights when Hovering
    visionComponent->SetHiddenInGame(true);
-
    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
@@ -58,7 +53,7 @@ void AAlly::PossessedBy(AController* newAllyControllerRef)
 void AAlly::SetEnabled(bool bEnabled)
 {
    Super::SetEnabled(bEnabled);
-   if(ULocalPlayer* player = Cast<ULocalPlayer>(controllerRef->Player)) { player->GetSubsystem<UPartyDelegateStore>()->OnAllyActiveChanged().Broadcast(this, bEnabled); }
+   if(ULocalPlayer* player = Cast<ULocalPlayer>(controllerRef->Player)) { player->GetSubsystem<UPartyDelegateContext>()->OnAllyActiveChanged().Broadcast(this, bEnabled); }
 }
 
 void AAlly::SetSelected(bool value)

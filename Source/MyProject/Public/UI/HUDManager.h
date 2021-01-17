@@ -43,6 +43,7 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    void BP_AddHUD(uint8 newState) override { AddHUD(newState); }
    void BP_AddHUDDialog(FName conversationName, EDialogBoxCloseCase dialogSource) override { ShowDialogWithSource(conversationName, dialogSource); }
    void BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, EDialogBoxCloseCase dialogSource) override { ShowDialogCustomLines(linesToDisplay, dialogSource); }
+   
    FORCEINLINE void BP_AddConfirmationBox(const FText& newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) override
    {
       ShowConfirmationBox(funcName, funcObject, newTitle, newDesc);
@@ -61,11 +62,6 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    UConfirmationBox* GetConfirmationBox() const override;
    URTSInputBox*     GetInputBox() const override;
    UStartMenu*       GetStartMenu() const override;
-
- public:
-   /** Setup widgets in our reference storage array to toggle them on and off later on through AddHUD*/
-   UFUNCTION(BlueprintCallable, Category = "HUDManager")
-   void SetWidget(uint8 newState, UMyUserWidget* widgetRef);
 
  public:
    /**
@@ -100,6 +96,47 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    int numWidgetsBlocking;
 
  private:
+   /** Setup widgets in our reference storage array to toggle them on and off later on through AddHUD*/
+   void SetWidget(UMyUserWidget* widgetRef, EHUDs newState);
+
+   void SetupWidgetReferences();
+
+   /**
+   * @brief Applies a hud to the screen: returns true if successful, false otherwise.
+   * Flip flops - If we have HUD already applied, we turn off
+   * @param newState - The EHUD value corresponding to this HUD.
+   * @param enableClickEvents - Can we click (for in-game interactions) with this hud open?
+   * @param canOpenCombat - Can this HUD be opened during combat?  If not, then don't let the player perform regular actions when it's open by switching to the UI cursor
+   * @param bBlocking - Can other MyUserWidgets be opened while this one is open?
+   */
+   bool ApplyHUD(uint8 newState, bool enableClickEvents, bool canOpenCombat, bool bBlocking = false);
+
+   /**
+   * @brief Helper function to update tracking of widgets on screen or widgets blocking actions
+   * @param removeIndex  - Identifies what widget to remove
+   * @param enableClickEvents - Can we click (for in-game interactions) while this widget is open?
+   * @param canOpenCombat - Is this widget considered blocking?
+   */
+   void UpdateWidgetTracking(int removeIndex, bool enableClickEvents, bool canOpenCombat);
+
+   private:
+   /**
+   * @brief Uses UE4 reflection to inject this HUDManager into any property named hudManagerRef. Allows us to inject into private members
+   * @param objectToInject - The UObject with a property called "hudManagerRef"
+   */
+   FORCEINLINE void InjectDependency(UObject* objectToInject)
+   {
+      FObjectProperty* objectProperty = FindFProperty<FObjectProperty>(objectToInject->GetClass(), "hudManagerRef"); // Find the property on that object
+      objectProperty->SetPropertyValue_InContainer(objectToInject, this); // Get that property and set its value in the container (which is the actual object instance)
+   }
+
+   void InjectDependentClasses();
+
+   /**
+   * @brief Creates the first widget that goes on screen that holds every other widget
+   */
+   void CreateMainWidget();
+   
    bool ShowHiddenWidget(UMyUserWidget* widgetToApply) const;
    void HideWidgetOnScreen(UMyUserWidget* widgetToApply) const;
 
@@ -119,40 +156,4 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    int  showMouseCursorCount   = 0;     // Counter to keep track of how many huds are on screen that want us to show the special hud cursor
    int  enableClickEventsCount = 0;     // Counter to keep track of how many huds are on screen that disable in-game click events
    bool bBlocked               = false; // Can we open any other widgets right now or are we blocked?
-
-   /**
-    * @brief Applies a hud to the screen: returns true if successful, false otherwise.
-    * Flip flops - If we have HUD already applied, we turn off
-    * @param newState - The EHUD value corresponding to this HUD.
-    * @param enableClickEvents - Can we click (for in-game interactions) with this hud open?
-    * @param canOpenCombat - Can this HUD be opened during combat?  If not, then don't let the player perform regular actions when it's open by switching to the UI cursor
-    * @param bBlocking - Can other MyUserWidgets be opened while this one is open?
-    */
-   bool ApplyHUD(uint8 newState, bool enableClickEvents, bool canOpenCombat, bool bBlocking = false);
-
-   /**
-    * @brief Helper function to update tracking of widgets on screen or widgets blocking actions
-    * @param removeIndex  - Identifies what widget to remove
-    * @param enableClickEvents - Can we click (for in-game interactions) while this widget is open?
-    * @param canOpenCombat - Is this widget considered blocking?
-    */
-   void UpdateWidgetTracking(int removeIndex, bool enableClickEvents, bool canOpenCombat);
-
- private:
-   /**
-    * @brief Uses UE4 reflection to inject this HUDManager into any property named hudManagerRef. Allows us to inject into private members
-    * @param objectToInject - The UObject with a property called "hudManagerRef"
-    */
-   FORCEINLINE void InjectDependency(UObject* objectToInject)
-   {
-      FObjectProperty* objectProperty = FindFProperty<FObjectProperty>(objectToInject->GetClass(), "hudManagerRef"); // Find the property on that object
-      objectProperty->SetPropertyValue_InContainer(objectToInject, this); // Get that property and set its value in the container (which is the actual object instance)
-   }
-
-   void InjectDependentClasses();
-
-   /**
-    * @brief Creates the first widget that goes on screen that holds every other widget
-    */
-   void CreateMainWidget();
 };

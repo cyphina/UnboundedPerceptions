@@ -26,9 +26,7 @@
 #include "UpStatComponent.h"
 
 UTargetedAttackComponent::UTargetedAttackComponent()
-{
-   agent->OnUnitAttackSwingHit().AddUObject(this, &UTargetedAttackComponent::OnUnitAttackSwingDone);
-   attackAnimClass = UNullAttackAnim::StaticClass();
+{   attackAnimClass = UNullAttackAnim::StaticClass();
 }
 
 void UTargetedAttackComponent::BeginAttack(AUnit* target)
@@ -55,6 +53,7 @@ void UTargetedAttackComponent::BeginPlay()
 {
    agent = Cast<AUnitController>(GetOwner())->GetUnitOwner();
    agent->GetUnitController()->OnUnitStopped().AddUObject(this, &UTargetedAttackComponent::OnUnitStopped);
+   agent->OnUnitAttackSwingHit().AddUObject(this, &UTargetedAttackComponent::OnUnitAttackSwingDone);
 }
 
 void UTargetedAttackComponent::OnUnitAttackSwingDone()
@@ -202,6 +201,7 @@ void UTargetedAttackComponent::OnAttackSwingDoneEffect()
 
 void UTargetedAttackComponent::HandleAutoAttackModifierTags()
 {
+   
 }
 
 FGameplayTag UTargetedAttackComponent::GetAttackElement() const

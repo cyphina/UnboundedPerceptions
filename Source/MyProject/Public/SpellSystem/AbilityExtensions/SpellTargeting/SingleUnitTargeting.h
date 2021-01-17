@@ -1,13 +1,16 @@
 ﻿#pragma once
 #include "SpellTargetingTypes.h"
+#include "SingleUnitTargeting.generated.h"
 
-struct FUpSpellTargeting_SingleUnit : public FUpSpellTargeting {
-   explicit FUpSpellTargeting_SingleUnit(const FGameplayTag& targetTag) :
-      FUpSpellTargeting(targetTag)
-   {
-   }
+/** Allows us to target both friendly and enemy units */
+UCLASS()
+class UUpSpellTargeting_SingleUnit : public UUpSpellTargeting
+{
+   GENERATED_BODY()
 
-   bool ManualTargetingCheck(const FHitResult& hitResult) const override;
+public:
+
+   bool ManualTargetingCheck(const AUnit* caster, const FHitResult& hitResult) const override;
 
    void ClickResponse(const FHitResult& hitResult, TSubclassOf<UMySpell> spellClass, IManualTargetingController& sourceUnitController) const override;
 
@@ -17,22 +20,42 @@ struct FUpSpellTargeting_SingleUnit : public FUpSpellTargeting {
 
    bool ShouldTryAdjustPosition(AUnit* spellCaster) const override;
 
-   virtual UEnvQuery* GetDefaultQueryForTargetingScheme(UDA_DefaultTargetingScheme* targetingSchemes) const override;
+   UEnvQuery* GetDefaultQueryForTargetingScheme(UDA_DefaultTargetingScheme* targetingSchemes) const override;
 
-   void HandleQueryResult(TSharedPtr<FEnvQueryResult> result, AUnit* casterRef, USpellCastComponent* spellCastComponent,
-                          TSubclassOf<UMySpell> spellToCast) const override;
+   void HandleQueryResult
+   (TSharedPtr<FEnvQueryResult> result, AUnit* casterRef, USpellCastComponent* spellCastComponent,
+    TSubclassOf<UMySpell>       spellToCast) const override;
 
- private:
-   bool CheckEligibleSpellTarget(const AUnit* hitUnit) const;
+private:
+   virtual bool CheckEligibleSpellTarget(const AUnit* caster, const AUnit* hitUnit) const;
 };
 
-struct FUpSpellTargeting_InteractableOrUnit : public FUpSpellTargeting {
-   explicit FUpSpellTargeting_InteractableOrUnit(const FGameplayTag& targetTag) :
-      FUpSpellTargeting(targetTag)
-   {
-   }
+UCLASS()
+class UUpSpellTargeting_SingleUnitFriendly : public UUpSpellTargeting_SingleUnit
+{
+   GENERATED_BODY()
 
-   bool ManualTargetingCheck(const FHitResult& hitResult) const override;
+private:
+   virtual bool CheckEligibleSpellTarget(const AUnit* caster, const AUnit* hitUnit) const override;
+};
+
+UCLASS()
+class UUpSpellTargeting_SingleUnitEnemy : public UUpSpellTargeting_SingleUnit
+{
+   GENERATED_BODY()
+
+private:
+   virtual bool CheckEligibleSpellTarget(const AUnit* caster, const AUnit* hitUnit) const override;
+};
+
+UCLASS()
+class UUpSpellTargeting_InteractableOrUnit : public UUpSpellTargeting
+{
+   GENERATED_BODY()
+
+public:
+
+   bool ManualTargetingCheck(const AUnit* caster, const FHitResult& hitResult) const override;
 
    void ClickResponse(const FHitResult& hitResult, TSubclassOf<UMySpell> spellClass, IManualTargetingController& sourceUnitController) const override;
 
@@ -42,13 +65,13 @@ struct FUpSpellTargeting_InteractableOrUnit : public FUpSpellTargeting {
 
    bool ShouldTryAdjustPosition(AUnit* spellCaster) const override;
 
-   virtual UEnvQuery* GetDefaultQueryForTargetingScheme(UDA_DefaultTargetingScheme* targetingSchemes) const override { return nullptr; }
+   UEnvQuery* GetDefaultQueryForTargetingScheme(UDA_DefaultTargetingScheme* targetingSchemes) const override { return nullptr; }
 
-   void HandleQueryResult(TSharedPtr<FEnvQueryResult> result, AUnit* casterRef, USpellCastComponent* spellCastComponent,
-                          TSubclassOf<UMySpell> spellToCast) const override;
+   void HandleQueryResult
+   (TSharedPtr<FEnvQueryResult> result, AUnit* casterRef, USpellCastComponent* spellCastComponent,
+    TSubclassOf<UMySpell>       spellToCast) const override;
 
- private:
+private:
    bool                      CheckEligibleSpellTarget(const FHitResult& hitResult) const;
    static AInteractableBase* GetHitInteractable(const FHitResult& hitResult);
-   bool                      IsInteractableAndAllUnitTargetTag() const;
 };

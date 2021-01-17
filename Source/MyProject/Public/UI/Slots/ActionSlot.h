@@ -36,6 +36,9 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    UFUNCTION(BlueprintCallable, Category = "Action")
    void SetImageFromMaterial(UMaterialInstanceDynamic* image);
 
+   UFUNCTION(BlueprintCallable, Category = "Action")
+   int GetSlotIndex() const { return slotIndex; }
+    
  protected:
    UFUNCTION()
    virtual void OnBtnClick() PURE_VIRTUAL(UActionSlot::OnBtnClick, );
@@ -51,7 +54,7 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    void NativeOnInitialized() override;
 
    // A button we can press to trigger the slot
-   UPROPERTY(Meta = (BindWidget))
+   UPROPERTY(BlueprintReadOnly, Meta = (BindWidget))
    UButton* btnAction;
 
    // An image covering the slot (used for items, spells, etc.)
@@ -65,6 +68,11 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    UPROPERTY(BlueprintReadOnly)
    AUserInput* CPCRef;
 
+   /**
+    * Can only be edited in the designer or in the "CreateWidget" node since it shouldn't be modified anywhere else but there.
+    * When using loops to create many slots use the setter in the "CreateWidget" node and when there's a few set number of slots
+    * (e.g. the ActionBar skill ring) then set the slot index manually in the designer.
+    */
    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Action", Meta = (ExposeOnSpawn = true))
    int slotIndex;
 

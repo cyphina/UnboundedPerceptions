@@ -16,7 +16,7 @@ class UBehaviorTree;
  * AIs that use the patrol task rely on the AIs having a PatrolComponent
  */
 
-UCLASS(ClassGroup = (Custom), Within = AIController, meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class MYPROJECT_API UPatrolComponent : public USceneComponent
 {
    GENERATED_BODY()

@@ -48,14 +48,6 @@ class MYPROJECT_API ABaseHero : public AAlly
    UFUNCTION(BlueprintCallable, Category = "Interfacing Equipment")
    void Unequip(const int unequipSlot) const;
 
-   /**
-    * Swap an item from one slot to another
-    * @param equipSlot1 - First slot to be swapped
-    * @param equipSlot2 - Second slot to be swapped
-    */
-   UFUNCTION(BlueprintCallable, Category = "Interfacing Equipment")
-   void SwapEquip(int equipSlot1, int equipSlot2);
-
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Stats")
    int GetCurrentExp() const;
 
@@ -68,6 +60,9 @@ class MYPROJECT_API ABaseHero : public AAlly
    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Stats")
    void LevelUp();
 
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Items")
+   int GetCurrentItemId() { return currentItemId.IsSet() ? currentItemId.GetValue() : INDEX_NONE; }
+   
    /**Set the item set to be used currently by this hero*/
    UFUNCTION(BlueprintCallable, Category = "Items")
    void SetCurrentItem(int newCurrentItemID, int newCurrentItemSlotIndex);
@@ -96,7 +91,7 @@ class MYPROJECT_API ABaseHero : public AAlly
    void SetCurrentInteractable(AActor* newInteractable);
 
    /** Gets the item set to be used currently by this hero */
-   TOptional<int> GetCurrentItem() const { return currentItemId; }
+   TOptional<int> GetCurrentItem() const { return currentItemId.GetValue(); }
 
    void SetSelected(bool value) override;
 

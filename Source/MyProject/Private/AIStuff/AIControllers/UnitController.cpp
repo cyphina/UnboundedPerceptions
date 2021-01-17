@@ -9,6 +9,7 @@
 #include "BehaviorTree/BehaviorTree.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "GameplayDelegateContext.h"
 
 #include "SpellSystem/MySpell.h"
 #include "PatrolComponent.h"
@@ -18,6 +19,7 @@
 #include "MoveVisitorDefs.inl"
 #include "RTSAttackExecution.h"
 #include "RTSDeathExecution.h"
+#include "RTSMoveExecution.h"
 #include "RTSStateComponent.h"
 #include "SpellDataLibrary.h"
 
@@ -91,7 +93,7 @@ void AUnitController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowi
 
 void AUnitController::Attack()
 {
-   customAttackLogic.GetDefaultObject()->Execute();
+   GetUnitOwner()->GetAbilitySystemComponent()->TryActivateAbilityByClass(GetUnitOwner()->GetCustomAttackLogic());
 }
 
 void AUnitController::OnDamageReceived(const FUpDamage& d)
@@ -102,8 +104,9 @@ void AUnitController::OnDamageReceived(const FUpDamage& d)
 
 void AUnitController::Die()
 {
-   customDeathLogic.GetDefaultObject()->Execute();
+   GetUnitOwner()->GetAbilitySystemComponent()->TryActivateAbilityByClass(GetUnitOwner()->GetCustomDeathLogic());
    GetUnitOwner()->SetSelected(false);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnUnitDieGlobal().Broadcast(GetUnitOwner());
    GetUnitOwner()->OnUnitDie().Broadcast();
    // Eventually this object will get GC'd. If we have something like resurrection, store unit data in the OnUnitDieEvent as opposed to keeping around a deactivated copy.
    SetLifeSpan(5.f);

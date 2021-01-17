@@ -15,7 +15,6 @@
 #include "SpellCastComponent.h"
 #include "State/IUnitState.h"
 
-#include "State/RTSStateMachine.h"
 #include "CombatParameters.h"
 
 #include "WorldObject.h"
@@ -26,6 +25,9 @@ class UUpStatComponent;
 class URTSVisionComponent;
 class UTargetComponent;
 class IAttackAnim;
+class URTSAttackExecution;
+class URTSDeathExecution;
+class URTSMoveExecution;
 struct UpCombatInfo;
 struct FUpDamage;
 
@@ -114,7 +116,7 @@ public:
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
    const TSet<AUnit*>& GetAllies() const { return *GetAllies_Impl(); }
-   
+
    URTSAbilitySystemComponent* GetAbilitySystemComponent() const override { return abilitySystemComponent; }
 
    URTSVisionComponent* GetVisionComponent() const { return visionComponent; }
@@ -132,6 +134,12 @@ public:
    FOnUnitDamageDealt& OnUnitDamageDealt() const { return OnUnitDamageDealtEvent; }
 
    FOnUnitAttackSwingHit& OnUnitAttackSwingHit() const { return OnUnitAttackSwingHitEvent; }
+
+   TSubclassOf<URTSAttackExecution> GetCustomAttackLogic() const { return customAttackLogic; }
+
+   TSubclassOf<URTSDeathExecution> GetCustomDeathLogic() const { return customDeathLogic; }
+
+   TSubclassOf<URTSMoveExecution> GetCustomMoveLogic() const { return customMoveLogic; }
 
 protected:
    UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
@@ -156,6 +164,24 @@ protected:
 
    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
    FUnitProperties unitProperties;
+
+   /**
+   * Holds logic for basic auto attacks. By default this requires a targeted attack component but some units have custom attacks which may not require them to undergo
+   * the targeting procedure.
+   */
+   UPROPERTY(EditDefaultsOnly)
+   TSubclassOf<URTSAttackExecution> customAttackLogic;
+
+   /** Holds logic for death */
+   UPROPERTY(EditDefaultsOnly)
+   TSubclassOf<URTSDeathExecution> customDeathLogic;
+
+   /** Holds custom move logic so that we add some logic for the AI to move in certain ways instead of just walking everywhere.
+   * For instance, if we want our character to teleport towards its target -
+   * we can cast a teleport spell if its off CD and if the target is far or something. 
+   */
+   UPROPERTY(EditDefaultsOnly)
+   TSubclassOf<URTSMoveExecution> customMoveLogic;
 
    /**
     * @brief Material reference to unit's base material so that if it changes (due to effects) we can revert it back
@@ -183,9 +209,10 @@ private:
    void AlignSelectionCircleWithGround() const;
    void StoreUnitHeight();
 
-   virtual const TSet<AUnit*>* GetVisibleEnemies_Impl() const PURE_VIRTUAL(AUnit::GetVisibleEnemies, return nullptr; );
-   virtual const TSet<AUnit*>* GetAllies_Impl() const PURE_VIRTUAL(AUnit::GetAllies, return nullptr; );
-   
+   virtual const TSet<AUnit*>* GetVisibleEnemies_Impl() const PURE_VIRTUAL(AUnit::GetVisibleEnemies, return nullptr;);
+
+   virtual const TSet<AUnit*>* GetAllies_Impl() const PURE_VIRTUAL(AUnit::GetAllies, return nullptr;);
+
    class AUnitController* unitController = nullptr;
 
    // Reference to combat parameters kept in pointer since these values are barely used much (cold splitting)

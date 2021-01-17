@@ -1,18 +1,29 @@
 ﻿#pragma once
 #include "SpellTargetingTypes.h"
+#include "NoTargeting.generated.h"
 
-struct FUpSpellTargeting_None : public FUpSpellTargeting {
-   explicit FUpSpellTargeting_None(const FGameplayTag& targetTag) : FUpSpellTargeting(targetTag) {}
-   
-   bool ManualTargetingCheck(const FHitResult& hitResult) const override { return true; }
+UCLASS()
+class UUpSpellTargeting_None : public UUpSpellTargeting
+{
+   GENERATED_BODY()
 
-   void ClickResponse(const FHitResult& hitResult, TSubclassOf<UMySpell> spellClass, IManualTargetingController& sourceUnitController) const override {}
+public:
 
-   void ManualSetSpellTarget(UTargetComponent* targetComp, const FHitResult& hitResult) const override {}
+   bool ManualTargetingCheck(const AUnit* caster, const FHitResult& hitResult) const override { return true; }
 
-   void AdjustCastPosition(USpellCastComponent* spellCastComp, TSubclassOf<UMySpell> spellClass, UTargetComponent* targetComp) const override {}
+   void ClickResponse(const FHitResult& hitResult, TSubclassOf<UMySpell> spellClass, IManualTargetingController& sourceUnitController) const override
+   {
+   }
 
-   virtual UEnvQuery* GetDefaultQueryForTargetingScheme(UDA_DefaultTargetingScheme* targetingSchemes) const override { return nullptr; }
+   void ManualSetSpellTarget(UTargetComponent* targetComp, const FHitResult& hitResult) const override
+   {
+   }
+
+   void AdjustCastPosition(USpellCastComponent* spellCastComp, TSubclassOf<UMySpell> spellClass, UTargetComponent* targetComp) const override
+   {
+   }
+
+   UEnvQuery* GetDefaultQueryForTargetingScheme(UDA_DefaultTargetingScheme* targetingSchemes) const override { return nullptr; }
 
    bool ShouldTryAdjustPosition(AUnit* spellCaster) const override { return false; }
 

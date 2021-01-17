@@ -52,7 +52,7 @@ bool UBTTask_CastSpellByTags::TryCastSpellsWithTag(const FGameplayTagContainer& 
 
    if(spellToCast) {
       UEnvQuery*          targetingScheme     = nullptr;
-      const FGameplayTag& spellDescriptionTag = spellToCast.GetDefaultObject()->descriptionTags.First();
+      const FGameplayTag& spellDescriptionTag = spellToCast.GetDefaultObject()->GetSpellDefaults().descriptionTags.First();
       if(spellToTargetingMap.Find(spellDescriptionTag)) {
          targetingScheme = spellToTargetingMap[spellDescriptionTag];
       } else {

@@ -6,32 +6,19 @@
 #include "SpellDataManager.h"
 #include "GameplayEffect.h"
 #include "SpellSystem/DamageStructs.h"
+#include "SpellDefaults.h"
 #include "MySpell.generated.h"
 
 class URTSAbilitySystemComponent;
 class AUnit;
 
-USTRUCT(BlueprintType)
-struct FSpellDefaults {
-   GENERATED_USTRUCT_BODY()
-
- public:
-   FSpellDefaults() = default;
-   FSpellDefaults(int id, UTexture2D* image) : id(id), image(image) {}
-   
-   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
-   int id; // set id to same as in table
-
-   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
-   UTexture2D* image;
-};
-
-/* FIRST ABILITY TAG SHOULD BE CD TAG
+/* 
  * Abilities should start at level 1 not 0
  * Remember when creating spells in blueprints we must do a few things
- * 1. Ensure the ID matches the entry in the table (and create an entry in the table if there is not any)
+ * 1. Setup the default properties
+ *    - Ensure the ID matches the entry in the table (and create an entry in the table if there is not any)
+ *    - Give it an image too
  * 2. Call parent ActivateAbility
- * 3. Create matching gameplay tag and set it in the spell default properties
  * 4. Call Commit ability and EndAbility
  */
 UCLASS()
@@ -39,45 +26,17 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
 {
    GENERATED_BODY()
 
-   AUnit* unitRef;
-
 public:
    UMySpell();
+
+   UFUNCTION(BlueprintCallable, Category = "Spell")
+   const FSpellDefaults& GetSpellDefaults() const { return spellDefaults; }
 
    UFUNCTION(BlueprintCallable, Category = "SpellChecks")
    bool IsOnCD(const UAbilitySystemComponent* abilityComponent) const;
 
-   void ActivateAbility
-   (const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
-    const FGameplayEventData*        TriggerEventData) override;
-
-   bool CheckCooldown
-   (const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-    OUT FGameplayTagContainer*       OptionalRelevantTags) const override;
-
-   // ! We want to make the avatar actor the source of the spell since owner is our player controller 
-   FGameplayEffectContextHandle MakeEffectContext(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo) const override;
-
-   void CommitExecute(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
-
-   void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
-
-   float GetCooldownTimeRemaining(const FGameplayAbilityActorInfo* ActorInfo) const override;
-
-   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
-   FSpellDefaults spellDefaults;
-
-   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
-   FGameplayTagContainer descriptionTags;
-
-   FGameplayTagContainer cooldownTags;
-
-   // TODO: Maybe have a better way to set this because we have 5 now...
-   static const int NUM_SCALING_DAMAGE_ATT = 4;
-
-#pragma region accessors
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   int GetMaxLevel() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->maxLevel; }
+   int GetMaxLevel() const { return spellDefaults.MaxLevel; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    float GetCDDuration(UAbilitySystemComponent* abilityComponent) const;
@@ -91,34 +50,25 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Spell")
    int GetCost(const URTSAbilitySystemComponent* abilityComponent) const;
 
-   const FUpSpellTargeting* GetTargeting() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->targeting; }
+   UFUNCTION(BlueprintCallable, Category = "Spell")
+   FText GetDescription() const { return spellDefaults.Desc; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   FText GetDescription() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->desc; }
-
-   UFUNCTION(BlueprintCallable, Category = "Spell")
-   FText GetName() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->name; }
+   FText GetSpellName() const { return spellDefaults.Name; }
 
    /**Get the name of the primary element this spell is associated with*/
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   FText GetElem() const { return FText::FromString(USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->elem.ToString().RightChop(15)); }
+   FText GetElem() const { return FText::FromString(spellDefaults.Elem.ToString().RightChop(15)); }
 
    /**Get the name of the primary element this spell is associated with*/
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   FGameplayTag GetElemTag() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->elem; }
+   FGameplayTag GetElemTag() const { return spellDefaults.Elem; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   TArray<int> GetPreReqs() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->preReqs; }
+   TArray<TSubclassOf<UMySpell>> GetPreReqs() const { return GetSpellDefaults().PreReqs; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   TArray<FText> GetPreReqNames() const
-   {
-      TArray<FText> preReqNames;
-      for(int i : USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->preReqs) {
-         preReqNames.Add(USpellDataManager::GetData().GetSpellInfo(i)->name);
-      }
-      return preReqNames;
-   }
+   TArray<FText> GetPreReqNames() const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    float GetSpellDuration(UAbilitySystemComponent* abilityComponent) const;
@@ -141,37 +91,116 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Spell")
    int GetLevel(UAbilitySystemComponent* abilityComponent) const;
 
-   /**Helper function to set the stat modifiers of a gameplay effect*/
-   UFUNCTION(BlueprintCallable, Category = "Helper")
-   FGameplayEffectSpecHandle SetScaling(FGameplayEffectSpecHandle specHandle);
-
-   UFUNCTION(BlueprintCallable, Category = "Helper")
-   FGameplayEffectSpecHandle SetPeriod(FGameplayEffectSpecHandle specHandle, float period);
-
-   /**Creates a gameplay effect setting the duration and period accordint to the table values*/
+   /**
+    * Creates a gameplay effect setting the duration and period according to the table values
+    * @param effectClass - Type of effect we want to create. This effect will have its values like duration and period set from the table values.
+    * @param name - Name of the effect. The effect doesn't need to have a name if it's instantaneous.
+    * @param assetTags - Any extra tags we want this effect to have (like secondary elements ,etc.).s
+    */
    UFUNCTION(BlueprintCallable, Category = "Spell Creation Helper")
    struct FGameplayEffectSpecHandle CreateGameplayEffectFromTableValues(TSubclassOf<UGameplayEffect> effectClass, FGameplayTag name, FGameplayTagContainer assetTags);
 
    UFUNCTION(BlueprintCallable)
    UEnvQuery* GetDefaultQueryForSpell(UWorld* worldRef);
 
-#pragma endregion
+   TSubclassOf<UUpSpellTargeting> GetTargeting() const;
+
+   /** Our version of cooldown just checks for the name tag of this spell */
+   bool CheckCooldown
+   (const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+    OUT FGameplayTagContainer*       OptionalRelevantTags) const override;
+
+   /** We want to make the avatar actor the source of the spell since owner is our player controller */
+   FGameplayEffectContextHandle MakeEffectContext(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo) const override;
+
+   /** Overrides functionality to apply cooldown and cost */
+   void CommitExecute(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
+
+   float GetCooldownTimeRemaining(const FGameplayAbilityActorInfo* ActorInfo) const override;
+
+   // TODO: Maybe have a better way to set this because we have 5 now...
+   static const int NUM_SCALING_DAMAGE_ATT = 4;
+
+protected:
+   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
+   FSpellDefaults spellDefaults;
 
 private:
-   UFUNCTION(BlueprintCallable, Category = "Helper")
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   FGameplayEffectSpecHandle SetScaling(FGameplayEffectSpecHandle specHandle);
+
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   FGameplayEffectSpecHandle SetPeriod(FGameplayEffectSpecHandle specHandle, float period);
+
+   ///
+   /// Active accessors allow us to get data for a spell that is being activated since the actor info is already set and we can find the ability system component from that.
+   /// Only use them within a BP derived from UMySpell.
+   /// 
+
+   /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
    UAbilitySystemComponent* GetOwnerAbilitySystemComponent() const;
 
-   /**Used to get the index from some spell information array based on current spell level
-    * Invariant, AbilityLevels start at 1
+   /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   UAbilitySystemComponent* GetAvatarAbilitySystemComponent() const;
+
+   /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   AUnit* GetAvatarUnit() const;
+
+   /** Whenever we need to target something in a "Wait Target Data" node we should use this or the node that makes target location info from the avatar actor */
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spell Helper")
+   FGameplayAbilityTargetingLocationInfo MakeTargetLocationInfoFromTargetComponent();
+
+   /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   FGameplayAbilityTargetDataHandle GetAvatarTargetData() const;
+
+   /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   FVector GetAvatarTargetLocation() const;
+
+   /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   int GetActiveSpellRange() const { return GetRange(GetAvatarAbilitySystemComponent()); }
+
+   /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   float GetActiveSpellAOE() const { return GetAOE(GetAvatarAbilitySystemComponent()); }
+
+   /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   float GetActiveSpellDuration() const { return GetSpellDuration(GetAvatarAbilitySystemComponent()); }
+
+   /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   float GetActiveSpellCDDuration() const { return GetCDDuration(GetAvatarAbilitySystemComponent()); }
+
+   /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   float GetActivePeriod() const { return GetPeriod(GetAvatarAbilitySystemComponent()); }
+
+   /**
+    * Only use this inside ActivateAbility in a blueprint derived from UMySpell.
+    * Gives us the collision channel for units that would be considered an enemy to the caster.
+    */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   TArray<TEnumAsByte<ECollisionChannel>> GetTraceChannelForEnemy() const;
+
+   /**
+   * Only use this inside ActivateAbility in a blueprint derived from UMySpell.
+   * Gives us the collision channel for units that would be considered a friendly to the caster.
+   */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   TArray<TEnumAsByte<ECollisionChannel>> GetTraceChannelForFriendly() const;
+   
+   /**
+    * Used to get the index from some spell information array based on current spell level
+    * ! Invariant - AbilityLevels start at 1
     * @param currentLevel : Current level of spell property (ex. Fireball has had 2 points put into it so it's level 2)
     * @param numCategories : Number of levels in spell property (ex. there may be 3 range upgrades for a spell)
     * @param maxLevel : Number of times this spell can be leveld up (ex. there may 5 total level upgrades for a spell, only 3 upgrades increase range)
     */
-   inline int GetIndex(int currentLevel, int numCategories, int maxLevel) const
-   {
-      int denom = maxLevel * currentLevel;
-      if(denom != 0)
-         return FMath::CeilToInt((float)numCategories / denom) - 1;
-      return 0;
-   }
+   int GetIndex(int currentLevel, int numCategories, int maxLevel) const;
 };

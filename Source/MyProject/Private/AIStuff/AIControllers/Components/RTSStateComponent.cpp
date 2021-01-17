@@ -1,5 +1,6 @@
 ﻿#include "RTSStateComponent.h"
 #include "RTSStateMachine.h"
+#include "Unit.h"
 #include "StateMachineFactory.h"
 #include "UnitController.h"
 

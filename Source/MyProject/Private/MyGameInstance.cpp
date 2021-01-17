@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "UpResourceManager.h"
 #include "MyGameInstance.h"
@@ -11,7 +9,7 @@
 #include "Interactables/StorageContainer.h"
 #include "Interactables/Pickup.h"
 
-CSV_DECLARE_CATEGORY_EXTERN(UpLevelLoading);
+
 
 UMyGameInstance::UMyGameInstance() {}
 

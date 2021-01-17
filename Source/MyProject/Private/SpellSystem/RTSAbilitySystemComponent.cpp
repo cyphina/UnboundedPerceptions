@@ -14,6 +14,7 @@
 #include "MySpell.h"
 #include "GameplayCueManager.h"
 #include "SpellDataLibrary.h"
+#include "SpellDelegateStore.h"
 #include "UpStatComponent.h"
 #include "SpellSystem/SpellFunctionLibrary.h"
 #include "SpellSystem/GameplayEffects/RTSDamageEffect.h"
@@ -26,8 +27,8 @@ void URTSAbilitySystemComponent::BeginPlay()
 {
    unitOwnerRef = Cast<AUnit>(GetOwner());
 
-   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_ID)));
-   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_TARGET_ID)));
+   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_TAG)));
+   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG)));
 }
 
 int URTSAbilitySystemComponent::FindSlotIndexOfSpell(TSubclassOf<UMySpell> spellToLookFor) const
@@ -270,7 +271,15 @@ TSubclassOf<UMySpell> URTSAbilitySystemComponent::GetSpellAtSlot(int index) cons
 
 void URTSAbilitySystemComponent::SetSpellAtSlot(TSubclassOf<UMySpell> spellClassToSet, int slotIndex)
 {
-   if(slotIndex >= 0 && slotIndex < abilities.Num()) { abilities[slotIndex] = spellClassToSet; }
+   if(slotIndex >= 0 && slotIndex < abilities.Num())
+   {
+      abilities[slotIndex] = spellClassToSet;
+      SpellHUDEvents::OnSpellSlotReplacedEvent.Broadcast(unitOwnerRef, spellClassToSet, slotIndex);
+   }
+   else
+   {
+      UE_LOG(LogTemp, Error, TEXT("Tried to set spell on unit named: %s on a spell slot that is nonexistent!"), *unitOwnerRef->GetGameName().ToString());
+   }
 }
 
 void URTSAbilitySystemComponent::TryRemoveInvisibility()

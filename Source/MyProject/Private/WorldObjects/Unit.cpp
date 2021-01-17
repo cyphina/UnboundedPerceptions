@@ -38,7 +38,7 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
 
    abilitySystemComponent = CreateDefaultSubobject<URTSAbilitySystemComponent>(TEXT("AbilitySystem"));
 
-   visionComponent = CreateDefaultSubobject<URTSVisionComponent>(FName("VisionRadius"));
+   visionComponent = CreateDefaultSubobject<URTSVisionComponent>(TEXT("VisionRadius"));
    visionComponent->SetupAttachment(RootComponent);
 
    selectionCircleDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));

@@ -18,7 +18,7 @@
 #include "DIRender.h"
 
 #include "NavArea_EnemySpot.h"
-#include "PartyDelegateStore.h"
+#include "PartyDelegateContext.h"
 #include "TargetComponent.h"
 #include "../BaseHero.h"
 
@@ -98,7 +98,7 @@ void AEnemy::SetSelected(bool value)
 void AEnemy::SetEnabled(bool bEnabled)
 {
    Super::SetEnabled(bEnabled);
-   if(UPartyDelegateStore* store = Cast<ULocalPlayer>(controllerRef->Player)->GetSubsystem<UPartyDelegateStore>()) {
+   if(UPartyDelegateContext* store = Cast<ULocalPlayer>(controllerRef->Player)->GetSubsystem<UPartyDelegateContext>()) {
       store->OnEnemyActiveChanged().Broadcast(this, bEnabled);
    }
 

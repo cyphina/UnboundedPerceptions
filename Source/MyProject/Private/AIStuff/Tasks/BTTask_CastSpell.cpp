@@ -12,11 +12,12 @@
 
 #include "BTTask_CastSpell.h"
 
+
+#include "SingleUnitTargeting.h"
 #include "UnitMessages.h"
 #include "UpAIHelperLibrary.h"
 #include "EnvironmentQuery/EnvQuery.h"
 #include "EnvironmentQuery/EnvQueryGenerator.h"
-#include "EnvironmentQuery/EnvQueryManager.h"
 #include "EnvironmentQuery/EnvQueryOption.h"
 #include "EnvironmentQuery/Items/EnvQueryItemType_ActorBase.h"
 
@@ -46,9 +47,9 @@ EBTNodeResult::Type UBTTask_CastSpell::ExecuteTask(UBehaviorTreeComponent& owner
    UMySpell* spell = spellToCast.GetDefaultObject();
 
    if(targetFindingLogic->GetOptionsMutable()[0]->Generator->ItemType == UEnvQueryItemType_VectorBase::StaticClass()) {
-      if(spell->GetTargeting()->GetTargetTag().MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Single"))) {
+      if(spell->GetTargeting()->IsChildOf(TSubclassOf<UUpSpellTargeting_SingleUnit>())) {
          UE_LOG(LogTemp, Error, TEXT("%s tried to cast a spell %s with the wrong targeting!"), *unitController->GetUnitOwner()->GetGameName().ToString(),
-                *spell->GetName().ToString());
+                *spell->GetSpellName().ToString());
          return EBTNodeResult::Failed;
       }
    }

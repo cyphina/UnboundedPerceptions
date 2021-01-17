@@ -18,6 +18,7 @@
 #include <Runtime\NavigationSystem\Public\NavigationSystem.h>
 
 #include "ManualSpellComponent.h"
+#include "NoTargeting.h"
 #include "RTSStateComponent.h"
 #include "SpellTargetingTypes.h"
 #include "TargetComponent.h"
@@ -76,7 +77,7 @@ void AHeroAIController::BeginUseItem(int itemToUseID, int slotIndex)
    const TSubclassOf<UMySpell> itemAbility = UItemManager::Get().GetConsumableInfo(itemToUseID)->abilityClass;
    GetManualSpellComponent()->PressedCastSpell(itemAbility);
 
-   if(itemAbility.GetDefaultObject()->GetTargeting()->GetTargetTag() != FGameplayTag::RequestGameplayTag("Skill.Targetting.None")) {
+   if(itemAbility.GetDefaultObject()->GetTargeting() != TSubclassOf<UUpSpellTargeting_None>()) {
       Cast<AUserInput>(GetWorld()->GetFirstPlayerController())->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Item);
    }
 }

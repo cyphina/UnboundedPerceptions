@@ -62,6 +62,5 @@ private:
 
    void OnTargetFound(TSharedPtr<FEnvQueryResult> envQuery);
 
-   FGameplayTag          GetManualTag(TSubclassOf<UMySpell> spell) const;
    FGameplayTagContainer GetDescriptorTags(TSubclassOf<UMySpell> spell) const;
 };

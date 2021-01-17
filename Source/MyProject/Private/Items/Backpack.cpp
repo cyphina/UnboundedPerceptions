@@ -336,5 +336,6 @@ void UBackpack::OnItemUsed(const ABaseHero* heroUsingItem, const FMyItem& itemID
 
 void UBackpack::BeginDestroy()
 {
+   Super::BeginDestroy();
    ItemChangeEvents::OnItemUsedEvent.RemoveAll(this);
 }

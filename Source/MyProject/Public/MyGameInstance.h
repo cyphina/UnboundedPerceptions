@@ -4,6 +4,8 @@
 #include "LevelSaveStructs.h"
 #include "MyGameInstance.generated.h"
 
+CSV_DECLARE_CATEGORY_EXTERN(UpLevelLoading);
+
 class UEventManager;
 class AHUDManager;
 class UTriggerManager;

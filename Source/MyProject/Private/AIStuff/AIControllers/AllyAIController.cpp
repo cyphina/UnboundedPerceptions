@@ -35,7 +35,7 @@ void AAllyAIController::OnPossess(APawn* InPawn)
 {
    Super::OnPossess(InPawn);
    allyRef             = Cast<AAlly>(GetPawn());
-   currentAllyBehavior = AllyBehavioralMode::ABM_Neutral;
+   currentAllyBehavior = EAllyBehavioralMode::ABM_Neutral;
 }
 
 void AAllyAIController::OnUnPossess()
@@ -43,9 +43,9 @@ void AAllyAIController::OnUnPossess()
    spellCastComponent->OnSpellCasted().RemoveAll(this);
 }
 
-void AAllyAIController::SwitchAIModes(AllyBehavioralMode newMode)
+void AAllyAIController::SwitchAIModes(EAllyBehavioralMode newMode)
 {
-   if(currentAllyBehavior != AllyBehavioralMode::ABM_Neutral) behaviorTreeComp->StopTree();
+   if(currentAllyBehavior != EAllyBehavioralMode::ABM_Neutral) behaviorTreeComp->StopTree();
    // if we choose neutral there's no behavior tree since it's element in the tree array is empty
    if(behaviorTrees[static_cast<uint8>(newMode)]) {
       UseBlackboard(behaviorTrees[static_cast<uint8>(newMode)]->BlackboardAsset, blackboardComp);

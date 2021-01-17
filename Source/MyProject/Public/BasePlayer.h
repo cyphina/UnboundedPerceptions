@@ -14,6 +14,7 @@ class APickup;
 class UQuestManager;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogTopicLearned, FGameplayTag, dialogTopic);
+
 DECLARE_EVENT(ABasePlayer, OnPartyUpdated);
 
 /**
@@ -31,13 +32,20 @@ class MYPROJECT_API ABasePlayer : public APlayerState
 
    void BeginPlay() override;
 
- public:
+public:
    static const int MAX_NUM_HEROES = 4;
 
    const TArray<ABaseHero*>& GetHeroes() const { return heroes; }
 
+   UFUNCTION(BlueprintCallable, Category = "Party")
    AUnit* GetFocusedUnit() const { return focusedUnit; }
-   void   SetFocusedUnit(AUnit* newFocusedUnit);
+
+   UFUNCTION(BlueprintCallable, Category = "Party")
+   void SetFocusedUnit(AUnit* newFocusedUnit);
+
+   /** TODO: Implement Party Leader */
+   UFUNCTION(BlueprintCallable, Category = "Party")
+   ABaseHero* GetPartyLeader() const { return nullptr; }
 
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    TArray<ABaseHero*> selectedHeroes;
@@ -127,7 +135,7 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    UFUNCTION(BlueprintCallable)
    void SetMoney(int newMoneyVal) { money = newMoneyVal; }
 
- protected:
+protected:
    /**
     * List of active heroes.
     * Party leader should always be at slot 0.
@@ -138,7 +146,7 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    /** Enemy or hero unit that we see detailed information in our actionbar */
    AUnit* focusedUnit = nullptr;
 
- private:
+private:
    void OnHeroSelected(ABaseHero* heroRef);
    void OnAllySelected(AAlly* allyRef);
    void OnUnitSelected(AUnit* unitRef);

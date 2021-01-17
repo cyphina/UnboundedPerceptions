@@ -54,8 +54,7 @@ class MYPROJECT_API AUserInput : public APlayerController
    UPROPERTY(VisibleAnywhere, BlueprintGetter = "GetMyGameInstance", Category = "References")
    UMyGameInstance* gameInstance;
 
-   /**HUDManager ref.  Set this in userinput because it depends on userinput being created first.  Also client-side HUD manipulation doesn't do very much,
-    *since we don't store any important data in the huds */
+   /** HUDManager ref.  Set this in UserInput because it depends on UserInput being created first. */
    UPROPERTY()
    AHUDManager* hudManagerRef;
 

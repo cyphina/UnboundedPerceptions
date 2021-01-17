@@ -14,9 +14,6 @@ class AUnit;
 class AUserInput;
 class UEnvQuery;
 class UMySpell;
-class URTSAttackExecution;
-class URTSDeathExecution;
-class URTSMoveExecution;
 struct FUpDamage;
 
 using FAIMessageObserverHandle = TSharedPtr<struct FAIMessageObserver, ESPMode::Fast>;
@@ -100,24 +97,6 @@ class MYPROJECT_API AUnitController : public AAIController
    /**Make sure to call UseBlackboard/InitializeBlackboard in the children classes depending
     * on how they use their blackboards as well as starting the tree*/
    void OnPossess(APawn* InPawn) override;
-
-   /**
-    * Holds logic for basic auto attacks. By default this requires a targeted attack component but some units have custom attacks which may not require them to undergo
-    * the targeting procedure.
-    */
-   UPROPERTY(EditDefaultsOnly)
-   TSubclassOf<URTSAttackExecution> customAttackLogic;
-
-   /** Holds logic for death */
-   UPROPERTY(EditDefaultsOnly)
-   TSubclassOf<URTSDeathExecution> customDeathLogic;
-
-   /** Holds custom move logic so that we add some logic for the AI to move in certain ways instead of just walking everywhere.
-    * For instance, if we want our character to teleport towards its target -
-    * we can cast a teleport spell if its off CD and if the target is far or something. 
-    */
-   UPROPERTY(EditDefaultsOnly)
-   TSubclassOf<URTSMoveExecution> customMoveLogic;
 
    /** Either Idle, Follow, Patrol, Search, or Roam*/
    UPROPERTY(EditDefaultsOnly)

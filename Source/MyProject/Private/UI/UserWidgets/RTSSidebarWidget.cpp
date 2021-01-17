@@ -29,12 +29,16 @@ void URTSSidebarWidget::NativeConstruct()
 
 void URTSSidebarWidget::UpdatePartyInformation()
 {
-   if(browser && !browser->IsBrowserLoading()) {
+   if(browser && !browser->IsBrowserLoading())
+   {
       // Unsubscribe existing party members
       int index = 0;
-      for(auto& handles : subscribedAttributeSetDelegateHandles) {
-         if(handles.Key.IsValid() && handles.Value.IsValid()) {
-            UMyAttributeSet* attributeSet = const_cast<UMyAttributeSet*>(cpcRef->GetBasePlayer()->GetHeroes()[index]->GetAbilitySystemComponent()->GetSet<UMyAttributeSet>());
+      for(auto& handles : subscribedAttributeSetDelegateHandles)
+      {
+         if(handles.Key.IsValid() && handles.Value.IsValid())
+         {
+            UMyAttributeSet* attributeSet = const_cast<UMyAttributeSet*>(cpcRef->GetBasePlayer()->GetHeroes()[index]->GetAbilitySystemComponent()->GetSet<UMyAttributeSet
+            >());
             attributeSet->statUpdatedEvent.Remove(handles.Key);
             attributeSet->baseStatUpdatedEvent.Remove(handles.Value);
          } else
@@ -47,7 +51,8 @@ void URTSSidebarWidget::UpdatePartyInformation()
 
       writer->WriteArrayStart();
       // Create JSON for each hero object which is used to update the sidebar browser
-      for(auto hero : cpcRef->GetBasePlayer()->GetHeroes()) {
+      for(auto hero : cpcRef->GetBasePlayer()->GetHeroes())
+      {
          TSharedPtr<FJsonObject> heroObj = MakeShareable(new FJsonObject);
          heroObj->SetStringField("name", hero->GetGameName().ToString());
          heroObj->SetNumberField("hitpoints", hero->GetStatComponent()->GetVitalCurValue(EVitals::Health));
@@ -78,7 +83,8 @@ void URTSSidebarWidget::UpdateDeselectAllHeroes()
 void URTSSidebarWidget::UpdateHeroToggleDeselected(AAlly* deselectedHeroRef)
 {
    // Could use virtual functions but right now we only need this one small check and it could be faster to use branching
-   if(deselectedHeroRef->GetClass()->IsChildOf(ABaseHero::StaticClass())) {
+   if(deselectedHeroRef->GetClass()->IsChildOf(ABaseHero::StaticClass()))
+   {
       // RVO should optimize this
       FString heroInfoString = MakeSingleHeroSelectedJson(deselectedHeroRef);
       UpdateInformation("updateHeroToggleDeselect", heroInfoString);
@@ -88,7 +94,8 @@ void URTSSidebarWidget::UpdateHeroToggleDeselected(AAlly* deselectedHeroRef)
 void URTSSidebarWidget::UpdateSingleHeroSelect(bool bToggled)
 {
    // Could use virtual functions but right now we only need this one small check and it could be faster to use branching
-   if(AAlly* heroAlly = cpcRef->GetBasePlayer()->selectedAllies.Last(); heroAlly->GetClass()->IsChildOf(ABaseHero::StaticClass())) {
+   if(AAlly* heroAlly = cpcRef->GetBasePlayer()->selectedAllies.Last(); heroAlly->GetClass()->IsChildOf(ABaseHero::StaticClass()))
+   {
       // RVO should optimize this
       FString heroInfoString = MakeSingleHeroSelectedJson(heroAlly);
 
@@ -111,9 +118,11 @@ void URTSSidebarWidget::UpdateHeroMana(const FGameplayAttribute& attributeModifi
 
 void URTSSidebarWidget::UpdateHeroVitals(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected)
 {
-   if(attributeModified.GetName() == "Health") {
+   if(attributeModified.GetName() == "Health")
+   {
       UpdateHeroHealth(attributeModified, newAttributeValue, unitAffected);
-   } else if(attributeModified.GetName() == "Mana") {
+   } else if(attributeModified.GetName() == "Mana")
+   {
       UpdateHeroMana(attributeModified, newAttributeValue, unitAffected);
    }
 }
@@ -132,9 +141,11 @@ void URTSSidebarWidget::UpdateHeroMaxMana(const FGameplayAttribute& attributeMod
 
 void URTSSidebarWidget::UpdateHeroMaxVitals(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected)
 {
-   if(attributeModified.GetName() == "Health") {
+   if(attributeModified.GetName() == "Health")
+   {
       UpdateHeroMaxHealth(attributeModified, newAttributeValue, unitAffected);
-   } else if(attributeModified.GetName() == "Mana") {
+   } else if(attributeModified.GetName() == "Mana")
+   {
       UpdateHeroMaxMana(attributeModified, newAttributeValue, unitAffected);
    }
 }
@@ -142,7 +153,7 @@ void URTSSidebarWidget::UpdateHeroMaxVitals(const FGameplayAttribute& attributeM
 FString URTSSidebarWidget::MakeHeroVitalJson(const AUnit* heroRef, const FString& vitalKey, double vitalValue) const
 {
    FString                 heroInfoString = "";
-   auto                    writer         = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&heroInfoString);
+   const auto              writer         = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&heroInfoString);
    TSharedPtr<FJsonObject> heroObj        = MakeShareable(new FJsonObject);
    heroObj->SetStringField("name", heroRef->GetGameName().ToString());
    heroObj->SetNumberField(vitalKey, vitalValue);
@@ -153,7 +164,7 @@ FString URTSSidebarWidget::MakeHeroVitalJson(const AUnit* heroRef, const FString
 FString URTSSidebarWidget::MakeSingleHeroSelectedJson(const AUnit* heroRef) const
 {
    FString                 heroInfoString = "";
-   auto                    writer         = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&heroInfoString);
+   const auto              writer         = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&heroInfoString);
    TSharedPtr<FJsonObject> heroObj        = MakeShareable(new FJsonObject);
    heroObj->SetStringField("name", heroRef->GetGameName().ToString());
    FJsonSerializer::Serialize(heroObj.ToSharedRef(), writer);
@@ -165,10 +176,11 @@ FString URTSSidebarWidget::MakeSingleHeroSelectedJson(const AUnit* heroRef) cons
 FReply URTSSidebarWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
    Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
-   auto cursorStateRef                 = cpcRef->GetCameraPawn()->GetCursorState();
-   bool letPlayerClickOnBrowserCursors = cursorStateRef == ECursorStateEnum::Moving || cursorStateRef == ECursorStateEnum::Select;
-   if(InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton) && letPlayerClickOnBrowserCursors) {
-      FVector2D screenSpaceTolocalWigetPosition{InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition())};
+   const ECursorStateEnum cursorStateRef                 = cpcRef->GetCameraPawn()->GetCursorState();
+   const bool             letPlayerClickOnBrowserCursors = cursorStateRef == ECursorStateEnum::Moving || cursorStateRef == ECursorStateEnum::Select;
+   if(InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton) && letPlayerClickOnBrowserCursors)
+   {
+      const FVector2D screenSpaceTolocalWigetPosition{InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition())};
       GetBrowser()->TriggerLeftMouseDown(screenSpaceTolocalWigetPosition);
       GetBrowser()->TriggerLeftMouseUp(screenSpaceTolocalWigetPosition);
       return FReply::Unhandled(); // Return unhandled so main game still handles click logic
@@ -179,8 +191,9 @@ FReply URTSSidebarWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, c
 FReply URTSSidebarWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
    Super::NativeOnMouseMove(InGeometry, InMouseEvent);
-   if(UNLIKELY(GetBrowser() && !GetBrowser()->IsBrowserLoading())) {
-      FVector2D screenSpaceTolocalWidgetPosition{InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition())};
+   if(UNLIKELY(GetBrowser() && !GetBrowser()->IsBrowserLoading()))
+   {
+      const FVector2D screenSpaceTolocalWidgetPosition{InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition())};
       GetBrowser()->TriggerMouseMove(screenSpaceTolocalWidgetPosition);
       return FReply::Unhandled();
    }
@@ -189,17 +202,23 @@ FReply URTSSidebarWidget::NativeOnMouseMove(const FGeometry& InGeometry, const F
 
 void URTSSidebarWidget::HandleBluEvent(const FString& eventName, const FString& eventMessage)
 {
-   if(LIKELY(eventName == "selectHero")) {
+   if(LIKELY(eventName == "selectHero"))
+   {
       // Notify pawn we clicked on the browser (since the the pawn deselects everything when we click on the ground typically and we don't want that)
       // When this flag is set it means we performed a successful browser interaction and the browser fires off a blu_event
       cpcRef->GetCameraPawn()->clickedOnBrowserHud = true;
-      UBluJsonObj* jsonObj                         = UBluBlueprintFunctionLibrary::ParseJSON(eventMessage);
-      int          heroIndex                       = jsonObj->getNumValue("value");
-      ABaseHero*   selectedHeroRef                 = cpcRef->GetBasePlayer()->GetHeroes()[heroIndex];
-      if(!cpcRef->IsInputKeyDown(EKeys::LeftShift)) {
+
+      UBluJsonObj* jsonObj         = UBluBlueprintFunctionLibrary::ParseJSON(eventMessage);
+      const int    heroIndex       = jsonObj->getNumValue("value");
+      ABaseHero*   selectedHeroRef = cpcRef->GetBasePlayer()->GetHeroes()[heroIndex];
+
+      if(!cpcRef->IsInputKeyDown(EKeys::LeftShift))
+      {
          cpcRef->GetBasePlayer()->ClearSelectedAllies();
+         cpcRef->GetBasePlayer()->SetFocusedUnit(selectedHeroRef);
          selectedHeroRef->SetSelected(true);
-      } else {
+      } else
+      {
          selectedHeroRef->SetSelected(!selectedHeroRef->GetSelected());
       }
    }

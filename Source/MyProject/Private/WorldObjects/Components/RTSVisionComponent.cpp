@@ -1,10 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "RTSVisionComponent.h"
 
 #include "RTSGameState.h"
-#include "type_traits"
 #include "Unit.h"
 
 // Sets default values for this component's properties
@@ -13,8 +10,7 @@ URTSVisionComponent::URTSVisionComponent()
    PrimaryComponentTick.bCanEverTick = true;
    UPrimitiveComponent::SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
    UPrimitiveComponent::SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-
-   SetSphereRadius(1000.f);
+   SphereRadius = 1000.f;
    bUseAttachParentBound = true;
    UPrimitiveComponent::SetCollisionObjectType(TRIGGER_CHANNEL);
 }
@@ -34,7 +30,6 @@ void URTSVisionComponent::BeginPlay()
    OnComponentBeginOverlap.AddDynamic(this, &URTSVisionComponent::OnVisionSphereOverlap);
    OnComponentEndOverlap.AddDynamic(this, &URTSVisionComponent::OnVisionSphereEndOverlap);
    SetCollisionProfileName("FriendlyVision");
-   SetSphereRadius(visionRadius);
 }
 
 void URTSVisionComponent::OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex,

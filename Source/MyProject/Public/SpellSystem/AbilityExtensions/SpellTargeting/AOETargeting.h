@@ -1,13 +1,14 @@
 ﻿#pragma once
 #include "SpellTargetingTypes.h"
+#include "AOETargeting.generated.h"
 
-struct FUpSpellTargeting_Area : public FUpSpellTargeting {
-   explicit FUpSpellTargeting_Area(const FGameplayTag& targetTag) :
-      FUpSpellTargeting(targetTag)
-   {
-   }
+UCLASS()
+class UUpSpellTargeting_Area : public UUpSpellTargeting
+{
+   GENERATED_BODY()
+public:
 
-   bool ManualTargetingCheck(const FHitResult& hitResult) const override;
+   bool ManualTargetingCheck(const AUnit* caster, const FHitResult& hitResult) const override;
 
    void ClickResponse(const FHitResult& hitResult, TSubclassOf<UMySpell> spellClass, IManualTargetingController& sourceUnitController) const override;
 
@@ -17,9 +18,9 @@ struct FUpSpellTargeting_Area : public FUpSpellTargeting {
 
    bool ShouldTryAdjustPosition(AUnit* spellCaster) const override;
 
-   virtual UEnvQuery* GetDefaultQueryForTargetingScheme(UDA_DefaultTargetingScheme* targetingSchemes) const override;
+   UEnvQuery* GetDefaultQueryForTargetingScheme(UDA_DefaultTargetingScheme* targetingSchemes) const override;
 
-   void HandleQueryResult(TSharedPtr<FEnvQueryResult> result, AUnit* casterRef, USpellCastComponent* spellCastComponent,
-                          TSubclassOf<UMySpell> spellToCast) const override;
+   void HandleQueryResult
+   (TSharedPtr<FEnvQueryResult> result, AUnit* casterRef, USpellCastComponent* spellCastComponent,
+    TSubclassOf<UMySpell>       spellToCast) const override;
 };
-

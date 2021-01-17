@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 
 #include "RTSPawn.h"
@@ -22,9 +20,11 @@
 #include "AbilitySystemComponent.h"
 #include "ActionbarInterface.h"
 #include "ManualSpellComponent.h"
-#include "PartyDelegateStore.h"
+#include "PartyDelegateContext.h"
 #include "SceneViewport.h"
+#include "SpellFunctionLibrary.h"
 #include "TargetedAttackComponent.h"
+#include "Actionbar/ActionbarInterface.h"
 
 #include "Algo/Transform.h"
 #include "GameBaseHelpers/DefaultCursorClickFunctionality.h"
@@ -34,7 +34,6 @@ float const ARTSPawn::maxArmLength     = 4000.f;
 float const ARTSPawn::minArmLength     = 250.f;
 float const ARTSPawn::defaultArmLength = 2500.f;
 
-// Sets default values
 ARTSPawn::ARTSPawn()
 {
    // Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -77,14 +76,20 @@ bool ARTSPawn::IsAnyAllySelected() const
    return controllerRef->GetBasePlayer()->selectedAllies.Num() > 0;
 }
 
-// Called when the game starts or when spawned
 void ARTSPawn::BeginPlay()
 {
    controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+   OnSkillSlotDroppedEvent.AddDynamic(this, &ARTSPawn::OnSkillSlotDropped);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnUnitSlotSelected().AddUObject(this, &ARTSPawn::OnUnitSlotSelected);
    FViewport::ViewportResizedEvent.AddUObject(this, &ARTSPawn::RecalculateViewportSize);
    controllerRef->GetViewportSize(viewX, viewY);
    clickFunctionalityClass = MakeUnique<UDefaultCursorClickFunctionality>(this, controllerRef);
    Super::BeginPlay();
+}
+
+void ARTSPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+   OnSkillSlotDroppedEvent.RemoveAll(this);
 }
 
 void ARTSPawn::Tick(float DeltaTime)
@@ -100,8 +105,6 @@ void ARTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
    InputComponent->BindAction("Stop", IE_Pressed, this, &ARTSPawn::StopSelectedAllyCommands);
    InputComponent->BindAction("LockCamera", IE_Pressed, this, &ARTSPawn::LockCamera);
-   InputComponent->BindAction("PrevFlightPath", IE_Pressed, this, &ARTSPawn::PrevFlight);
-   InputComponent->BindAction("NextFlightPath", IE_Pressed, this, &ARTSPawn::NextFlight);
    InputComponent->BindAction("RightClick", IE_Pressed, this, &ARTSPawn::RightClick);
    InputComponent->BindAction("RightClickShift", IE_Pressed, this, &ARTSPawn::RightClickShift);
    InputComponent->BindAction("LeftClick", IE_Pressed, this, &ARTSPawn::LeftClick);
@@ -450,28 +453,13 @@ void ARTSPawn::StopSelectedAllyCommands()
       controllerRef->GetBasePlayer()->selectedAllies[i]->ClearCommandQueue();
    }
 
-   // Cancel whatever secondary cursors we have since we're stopping our action and set hitActor to null to make cursor hover proc
    hasSecondaryCursor = false;
-   hitActor           = nullptr;
+   hitActor           = nullptr; // Set hitActor to null to make cursor hover proc
 
    for(auto ally : controllerRef->GetBasePlayer()->selectedAllies)
       ally->GetAllyAIController()->StopAutomation();
 
    HideSpellCircle();
-}
-
-void ARTSPawn::PrevFlight()
-{
-   for(int i = 0; i < controllerRef->GetBasePlayer()->selectedAllies.Num(); i++) {
-      Cast<UFlyComponent>(controllerRef->GetBasePlayer()->GetHeroes()[i]->GetComponentByClass(UFlyComponent::StaticClass()))->PreviousFlightPathSelected();
-   }
-}
-
-void ARTSPawn::NextFlight()
-{
-   for(int i = 0; i < controllerRef->GetBasePlayer()->selectedAllies.Num(); i++) {
-      Cast<UFlyComponent>(controllerRef->GetBasePlayer()->GetHeroes()[i]->GetComponentByClass(UFlyComponent::StaticClass()))->NextFlightPathSelected();
-   }
 }
 
 void ARTSPawn::RightClick()
@@ -542,19 +530,18 @@ void ARTSPawn::TabSingleSelection() const
 
 void ARTSPawn::AttackMoveInitiate()
 {
-   // TODO: Abstract this so we don't need two copies for quickcast and in cursor functionality
+   SetSecondaryCursor(ECursorStateEnum::AttackMove);
    if(!bQuickCast)
-      SetSecondaryCursor(ECursorStateEnum::AttackMove);
-   else {
-      FHitResult hitRes;
-      if(controllerRef->GetHitResultUnderCursor(SELECTABLE_BY_CLICK_CHANNEL, false, hitRes)) AttackMoveConfirm(hitRes.Location);
+   {
+      LeftClick();
    }
 }
 
 void ARTSPawn::UseAbility(int abilityIndex)
 {
-   controllerRef->GetWidgetProvider()->GetIngameHUD()->GetActionHUD()->UseSkill(abilityIndex);
-   //Quick cast enabled
+   OnSkillSlotPressedEvent.Broadcast(abilityIndex);
+   
+   // TODO: Quickcast for Vector Targeting
    if(bQuickCast) {
       FHitResult hitRes;
       if(controllerRef->GetHitResultUnderCursor(SELECTABLE_BY_CLICK_CHANNEL, false, hitRes))
@@ -564,19 +551,13 @@ void ARTSPawn::UseAbility(int abilityIndex)
    }
 }
 
-void ARTSPawn::AttackMoveConfirm(FVector moveLocation)
+void ARTSPawn::OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex)
 {
-   if(controllerRef->IsInputKeyDown(EKeys::LeftShift)) {
-      for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
-         ally->QueueAction(TFunction<void()>([ally, moveLocation]() { ally->GetAllyAIController()->GetTargetedAttackComponent()->BeginAttackMove(moveLocation); }));
-      }
-   } else {
-      for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies) {
-         ally->GetAllyAIController()->GetTargetedAttackComponent()->BeginAttackMove(moveLocation);
-      }
+   if(AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit())
+   {
+      auto& focusedUnitAbilities = controllerRef->GetBasePlayer()->GetFocusedUnit()->GetAbilitySystemComponent()->GetAbilities();
+      USpellFunctionLibrary::SpellSwap(focusedUnitAbilities[dragSlotIndex], focusedUnitAbilities[dragSlotIndex], focusedUnit);
    }
-   CreateClickVisual(moveLocation);
-   SetSecondaryCursor();
 }
 
 void ARTSPawn::SelectControlGroup(int controlIndex)
@@ -638,4 +619,15 @@ void ARTSPawn::MakeControlGroup(int controlGroupIndex)
    auto& cgroup = controlGroups[controlGroupIndex];
 
    Algo::Transform(allies, cgroup, [](AAlly* ally) { return MakeWeakObjectPtr(ally); });
+}
+
+void ARTSPawn::OnUnitSlotSelected(AUnit* unitSelected)
+{
+   if(IsValid(unitSelected))
+   {
+      controllerRef->GetBasePlayer()->ClearSelectedAllies();
+      unitSelected->SetSelected(true);
+      controllerRef->GetBasePlayer()->SetFocusedUnit(unitSelected);
+      OnAllySelectedDelegate.Broadcast(true);
+   }
 }

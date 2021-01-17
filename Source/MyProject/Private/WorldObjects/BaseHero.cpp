@@ -23,7 +23,7 @@
 #include "AbilitySystemComponent.h"
 #include "CombatParameters.h"
 #include "HeroInventory.h"
-#include "PartyDelegateStore.h"
+#include "PartyDelegateContext.h"
 #include "RTSIngameWidget.h"
 #include "RTSSidebarWidget.h"
 #include "TargetComponent.h"
@@ -33,6 +33,7 @@
 #include "SpellSystem/Spellbook.h"
 #include "WorldObjects/NPC.h"
 #include "Items/ItemDelegateStore.h"
+#include "SpellSystem/SpellDelegateStore.h"
 
 ABaseHero::ABaseHero(const FObjectInitializer& oI) : AAlly(oI)
 {
@@ -58,8 +59,8 @@ void ABaseHero::BeginPlay()
    GiveItemAbilities();
 
    spellbook = USpellBook::CreateSpellBook(this);
-   spellbook->OnSpellLearned().AddUObject(this, &ABaseHero::OnSpellLearned);
-   spellbook->OnSpellUpgraded().AddUObject(this, &ABaseHero::OnSpellUpgraded);
+   SpellHUDEvents::OnSpellLearnedEvent.AddUObject(this, &ABaseHero::OnSpellLearned);
+   SpellHUDEvents::OnSpellUpgradedEvent.AddUObject(this, &ABaseHero::OnSpellUpgraded);
 
    OnPickupItem().BindUObject(this, &ABaseHero::OnItemPickup);
 }
@@ -89,7 +90,7 @@ void ABaseHero::UnPossessed()
 void ABaseHero::SetEnabled(bool bEnabled)
 {
    Super::SetEnabled(bEnabled);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateStore>()->OnHeroActiveChanged().Broadcast(this, bEnabled);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroActiveChanged().Broadcast(this, bEnabled);
    if(bEnabled) {
       controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->OnItemSelected().AddUObject(this, &ABaseHero::OnItemSelected);
    } else {
@@ -130,7 +131,7 @@ void ABaseHero::SetCurrentExp(int amount)
    currentExp += amount;
    while(currentExp >= expForLevel) {
       currentExp = currentExp - expForLevel;
-      expForLevel *= NEXT_EXP_MULTIPLIER; //
+      expForLevel *= NEXT_EXP_MULTIPLIER;
       LevelUp();
    }
 }
@@ -145,7 +146,7 @@ void ABaseHero::LevelUp_Implementation()
    attPoints += 5;
    skillPoints += 1;
    statComponent->SetUnitLevel(statComponent->GetUnitLevel() + 1);
-   OnLevelUpEvent.Broadcast();
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroLevelUp().Broadcast(this);
 }
 
 void ABaseHero::SetCurrentInteractable(AActor* newInteractable)
@@ -191,12 +192,6 @@ void ABaseHero::Unequip(const int unequipSlot) const
       } else
          URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Equipment", "NotEnoughSpaceUnequip", "Not enough space to unequip!"));
    }
-}
-
-void ABaseHero::SwapEquip(int equipSlot1, int equipSlot2)
-{
-   equipment->SwapEquips(equipSlot1, equipSlot2);
-   ItemChangeEvents::OnEquipmentChangedEvent.Broadcast(this, FMyItem(-1, 0));
 }
 
 void ABaseHero::OnSpellCasted(TSubclassOf<UMySpell> spellCasted)

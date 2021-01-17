@@ -1,7 +1,6 @@
 #pragma once
 #include "GameplayTags.h"
-
-/** This header is so we can just include information about these structs without having to include other parts of a class had we put the structs in those headers*/
+#include "DamageStructs.generated.h"
 
 class AUnit;
 
@@ -35,21 +34,23 @@ struct FUpDamage {
 };
 
 /** Most skills derive damage from a combination of these stats. */
-USTRUCT(BlueprintType, NoExport)
+USTRUCT(BlueprintType)
 struct FDamageScalarStruct {
+   GENERATED_BODY()
+   
    FDamageScalarStruct(int hits = 0, int str = 0, int intel = 0, int agi = 0, int und = 0) :
        hitpoints(hits), strength(str), intelligence(intel), agility(agi), understanding(und)
    {
    }
 
-   UPROPERTY(BlueprintReadWrite)
+   UPROPERTY(BlueprintReadWrite, EditAnywhere)
    int hitpoints = 0;
-   UPROPERTY(BlueprintReadWrite)
+   UPROPERTY(BlueprintReadWrite, EditAnywhere)
    int strength = 0;
-   UPROPERTY(BlueprintReadWrite)
+   UPROPERTY(BlueprintReadWrite, EditAnywhere)
    int intelligence = 0;
-   UPROPERTY(BlueprintReadWrite)
+   UPROPERTY(BlueprintReadWrite, EditAnywhere)
    int agility = 0;
-   UPROPERTY(BlueprintReadWrite)
+   UPROPERTY(BlueprintReadWrite, EditAnywhere)
    int understanding = 0;
 };

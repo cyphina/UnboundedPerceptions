@@ -2,15 +2,19 @@
 
 #include "MyProject.h"
 #include "QuestJournal.h"
+
+#include "PartyDelegateContext.h"
 #include "QuestJournalEntry.h"
 #include "RTSGameMode.h"
+#include "UserInput.h"
 #include "../QuestManager.h"
 
 void UQuestJournal::NativeConstruct()
-{  
+{
    Super::NativeConstruct();
    gameModeRef = CPC->GetGameMode();
-   if (gameModeRef->GetQuestManager()) { gameModeRef->GetQuestManager()->questJournalRef = this; }
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroLevelUp().AddUObject(this, &UQuestJournal::OnHeroLevelUp);
+   if(gameModeRef->GetQuestManager()) { gameModeRef->GetQuestManager()->questJournalRef = this; }
 }
 
 bool UQuestJournal::OnWidgetAddToViewport_Implementation()
@@ -20,9 +24,11 @@ bool UQuestJournal::OnWidgetAddToViewport_Implementation()
 
 void UQuestJournal::OnQuestEntryClicked(AQuest* quest, UQuestJournalEntry* questButton)
 {
-   if (currentQuestWidget) currentQuestWidget->ToggleButtonEnabled(true);
+   if(currentQuestWidget)
+      currentQuestWidget->ToggleButtonEnabled(true);
 
-   if (IsValid(quest) && IsValid(questButton)) {
+   if(IsValid(quest) && IsValid(questButton))
+   {
       selectedQuest      = quest;
       currentQuestWidget = questButton;
       questButton->ToggleButtonEnabled(false);
@@ -38,7 +44,24 @@ void UQuestJournal::OnQuestEntryClicked(AQuest* quest, UQuestJournalEntry* quest
 UQuestJournalEntry* UQuestJournal::GetQuestJournalEntry(AQuest* quest)
 {
    auto pred  = [&](UQuestJournalEntry* questEntry) { return questEntry->assignedQuest == quest; };
-   int  index = questJournalEntries.IndexOfByPredicate(pred);
-   if (index != INDEX_NONE) return questJournalEntries[questJournalEntries.IndexOfByPredicate(pred)];
+   const int  index = questJournalEntries.IndexOfByPredicate(pred);
+   if(index != INDEX_NONE)
+      return questJournalEntries[questJournalEntries.IndexOfByPredicate(pred)];
    return nullptr;
+}
+
+void UQuestJournal::OnHeroLevelUp(ABaseHero* levelingHero)
+{
+   if(levelingHero == CPC->GetBasePlayer()->GetPartyLeader())
+   {
+      for(auto& questJournalEntry : questJournalEntries)
+      {
+         questJournalEntry->LevelColorUpdate();
+      }
+      
+      if(GetVisibility() != ESlateVisibility::Collapsed)
+      {
+         UpdateSuggestedLevelColor();
+      }
+   }
 }

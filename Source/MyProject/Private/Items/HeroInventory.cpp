@@ -11,7 +11,7 @@
 #include "WorldObjects/BaseHero.h"
 
 #include "ItemDelegateStore.h"
-#include "PartyDelegateStore.h"
+#include "PartyDelegateContext.h"
 
 #include "AIStuff/AIControllers/HeroAIController.h"
 
@@ -25,7 +25,7 @@ void UHeroInventory::NativeOnInitialized()
    ItemChangeEvents::OnItemPickedUpEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
    ItemChangeEvents::OnItemPurchasedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
    ItemChangeEvents::OnItemUsedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
-   GetOwningLocalPlayer()->GetSubsystem<UPartyDelegateStore>()->OnHeroActiveChanged().AddUObject(this, &UHeroInventory::OnHeroActiveChanged);
+   GetOwningLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnHeroActiveChanged().AddUObject(this, &UHeroInventory::OnHeroActiveChanged);
 }
 
 void UHeroInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)

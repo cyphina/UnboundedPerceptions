@@ -50,7 +50,11 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
    const FGameplayAbilitySpec* FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass) const;
 
  protected:
-   /** List of abilities that are in unit's skill slots */
+   /**
+    * List of abilities that are in unit's skill slots.
+    * Heroes can potentially swap out skills from their spell book to a skill slot.
+    * For enemies, this is all the skills they have.
+    */
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
    TArray<TSubclassOf<class UMySpell>> abilities;
 

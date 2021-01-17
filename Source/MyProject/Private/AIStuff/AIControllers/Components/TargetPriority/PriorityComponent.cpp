@@ -24,7 +24,7 @@
 void UUpPriorityComponent::FindBestTargetForSpell(TSubclassOf<UMySpell> spell)
 {
    FEnvQueryRequest queryRequest;
-   priorityCalculation = MakePriorityCalculation(GetManualTag(spell));
+   //priorityCalculation = MakePriorityCalculation(GetManualTag(spell));
    queryRequest.SetFloatParam("SimpleGrid.GridSize", 700);
    queryRequest.Execute(EEnvQueryRunMode::RandomBest25Pct, this, &UUpPriorityComponent::OnTargetFound);
 }
@@ -36,6 +36,7 @@ void UUpPriorityComponent::BeginPlay()
 
 UPriorityCalculation* UUpPriorityComponent::MakePriorityCalculation(FGameplayTag targetingTag) const
 {
+   // TODO: Figure out if we want to keep the priority component. If we do, we have to make this use the Targeting strategy objects
    if(targetingTag.MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Single"))) {
       return NewObject<UPriorityCalculation>();
    } else if(targetingTag.MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))) {
@@ -63,14 +64,9 @@ UTargetComponent* UUpPriorityComponent::GetTargetComp() const
    return unitControllerRef->GetUnitOwner()->FindComponentByClass<UTargetComponent>();
 }
 
-FGameplayTag UUpPriorityComponent::GetManualTag(TSubclassOf<UMySpell> spell) const
-{
-   return spell.GetDefaultObject()->GetTargeting()->GetTargetTag();
-}
-
 FGameplayTagContainer UUpPriorityComponent::GetDescriptorTags(TSubclassOf<UMySpell> spell) const
 {
-   return spell.GetDefaultObject()->AbilityTags.Filter(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Category")));
+   return spell.GetDefaultObject()->GetSpellDefaults().descriptionTags.Filter(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Category")));
 }
 
 UBehaviorTreeComponent* UUpPriorityComponent::GetBehaviorTreeComp() const

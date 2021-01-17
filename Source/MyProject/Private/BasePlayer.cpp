@@ -1,12 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "BasePlayer.h"
 #include "EngineUtils.h"
 #include "WorldObjects/BaseHero.h"
 #include "Quests/QuestManager.h"
 #include "GameplayTagContainer.h"
-#include "PartyDelegateStore.h"
+#include "PartyDelegateContext.h"
 
 ABasePlayer::ABasePlayer()
 {
@@ -16,16 +14,16 @@ ABasePlayer::ABasePlayer()
 void ABasePlayer::BeginPlay()
 {
    Super::BeginPlay();
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateStore>()->OnAllyActiveChanged().AddUObject(this, &ABasePlayer::OnAllyActiveChanged);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateStore>()->OnSummonActiveChanged().AddUObject(this, &ABasePlayer::OnSummonActiveChanged);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateStore>()->OnHeroActiveChanged().AddUObject(this, &ABasePlayer::OnHeroActiveChanged);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnAllyActiveChanged().AddUObject(this, &ABasePlayer::OnAllyActiveChanged);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnSummonActiveChanged().AddUObject(this, &ABasePlayer::OnSummonActiveChanged);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroActiveChanged().AddUObject(this, &ABasePlayer::OnHeroActiveChanged);
 }
 
 void ABasePlayer::SetFocusedUnit(AUnit* newFocusedUnit)
 {
    focusedUnit = newFocusedUnit;
    if(ULocalPlayer* localPlayer = GetWorld()->GetFirstLocalPlayerFromController()) {
-      localPlayer->GetSubsystem<UPartyDelegateStore>()->OnFocusedUnitChanged().Broadcast(newFocusedUnit);
+      localPlayer->GetSubsystem<UPartyDelegateContext>()->OnFocusedUnitChanged().Broadcast(newFocusedUnit);
    }
 }
 

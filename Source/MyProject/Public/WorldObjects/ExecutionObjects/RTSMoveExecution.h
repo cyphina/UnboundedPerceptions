@@ -6,10 +6,8 @@
 #include "RTSMoveExecution.generated.h"
 
 UCLASS(BlueprintType, Blueprintable, Abstract)
-class URTSMoveExecution : public UObject, public IRTSExecution
+class URTSMoveExecution : public URTSExecution
 {
    GENERATED_BODY()
 
- public:
-   void Execute_Implementation() override;
 };

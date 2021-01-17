@@ -19,10 +19,17 @@ class MYPROJECT_API UMainWidget : public UMyUserWidget
 {
    GENERATED_BODY()
 
-   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
+public:
+   URTSIngameWidget* GetIngameWidget() const { return ingameWidget; }
+
+   UBreakMenu* GetBreakMenu() const { return breakMenu; }
+
+   USettingsMenu* GetSettingsMenu() const { return settingsMenu; };
+
+protected:
+   UPROPERTY(BlueprintReadOnly)
    class AHUDManager* hudManagerRef;
 
- protected:
    UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
    URTSIngameWidget* ingameWidget;
 
@@ -31,6 +38,5 @@ class MYPROJECT_API UMainWidget : public UMyUserWidget
 
    UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
    UBreakMenu* breakMenu;
-
 #pragma endregion
 };

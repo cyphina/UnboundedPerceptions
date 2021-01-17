@@ -4,10 +4,7 @@
 #include "RTSDeathExecution.generated.h"
 
 UCLASS(BlueprintType, Blueprintable, Abstract)
-class URTSDeathExecution : public UObject, public IRTSExecution
+class URTSDeathExecution : public URTSExecution
 {
    GENERATED_BODY()
-
- public:
-   void Execute_Implementation() override;
 };

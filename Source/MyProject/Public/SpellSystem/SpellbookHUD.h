@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "MySpell.h"
 #include "UI/UserWidgetExtensions/MyDraggableWidget.h"
 #include "SpellbookHUD.generated.h"
 
@@ -12,6 +14,8 @@ class UBorder;
 class UTextBlock;
 class USpellbookSlot;
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSpellSlotSelected, int);
+
 /**
  * HUD for leveling up and setting spells
  */
@@ -20,31 +24,27 @@ class MYPROJECT_API USpellbookHUD : public UMyDraggableWidget
 {
    GENERATED_BODY()
 
+public:
+   ABaseHero* GetHeroRef() const { return heroWithOpenSpellbookRef; }
+
+   FOnSpellSlotSelected OnSpellSlotSelected() { return OnSpellSlotSelectedEvent; }
+
    UPROPERTY()
    class AHUDManager* hudManagerRef;
 
    UPROPERTY(BlueprintReadOnly, Meta=(AllowPrivateAccess=true))
-   ABaseHero* heroRef;
-
-   void NativeConstruct() override;
-
-   bool OnWidgetAddToViewport_Implementation() override;
-
-   UFUNCTION()
-   void CloseWidget();
+   ABaseHero* heroWithOpenSpellbookRef;
+   
+   bool bLevelingUp = false;
 
    /** When we click on the button to level up our skills, the background changes to let the user know that clicking on their skills will add a point to it*/
    UFUNCTION()
    void ChangeBackgroundColorWhenLeveling();
 
- public:
-   ABaseHero* GetHeroRef() const { return heroRef; }
-   bool       bLevelingUp = false;
-
-   /** Updates colors of all the skill slots. Used after we learn a new spell since we may unlock others in the chain*/
-   void Update();
-
- protected:
+protected:
+   void NativeConstruct() override;
+   bool OnWidgetAddToViewport_Implementation() override;
+   
    UPROPERTY(BlueprintReadWrite, Category = "SpellbookData")
    TArray<USpellbookSlot*> spellbookSlots;
 
@@ -59,4 +59,24 @@ class MYPROJECT_API USpellbookHUD : public UMyDraggableWidget
 
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Action", Meta = (BindWidget))
    UTextBlock* txtPoints;
+
+private:
+   UFUNCTION()
+   void CloseWidget();
+
+   /** Updates colors of all the skill slots. Used when reopening this HUD or after we learn a new spell since we may unlock others in the chain*/
+   void ResetHUDForNewHero(); 
+   void UpdateSpellSlotImageAndLevelText();
+   void ColorLearnedSpellIndices();
+   void ColorLearnableSpellSlots();
+   void ColorUnknownSpellSlots();
+
+   void OnSpellLearned(TSubclassOf<UMySpell> spellClass);
+   void OnSpellUpgraded(TSubclassOf<UMySpell> spellClass);
+
+   const FLinearColor canLearnSpellColor    = FLinearColor(0.62, 0.61, 0, 1.0);
+   const FLinearColor tooHighLevelSpellColor = FLinearColor(0.6, 0, 0.02, 1.0);
+
+   
+   FOnSpellSlotSelected OnSpellSlotSelectedEvent;
 };

@@ -3,6 +3,8 @@
 #include "MyProject.h"
 #include "RTSGameMode.h"
 #include "HUDManager.h"
+
+#include "ActionbarInterface.h"
 #include "UserInput.h"
 #include "RTSGameState.h"
 #include "RTSIngameWidget.h"
@@ -11,7 +13,7 @@
 #include "StorageContainer.h"
 #include "UserWidgets/MainWidget.h"
 
-#include "UserWidgets/ActionbarInterface.h"
+#include "Actionbar/ActionbarInterface.h"
 #include "Stats/CharacterMenu.h"
 #include "Items/EquipmentMenu.h"
 
@@ -80,12 +82,38 @@ void AHUDManager::BeginPlay()
 
    InjectDependentClasses();
 
+   SetupWidgetReferences();
+   
    ANPC::SetHUDManagerRef(this);
 }
 
-void AHUDManager::SetWidget(uint8 newState, UMyUserWidget* widgetRef)
+void AHUDManager::SetWidget(UMyUserWidget* widgetRef, EHUDs newState)
 {
-   widgetReferences[newState] = widgetRef;
+   widgetReferences[static_cast<uint8>(newState)] = widgetRef;
+}
+
+void AHUDManager::SetupWidgetReferences()
+{
+   SetWidget(mainWidget->GetIngameWidget(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetBreakMenu(), EHUDs::HS_Break);
+   SetWidget(mainWidget->GetSettingsMenu(), EHUDs::HS_Settings);
+   SetWidget(mainWidget->GetIngameWidget()->GetCharacterHUD(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetInventoryHUD(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetEquipHUD(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetQuestList(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetQuestJournal(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetMinimap(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetActionHUD(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetSocialWindow(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetDialogBox(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetSpellBookMenu(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetStorageHUD(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetShopHUD(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetExamineMenu(), EHUDs::HS_Ingame);
+   //SetWidget(mainWidget->GetIngameWidget()->Chat(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetShopHUD(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetShopHUD(), EHUDs::HS_Ingame);
+   SetWidget(mainWidget->GetIngameWidget()->GetShopHUD(), EHUDs::HS_Ingame);
 }
 
 void AHUDManager::AddHUD(uint8 newState)

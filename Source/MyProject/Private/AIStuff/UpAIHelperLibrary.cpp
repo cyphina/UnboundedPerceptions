@@ -55,7 +55,7 @@ void UUpAIHelperLibrary::AIBeginCastSpell(UEnvQuery* targetFindingQuery, TSubcla
    FEnvQueryRequest                                                     queryRequest{targetFindingQuery, spellCastComponent->GetOwner()};
    const auto                                                           castSpellAfterQuery = FQueryFinishedSignature::CreateLambda(
    [&spellToCast, spellCastComponent](const TSharedPtr<FEnvQueryResult> res) {
-      spellToCast.GetDefaultObject()->GetTargeting()->HandleQueryResult(res,
+      spellToCast.GetDefaultObject()->GetTargeting().GetDefaultObject()->HandleQueryResult(res,
                                                                         Cast<AUnit>(spellCastComponent->GetOwner()), spellCastComponent, spellToCast);
    });
    queryRequest.Execute(EEnvQueryRunMode::SingleResult, castSpellAfterQuery);

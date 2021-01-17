@@ -1,13 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UserWidget.h"
 #include "ActionSlot.h"
 #include "SkillSlot.generated.h"
 
 class URTSAbilitySystemComponent;
 class UMySpell;
-class UESkillContainer;
 
 UCLASS(meta = (DisableNativeTick))
 class MYPROJECT_API USkillSlot : public UActionSlot
@@ -17,15 +15,15 @@ class MYPROJECT_API USkillSlot : public UActionSlot
  public:
    USkillSlot(const FObjectInitializer& o);
 
-   /* Resumes cooldown effect for the new skill if a new skill is swapped into this skill slot that is on CD */
-   void ShowCooldown();
-
    /**
     * Used when changing the skill to a new one.
     * Can be triggered via a spell effect or via the player rearranging their actionbar
     */
    UFUNCTION(BlueprintCallable, Category = "Update skills")
    void UpdateSkillSlot(TSubclassOf<UMySpell> spell);
+   
+   /** Resumes cooldown effect for the new skill if a new skill is swapped into this skill slot that is on CD */
+   void ShowCooldown();
 
  protected:
    void NativeConstruct() override;
@@ -58,11 +56,11 @@ class MYPROJECT_API USkillSlot : public UActionSlot
    void UpdateCD();
 
    /**When the cd visuals need to be hided (time and image mostly)*/
-   UFUNCTION(BlueprintCallable)
+   UFUNCTION()
    void OnCDFinished();
 
    /**When the cd visuals need to be shown (time and image mostly)*/
-   UFUNCTION(BlueprintCallable)
+   UFUNCTION()
    void ShowCDVisuals() const;
 
    URTSAbilitySystemComponent* GetOwningAbilityComponent() const;

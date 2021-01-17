@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "ECursorStates.h"
@@ -7,20 +5,25 @@
 #include "GameBaseHelpers/CursorClickFunctionality.h"
 #include "RTSPawn.generated.h"
 
+class ARTSPawn;
 class ABaseHero;
 class AUnit;
 class AUserInput;
 class AAlly;
 class ICursorClickFunctionality;
+class USkillSlot;
 class UCameraComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllySelected, bool, ToggleSelect);       // ToggleAllySelect, SelectAllyUnit, SelectionRect
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllyDeselected, AAlly*, DeselectedAlly); // ToggleAllyDeselect,
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGroundSelected);                                  // SelectGround,
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);                                    // SelectEnemy
+DECLARE_EVENT_OneParam(ARTSPawn, FOnSkillSlotPressed, int);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillSlotDropped, int, dragSlotIndex, int, dropSlotIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGroundSelected); // SelectGround,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);   // SelectEnemy
 
 /**
- * @brief The RTS Pawn holds controls related to main gameplay. Contrast this to the UserInput which holds control logic for all gameplay types (it's consistent even if we
+ * @brief This is the object that represents the player controlling all the units so the camera is attached to this pawn.
+ * The RTS Pawn holds controls related to main gameplay. Contrast this to the UserInput which holds control logic for all gameplay types (it's consistent even if we
  * swap out pawn.
  */
 UCLASS()
@@ -28,7 +31,7 @@ class MYPROJECT_API ARTSPawn : public APawn
 {
    GENERATED_BODY()
 
- public:
+public:
    ARTSPawn();
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helper")
@@ -38,8 +41,13 @@ class MYPROJECT_API ARTSPawn : public APawn
 
    void DisableInput(APlayerController* PlayerController) override;
 
- protected:
+protected:
    void BeginPlay() override;
+   void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+   void Tick(float DeltaTime) override;
+   void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+   void PossessedBy(AController* newController) override;
+   void UnPossessed() override;
 
    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    class USceneComponent* scene;
@@ -53,17 +61,12 @@ class MYPROJECT_API ARTSPawn : public APawn
    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    class USpringArmComponent* mapArm;
 
-   void Tick(float DeltaTime) override;
-   void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-   void PossessedBy(AController* newController) override;
-   void UnPossessed() override;
-
- private:
+private:
    UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true"))
    AUserInput* controllerRef;
 
 #pragma region mouse
- public:
+public:
    /** Scales length of the line we check when we line trace during a click event to query what is under the cursor */
    static const int CLICK_TRACE_LENGTH_MULTIPLIER = 5;
 
@@ -77,7 +80,7 @@ class MYPROJECT_API ARTSPawn : public APawn
    UFUNCTION(BlueprintCallable, BlueprintPure)
    bool isSelectionRectActive() const;
 
-   // If there is a cursor on screen not created by hovering
+   /** If there is a cursor on screen not created by hovering */
    UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true), Category = "Control Settings")
    bool hasSecondaryCursor;
 
@@ -85,15 +88,15 @@ class MYPROJECT_API ARTSPawn : public APawn
    UPROPERTY(BlueprintReadWrite, Category = "Control Settings")
    TArray<ECursorStateEnum> cursorDirections;
 
-   /**Stores what object collision types we hit when tracing for left clicks*/
+   /** Stores what object collision types we hit when tracing for left clicks*/
    UPROPERTY(BlueprintReadOnly, Category = "Control Settings")
    TArray<TEnumAsByte<EObjectTypeQuery>> leftClickQueryObjects;
 
-   /**Stores what object collision types we hit when tracing for right clicks*/
+   /** Stores what object collision types we hit when tracing for right clicks*/
    UPROPERTY(BlueprintReadOnly, Category = "Control Settings")
    TArray<TEnumAsByte<EObjectTypeQuery>> rightClickQueryObjects;
 
-   /**Similar to change cursor but used for changing to secondary cursors.  If cursorType is not a secondary cursor, toggles off secondary cursors*/
+   /** Similar to change cursor but used for changing to secondary cursors.  If cursorType is not a secondary cursor, toggles off secondary cursors*/
    void SetSecondaryCursor(const ECursorStateEnum cursorType = ECursorStateEnum::Select);
 
    // Changes cursor to be a different picture.  Called when hovering over different objects.  Changes hardware cursor and cursorState
@@ -138,7 +141,7 @@ class MYPROJECT_API ARTSPawn : public APawn
    /** Should we enable quick casting (casting without having to click after pressing our spell key. Also makes attack move quick*/
    bool bQuickCast;
 
- private:
+private:
    /**Stores last actor hit by the cursor hover trace.  Used so we don't retrace if we hit the same actor, but sometimes canceling actions like clicking the ground should
     *reset this*/
    UPROPERTY()
@@ -169,7 +172,7 @@ class MYPROJECT_API ARTSPawn : public APawn
 
 #pragma region camera
 
- public:
+public:
    int cameraBoundsX;
    int cameraBoundsY;
 
@@ -207,7 +210,7 @@ class MYPROJECT_API ARTSPawn : public APawn
    UFUNCTION(BlueprintCallable, Category = "Camera Settings")
    void SetCameraArmLength(float newLength) const;
 
- private:
+private:
    int viewX, viewY;
 
    void RecalculateViewportSize(FViewport* viewport, uint32 newSize);
@@ -232,18 +235,20 @@ class MYPROJECT_API ARTSPawn : public APawn
 #pragma endregion
 
 #pragma region commands
- public:
-   /** Stop all selected unit actions, stops AI behavior, and hides the spell circle!*/
+public:
+   /** Stop all selected unit actions, stops AI behavior, and hides the spell circle! */
    UFUNCTION(BlueprintCallable, Category = "Action")
    void StopSelectedAllyCommands();
 
-   UFUNCTION(BlueprintCallable)
-   void AttackMoveConfirm(FVector moveLocation);
+   FOnSkillSlotPressed OnSkillSlotPressed() { return OnSkillSlotPressedEvent; }
 
- private:
-   /** Spline Flight Path Controls */
-   void PrevFlight();
-   void NextFlight();
+protected:
+   UPROPERTY(BlueprintAssignable, BlueprintCallable)
+   FOnSkillSlotDropped OnSkillSlotDroppedEvent;
+
+private:
+   UFUNCTION()
+   void OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex);
 
    void RightClick();
    void RightClickShift();
@@ -256,7 +261,6 @@ class MYPROJECT_API ARTSPawn : public APawn
    void TabSingleSelection() const;
 
    void UseAbility(int abilityIndex);
-
    /** Delegate to pass to BindAction so we can have a parameter for useability*/
    DECLARE_DELEGATE_OneParam(FAbilityUseDelegate, int);
 
@@ -275,9 +279,9 @@ class MYPROJECT_API ARTSPawn : public APawn
    /** The index of the control group key being held down*/
    uint8 controlBeingHeldIndex = 0;
 
-   FTimerHandle ControlGroupDoupleTapHandle;
    /** Pans the camera to the first unit in the control group if we double tap the control select button*/
-
+   FTimerHandle ControlGroupDoupleTapHandle;
+   
    UFUNCTION()
    void ControlGroupDoubleTapTimer();
 
@@ -287,15 +291,18 @@ class MYPROJECT_API ARTSPawn : public APawn
    UFUNCTION()
    void StopContolGroupFollow(int releaseIndex);
 
-   /** Create a control group*/
+   /** Create a control group */
    void MakeControlGroup(int controlGroupIndex);
    DECLARE_DELEGATE_OneParam(FMakeControlGroupDelegate, int);
+
+   FOnSkillSlotPressed OnSkillSlotPressedEvent;
+
+   void OnUnitSlotSelected(AUnit* unitSelected);
 
 #pragma endregion
 
 #pragma region selection
- public:
-   /* If we need the ally that ws just selected, we can get it from baseplayer selectedAllies last */
+public:
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnAllySelected OnAllySelectedDelegate;
 
@@ -307,6 +314,5 @@ class MYPROJECT_API ARTSPawn : public APawn
 
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnGroundSelected OnGroundSelectedDelegate;
-
 #pragma endregion
 };
