@@ -18,7 +18,8 @@
  * via Instanced, so I had to adapt my plan so I can get the main benefit of being able to edit it in the property window.
  */
 
-/** Decorators add extra functionality to the interactables, like activating triggers, forcing conditionals for interaction, and adding additional information to them.
+/**
+ * Decorators add extra functionality to the interactables, like activating triggers, forcing conditionals for interaction, and adding additional information to them.
  * To use, choose a decorator in the interactable's decorator field.  In the decorator itself, there's a decoratedInteractable field that can be filled out to
  * chain decorators together.
  * Don't add more of the same type since it's not necessary since the decorators that could use more than one take in an array of data that can be parsed.
@@ -33,19 +34,22 @@ class MYPROJECT_API UInteractableActorDecoratorBase : public UObject
    UPROPERTY(EditAnywhere)
    UInteractableActorDecoratorBase* decoratedInteractable;
 
-   /**Initialize some values for the decorator that need to be initialized usually at BeginPlay.  Called by the InteractableBase to setup the decorator during
-    *InteractableBase::BeginPlay()
+   /**
+    * Initialize some values for the decorator that need to be initialized usually at BeginPlay.  Called by the InteractableBase to setup the decorator during
+    * InteractableBase::BeginPlay()
     */
    virtual void Init()
    {
       if (decoratedInteractable) {
-         decoratedInteractable->Rename(0, this);
+         decoratedInteractable->Rename(nullptr, this);
          decoratedInteractable->Init();
       }
    }
 
-   /**Performs extra work during Interact() call in the InteractableBase as well as has some usage as a boolean to make sure any conditionalDecorators are sucessfully
-    *activated (if there are any in the decorator chain)*/
+   /**
+    * Performs extra work during Interact() call in the InteractableBase as well as has some usage as a boolean to make sure any conditionalDecorators are successfully
+    * activated (if there are any in the decorator chain)
+    */
    virtual bool Interact() PURE_VIRTUAL(UInteractableActor::Interact, return true;);
 
    virtual FText GetName() const { return decoratedInteractable->GetName(); }

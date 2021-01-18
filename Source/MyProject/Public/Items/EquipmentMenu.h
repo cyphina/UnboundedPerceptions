@@ -1,7 +1,5 @@
 #pragma once
 
-#include "CoreMinimal.h"
-
 #include "EquipmentSlot.h"
 #include "UI/UserWidgetExtensions/MyDraggableWidget.h"
 #include "EquipmentMenu.generated.h"
@@ -12,6 +10,7 @@
 
 class UEquip;
 class UWeapon;
+class UTextBlock;
 class ABaseHero;
 struct FMyItem;
 
@@ -24,15 +23,10 @@ class MYPROJECT_API UEquipmentMenu : public UMyDraggableWidget
    UFUNCTION(BlueprintCallable)
    ABaseHero* GetEquippedHero() const { return heroRef; }
 
-   /** Call to redraw what is in equipment */
-   UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Equipment")
-   void Update();
-
-   void NativeOnInitialized() override;
-
-   void Update_Implementation();
-
  protected:
+   void NativeOnInitialized() override;
+   bool OnWidgetAddToViewport_Implementation() override;
+   
    UPROPERTY(BlueprintReadWrite, Category = "References")
    ABaseHero* heroRef;
 
@@ -56,6 +50,9 @@ class MYPROJECT_API UEquipmentMenu : public UMyDraggableWidget
 
    UPROPERTY(meta=(BindWidget))
    UEquipmentSlot* offHandSlot;
+
+   UPROPERTY(meta=(BindWidget))
+   UTextBlock* Text_MenuTitle;
    
  private:
    void SetupEquipImages();

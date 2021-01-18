@@ -13,7 +13,7 @@
 
 USTRUCT(Blueprintable, NoExport)
 struct FItemPrice {
-   FItemPrice() : money(0), items(TArray<int>()) {}
+   FItemPrice() : money(0), tradeItems(TArray<int>()) {}
 
    /**How much money this item costs*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -21,7 +21,7 @@ struct FItemPrice {
 
    /**How many items to trade in for this item*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-   TArray<FMyItem> items;
+   TArray<FMyItem> tradeItems;
 };
 
 UCLASS()

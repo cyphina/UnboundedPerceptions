@@ -37,7 +37,7 @@ void AQuest::SetupGoalAmounts()
          currentAmounts.Add(num, 0);
          if(goal.goalType == EGoalType::Interact)
             // Used when the goal requires us to interact with multiple copies of the same named object. We use the address of the decorator to check for uniqueness
-            interactedActors.Add(num, TArray<const UNamedInteractableDecorator*>());
+            interactedActors.Add(num, TArray<const FText*>());
       }
       ++num;
    }

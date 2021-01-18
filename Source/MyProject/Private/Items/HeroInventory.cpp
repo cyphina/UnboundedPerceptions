@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "HeroInventory.h"
 
@@ -30,20 +28,25 @@ void UHeroInventory::NativeOnInitialized()
 
 void UHeroInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)
 {
-   if(!GetBackpack()->IsEmptySlot(iSlot)) {
+   if(!GetBackpack()->IsEmptySlot(iSlot))
+   {
       OnItemSelected().Broadcast(hIndex, iSlot);
    }
 }
 
 void UHeroInventory::OnItemChangeEvent(const ABaseHero* heroUsingItem, const FMyItem& item)
 {
-   if(GetVisibility() == ESlateVisibility::Visible) LoadItems();
+   if(GetVisibility() == ESlateVisibility::Visible)
+   {
+      LoadItems();
+   }
 }
 
 void UHeroInventory::OnHeroActiveChanged(ABaseHero* heroThatChangedActivefState, bool newActiveState)
 {
    // TODO: Refresh inventory and move from the selected page. Also change hIndex... if we plan to keep it around.
-   if(!newActiveState) {
+   if(!newActiveState)
+   {
       LoadItems();
    }
 }

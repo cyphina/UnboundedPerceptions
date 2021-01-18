@@ -38,6 +38,7 @@ void UESkillContainer::OnWidgetShown(URTSAbilitySystemComponent* focusedUnitAbil
       skillSlot->UpdateSkillSlot(focusedUnitAbilityComp->GetSpellAtSlot(index));
       ++index;
    }
+   PlayAnimation(flowOutAnim);
 }
 
 void UESkillContainer::OnFocusedUnitSpellCasted(AUnit* focusedUnit, int spellIndex)

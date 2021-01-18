@@ -112,9 +112,9 @@ void ANPC::Interact_Implementation(ABaseHero* hero)
    GetController()->StopMovement();
 
    // Turn towards our NPC
-   FVector currentLocation    = GetActorLocation();
-   FVector difference         = hero->GetActorLocation() - currentLocation;
-   FVector projectedDirection = FVector(difference.X, difference.Y, 0);
+   const FVector currentLocation    = GetActorLocation();
+   const FVector difference         = hero->GetActorLocation() - currentLocation;
+   const FVector projectedDirection = FVector(difference.X, difference.Y, 0);
    SetActorRotation(FRotationMatrix::MakeFromX(FVector(projectedDirection)).Rotator());
 
    // If this npc wants to converse, we go to another screen after the initial conversation where we can interact more

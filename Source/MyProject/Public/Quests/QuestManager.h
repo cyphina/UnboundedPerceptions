@@ -24,7 +24,7 @@ class MYPROJECT_API UQuestMap : public UDataAsset
 {
    GENERATED_BODY()
 
- public:
+public:
    /**Map of classes from which we can activate quests from*/
    UPROPERTY(EditAnywhere)
    TMap<FGameplayTag, TSubclassOf<AQuest>> questClassList;
@@ -38,10 +38,10 @@ class MYPROJECT_API UQuestManager : public UObject
 {
    GENERATED_BODY()
 
- public:
- #if WITH_EDITOR
-   void PostEditChangeProperty( struct FPropertyChangedEvent& PropertyChangedEvent) override;
- #endif
+public:
+#if WITH_EDITOR
+   void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 
    /** Updates map that maps quest classes to quest gameplaytags whenever we recompile the blueprint */
    void UpdateQuestClassList();
@@ -123,6 +123,7 @@ class MYPROJECT_API UQuestManager : public UObject
    UFUNCTION(BlueprintCallable, Category = "Quest Managing")
    void CompleteGoals();
 
+private:
    /**Called when party leader moves to recalculate distance and move arrow around*/
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
    void OnPartyLeaderMove();
@@ -131,9 +132,8 @@ class MYPROJECT_API UQuestManager : public UObject
     * Need callbacks here since we specifically need that parameter
     */
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
-   void OnEnemyDie(const AEnemy* enemyClass);
+   void OnEnemyDie(AUnit* deadUnit);
 
-   
    /**
     * @brief Callback when we talk to an NPC
     * @param talkedToNPC - NPC we talked to.
@@ -144,7 +144,12 @@ class MYPROJECT_API UQuestManager : public UObject
 
    void OnItemPickedUp(const ABaseHero* heroPickingItem, const FMyItem& newItem);
 
-   /**Callback when Interactable is sucessfully interacted with*/
+   /**
+    *Callback when Interactable is successfully interacted with
+    * @param decoratorName - Name of the interactable with a "Named Decorator"
+    */
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
-   void OnInteracted(const UNamedInteractableDecorator* finishedInteractableDialog);
+   void OnInteracted(const FText& decoratorName);
+
+   void SetupWidgetReferences();
 };

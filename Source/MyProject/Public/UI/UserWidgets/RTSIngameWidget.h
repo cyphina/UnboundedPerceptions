@@ -1,7 +1,5 @@
 ﻿#pragma once
 
-#include "CoreMinimal.h"
-
 #include "HUDTypes.h"
 #include "UI/UserWidgetExtensions/MyUserWidget.h"
 #include "RTSIngameWidget.generated.h"
@@ -9,7 +7,6 @@
 class UGameSpeedWidget;
 class ARTSGameState;
 class URTSSidebarWidget;
-
 class UCharacterMenu;
 class UInventory;
 class UHeroInventory;
@@ -21,10 +18,11 @@ class UQuestJournal;
 class UMinimap;
 class UNPCSocialMenu;
 class UDialogBox;
-
 class UItemExamineWidget;
 class UBackpack;
 class USpellbookHUD;
+class UConfirmationBox;
+class URTSInputBox;
 
 /**
  * Holds every widget used in the main gamemode Up (the top down game where we control four heroes).
@@ -37,7 +35,7 @@ class MYPROJECT_API URTSIngameWidget : public UMyUserWidget
 
    URTSIngameWidget();
 
- public:
+public:
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
    USpellbookHUD* GetSpellBookMenu() const { return Menu_Spellbook; }
 
@@ -60,7 +58,7 @@ class MYPROJECT_API URTSIngameWidget : public UMyUserWidget
    UInventory* GetStorageHUD() const { return Inventory_Storage; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   UActionbarInterface* GetActionHUD() const { return Widget_Actionbar; }
+   UActionbarInterface* GetActionbar() const { return Widget_Actionbar; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
    UQuestList* GetQuestList() const { return Widget_QuestTracker; }
@@ -77,11 +75,20 @@ class MYPROJECT_API URTSIngameWidget : public UMyUserWidget
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
    UNPCSocialMenu* GetSocialWindow() const { return Menu_Social; }
 
-   UFUNCTION(Blueprintcallable)
+   UFUNCTION(Blueprintcallable, BlueprintPure, Category = "HUDManager")
    URTSSidebarWidget* GetSidebarWidget() const { return Sidebar_HeroStatus; }
 
-   UFUNCTION(BlueprintCallable)
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
    UGameSpeedWidget* GetGamespeedWidget() const { return Widget_Gamespeed; }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+   UConfirmationBox* GetChatBox() const { return Modal_Confirm; }
+   
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+   UConfirmationBox* GetConfirmModal() const { return Modal_Confirm; }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
+   URTSInputBox* GetInputModal() const { return Modal_Input; }
 
    /**
     * @brief TODO: Rewrite BP version to rely on native version instead of vice versa
@@ -90,13 +97,13 @@ class MYPROJECT_API URTSIngameWidget : public UMyUserWidget
     */
    static void NativeDisplayHelpText(UWorld* worldRef, const FText& hText);
 
- protected:
+protected:
    void NativeOnInitialized() override;
-   
+
    UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Help")
    void DisplayHelpText(const FText& hText);
 
- private:
+private:
    UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
    class AHUDManager* hudManagerRef;
 
@@ -144,4 +151,10 @@ class MYPROJECT_API URTSIngameWidget : public UMyUserWidget
 
    UPROPERTY(BlueprintReadOnly, Meta = (BindWidget), Meta = (AllowPrivateAccess = true))
    UGameSpeedWidget* Widget_Gamespeed;
+
+   UPROPERTY(BlueprintReadOnly, Meta = (BindWidget), Meta = (AllowPrivateAccess = true))
+   UConfirmationBox* Modal_Confirm;
+
+   UPROPERTY(BlueprintReadOnly, Meta = (BindWidget), Meta = (AllowPrivateAccess = true))
+   URTSInputBox* Modal_Input;
 };

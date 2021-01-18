@@ -241,7 +241,6 @@ void UBackpack::SwapItems(UBackpack* otherPack, const int slot1, const int slot2
 
 FMyItem UBackpack::GetItem(const int slot) const
 {
-   check(slot >= 0 && slot < backpack_max_items);
    if(items.IsAllocated(slot)) { return items[slot]; }
    return FMyItem();
 }

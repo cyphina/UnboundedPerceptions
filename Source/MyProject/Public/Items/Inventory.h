@@ -18,16 +18,17 @@ class MYPROJECT_API UInventory : public UMyDraggableWidget
 {
    GENERATED_BODY()
 
- public:
+public:
    /**
     * Runs when an itemSlot in the inventoryView is clicked on.  Depending on the inventory type, different things may occur.
-    * @iSlot - Index of the slot in the backpack (not inventory view slot index) to be used
+    * @iSlot - Index of the slot in the backpack to be used
     */
-   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inventory Functions")
-   void         UseItemAtInventorySlot(int32 iSlot);
-   virtual void UseItemAtInventorySlot_Implementation(int32 iSlot) PURE_VIRTUAL(UInventory::UseItemAtInventorySlot, );
+   UFUNCTION(BlueprintCallable, Category = "Inventory Functions")
+   void UseItem(int32 iSlot);
 
-   /** Used to update the view whenever change occurs within the backpack corresponding to our inventory */
+   /** Used to update the view whenever change occurs within the backpack corresponding to our inventory
+    * TODO: Try and only have to reload items that changed.
+    */
    UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Inventory Functions")
    void LoadItems();
 
@@ -37,16 +38,21 @@ class MYPROJECT_API UInventory : public UMyDraggableWidget
    UFUNCTION(BlueprintCallable, Category = "Inventory Functions")
    void SetBackPack(UBackpack* bPack) { backpack = bPack; }
 
-   UInventoryView* GetInventoryView() const { return inventoryView; }
-   
- protected:
+   FMyItem GetBackpackItemAtSlot(int slotIndex) const;
+
+protected:
+   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inventory Functions")
+   void UseItemAtInventorySlot(int32 iSlot);
+   virtual void UseItemAtInventorySlot_Implementation(int32 iSlot) PURE_VIRTUAL(UInventory::UseItemAtInventorySlot,);
+
    void NativeConstruct() override;
    bool OnWidgetAddToViewport_Implementation() override;
 
    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
    UInventoryView* inventoryView;
 
- private:
+private:
+
    /**backpack reference for whatever inventory we are displaying*/
    UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "UIInitialParams", Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true))
    UBackpack* backpack;

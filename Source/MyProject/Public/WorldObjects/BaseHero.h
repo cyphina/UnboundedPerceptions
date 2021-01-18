@@ -17,7 +17,7 @@ class UEquipmentContainer;
 class UTriggerManager;
 class AHeroAIController;
 
-using Equip_Slot_Arr = TStaticArray<int, 10>;
+using Equip_Slot_Arr = TStaticArray<int, 7>;
 
 DECLARE_EVENT(ABaseHero, FOnLevelUp);
 DECLARE_DELEGATE_RetVal_OneParam(bool, FOnPickupItem, FMyItem&);

@@ -17,7 +17,7 @@
 #include "ToolTipWidget.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
-#include "SpellSystem/SpellDelegateStore.h"
+#include "SpellDelegateStore.h"
 #include "UMG/Public/Components/Image.h"
 #include "UMG/Public/Components/TextBlock.h"
 

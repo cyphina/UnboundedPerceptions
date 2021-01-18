@@ -9,7 +9,7 @@
 #include "SpellBook.h"
 #include "ToolTipWidget.h"
 #include "SpellSystem/MySpell.h"
-#include "SpellSystem/SpellDelegateStore.h"
+#include "SpellDelegateStore.h"
 #include "WorldObjects/BaseHero.h"
 #include "UMG/Public/Components/TextBlock.h"
 

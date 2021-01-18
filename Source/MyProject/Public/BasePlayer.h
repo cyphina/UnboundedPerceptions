@@ -56,6 +56,7 @@ public:
 
    /**
     * If there's any hero that is interacting currently with something blocking (e.g., storage or dialog)
+    * TODO: Remove this and only let the party leader interact for simplicity
     */
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    ABaseHero* heroInBlockingInteraction;

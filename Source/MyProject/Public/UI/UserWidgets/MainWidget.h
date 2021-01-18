@@ -4,6 +4,8 @@
 #include "UI/UserWidgetExtensions/MyUserWidget.h"
 #include "MainWidget.generated.h"
 
+class UKeyRemapWidget;
+class USaveLoadMenu;
 class URTSIngameWidget;
 class USettingsMenu;
 class UBreakMenu;
@@ -24,8 +26,13 @@ public:
 
    UBreakMenu* GetBreakMenu() const { return breakMenu; }
 
-   USettingsMenu* GetSettingsMenu() const { return settingsMenu; };
+   USettingsMenu* GetSettingsMenu() const { return settingsMenu; }
 
+   USaveLoadMenu* GetSaveLoadMenu() const { return saveLoadMenu; }
+
+   UKeyRemapWidget* GetRemapMenu() const { return keyRemapMenu; }
+
+   
 protected:
    UPROPERTY(BlueprintReadOnly)
    class AHUDManager* hudManagerRef;
@@ -38,5 +45,12 @@ protected:
 
    UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
    UBreakMenu* breakMenu;
+
+   UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
+   USaveLoadMenu* saveLoadMenu;
+
+   UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
+   UKeyRemapWidget* keyRemapMenu;
+   
 #pragma endregion
 };

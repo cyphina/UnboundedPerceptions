@@ -5,7 +5,7 @@
 #include "MySpell.h"
 #include "BaseCharacter.h"
 #include "ECursorStates.h"
-#include "SpellSystem/SpellDelegateStore.h"
+#include "SpellDelegateStore.h"
 #include "BasePlayer.h"
 #include "DefaultCursorClickFunctionality.h"
 #include "NoTargeting.h"

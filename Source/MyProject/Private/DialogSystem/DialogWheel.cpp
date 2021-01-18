@@ -40,7 +40,6 @@ bool UDialogWheel::HandleSelectedLeafNode()
 
       hudManagerRef->ShowDialogWithSource(conversationName, EDialogBoxCloseCase::finishedNPCConvo);
       NPCEvents::OnNPCTalkedEvent.Broadcast(socialWindowRef->GetNPC(), currentlySelectedTopicNode->GetCompleteTag());
-      CPC->GetGameMode()->GetQuestManager()->OnTalkNPC(socialWindowRef->GetNPC(), currentlySelectedTopicNode->GetCompleteTag());
       socialWindowRef->GetNPC()->AddConversedDialog(conversationName);
       return true;
    }

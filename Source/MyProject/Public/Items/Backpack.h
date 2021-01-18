@@ -83,7 +83,9 @@ class MYPROJECT_API UBackpack : public UObject
    UFUNCTION(BlueprintCallable)
    bool TransferItems(UBackpack* otherPack, const int transferSlot);
 
-   /**Swap two items location in seperate backpacks.  Swaps item from the other pack to this one
+   /**
+    * Swap two items location in separate backpacks.  Swaps item from the other pack to this one.
+    * Used when dragging and dropping items from one backpack slot to another, or from a backpack slot to a storage slot.
     * @param otherPack - The other backpack which swaps an item to us
     * @param slot1 - Index of the slot in this backpack which is going to be swapped
     * @param slot2 - Index of the slot in the other backpack which we're swapping to
@@ -91,7 +93,7 @@ class MYPROJECT_API UBackpack : public UObject
    UFUNCTION(BlueprintCallable)
    void SwapItems(UBackpack* otherPack, const int slot1, const int slot2);
 
-   /**Item accessor
+   /** Gets information about the item in a slot. Returns a copy so it can't actually modify the backpack
     * @param slot - The slot of the item to grab
     * @return - Returns default FMyItem() if there was nothing in that slot
     */

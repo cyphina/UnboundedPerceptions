@@ -256,7 +256,7 @@ class MYPROJECT_API AQuest : public AInfo
     *Map that links a goal to the actors that have been interacted with so we don't interact with the same actors twice... granted the quest asks to interact with multiple actors
     *TODO: Modify this beacuse it will screw up once we change levels since it won't point to a valid named decorator
     */
-   TMap<int, TArray<const UNamedInteractableDecorator*>> interactedActors;
+   TMap<int, TArray<const FText*>> interactedActors;
 
    /**
     *Struct with information about quest

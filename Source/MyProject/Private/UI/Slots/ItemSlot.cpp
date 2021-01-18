@@ -11,24 +11,17 @@
 
 void UItemSlot::OnBtnClick()
 {
-   const int backpackIndex = inventoryRef->GetInventoryView()->GetCorrespondingBackpackIndex(slotIndex);
-   const int itemId        = inventoryRef->GetBackpack()->GetItem(backpackIndex).id;
-   if(itemId > 0)
-      inventoryRef->UseItemAtInventorySlot(backpackIndex);
+   inventoryRef->UseItem(slotIndex);
 }
 
 void UItemSlot::ShowDesc(UToolTipWidget* tooltip)
 {
-   const int backpackIndex = inventoryRef->GetInventoryView()->GetCorrespondingBackpackIndex(slotIndex);
-   if(inventoryRef->GetBackpack()->IsEmptySlot(backpackIndex))
-      return;
-   const int itemId = inventoryRef->GetBackpack()->GetItem(backpackIndex).id;
-
-   if(itemId > 0) {
-      const auto itemInfo = UItemManager::Get().GetItemInfo(itemId);
+   const FMyItem item = inventoryRef->GetBackpackItemAtSlot(slotIndex);
+   if(item) {
+      const auto itemInfo = UItemManager::Get().GetItemInfo(item.id);
       if(itemInfo->itemType.MatchesTag(FGameplayTag::RequestGameplayTag("Item.Equippable", false))) {
          const FText rarityName = UItemFunctionLibrary::GetRarityText(itemInfo->rarity);
-         const FText bonusDesc  = UItemFunctionLibrary::GetBonusDescription(itemId);
+         const FText bonusDesc  = UItemFunctionLibrary::GetBonusDescription(item.id);
          tooltip->SetupTTBoxText(itemInfo->name, rarityName, itemInfo->description, bonusDesc, FText::GetEmpty());
       }
       // Else we don't have a piece of equipment

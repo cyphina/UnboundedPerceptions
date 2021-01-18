@@ -33,7 +33,7 @@
 #include "SpellSystem/Spellbook.h"
 #include "WorldObjects/NPC.h"
 #include "Items/ItemDelegateStore.h"
-#include "SpellSystem/SpellDelegateStore.h"
+#include "SpellDelegateStore.h"
 
 ABaseHero::ABaseHero(const FObjectInitializer& oI) : AAlly(oI)
 {

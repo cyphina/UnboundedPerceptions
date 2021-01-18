@@ -44,6 +44,12 @@ protected:
 
    UPROPERTY(Meta = (BindWidget))
    USkillSlot* skillSlot6;
+
+   UPROPERTY(Transient, Meta = (BindWidgetAnim))
+   UWidgetAnimation* flowOutAnim;
+
+   UPROPERTY(Transient, Meta = (BindWidgetAnim))
+   UWidgetAnimation* flowInAnim;
    
 private:
    void OnFocusedUnitSpellCasted(AUnit* focusedUnit, int spellIndex);

@@ -2,8 +2,11 @@
 #include "EquipmentMenu.h"
 
 #include "BaseHero.h"
+#include "BasePlayer.h"
 #include "EquipmentContainer.h"
 #include "ItemFunctionLibrary.h"
+#include "TextBlock.h"
+#include "UserInput.h"
 #include "Items/ItemDelegateStore.h"
 #include "UI/HUDManager.h"
 
@@ -19,8 +22,18 @@ void UEquipmentMenu::NativeOnInitialized()
    equipSlots[6] = offHandSlot;
 }
 
-void UEquipmentMenu::Update_Implementation()
+bool UEquipmentMenu::OnWidgetAddToViewport_Implementation()
 {
+   if(CPC->GetBasePlayer()->selectedHeroes.Num() > 0)
+   {
+      if(ABaseHero* hero = CPC->GetBasePlayer()->selectedHeroes[0])
+      {
+         SetupEquipImages();
+         Text_MenuTitle->SetText(FText::Format(NSLOCTEXT("EquipMenu", "EquipMenuTitle", "{0}'s Equipment"), hero->GetGameName()));
+         return true;
+      }
+   }
+   return false;
 }
 
 void UEquipmentMenu::SetupEquipImages()
@@ -45,6 +58,6 @@ void UEquipmentMenu::SetupEquipImages()
 void UEquipmentMenu::OnEquipmentChanged(const ABaseHero* heroThatChanged, const FMyItem& changedEquip)
 {
    if(GetVisibility() != ESlateVisibility::Collapsed) {
-      if(GetEquippedHero() == heroThatChanged) Update();
+      if(GetEquippedHero() == heroThatChanged) SetupEquipImages();
    }
 }

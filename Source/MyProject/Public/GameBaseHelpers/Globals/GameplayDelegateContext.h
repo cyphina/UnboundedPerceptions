@@ -6,7 +6,8 @@
 
 class AUnit;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDie, AUnit*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDieGlobal, AUnit*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnNamedInteractableInteracted, const FText&);
 
 UCLASS()
 class MYPROJECT_API UGameplayDelegateContext : public ULocalPlayerSubsystem
@@ -14,8 +15,10 @@ class MYPROJECT_API UGameplayDelegateContext : public ULocalPlayerSubsystem
    GENERATED_BODY()
 
 public:
-   FOnUnitDie& OnUnitDieGlobal() { return OnUnitDieGlobalEvent; }
-
+   FOnUnitDieGlobal& OnUnitDieGlobal() { return OnUnitDieGlobalEvent; }
+   FOnNamedInteractableInteracted& OnInteracted() { return OnInteractedEvent; }
+   
 private:
-   FOnUnitDie OnUnitDieGlobalEvent;
+   FOnUnitDieGlobal OnUnitDieGlobalEvent;
+   FOnNamedInteractableInteracted OnInteractedEvent;
 };

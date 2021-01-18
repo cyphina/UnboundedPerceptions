@@ -30,7 +30,7 @@ UStoreInventory::UStoreInventory() : interactingHero()
 
 bool UStoreInventory::OnItemPurchased() const
 {
-   GetInteractingHeroBackpack()->RemoveItems(itemPrice->items);
+   GetInteractingHeroBackpack()->RemoveItems(itemPrice->tradeItems);
    if(ABasePlayer* basePlayer = CPC->GetBasePlayer()) {
       CPC->GetBasePlayer()->SetMoney(CPC->GetBasePlayer()->GetMoney() - itemPrice->money);
       FMyItem    newItemPurchased{itemToBuy, 1};
@@ -60,7 +60,7 @@ bool UStoreInventory::OnItemsPurchased(FString howManyItems)
             URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("InventoryFull", "NotEnoughSpaceStore", "Not enough space in inventory to purchase item!"));
          }
          
-         TArray<FMyItem> itemPriceItems = itemPrice->items;
+         TArray<FMyItem> itemPriceItems = itemPrice->tradeItems;
          for(FMyItem& item : itemPriceItems) {
             item.count *= num;
          }
@@ -75,9 +75,9 @@ bool UStoreInventory::OnItemsPurchased(FString howManyItems)
 bool UStoreInventory::EnoughFunds(int numPurchasing) const
 {
    if(itemPrice->money * numPurchasing <= CPC->GetBasePlayer()->GetMoney()) {
-      if(itemPrice->items.Num() > 0) {
+      if(itemPrice->tradeItems.Num() > 0) {
          int itemTradingInCount = 0;
-         for(const FMyItem& tradeItems : itemPrice->items) {
+         for(const FMyItem& tradeItems : itemPrice->tradeItems) {
             itemTradingInCount = GetInteractingHeroBackpack()->FindItemCount(tradeItems.id);
             if(itemTradingInCount < tradeItems.count * numPurchasing) {
                URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NotEnoughItemsText);

@@ -7,37 +7,40 @@ class UMySpell;
 
 UENUM(BlueprintType)
 enum class ERarity : uint8 // rarity enum for all types of items
-{ Common = 0,
-  Uncommon,
-  Rare,
-  Very_Rare,
-  Super_Rare,
-  Mega_Rare,
-  Ultra_Rare,
-  Legendary,
-  /*Easy/Normal Cutoff*/
-  Mythical,
-  Fabled,
-  /**Hard cutoff*/
-  SemiGod_Tier,
-  DemiGod_Tier,
-  God_Tier,
-  /**Expert cutoff*/
-  Beyond_Godlike,
-  /**Nightmare - Highest Level cutoff*/
-  Unbounded,
-  Artifact,
-  Key_Item };
+{
+   Common = 0,
+   Uncommon,
+   Rare,
+   Very_Rare,
+   Super_Rare,
+   Mega_Rare,
+   Ultra_Rare,
+   Legendary,
+   /*Easy/Normal Cutoff*/
+   Mythical,
+   Fabled,
+   /**Hard cutoff*/
+   SemiGod_Tier,
+   DemiGod_Tier,
+   God_Tier,
+   /**Expert cutoff*/
+   Beyond_Godlike,
+   /**Nightmare - Highest Level cutoff*/
+   Unbounded,
+   Artifact,
+   Key_Item
+};
 
 USTRUCT(BlueprintType, NoExport)
-struct FMyItemInfo {
+struct FMyItemInfo
+{
    FMyItemInfo() :
-       name(FText::GetEmpty()), image(nullptr), description(FText::GetEmpty()), itemType(FGameplayTag()), isStackable(false), count(1), rarity(ERarity::Common)
+      name(FText::GetEmpty()), image(nullptr), description(FText::GetEmpty()), itemType(FGameplayTag()), isStackable(false), count(1), rarity(ERarity::Common)
    {
    }
 
    FMyItemInfo(FText name, UTexture2D* image, FText desc, FGameplayTag itemType, bool isStackable, int count, ERarity rarity) :
-       image(image), itemType(itemType), isStackable(isStackable), count(count), rarity(rarity)
+      image(image), itemType(itemType), isStackable(isStackable), count(count), rarity(rarity)
    {
       this->name        = FText::Format(NSLOCTEXT("Items", "ItemName", "{0}"), name);
       this->description = FText::Format(NSLOCTEXT("Items", "ItemDesc", "{0}"), desc);
@@ -92,10 +95,14 @@ class UConsumable;
 class ABaseHero;
 class UWeapon;
 
-/**Items are going to be changed eventually so that we only store an ID, and whenever they are referenced, we lookup their stats kind of like spells*/
+/**
+ * Each item struct has an id which can be used to lookup more information about the item in an item table (see UItemFunctionLibrary).
+ * It also has a count which is used when storing items in a backpack which is a specialized data structure for item storage.
+ */
 
 USTRUCT(BlueprintType, NoExport)
-struct FMyItem {
+struct FMyItem
+{
    /**Item ID.  Valid ID's start at 1 since we can use this as a conditional if we let 0 be invalid*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Information")
    int id = 0;
@@ -104,7 +111,14 @@ struct FMyItem {
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Information")
    int count = 1;
 
-   FMyItem() {}
-   explicit FMyItem(int id, int count = 1) : id(id), count(count) {}
-   bool operator()() const { return id > 0; }
+   FMyItem()
+   {
+   }
+
+   explicit FMyItem(int id, int count = 1) :
+      id(id), count(count)
+   {
+   }
+
+   operator bool() const { return id > 0; }
 };

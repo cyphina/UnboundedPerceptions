@@ -1,7 +1,22 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "Inventory.h"
+#include "Backpack.h"
+#include "BaseHero.h"
+#include "InventoryView.h"
+
+void UInventory::UseItem(int32 iSlot)
+{
+   if(!GetBackpack()->IsEmptySlot(iSlot))
+   {
+      UseItemAtInventorySlot(inventoryView->GetCorrespondingBackpackIndex(iSlot));
+      LoadItems();
+   }
+}
+
+FMyItem UInventory::GetBackpackItemAtSlot(int slotIndex) const
+{
+   return GetBackpack()->GetItem(inventoryView->GetCorrespondingBackpackIndex(slotIndex));
+}
 
 void UInventory::NativeConstruct()
 {
