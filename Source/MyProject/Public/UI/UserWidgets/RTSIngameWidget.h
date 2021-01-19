@@ -16,7 +16,7 @@ class UActionbarInterface;
 class UQuestList;
 class UQuestJournal;
 class UMinimap;
-class UNPCSocialMenu;
+class UDialogUI;
 class UDialogBox;
 class UItemExamineWidget;
 class UBackpack;
@@ -73,7 +73,7 @@ public:
    UDialogBox* GetDialogBox() const { return Widget_Dialog; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   UNPCSocialMenu* GetSocialWindow() const { return Menu_Social; }
+   UDialogUI* GetSocialWindow() const { return Menu_Social; }
 
    UFUNCTION(Blueprintcallable, BlueprintPure, Category = "HUDManager")
    URTSSidebarWidget* GetSidebarWidget() const { return Sidebar_HeroStatus; }
@@ -144,7 +144,7 @@ private:
    UDialogBox* Widget_Dialog;
 
    UPROPERTY(BlueprintReadOnly, Meta = (BindWidget), Meta = (AllowPrivateAccess = true))
-   UNPCSocialMenu* Menu_Social;
+   UDialogUI* Menu_Social;
 
    UPROPERTY(BlueprintReadOnly, Meta = (BindWidget), Meta = (AllowPrivateAccess = true))
    URTSSidebarWidget* Sidebar_HeroStatus;
