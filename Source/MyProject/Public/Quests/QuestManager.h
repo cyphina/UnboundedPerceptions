@@ -140,7 +140,7 @@ private:
     * @param conversationTopic - If this is the default tag, then it means there was no conversation topic.
     */
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
-   void OnTalkNPC(ANPC* talkedToNPC, const FGameplayTag& conversationTopic);
+   void OnTalkNPC(ANPC* talkedToNPC, FGameplayTag conversationTopic);
 
    void OnItemPickedUp(const ABaseHero* heroPickingItem, const FMyItem& newItem);
 

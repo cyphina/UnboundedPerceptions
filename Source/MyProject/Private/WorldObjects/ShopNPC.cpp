@@ -5,7 +5,7 @@
 #include "UserInput.h"
 #include "Items/Backpack.h"
 #include "UI/HUDManager.h"
-#include "DialogSystem/NPCSocialMenu.h"
+#include "DialogSystem/DialogUI.h"
 #include "RTSIngameWidget.h"
 #include "LevelSaveStructs.h"
 

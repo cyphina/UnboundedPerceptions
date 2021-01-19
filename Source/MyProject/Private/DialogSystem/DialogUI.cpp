@@ -1,13 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "DialogUI.h"
-
 #include "DialogWheel.h"
 #include "WorldObjects/NPC.h"
 #include "UMG/Public/Components/Button.h"
 #include "UI/HUDManager.h"
-#include "Algo/RemoveIf.h"
 
 void UDialogUI::NativeConstruct()
 {
@@ -53,7 +49,7 @@ void UDialogUI::SetMainView()
 
 void UDialogUI::HideOrShowAllButtons(bool bHide) const
 {
-   ESlateVisibility visibilitySettingForButtons = bHide ? ESlateVisibility::Collapsed : ESlateVisibility::Visible;
+   const ESlateVisibility visibilitySettingForButtons = bHide ? ESlateVisibility::Collapsed : ESlateVisibility::Visible;
    // Iterate through properties to find buttons
    btnGift->SetVisibility(visibilitySettingForButtons);
    btnLeave->SetVisibility(visibilitySettingForButtons);
@@ -82,7 +78,7 @@ void UDialogUI::Psychosis()
 
 void UDialogUI::Shop()
 {
-   hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Shop_General));
+   hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Shop_General));
 }
 
 bool UDialogUI::OnWidgetAddToViewport_Implementation()
@@ -91,8 +87,8 @@ bool UDialogUI::OnWidgetAddToViewport_Implementation()
    // SetMainView();
 
    // Hide the ingame widget so we just see social options
-   if(hudManagerRef->IsWidgetOnScreen(HUDs::HS_Actionbar))
-      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Actionbar));
+   if(hudManagerRef->IsWidgetOnScreen(EHUDs::HS_Actionbar))
+      hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Actionbar));
 
    dialogWheel->OnWidgetAddToViewport();
 
@@ -101,9 +97,9 @@ bool UDialogUI::OnWidgetAddToViewport_Implementation()
 
 void UDialogUI::Leave()
 {
-   hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Social));
-   if(!hudManagerRef->IsWidgetOnScreen(HUDs::HS_Actionbar))
-      hudManagerRef->AddHUD(static_cast<uint8>(HUDs::HS_Actionbar));
+   hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Social));
+   if(!hudManagerRef->IsWidgetOnScreen(EHUDs::HS_Actionbar))
+      hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Actionbar));
    // Reactivate patrolling and remove global reference to current blocking interactable
    npcRef->OnDoneTalking();
 }

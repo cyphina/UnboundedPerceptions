@@ -70,7 +70,8 @@ void UQuestManager::Init()
    ItemChangeEvents::OnItemDroppedEvent.AddUObject(this, &UQuestManager::OnItemPickedUp);
    ItemChangeEvents::OnItemPurchasedEvent.AddUObject(this, &UQuestManager::OnItemPickedUp);
    ItemChangeEvents::OnItemUsedEvent.AddUObject(this, &UQuestManager::OnItemPickedUp);
-   NPCEvents::OnNPCTalkedEvent.AddUObject(this, &UQuestManager::OnTalkNPC);
+   NPCDelegateContext::OnNPCConversationEvent.AddUObject(this, &UQuestManager::OnTalkNPC);
+   NPCDelegateContext::OnNPCTalkedEvent.AddUObject(this, &UQuestManager::OnTalkNPC, FGameplayTag::EmptyTag);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnInteracted().AddUObject(this, &UQuestManager::OnInteracted);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnUnitDieGlobal().AddUObject(this, &UQuestManager::OnEnemyDie);
 }
@@ -251,7 +252,7 @@ void UQuestManager::OnEnemyDie(AUnit* deadUnit)
    }
 }
 
-void UQuestManager::OnTalkNPC(ANPC* talkedToNPC, const FGameplayTag& conversationTopic)
+void UQuestManager::OnTalkNPC(ANPC* talkedToNPC, FGameplayTag conversationTopic)
 {
    auto talkFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, talkedToNPC, conversationTopic]() {
       for(AQuest* quest : quests) {

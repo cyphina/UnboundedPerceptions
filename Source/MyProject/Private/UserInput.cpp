@@ -32,7 +32,7 @@ void AUserInput::BeginPlay()
 
    basePlayer = Cast<ABasePlayer>(PlayerState);
 
-   GetWorld()->SpawnActor<AHUDManager>(hudManagerClass, FTransform(), FActorSpawnParameters());
+   hudManagerRef = GetWorld()->SpawnActor<AHUDManager>(hudManagerClass, FTransform(), FActorSpawnParameters());
    Super::BeginPlay();
 }
 

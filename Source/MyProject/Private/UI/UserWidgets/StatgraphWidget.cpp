@@ -15,7 +15,7 @@
 #include "UpStatComponent.h"
 #include "UserInput.h"
 
-void UStatgraphWidget::NativeConstruct()
+void UStatgraphWidget::NativeOnInitialized()
 {
    Super::NativeConstruct();
    cpcRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());

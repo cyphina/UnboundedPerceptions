@@ -9,7 +9,7 @@
 #include "EventSystem/RTSConditional.h"
 #include "UI/HUDManager.h"
 #include "WorldObjects/BaseHero.h"
-#include "DialogSystem/NPCSocialMenu.h"
+#include "DialogSystem/DialogUI.h"
 
 void UDialogBox::InitDialogPortraitMaps()
 {

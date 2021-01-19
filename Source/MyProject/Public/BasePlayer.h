@@ -134,7 +134,7 @@ public:
    int GetMoney() const { return money; }
 
    UFUNCTION(BlueprintCallable)
-   void SetMoney(int newMoneyVal) { money = newMoneyVal; }
+   void SetMoney(int newMoneyVal);
 
 protected:
    /**

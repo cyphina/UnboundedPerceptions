@@ -29,7 +29,7 @@
 #include "Quests/UI/Minimap.h"
 
 #include "DialogSystem/DialogBox.h"
-#include "DialogSystem/NPCSocialMenu.h"
+#include "DialogSystem/DialogUI.h"
 #include "DialogSystem/DialogWheel.h"
 #include "EventSystem/Trigger.h"
 

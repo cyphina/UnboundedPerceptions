@@ -9,12 +9,13 @@
 #include "RTSGameState.h"
 #include "UI/HUDManager.h"
 #include "DialogSystem/DialogBox.h"
-#include "DialogSystem/NPCSocialMenu.h"
+#include "DialogSystem/DialogUI.h"
 #include "Quests/QuestManager.h"
 #include "LevelSaveStructs.h"
 #include "RTSIngameWidget.h"
 #include "AIStuff/AIControllers/NPCAIController.h"
 #include "AIModule/Classes/BrainComponent.h"
+#include "DialogSystem/NPCDelegateStore.h"
 
 AHUDManager* ANPC::hudManagerRef = nullptr;
 
@@ -132,7 +133,7 @@ void ANPC::Interact_Implementation(ABaseHero* hero)
    }
 
    // Check to see if any quests wanted us to talk to this NPC
-   controllerRef->GetGameMode()->GetQuestManager()->OnTalkNPC(this, FGameplayTag());
+   NPCDelegateContext::OnNPCTalkedEvent.Broadcast(this);
    controllerRef->GetBasePlayer()->heroInBlockingInteraction = hero;
    AddConversedDialog(conversationStarterName);
 }

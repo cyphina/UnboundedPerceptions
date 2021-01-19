@@ -5,7 +5,7 @@
 #include "UserInput.h"
 #include "BasePlayer.h"
 #include "UI/HUDManager.h"
-#include "DialogSystem/NPCSocialMenu.h"
+#include "DialogSystem/DialogUI.h"
 #include "DialogSystem/DialogBox.h"
 #include "WorldObjects/NPC.h"
 
@@ -39,7 +39,7 @@ bool UDialogWheel::HandleSelectedLeafNode()
       const FName conversationName = socialWindowRef->GetNPC()->GetConversationName(currentlySelectedTopicNode->GetCompleteTag());
 
       hudManagerRef->ShowDialogWithSource(conversationName, EDialogBoxCloseCase::finishedNPCConvo);
-      NPCEvents::OnNPCTalkedEvent.Broadcast(socialWindowRef->GetNPC(), currentlySelectedTopicNode->GetCompleteTag());
+      NPCDelegateContext::OnNPCConversationEvent.Broadcast(socialWindowRef->GetNPC(), currentlySelectedTopicNode->GetCompleteTag());
       socialWindowRef->GetNPC()->AddConversedDialog(conversationName);
       return true;
    }

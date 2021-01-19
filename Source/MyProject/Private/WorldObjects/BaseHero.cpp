@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 
 #include "BasePlayer.h"
@@ -22,6 +20,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "CombatParameters.h"
+#include "GameplayDelegateContext.h"
 #include "HeroInventory.h"
 #include "PartyDelegateContext.h"
 #include "RTSIngameWidget.h"
@@ -34,6 +33,7 @@
 #include "WorldObjects/NPC.h"
 #include "Items/ItemDelegateStore.h"
 #include "SpellDelegateStore.h"
+#include "UIDelegateContext.h"
 
 ABaseHero::ABaseHero(const FObjectInitializer& oI) : AAlly(oI)
 {
@@ -62,6 +62,7 @@ void ABaseHero::BeginPlay()
    SpellHUDEvents::OnSpellLearnedEvent.AddUObject(this, &ABaseHero::OnSpellLearned);
    SpellHUDEvents::OnSpellUpgradedEvent.AddUObject(this, &ABaseHero::OnSpellUpgraded);
 
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnAttributePointAllocated().AddUObject(this, &ABaseHero::ChangeAttribute);
    OnPickupItem().BindUObject(this, &ABaseHero::OnItemPickup);
 }
 
@@ -134,6 +135,7 @@ void ABaseHero::SetCurrentExp(int amount)
       expForLevel *= NEXT_EXP_MULTIPLIER;
       LevelUp();
    }
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnExpGained().Broadcast(amount);
 }
 
 const UEquipmentContainer* ABaseHero::GetEquipment() const

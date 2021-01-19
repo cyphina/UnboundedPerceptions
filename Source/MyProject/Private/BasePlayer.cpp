@@ -1,6 +1,7 @@
 #include "MyProject.h"
 #include "BasePlayer.h"
 #include "EngineUtils.h"
+#include "GameplayDelegateContext.h"
 #include "WorldObjects/BaseHero.h"
 #include "Quests/QuestManager.h"
 #include "GameplayTagContainer.h"
@@ -76,6 +77,12 @@ void ABasePlayer::LearnDialogTopic(FGameplayTag topic)
 {
    dialogTopics.AddTag(topic);
    OnDialogLearned.Broadcast(topic);
+}
+
+void ABasePlayer::SetMoney(int newMoneyVal)
+{
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnMoneyGained().Broadcast(newMoneyVal - newMoneyVal);
+   money = newMoneyVal;
 }
 
 void ABasePlayer::OnHeroSelected(ABaseHero* heroRef)

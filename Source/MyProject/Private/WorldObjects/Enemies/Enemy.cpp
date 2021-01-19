@@ -111,7 +111,6 @@ void AEnemy::SetEnabled(bool bEnabled)
 
 void AEnemy::SpawnItemDrops()
 {
-   controllerRef->GetGameMode()->GetQuestManager()->OnEnemyDie(this);
    controllerRef->GetBasePlayer()->UpdateEXP(expGiven);
    controllerRef->GetBasePlayer()->UpdateGold(moneyGiven);
 
