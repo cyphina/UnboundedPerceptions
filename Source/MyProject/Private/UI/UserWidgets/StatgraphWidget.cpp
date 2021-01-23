@@ -109,9 +109,10 @@ void UStatgraphWidget::ShowMechanics()
       const UEnum* eBonus2 = FindObject<UEnum>(ANY_PACKAGE, TEXT("EUnitScalingStats"), true);
 
       writer->WriteArrayStart();
-      for(auto mech : TEnumRange<EMechanics>()) {
+      for(int i = 0; i < static_cast<int>(EMechanics::Count); ++i) {
+         const EMechanics mech = static_cast<EMechanics>(i);
          writer->WriteObjectStart();
-         writer->WriteValue("statName", eBonus->GetNameStringByIndex(static_cast<uint8>(mech)));
+         writer->WriteValue("statName", eBonus->GetNameStringByIndex(i));
          writer->WriteIdentifierPrefix("values");
          writer->WriteArrayStart();
          writer->WriteValue(focusedUnit->GetStatComponent()->GetMechanicBaseValue(mech));
@@ -147,7 +148,8 @@ void UStatgraphWidget::ShowVitals()
       const UEnum* eBonus = FindObject<UEnum>(ANY_PACKAGE, TEXT("EVitals"), true);
 
       writer->WriteArrayStart();
-      for(auto vit : TEnumRange<EVitals>()) {
+      for(int i = 0; i < static_cast<int>(EVitals::Count); ++i) {
+         const EVitals vit = static_cast<EVitals>(i);
          writer->WriteObjectStart();
          writer->WriteValue("statName", eBonus->GetNameStringByIndex(static_cast<uint8>(vit)));
          writer->WriteIdentifierPrefix("values");

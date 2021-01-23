@@ -8,6 +8,12 @@
 #include "UnitController.h"
 #include "SpellSystem/MySpell.h"
 
+void UChannelingBar::NativeOnInitialized()
+{
+   Super::NativeOnInitialized();
+   controllerRef = GetOwningPlayer<AUserInput>();
+}
+
 FText UChannelingBar::GetChannelingName()
 {
    AUnit* channelingUnit = controllerRef->GetBasePlayer()->GetFocusedUnit();

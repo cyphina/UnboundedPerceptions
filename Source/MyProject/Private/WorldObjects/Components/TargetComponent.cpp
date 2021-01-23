@@ -11,17 +11,12 @@ UTargetComponent::UTargetComponent()
    PrimaryComponentTick.bCanEverTick = false;
 }
 
-void UTargetComponent::BeginPlay()
-{
-   
-}
-
 AActor* UTargetComponent::GetTargetActorOrUnit() const
 {
-   if(targetData->target.IsType<UTargetComponent*>())
-      return targetData->target.Get<AUnit*>();
-   else if(targetData->target.IsType<AActor*>())
-      return targetData->target.Get<AActor*>();
+   if(targetData.target.IsType<UTargetComponent*>())
+      return targetData.target.Get<AUnit*>();
+   else if(targetData.target.IsType<AActor*>())
+      return targetData.target.Get<AActor*>();
    else
       return nullptr;
 }

@@ -6,6 +6,7 @@
 #include "RTSCheatManager.h"
 #include "SettingsContext.h"
 #include "SpellDelegateStore.h"
+#include "UIDelegateContext.h"
 #include "UserInput.h"
 #include "Slots/ActionSlot.h"
 #include "WorldObjects/Ally.h"
@@ -18,10 +19,13 @@ void UESkillContainer::NativePreConstruct()
 
 void UESkillContainer::NativeOnInitialized()
 {
+   Super::NativeOnInitialized();
+
    SpellHUDEvents::OnFocusedUnitSpellCastedEvent.AddUObject(this, &UESkillContainer::OnFocusedUnitSpellCasted);
    SpellHUDEvents::OnSpellSlotReplacedEvent.AddUObject(this, &UESkillContainer::OnSpellSlotReplaced);
    GetWorld()->GetGameInstance()->GetSubsystem<USettingsContext>()->OnKeybindsChanged().AddDynamic(this, &UESkillContainer::OnKeybindsChanged);
-   
+   GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedEvent.AddDynamic(this, &UESkillContainer::OnSkillSlotDropped);
+
    skillSlots.Add(skillSlot1);
    skillSlots.Add(skillSlot2);
    skillSlots.Add(skillSlot3);
@@ -32,13 +36,22 @@ void UESkillContainer::NativeOnInitialized()
 
 void UESkillContainer::OnWidgetShown(URTSAbilitySystemComponent* focusedUnitAbilityComp)
 {
-   int index = 0;
+   int index                    = 0;
+   this->focusedUnitAbilityComp = focusedUnitAbilityComp;
    for(USkillSlot* skillSlot : skillSlots)
    {
       skillSlot->UpdateSkillSlot(focusedUnitAbilityComp->GetSpellAtSlot(index));
       ++index;
    }
    PlayAnimation(flowOutAnim);
+}
+
+void UESkillContainer::OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex)
+{
+   GetWorld()->GetTimerManager().SetTimerForNextTick([this, dragSlotIndex, dropSlotIndex]() {
+      skillSlots[dragSlotIndex]->UpdateSkillSlot(focusedUnitAbilityComp->GetSpellAtSlot(dragSlotIndex));
+      skillSlots[dropSlotIndex]->UpdateSkillSlot(focusedUnitAbilityComp->GetSpellAtSlot(dropSlotIndex));
+   });
 }
 
 void UESkillContainer::OnFocusedUnitSpellCasted(AUnit* focusedUnit, int spellIndex)
@@ -65,7 +78,7 @@ void UESkillContainer::OnKeybindsChanged(FInputActionKeyMapping newKeyMap)
 
    inputSettings->GetActionNames(abilityActionNames);
    abilityActionNames.FilterByPredicate([](const FName actionName) { return actionName.ToString().StartsWith("UseAbility"); });
-   abilityActionNames.Sort([](const FName&             a, const FName& b) { return a.FastLess(b); });
+   abilityActionNames.Sort([](const FName& a, const FName& b) { return a.FastLess(b); });
 
    int                            index = 0;
    TArray<FInputActionKeyMapping> outNewActionKeyMappings;

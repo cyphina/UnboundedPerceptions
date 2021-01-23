@@ -9,6 +9,7 @@
 #include "BluJsonObj.h"
 #include "GameplayEffectExtension.h"
 #include "Image.h"
+#include "PartyDelegateContext.h"
 #include "RTSPawn.h"
 #include "UpStatComponent.h"
 #include "UserInput.h"
@@ -20,9 +21,9 @@ void URTSSidebarWidget::NativeConstruct()
    Super::NativeConstruct();
    cpcRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
    cpcRef->GetBasePlayer()->partyUpdatedEvent.AddUObject(this, &URTSSidebarWidget::UpdatePartyInformation);
-   cpcRef->GetCameraPawn()->OnAllySelectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateSingleHeroSelect);
-   cpcRef->GetCameraPawn()->OnAllyDeselectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateHeroToggleDeselected);
-   cpcRef->GetCameraPawn()->OnGroundSelectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateDeselectAllHeroes);
+   cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateSingleHeroSelect);
+   cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllyDeselectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateHeroToggleDeselected);
+   cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnGroundSelectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateDeselectAllHeroes);
    StartDisplay(width, height);
    browser->ScriptEventEmitter.AddDynamic(this, &URTSSidebarWidget::HandleBluEvent);
 }
@@ -96,7 +97,6 @@ void URTSSidebarWidget::UpdateSingleHeroSelect(bool bToggled)
    // Could use virtual functions but right now we only need this one small check and it could be faster to use branching
    if(AAlly* heroAlly = cpcRef->GetBasePlayer()->selectedAllies.Last(); heroAlly->GetClass()->IsChildOf(ABaseHero::StaticClass()))
    {
-      // RVO should optimize this
       FString heroInfoString = MakeSingleHeroSelectedJson(heroAlly);
 
       // Send JSON data to the browser, which will automatically set deselected to its saved objects and then select the hero we passed in
@@ -209,7 +209,7 @@ void URTSSidebarWidget::HandleBluEvent(const FString& eventName, const FString& 
       cpcRef->GetCameraPawn()->clickedOnBrowserHud = true;
 
       UBluJsonObj* jsonObj         = UBluBlueprintFunctionLibrary::ParseJSON(eventMessage);
-      const int    heroIndex       = jsonObj->getNumValue("value");
+      const int    heroIndex       = jsonObj->GetNumValue("value");
       ABaseHero*   selectedHeroRef = cpcRef->GetBasePlayer()->GetHeroes()[heroIndex];
 
       if(!cpcRef->IsInputKeyDown(EKeys::LeftShift))

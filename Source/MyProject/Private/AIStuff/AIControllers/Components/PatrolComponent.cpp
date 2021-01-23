@@ -19,9 +19,6 @@ void UPatrolComponent::BeginPlay()
 {
    Super::BeginPlay();
    if(AAIController* ownerControllerRef = Cast<AAIController>(GetOwner())) {
-      ownerBTComp = ownerControllerRef->FindComponentByClass<UBehaviorTreeComponent>();
-      ownerControllerRef->ReceiveMoveCompleted.AddDynamic(this, &UPatrolComponent::MoveToNextPatrolPoint);
-      ensure(ownerBTComp);
       if(AUnitController* unitControllerRef = Cast<AUnitController>(ownerControllerRef)) {
          unitControllerRef->OnUnitStopped().AddUObject(this, &UPatrolComponent::StopPatrolling);
       }

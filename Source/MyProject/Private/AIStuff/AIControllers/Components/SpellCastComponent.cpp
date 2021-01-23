@@ -11,6 +11,7 @@
 
 void USpellCastComponent::BeginPlay()
 {
+   Super::BeginPlay();
    const auto unitControllerOwner = Cast<AUnitController>(GetOwner());
    check(unitControllerOwner);
    unitOwnerRef = unitControllerOwner->GetUnitOwner();

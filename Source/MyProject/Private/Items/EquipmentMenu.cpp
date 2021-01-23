@@ -7,12 +7,12 @@
 #include "ItemFunctionLibrary.h"
 #include "TextBlock.h"
 #include "UserInput.h"
-#include "Items/ItemDelegateStore.h"
+#include "ItemDelegateContext.h"
 #include "UI/HUDManager.h"
 
 void UEquipmentMenu::NativeOnInitialized()
 {
-   ItemChangeEvents::OnEquipmentChangedEvent.AddUObject(this, &UEquipmentMenu::OnEquipmentChanged);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().AddUObject(this, &UEquipmentMenu::OnEquipmentChanged);
    equipSlots[0] = helmetSlot;
    equipSlots[1] = bodySlot;
    equipSlots[2] = gloveSlot;

@@ -26,12 +26,14 @@ void URTSStateComponent::ChangeState(EUnitState newState) const
 
 void URTSStateComponent::BeginPlay()
 {
-   stateMachine = StateMachineFactory::BuildStateMachine(Cast<AUnit>(GetOwner()));
+   Super::BeginPlay();
+   if(AUnitController* ownerController = Cast<AUnitController>(GetOwner())) { stateMachine = StateMachineFactory::BuildStateMachine(ownerController->GetUnitOwner()); }
    Cast<AUnitController>(GetOwner())->OnUnitStopped().AddUObject(this, &URTSStateComponent::OnUnitStopped);
 }
 
 void URTSStateComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
+   Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
    stateMachine->Update(DeltaTime);
 }
 

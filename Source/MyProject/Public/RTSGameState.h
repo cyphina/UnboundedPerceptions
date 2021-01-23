@@ -73,6 +73,7 @@ private:
    void OnEnemyActiveChanged(AEnemy* enemyRef, bool isActive);
 
    /** As units get killed off due to level unload, we need to make sure these data structures are on good shape when we resume playing in the next level */
+   UFUNCTION()
    void CleanupUnitLists();
 
    UPROPERTY(EditDefaultsOnly, Category = "Vision", Meta = (AllowPrivateAccess = true))

@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "UserInput.h"
 #include "MyGameInstance.h"
@@ -12,7 +10,7 @@
 AUserInput::AUserInput()
 {
    // Initialization of variables
-   PrimaryActorTick.bCanEverTick = false;
+   PrimaryActorTick.bCanEverTick = true;
    basePlayer                    = nullptr;
    gameInstance                  = nullptr;
 

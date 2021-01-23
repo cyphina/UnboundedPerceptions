@@ -45,6 +45,8 @@ class MYPROJECT_API AAlly : public AUnit
    const TSet<AUnit*>* GetVisibleEnemies_Impl() const override;
    const TSet<AUnit*>* GetAllies_Impl() const override;
 
+   void SetEnabled(bool bEnabled) override;
+
    UPROPERTY()
    AAllyAIController* allyController;
 
@@ -58,7 +60,6 @@ class MYPROJECT_API AAlly : public AUnit
    void Tick(float deltaSeconds) override;
    void EndPlay(const EEndPlayReason::Type eReason) override;
    void PossessedBy(AController* newAllyControllerRef) override;
-   void SetEnabled(bool bEnabled) override;
 
  private:
    /** What enemies are in our radius determined via sphere overlap events */

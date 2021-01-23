@@ -11,6 +11,7 @@
 #include "ItemFunctionLibrary.h"
 #include "ManualSpellComponent.h"
 #include "MyProject.h"
+#include "PartyDelegateContext.h"
 #include "RTSIngameWidget.h"
 #include "RTSPawn.h"
 #include "TargetedAttackComponent.h"
@@ -196,11 +197,11 @@ void UDefaultCursorClickFunctionality::ToggleSingleAllySelection()
       if(AAlly* allyRef = Cast<AAlly>(hitActor)) {
          if(allyRef->GetSelected()) {
             allyRef->SetSelected(false);
-            pawnRef->OnAllyDeselectedDelegate.Broadcast(allyRef);
+            controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllyDeselectedDelegate.Broadcast(allyRef);
 
          } else {
             allyRef->SetSelected(true);
-            pawnRef->OnAllySelectedDelegate.Broadcast(true);
+            controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.Broadcast(true);
          }
       }
    }
@@ -227,20 +228,27 @@ void UDefaultCursorClickFunctionality::ItemUsageQueue() {}
 
 void UDefaultCursorClickFunctionality::SelectSingleUnitUnderClick()
 {
-   if(!pawnRef->clickedOnBrowserHud) {
+   if(!pawnRef->clickedOnBrowserHud)
+   {
       // Ensure we didn't click on the browser widget in a meaningful way
       controllerRef->GetBasePlayer()->ClearSelectedAllies();
-      if(AUnit* selectedUnit = Cast<AUnit>(pawnRef->GetHitActorClick(clickHitResult))) {
+      if(AUnit* selectedUnit = Cast<AUnit>(pawnRef->GetHitActorClick(clickHitResult)))
+      {
          selectedUnit->SetSelected(true);
+         controllerRef->GetBasePlayer()->SetFocusedUnit(selectedUnit);
          // Kind of jank but this is what I thought of at the moment so we don't have to check this everywhere we bind to this delegate
          if(selectedUnit->GetClass()->IsChildOf(AAlly::StaticClass()))
-            pawnRef->OnAllySelectedDelegate.Broadcast(false);
-         else
-            pawnRef->OnUnitSelectedDelegate.Broadcast();
-      } else {
+         {
+            controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.Broadcast(false);
+         } else
+         {
+            controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnUnitSelectedDelegate.Broadcast();
+         }
+      } else
+      {
          // We selected the ground
          pawnRef->ChangeCursor(ECursorStateEnum::Select);
-         pawnRef->OnGroundSelectedDelegate.Broadcast();
+         controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnGroundSelectedDelegate.Broadcast();
       }
    }
 }
@@ -250,7 +258,7 @@ void UDefaultCursorClickFunctionality::SelectEnemy()
    if(AEnemy* selectedEnemy = Cast<AEnemy>(pawnRef->GetHitActorClick(clickHitResult))) {
       controllerRef->GetBasePlayer()->ClearSelectedAllies();
       selectedEnemy->SetSelected(true);
-      pawnRef->OnUnitSelectedDelegate.Broadcast();
+      controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnUnitSelectedDelegate.Broadcast();
    }
 }
 

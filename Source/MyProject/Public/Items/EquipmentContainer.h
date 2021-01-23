@@ -4,9 +4,7 @@
 #include "EquipmentContainer.generated.h"
 
 class UBackpack;
-
 DECLARE_DELEGATE_TwoParams(FOnEquipmentContainerChanged, int, bool);
-
 using Equip_Slot_Arr = TStaticArray<int, 7>;
 
 /**
@@ -34,7 +32,7 @@ public:
    /** Frees the slot from the container as well as removing stat bonuses */
    void Unequip(int slot);
 
-   FOnEquipmentContainerChanged& OnEquipmentChanged() { return OnEquipmentChangedEvent; }
+   FOnEquipmentContainerChanged& OnEquipmentContainerChanged() { return OnEquipmentChangedEvent; }
 
    using RangedForIteratorType = Equip_Slot_Arr::RangedForIteratorType;
    using RangedForConstIteratorType = Equip_Slot_Arr::RangedForConstIteratorType;

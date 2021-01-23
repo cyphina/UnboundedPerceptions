@@ -22,13 +22,24 @@
 #include "TargetComponent.h"
 #include "PatrolComponent.h"
 
-AAllyAIController::AAllyAIController()
+#include "ManualSpellComponent.h"
+#include "TargetedAttackComponent.h"
+#include "SpellCastComponent.h"
+#include "AIModule/Classes/BehaviorTree/BlackboardComponent.h"
+#include "AIModule/Classes/BehaviorTree/BehaviorTreeComponent.h"
+
+AAllyAIController::AAllyAIController() : AUnitController()
 {
    SetActorTickInterval(0.2f);
    behaviorTrees.SetNum(NUM_BEHAVIORAL_MODES);
 
    patrolComp = CreateDefaultSubobject<UPatrolComponent>("PatrolComponent");
    stateComp  = CreateDefaultSubobject<URTSStateComponent>("StateComponent");
+   spellCastComponent  = CreateDefaultSubobject<USpellCastComponent>("SpellComponent");
+   manualSpellCastComponent  = CreateDefaultSubobject<UManualSpellComponent>("ManualSpellComponent");
+   targetedAttackComponent = CreateDefaultSubobject<UTargetedAttackComponent>("TargetedAttackComponent");
+   blackboardComp = CreateDefaultSubobject<UBlackboardComponent>("BlackboardComponent");
+   behaviorTreeComp = CreateDefaultSubobject<UBehaviorTreeComponent>("BehaviorTreeComponent");
 }
 
 void AAllyAIController::OnPossess(APawn* InPawn)
@@ -40,6 +51,7 @@ void AAllyAIController::OnPossess(APawn* InPawn)
 
 void AAllyAIController::OnUnPossess()
 {
+   Super::OnUnPossess();
    spellCastComponent->OnSpellCasted().RemoveAll(this);
 }
 

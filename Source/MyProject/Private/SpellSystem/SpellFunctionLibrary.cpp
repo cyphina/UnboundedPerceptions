@@ -22,7 +22,7 @@
 #include "SkillSlot.h"
 
 const FGameplayTag USpellFunctionLibrary::CONFIRM_SPELL_TAG        = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Spell");
-const FGameplayTag USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG = FGameplayTag::RequestGameplayTag("Skill.Targetting.Confirm");
+const FGameplayTag USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Target");
 
 USpellFunctionLibrary::USpellFunctionLibrary(const FObjectInitializer& o) :
    Super(o)

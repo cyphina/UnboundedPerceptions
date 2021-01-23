@@ -8,7 +8,7 @@
 
 #include "WorldObjects/BaseHero.h"
 
-#include "ItemDelegateStore.h"
+#include "ItemDelegateContext.h"
 #include "PartyDelegateContext.h"
 
 #include "AIStuff/AIControllers/HeroAIController.h"
@@ -19,10 +19,11 @@
 
 void UHeroInventory::NativeOnInitialized()
 {
-   ItemChangeEvents::OnEquipmentChangedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
-   ItemChangeEvents::OnItemPickedUpEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
-   ItemChangeEvents::OnItemPurchasedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
-   ItemChangeEvents::OnItemUsedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+   Super::NativeOnInitialized();
+   GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+   GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemPickedUp().AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+   GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemPurchased().AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+   GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemUsed().AddUObject(this, &UHeroInventory::OnItemChangeEvent);
    GetOwningLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnHeroActiveChanged().AddUObject(this, &UHeroInventory::OnHeroActiveChanged);
 }
 

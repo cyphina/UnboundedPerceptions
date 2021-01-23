@@ -37,6 +37,7 @@ int UEquipmentContainer::Equip(int equipItemID)
    {
       return SwapEquipsFromInventory(equipItemID, 6);
    }
+   
    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Orange, "Error, equipping unknown type of item");
    return 0;
 }
@@ -46,13 +47,13 @@ int UEquipmentContainer::SwapEquipsFromInventory(int equipID, int equipSlot)
    const int prevEquipId = equips[equipSlot];
    if(prevEquipId > 0)
    {
-      OnEquipmentChanged().ExecuteIfBound(equips[equipSlot], false);
+      OnEquipmentContainerChanged().ExecuteIfBound(equips[equipSlot], false);
       equips[equipSlot] = equipID;
-      OnEquipmentChanged().Execute(equipID, true);
+      OnEquipmentContainerChanged().Execute(equipID, true);
       return prevEquipId;
    }
    equips[equipSlot] = equipID;
-   OnEquipmentChanged().Execute(equipID, true);
+   OnEquipmentContainerChanged().Execute(equipID, true);
    return 0;
 }
 
@@ -61,7 +62,7 @@ void UEquipmentContainer::Unequip(int slot)
    if(equips[slot] > 0)
    {
       FMyItem item = FMyItem(equips[slot]);
-      OnEquipmentChanged().Execute(equips[slot], false);
+      OnEquipmentContainerChanged().Execute(equips[slot], false);
       equips[slot] = 0;
    }
 }

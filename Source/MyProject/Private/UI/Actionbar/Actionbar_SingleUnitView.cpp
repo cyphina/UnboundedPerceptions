@@ -6,14 +6,14 @@
 #include "Actionbar_FocusedUnitPortrait.h"
 #include "BasePlayer.h"
 #include "GameplayDelegateContext.h"
-#include "PartyDelegateContext.h"
+#include "UIDelegateContext.h"
 #include "Primitives/RTSWidgetSwitcher.h"
 #include "Unit.h"
 #include "UserInput.h"
 
 void UActionbar_SingleUnitView::NativeOnInitialized()
 {
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnUnitSlotSelected().AddUObject(this, &UActionbar_SingleUnitView::OnUnitSlotSelected);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnUnitSlotSelected().AddUObject(this, &UActionbar_SingleUnitView::OnUnitSlotSelected);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnUnitDieGlobal().AddUObject(this, &UActionbar_SingleUnitView::OnUnitDie);
 }
 

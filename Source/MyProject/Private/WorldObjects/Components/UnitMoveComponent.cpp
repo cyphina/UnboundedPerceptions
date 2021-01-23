@@ -11,7 +11,7 @@ void UUnitMoveComponent::BeginPlay()
 
 void UUnitMoveComponent::OnMoveSpeedChanged(const FGameplayAttribute& att, float& newVal, AUnit* unitRef)
 {
-   if(att == UMyAttributeSet::MovementSpeedAttribute()) { 
+   if(att == UMyAttributeSet::GetMovementSpeedAttribute()) { 
       MaxWalkSpeed = newVal;
    }
 }

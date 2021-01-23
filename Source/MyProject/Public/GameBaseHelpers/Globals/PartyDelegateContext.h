@@ -14,8 +14,13 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnHeroActiveChanged, ABaseHero*, bool);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEnemyActiveChanged, AEnemy*, bool);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnSummonActiveChanged, ASummon*, bool);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnFocusedUnitChanged, AUnit*);
+
 DECLARE_EVENT_OneParam(ABaseHero, FOnHeroLevelUp, ABaseHero*);
-DECLARE_EVENT_OneParam(ARTSPawn, FOnUnitSlotSelected, AUnit*);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllySelected, bool, ToggleSelect);       // (ToggleSelect is if we shift click) ToggleAllySelect, SelectAllyUnit, SelectionRect
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllyDeselected, AAlly*, DeselectedAlly); // ToggleAllyDeselect,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGroundSelected);                                  // SelectGround,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);                                    // SelectEnemy
 
 UCLASS()
 class UPartyDelegateContext : public ULocalPlayerSubsystem
@@ -32,10 +37,20 @@ public:
    FOnSummonActiveChanged& OnSummonActiveChanged() const { return OnSummonActiveChangedEvent; }
 
    FOnFocusedUnitChanged& OnFocusedUnitChanged() const { return OnFocusedUnitChangedEvent; }
-   
+
    FOnHeroLevelUp& OnHeroLevelUp() const { return OnHeroLevelUpEvent; }
 
-   FOnUnitSlotSelected& OnUnitSlotSelected() const { return OnUnitSlotSelectedEvent; }
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+   FOnAllySelected OnAllySelectedDelegate;
+
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+   FOnAllyDeselected OnAllyDeselectedDelegate;
+
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+   FOnUnitSelected OnUnitSelectedDelegate;
+
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+   FOnGroundSelected OnGroundSelectedDelegate;
 
 protected:
    void Initialize(FSubsystemCollectionBase& Collection) override;
@@ -48,5 +63,4 @@ private:
    mutable FOnSummonActiveChanged OnSummonActiveChangedEvent;
    mutable FOnFocusedUnitChanged  OnFocusedUnitChangedEvent;
    mutable FOnHeroLevelUp         OnHeroLevelUpEvent;
-   mutable FOnUnitSlotSelected OnUnitSlotSelectedEvent;
 };

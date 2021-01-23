@@ -49,7 +49,7 @@ public:
    void SwapHero();
 
    /**
-   * Call this to display browser when widget starts up and to setup listener to hero stats
+   * Call this once to display browser when widget starts up and to setup listener to hero stats
    */
    UFUNCTION(BlueprintCallable)
    void Startup();

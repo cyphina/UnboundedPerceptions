@@ -62,6 +62,9 @@ void AHUDManager::BeginPlay()
    playerControllerRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
    if(!ensure(playerControllerRef != nullptr)) return;
 
+   ARTSPawn* playerPawn = Cast<ARTSPawn>(playerControllerRef->GetPawn());
+   if(!ensure(playerPawn != nullptr)) return;
+
    gameMode = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
    if(!ensure(gameMode != nullptr)) return;
 
@@ -81,9 +84,8 @@ void AHUDManager::BeginPlay()
    playerControllerRef->SetInputMode(inputModeData);
    playerControllerRef->bShowMouseCursor = true;
 
-   InjectDependentClasses();
-
    SetupWidgetReferences();
+   InjectDependentClasses();
    
    ANPC::SetHUDManagerRef(this);
 }

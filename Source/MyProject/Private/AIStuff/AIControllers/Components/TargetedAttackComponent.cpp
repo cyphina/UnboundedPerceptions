@@ -34,7 +34,10 @@ void UTargetedAttackComponent::BeginAttack(AUnit* target)
    if(USpellDataLibrary::IsAttackable(target->GetAbilitySystemComponent()) && !USpellDataLibrary::IsStunned(agent->GetAbilitySystemComponent())) {
       agent->GetUnitController()->Stop();
       agent->GetTargetComponent()->SetTarget(target);
-      agent->FindComponentByClass<URTSStateComponent>()->ChangeState(EUnitState::STATE_ATTACKING);
+      if(URTSStateComponent* stateComp = agent->FindComponentByClass<URTSStateComponent>())
+      {
+         stateComp->ChangeState(EUnitState::STATE_ATTACKING);
+      }
       InitializeAttackParams();
    }
 }
@@ -51,6 +54,7 @@ void UTargetedAttackComponent::OverrideAttackWithSpell(TSubclassOf<UMySpell> ove
 
 void UTargetedAttackComponent::BeginPlay()
 {
+   Super::BeginPlay();
    agent = Cast<AUnitController>(GetOwner())->GetUnitOwner();
    agent->GetUnitController()->OnUnitStopped().AddUObject(this, &UTargetedAttackComponent::OnUnitStopped);
    agent->OnUnitAttackSwingHit().AddUObject(this, &UTargetedAttackComponent::OnUnitAttackSwingDone);

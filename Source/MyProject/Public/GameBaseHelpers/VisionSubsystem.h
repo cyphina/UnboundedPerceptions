@@ -26,7 +26,11 @@ class MYPROJECT_API UVisionSubsystem : public UObject
    UVisionSubsystem();
 
    void StartUpdating();
+
+   UFUNCTION()
    void ResumeUpdating();
+
+   UFUNCTION()
    void StopUpdating();
 
    FHitResult                  visionHitResult;

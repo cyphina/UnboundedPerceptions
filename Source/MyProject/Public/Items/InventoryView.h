@@ -30,7 +30,6 @@ public:
    UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Inventory Functions")
    void LoadItems();
 
-protected:
    /**Reference to the container that lists the items we have.  The slots need this.*/
    UPROPERTY(BlueprintReadWrite, Category = "References")
    UInventory* inventoryRef;

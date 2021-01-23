@@ -20,19 +20,19 @@ class MYPROJECT_API UESkillContainer : public UUserWidget
 {
    GENERATED_BODY()
 
-public:
+ public:
    void OnWidgetShown(URTSAbilitySystemComponent* focusedUnitAbilityComp);
-   
-protected:
+
+ protected:
    void NativePreConstruct() override;
    void NativeOnInitialized() override;
-   
+
    UPROPERTY(Meta = (BindWidget))
    USkillSlot* skillSlot1;
 
    UPROPERTY(Meta = (BindWidget))
    USkillSlot* skillSlot2;
-   
+
    UPROPERTY(Meta = (BindWidget))
    USkillSlot* skillSlot3;
 
@@ -50,11 +50,17 @@ protected:
 
    UPROPERTY(Transient, Meta = (BindWidgetAnim))
    UWidgetAnimation* flowInAnim;
-   
-private:
+
+ private:
+   UFUNCTION()
+   void OnKeybindsChanged(FInputActionKeyMapping newKeyMap);
+
+   UFUNCTION()
+   void OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex);
+
    void OnFocusedUnitSpellCasted(AUnit* focusedUnit, int spellIndex);
    void OnSpellSlotReplaced(AUnit* affectedUnit, TSubclassOf<UMySpell> replacingSpellClass, int slotIndex);
-   void OnKeybindsChanged(FInputActionKeyMapping newKeyMap);   
 
-   TArray<USkillSlot*> skillSlots;
+   URTSAbilitySystemComponent* focusedUnitAbilityComp;
+   TArray<USkillSlot*>         skillSlots;
 };

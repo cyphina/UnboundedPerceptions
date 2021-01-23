@@ -2,38 +2,51 @@
 #include "MySpell.h"
 #include "SpellDataManager.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AssetRegistryModule.h"
 #include "GameplayEffects/RTSDamageEffect.h"
 
-
-USpellDataManager* USpellDataManager::SingletonManager = nullptr;
-
-
+USpellDataManager*                        USpellDataManager::SingletonManager = nullptr;
+TMap<FGameplayTag, TSubclassOf<UMySpell>> USpellDataManager::spellClasses;
 
 USpellDataManager::USpellDataManager()
 {
-
-}
-
-void USpellDataManager::SetupSpells(UDataTable* spellLookupTable)
-{
-   SetupCachedSpellClassMap();
 }
 
 void USpellDataManager::SetupCachedSpellClassMap()
 {
-   for(TObjectIterator<UClass> it; it; ++it)
+   FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(FName("AssetRegistry"));
+   IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+
+   const FName SpellPath = TEXT("/Game/RTS_Tutorial/Blueprints/SpellSystem/Spells");
+
+   TArray<FString> ScanPaths;
+   ScanPaths.Add(SpellPath.ToString());
+   AssetRegistry.ScanPathsSynchronous(ScanPaths);
+
+   TArray<FAssetData> SpellAssetList;
+   FARFilter Filter;
+   Filter.ClassNames.Add(UBlueprint::StaticClass()->GetFName());
+   Filter.PackagePaths.Add(SpellPath);
+   Filter.bRecursiveClasses = true;
+   Filter.bRecursivePaths = true;
+   AssetRegistry.GetAssets(Filter, SpellAssetList);
+
+   TArray<TSubclassOf<UMySpell>> SpellClasses;
+   for(const FAssetData& Asset : SpellAssetList)
    {
-      auto x = *it;
-      
-      if((*it)->IsChildOf(UMySpell::StaticClass()))
+      const UBlueprint* BlueprintObj = Cast<UBlueprint>(Asset.GetAsset());
+      if(!BlueprintObj)
       {
-         FProperty* prop = it->FindPropertyByName("spellDefaults");
-         if(FStructProperty* p = prop ? CastField<FStructProperty>(prop) : nullptr)
-         {
-            FSpellDefaults* structAddress      = prop->ContainerPtrToValuePtr<FSpellDefaults>((*it)->GetDefaultObject());
-            spellClasses.Add(structAddress->nameTag, *it);
-         }
+         continue;
       }
+
+      UClass* BlueprintClass = BlueprintObj->GeneratedClass;
+      if(!BlueprintClass || !BlueprintClass->IsChildOf(UMySpell::StaticClass()))
+      {
+         continue;
+      }
+
+      spellClasses.Add(BlueprintClass->GetDefaultObject<UMySpell>()->GetSpellDefaults().nameTag, BlueprintClass);
    }
 }
 
@@ -41,5 +54,6 @@ void USpellDataManager::InitializeManager()
 {
    check(!SingletonManager);
    SingletonManager = NewObject<USpellDataManager>(GetTransientPackage(), NAME_None);
+   SetupCachedSpellClassMap();
    SingletonManager->AddToRoot();
 }

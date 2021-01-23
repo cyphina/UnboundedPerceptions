@@ -16,11 +16,9 @@ DECLARE_CYCLE_STAT(TEXT("Unit Vision Update"), STAT_UnitVision, STATGROUP_RTSUni
 
 namespace VisionCVars
 {
-   static float VisionUpdateLoopTime = .1f;
-   static FAutoConsoleVariableRef
-       CVarNumSecondsBeforeShowingInMinutes(TEXT("VisionUpdateLoopTime"), VisionUpdateLoopTime,
-                                            TEXT("How long between vision updates in seconds"),
-                                            ECVF_Default);
+   static float                   VisionUpdateLoopTime = .1f;
+   static FAutoConsoleVariableRef CVarNumSecondsBeforeShowingInMinutes(TEXT("VisionUpdateLoopTime"), VisionUpdateLoopTime,
+                                                                       TEXT("How long between vision updates in seconds"), ECVF_Default);
 }
 
 UVisionSubsystem::UVisionSubsystem()
@@ -32,10 +30,9 @@ UVisionSubsystem* UVisionSubsystem::Create(UObject* outer)
 {
    auto newVisionManager = NewObject<UVisionSubsystem>(outer);
    if(ARTSGameMode* gameModeRef = Cast<ARTSGameMode>(newVisionManager->GetWorld()->GetAuthGameMode())) {
-      newVisionManager->StartUpdating();
+      newVisionManager->gameStateRef = Cast<ARTSGameState>(newVisionManager->GetWorld()->GetGameState());
       gameModeRef->OnLevelLoaded.AddDynamic(newVisionManager, &UVisionSubsystem::ResumeUpdating);
       gameModeRef->OnLevelAboutToUnload.AddDynamic(newVisionManager, &UVisionSubsystem::StopUpdating);
-
       newVisionManager->StartUpdating();
       return newVisionManager;
    }
@@ -81,18 +78,25 @@ void UVisionSubsystem::AddVisibleEnemy(AUnit* newEnemy)
 TSet<const URTSVisionComponent*> UVisionSubsystem::GetFriendlyVisionComps() const
 {
    TSet<const URTSVisionComponent*> friendlyVisionComps;
-   const auto friendlyUnitSeesSomeone = [](const AUnit* friendlyUnit) { return friendlyUnit->GetVisionComponent()->GetPossibleVisibleEnemies().Num() > 0; };
-   const auto getFriendlyVisionComp = [](const AUnit* friendlyUnit) { return friendlyUnit->GetVisionComponent(); };
+   const auto                       friendlyUnitSeesSomeone = [](const AUnit* friendlyUnit) {
+      return friendlyUnit->GetVisionComponent()->GetPossibleVisibleEnemies().Num() > 0;
+   };
+   const auto getFriendlyVisionComp = [](const AUnit* friendlyUnit) {
+      return friendlyUnit->GetVisionComponent();
+   };
    Algo::TransformIf(gameStateRef->GetAllFriendlyUnits(), friendlyVisionComps, friendlyUnitSeesSomeone, getFriendlyVisionComp);
    return friendlyVisionComps;
-
 }
 
 TSet<const URTSVisionComponent*> UVisionSubsystem::GetEnemyVisionComps() const
 {
    TSet<const URTSVisionComponent*> enemyVisionComps;
-   const auto                 enemySeesSomeone   = [](const AUnit* enemyUnit) { return enemyUnit->GetVisionComponent()->GetPossibleVisibleEnemies().Num() > 0; };
-   const auto                 getEnemyVisionComp = [](const AUnit* enemyUnit) { return enemyUnit->GetVisionComponent(); };
+   const auto                       enemySeesSomeone = [](const AUnit* enemyUnit) {
+      return enemyUnit->GetVisionComponent()->GetPossibleVisibleEnemies().Num() > 0;
+   };
+   const auto getEnemyVisionComp = [](const AUnit* enemyUnit) {
+      return enemyUnit->GetVisionComponent();
+   };
    Algo::TransformIf(gameStateRef->GetAllEnemyUnits(), enemyVisionComps, enemySeesSomeone, getEnemyVisionComp);
    return enemyVisionComps;
 }
@@ -107,7 +111,7 @@ void UVisionSubsystem::UpdateVisibleEnemies()
 
    SCOPE_CYCLE_COUNTER(STAT_UnitVision)
    {
-      TSet<AUnit*>                     lastVisibleEnemies;
+      TSet<AUnit*>                           lastVisibleEnemies;
       const TSet<const URTSVisionComponent*> allyVisionToIterateOver = GetFriendlyVisionComps();
 
       /** By reference capture according to this https://en.cppreference.com/w/cpp/language/lambda in Lambda Capture section
@@ -122,17 +126,16 @@ void UVisionSubsystem::UpdateVisibleEnemies()
       */
 
       ParallelForWithPreWork(
-      allyVisionToIterateOver.Num(),
-      [this, &allyVisionToIterateOver](const int32 curIndx) {
-         const URTSVisionComponent* allyVision = allyVisionToIterateOver[FSetElementId::FromInteger(curIndx)];
-         allyVision->visionMutex.ReadLock();
-         for(AUnit* enemy : allyVision->GetPossibleVisibleEnemies()) {
-            if(CheckUnitInVision(enemy, allyVision, visibleMutex, visibleEnemies))
-               AddVisibleEnemy(enemy);
-         }
-         allyVision->visionMutex.ReadUnlock();
-      },
-      [this, &lastVisibleEnemies]() { StoreEnemiesVisibleLastCall(lastVisibleEnemies); });
+          allyVisionToIterateOver.Num(),
+          [this, &allyVisionToIterateOver](const int32 curIndx) {
+             const URTSVisionComponent* allyVision = allyVisionToIterateOver[FSetElementId::FromInteger(curIndx)];
+             allyVision->visionMutex.ReadLock();
+             for(AUnit* enemy : allyVision->GetPossibleVisibleEnemies()) {
+                if(CheckUnitInVision(enemy, allyVision, visibleMutex, visibleEnemies)) AddVisibleEnemy(enemy);
+             }
+             allyVision->visionMutex.ReadUnlock();
+          },
+          [this, &lastVisibleEnemies]() { StoreEnemiesVisibleLastCall(lastVisibleEnemies); });
 
       /// --Non multi-threaded code below runs after parallel work--
 

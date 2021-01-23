@@ -111,6 +111,8 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Functionality")
    virtual void SetEnabled(bool bEnabled);
 
+   bool IsEnabled() const { return unitProperties.bIsEnabled; }
+   
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
    const TSet<AUnit*>& GetVisibleEnemies() const { return *GetVisibleEnemies_Impl(); }
 

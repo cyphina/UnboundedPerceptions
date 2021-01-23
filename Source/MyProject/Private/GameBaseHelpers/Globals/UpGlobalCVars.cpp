@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "CoreMinimal.h"
 
+// TODO: This is the ultimate goal
 bool bEnableEnemyControl = 0;
 static FAutoConsoleVariableRef CVarEnableEnemyControl(
 	TEXT("enableEnemyControl"), 

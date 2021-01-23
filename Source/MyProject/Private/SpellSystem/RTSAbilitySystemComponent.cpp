@@ -5,9 +5,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "BrainComponent.h"
 
-#include "IUnitState.h"
-#include "UnitController.h"
-#include "WorldObjects/Unit.h"
+#include "WorldObjects/BaseHero.h"
 
 #include "AbilitySystemGlobals.h"
 #include "GameplayEffectCustomApplicationRequirement.h"
@@ -25,10 +23,16 @@ URTSAbilitySystemComponent::URTSAbilitySystemComponent() : UAbilitySystemCompone
 
 void URTSAbilitySystemComponent::BeginPlay()
 {
+   Super::BeginPlay();
    unitOwnerRef = Cast<AUnit>(GetOwner());
 
    GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_TAG)));
    GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG)));
+
+   // TODO: Set this more elegantly I guess.
+   if(Cast<ABaseHero>(GetOwner())) {
+      abilities.SetNum(6);
+   }
 }
 
 int URTSAbilitySystemComponent::FindSlotIndexOfSpell(TSubclassOf<UMySpell> spellToLookFor) const

@@ -17,7 +17,9 @@ void ChasingState::Enter(AUnit& unit)
    if(unit.GetTargetComponent()->GetTargetUnit() && !unit.GetTargetComponent()->GetTargetUnit()->GetVisionComponent()->IsVisible()) {
       unit.GetUnitController()->StopMovement();
    } else
+   {
       unit.FindComponentByClass<URTSStateComponent>()->ChangeState(EUnitState::STATE_IDLE);
+   }
 }
 
 void ChasingState::Exit(AUnit& unit)

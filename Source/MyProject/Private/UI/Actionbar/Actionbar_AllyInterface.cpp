@@ -24,11 +24,11 @@ void UActionbar_AllyInterface::NativeOnInitialized()
 
 void UActionbar_AllyInterface::OnWidgetShown(AUnit* focusedUnit)
 {
-   AAlly* allyRef = Cast<AAlly>(focusedUnit);
-   if(allyRef)
+   focusedAlly = Cast<AAlly>(focusedUnit);
+   if(focusedAlly)
    {
       AIOptionButtons[currentlySelectedButtonIndex]->SetIsEnabled(true);
-      AIOptionButtons[static_cast<int>(allyRef->GetAllyAIController()->GetAllyBehaviorMode())]->SetIsEnabled(false);
+      AIOptionButtons[static_cast<int>(focusedAlly->GetAllyAIController()->GetAllyBehaviorMode())]->SetIsEnabled(false);
    }
 }
 

@@ -4,6 +4,7 @@
 #include "Actionbar_UnitInterface.h"
 #include "Actionbar_EnemyInterface.generated.h"
 
+class AEnemy;
 class UTextBlock;
 class AUnit;
 
@@ -12,9 +13,15 @@ UCLASS()
 class MYPROJECT_API UActionbar_EnemyInterface : public UActionbar_UnitInterface
 {
    GENERATED_BODY()
-   
+
+public:
+   void OnWidgetShown(AUnit* focusedUnit) override;
+
 protected:
    UPROPERTY(Meta=(BindWidget))
    UTextBlock* Text_EnemyDescription;
 
+private:
+   UPROPERTY(BlueprintReadOnly, Meta=(AllowPrivateAccess))
+   AEnemy* enemyRef;
 };

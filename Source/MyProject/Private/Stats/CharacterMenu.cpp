@@ -13,6 +13,7 @@
 #include "UpStatComponent.h"
 #include "VerticalBox.h"
 #include "VerticalBoxSlot.h"
+#include "WidgetCompilerLog.h"
 
 void UCharacterMenu::NativeOnInitialized()
 {
@@ -26,14 +27,20 @@ void UCharacterMenu::NativeOnInitialized()
    
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnMoneyGained().AddUObject(this, &UCharacterMenu::OnMoneyGained);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnExpGained().AddUObject(this, &UCharacterMenu::OnEXPGained);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroLevelUp().AddUObject(this, &UCharacterMenu::OnHeroLevelUp);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroLevelUp().AddUObject(this, &UCharacterMenu::OnHeroLevelUp); 
 }
 
 bool UCharacterMenu::OnWidgetAddToViewport_Implementation()
 {
    Super::OnWidgetAddToViewport_Implementation();
    baseHeroRef = CPC->GetBasePlayer()->selectedHeroes[0];
-   return baseHeroRef ? true : false;
+   if(baseHeroRef)
+   {
+      InitialHeroValueSetup(baseHeroRef);
+      Widget_StatGraph->Startup();
+      return true;
+   }
+   return false;
 }
 
 void UCharacterMenu::OnAnimationFinished_Implementation(const UWidgetAnimation* Animation)
@@ -46,6 +53,14 @@ void UCharacterMenu::OnAnimationFinished_Implementation(const UWidgetAnimation* 
    else
    {
       Widget_StatGraph->Cleanup();
+   }
+}
+
+void UCharacterMenu::ValidateCompiledDefaults(IWidgetCompilerLog& CompileLog) const
+{
+   if(!AttributePointerWidgetClass)
+   {
+      CompileLog.Error(FText::Format(FText::FromString("{0} does not have a valid attribute pointer widget class set."), FText::FromString(GetName())));
    }
 }
 
@@ -78,6 +93,7 @@ void UCharacterMenu::InitialHeroValueSetup(ABaseHero* heroRef)
    Text_Money->SetText(FText::AsNumber(GetOwningPlayer<AUserInput>()->GetBasePlayer()->GetMoney()));
    Text_EXP->SetText(FText::AsNumber(heroRef->GetExpToLevel() - heroRef->GetCurrentExp()));
    Text_AttPoints->SetText(FText::AsNumber(heroRef->GetAttPoints()));
+   SetupCharacterPortrait(heroRef);
 }
 
 void UCharacterMenu::OnMoneyGained(int moneyGained)

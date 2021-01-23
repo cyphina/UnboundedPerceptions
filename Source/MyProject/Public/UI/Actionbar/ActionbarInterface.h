@@ -52,8 +52,13 @@ class MYPROJECT_API UActionbarInterface : public UMyUserWidget
    void NativeOnInitialized() override;
 
  private:
-   void OnAllySelected();
-   void OnAllyDeselected();
+   UFUNCTION()
+   void OnAllySelected(bool bToggled);
+   
+   UFUNCTION()
+   void OnAllyDeselected(AAlly* deselectedAlly);
+   
+   UFUNCTION()
    void OnGroundSelected();
 
    /** Handles scenario when a new unit is left clicked on, or if we tab to focus on a different unit in the selection group */

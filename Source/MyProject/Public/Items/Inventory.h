@@ -45,7 +45,7 @@ protected:
    void UseItemAtInventorySlot(int32 iSlot);
    virtual void UseItemAtInventorySlot_Implementation(int32 iSlot) PURE_VIRTUAL(UInventory::UseItemAtInventorySlot,);
 
-   void NativeConstruct() override;
+   void NativeOnInitialized() override;
    bool OnWidgetAddToViewport_Implementation() override;
 
    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))

@@ -12,12 +12,10 @@
 TArray<FGameplayAttribute> UMyAttributeSet::attList = TArray<FGameplayAttribute>();
 TSet<FGameplayAttribute>   UMyAttributeSet::attSet  = TSet<FGameplayAttribute>();
 
-const float UMyAttributeSet::MAX_HEALTH = TNumericLimits<int>().Max();
-
 UMyAttributeSet::UMyAttributeSet()
 {
-   attList = {StrengthAttribute(),  UnderstandingAttribute(), IntelligenceAttribute(), ExplosivenessAttribute(),
-              EnduranceAttribute(), AgilityAttribute(),       LuckAttribute()};
+   attList = {GetStrengthAttribute(),  GetUnderstandingAttribute(), GetIntelligenceAttribute(), GetExplosivenessAttribute(),
+              GetEnduranceAttribute(), GetAgilityAttribute(),       GetLuckAttribute()};
    attSet  = TSet<FGameplayAttribute>(attList);
 }
 
@@ -41,83 +39,34 @@ void UMyAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
    }*/
 }
 
-DEFINE_ATTRIBUTE_FUNCTION(Strength, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Intelligence, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Agility, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Understanding, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Endurance, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Luck, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Explosiveness, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Critical_Chance, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Critical_Damage, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Accuracy, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Dodge, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Attack_Speed, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Cast_Speed, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Physical_Aff, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Fire_Aff, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Water_Aff, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Wind_Aff, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Earth_Aff, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Electric_Aff, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Darkness_Aff, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Light_Aff, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Arcane_Aff, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Chaos_Aff, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Poison_Aff, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Blood_Aff, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Ethereal_Aff, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Physical_Resist, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Fire_Resist, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Water_Resist, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Wind_Resist, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Earth_Resist, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Electric_Resist, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Darkness_Resist, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Light_Resist, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Arcane_Resist, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Chaos_Resist, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Poison_Resist, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Blood_Resist, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Ethereal_Resist, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Health, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Mana, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Psyche, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Moxie, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(Shield, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(MovementSpeed, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(AttackRange, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(WeaponPower, UMyAttributeSet);
-DEFINE_ATTRIBUTE_FUNCTION(GlobalDamageModifier, UMyAttributeSet);
-
 TArray<FGameplayAttribute> UMyAttributeSet::GetAtts()
 {
-   TArray<FGameplayAttribute> atts = {StrengthAttribute(),  UnderstandingAttribute(), IntelligenceAttribute(), ExplosivenessAttribute(),
-                                      EnduranceAttribute(), AgilityAttribute(),       LuckAttribute()};
+   TArray<FGameplayAttribute> atts = {GetStrengthAttribute(),  GetUnderstandingAttribute(), GetIntelligenceAttribute(), GetExplosivenessAttribute(),
+                                      GetEnduranceAttribute(), GetAgilityAttribute(),       GetLuckAttribute()};
    return atts;
 }
 
 TArray<FGameplayAttribute> UMyAttributeSet::GetSkills()
 {
    TArray<FGameplayAttribute> skills = {
-       Critical_ChanceAttribute(), Critical_DamageAttribute(), AccuracyAttribute(),     DodgeAttribute(),         Attack_SpeedAttribute(), Cast_SpeedAttribute(),
-       Physical_AffAttribute(),    Fire_AffAttribute(),        Water_AffAttribute(),    Wind_AffAttribute(),      Earth_AffAttribute(),    Electric_AffAttribute(),
-       Darkness_AffAttribute(),    Light_AffAttribute(),       Arcane_AffAttribute(),   Chaos_AffAttribute(),     Poison_AffAttribute(),   Blood_AffAttribute(),
-       Ethereal_AffAttribute(),    Physical_ResistAttribute(), Fire_ResistAttribute(),  Water_ResistAttribute(),  Wind_ResistAttribute(),  Earth_ResistAttribute(),
-       Electric_ResistAttribute(), Darkness_ResistAttribute(), Light_ResistAttribute(), Arcane_ResistAttribute(), Chaos_ResistAttribute(), Poison_ResistAttribute(),
-       Blood_ResistAttribute(),    Ethereal_ResistAttribute()};
+       GetCritical_ChanceAttribute(), GetCritical_DamageAttribute(), GetAccuracyAttribute(),     GetDodgeAttribute(),         GetAttack_SpeedAttribute(), GetCast_SpeedAttribute(),
+       GetPhysical_AffAttribute(),    GetFire_AffAttribute(),        GetWater_AffAttribute(),    GetWind_AffAttribute(),      GetEarth_AffAttribute(),    GetElectric_AffAttribute(),
+       GetDarkness_AffAttribute(),    GetLight_AffAttribute(),       GetArcane_AffAttribute(),   GetChaos_AffAttribute(),     GetPoison_AffAttribute(),   GetBlood_AffAttribute(),
+       GetEthereal_AffAttribute(),    GetPhysical_ResistAttribute(), GetFire_ResistAttribute(),  GetWater_ResistAttribute(),  GetWind_ResistAttribute(),  GetEarth_ResistAttribute(),
+       GetElectric_ResistAttribute(), GetDarkness_ResistAttribute(), GetLight_ResistAttribute(), GetArcane_ResistAttribute(), GetChaos_ResistAttribute(), GetPoison_ResistAttribute(),
+       GetBlood_ResistAttribute(),    GetEthereal_ResistAttribute()};
    return skills;
 }
 
 TArray<FGameplayAttribute> UMyAttributeSet::GetVitals()
 {
-   TArray<FGameplayAttribute> vits = {HealthAttribute(), ManaAttribute(), PsycheAttribute(), MoxieAttribute(), ShieldAttribute()};
+   TArray<FGameplayAttribute> vits = {GetHealthAttribute(), GetManaAttribute(), GetPsycheAttribute(), GetMoxieAttribute(), GetShieldAttribute()};
    return vits;
 }
 
 TArray<FGameplayAttribute> UMyAttributeSet::GetMechanics()
 {
-   TArray<FGameplayAttribute> mechs = {MovementSpeedAttribute(), AttackRangeAttribute(), WeaponPowerAttribute(), GlobalDamageModifierAttribute()};
+   TArray<FGameplayAttribute> mechs = {GetMovementSpeedAttribute(), GetAttackRangeAttribute(), GetWeaponPowerAttribute(), GetGlobalDamageModifierAttribute()};
    return mechs;
 }
 
@@ -137,7 +86,7 @@ void UMyAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute
 void UMyAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
    AUnit* unit = Cast<AUnit>(GetOwningActor());
-   if(Attribute == HealthAttribute()) { // Health clamping
+   if(Attribute == GetHealthAttribute()) { // Health clamping
       Health.SetCurrentValue(FMath::Clamp(Health.GetCurrentValue(), 0.0f, Health.GetBaseValue()));
    } else if(attSet.Contains(Attribute)) { // Needs to be run before the broadcast to get proper values to the stat widget in the character menu
       unit->GetStatComponent()->UpdateStats(Attribute);

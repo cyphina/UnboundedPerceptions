@@ -15,10 +15,11 @@
 #include "WorldObjects/NPC.h"
 #include "UserInput.h"
 #include "GoalActor.h"
+#include "ItemDelegateContext.h"
 #include "RTSIngameWidget.h"
 #include "Interactables/NamedInteractableDecorator.h"
 #include "Items/ItemManager.h"
-#include "ItemDelegateStore.h"
+#include "ItemDelegateContext.h"
 #include "DialogSystem/NPCDelegateStore.h"
 #include "Runtime/AssetRegistry/Public/AssetRegistryModule.h"
 
@@ -57,29 +58,34 @@ void UQuestManager::UpdateQuestClassList()
 void UQuestManager::Init()
 {
    controllerRef = Cast<AUserInput>(GetOuter()->GetWorld()->GetFirstPlayerController());
-   /// Quest manager setup is done in PlayerController after huds are made
-
-   // Widgets may not be initialized due to begin play order
+   
+   // Widgets may not be initialized due to begin play order so setup next frame.
    GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UQuestManager::SetupWidgetReferences);
    
    completedQuests.Reserve(4);
    failedQuests.Reserve(4);
    quests.Reserve(4);
 
-   ItemChangeEvents::OnItemPickedUpEvent.AddUObject(this, &UQuestManager::OnItemPickedUp);
-   ItemChangeEvents::OnItemDroppedEvent.AddUObject(this, &UQuestManager::OnItemPickedUp);
-   ItemChangeEvents::OnItemPurchasedEvent.AddUObject(this, &UQuestManager::OnItemPickedUp);
-   ItemChangeEvents::OnItemUsedEvent.AddUObject(this, &UQuestManager::OnItemPickedUp);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemPickedUp().AddUObject(this, &UQuestManager::OnItemPickedUp);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemDropped().AddUObject(this, &UQuestManager::OnItemPickedUp);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemPurchased().AddUObject(this, &UQuestManager::OnItemPickedUp);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemUsed().AddUObject(this, &UQuestManager::OnItemPickedUp);
+   
+   // TODO: One more listener for when item rewards are given from quests
    NPCDelegateContext::OnNPCConversationEvent.AddUObject(this, &UQuestManager::OnTalkNPC);
    NPCDelegateContext::OnNPCTalkedEvent.AddUObject(this, &UQuestManager::OnTalkNPC, FGameplayTag::EmptyTag);
+   
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnInteracted().AddUObject(this, &UQuestManager::OnInteracted);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnUnitDieGlobal().AddUObject(this, &UQuestManager::OnEnemyDie);
 }
 
 void UQuestManager::SetupWidgetReferences()
 {
-   questListRef = controllerRef->GetHUDManager()->GetIngameHUD()->GetQuestList();
-   questJournalRef = controllerRef->GetHUDManager()->GetIngameHUD()->GetQuestJournal();
+   if(questListRef && questJournalRef)
+   {
+      questListRef    = controllerRef->GetHUDManager()->GetIngameHUD()->GetQuestList();
+      questJournalRef = controllerRef->GetHUDManager()->GetIngameHUD()->GetQuestJournal();
+   }
 }
 
 void UQuestManager::SelectNewQuest(AQuest* quest)

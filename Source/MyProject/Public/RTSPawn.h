@@ -14,13 +14,6 @@ class ICursorClickFunctionality;
 class USkillSlot;
 class UCameraComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllySelected, bool, ToggleSelect);       // ToggleAllySelect, SelectAllyUnit, SelectionRect
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllyDeselected, AAlly*, DeselectedAlly); // ToggleAllyDeselect,
-DECLARE_EVENT_OneParam(ARTSPawn, FOnSkillSlotPressed, int);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillSlotDropped, int, dragSlotIndex, int, dropSlotIndex);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGroundSelected); // SelectGround,
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);   // SelectEnemy
-
 /**
  * @brief This is the object that represents the player controlling all the units so the camera is attached to this pawn.
  * The RTS Pawn holds controls related to main gameplay. Contrast this to the UserInput which holds control logic for all gameplay types (it's consistent even if we
@@ -240,16 +233,11 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Action")
    void StopSelectedAllyCommands();
 
-   FOnSkillSlotPressed OnSkillSlotPressed() { return OnSkillSlotPressedEvent; }
 
 protected:
-   UPROPERTY(BlueprintAssignable, BlueprintCallable)
-   FOnSkillSlotDropped OnSkillSlotDroppedEvent;
+
 
 private:
-   UFUNCTION()
-   void OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex);
-
    void RightClick();
    void RightClickShift();
    void LeftClick();
@@ -295,7 +283,6 @@ private:
    void MakeControlGroup(int controlGroupIndex);
    DECLARE_DELEGATE_OneParam(FMakeControlGroupDelegate, int);
 
-   FOnSkillSlotPressed OnSkillSlotPressedEvent;
 
    void OnUnitSlotSelected(AUnit* unitSelected);
 
@@ -303,16 +290,6 @@ private:
 
 #pragma region selection
 public:
-   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnAllySelected OnAllySelectedDelegate;
 
-   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnAllyDeselected OnAllyDeselectedDelegate;
-
-   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnUnitSelected OnUnitSelectedDelegate;
-
-   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnGroundSelected OnGroundSelectedDelegate;
 #pragma endregion
 };

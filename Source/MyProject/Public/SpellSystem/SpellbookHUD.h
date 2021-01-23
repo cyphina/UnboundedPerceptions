@@ -42,7 +42,7 @@ public:
    void ChangeBackgroundColorWhenLeveling();
 
 protected:
-   void NativeConstruct() override;
+   void NativeOnInitialized() override;
    bool OnWidgetAddToViewport_Implementation() override;
    
    UPROPERTY(BlueprintReadWrite, Category = "SpellbookData")

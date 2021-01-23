@@ -98,6 +98,9 @@ class MYPROJECT_API AUnitController : public AAIController
     * on how they use their blackboards as well as starting the tree*/
    void OnPossess(APawn* InPawn) override;
 
+   UPROPERTY(EditDefaultsOnly)
+   float smallMoveIgnoreRange = 50.f;
+
    /** Either Idle, Follow, Patrol, Search, or Roam*/
    UPROPERTY(EditDefaultsOnly)
    UBehaviorTree* idleMoveLogic;
@@ -134,6 +137,7 @@ class MYPROJECT_API AUnitController : public AAIController
     * If the unit needs both adjusted, then the unit will turn towards the target after the move finishes as setup by a callback that triggers after a move.
     */
    bool AdjustPosition(const float range, FVector targetLocation);
+   bool AdjustPosition(const float range, FVector targetLocation, EPathFollowingRequestResult::Type& outPathReqRes);
 
    /**
     * Function to move to appropriate distance from target and face the target

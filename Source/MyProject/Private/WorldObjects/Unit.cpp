@@ -27,9 +27,10 @@
 #include "RTSVisionComponent.h"
 
 #include "UpStatComponent.h"
+#include "TargetComponent.h"
 
 AUnit::AUnit(const FObjectInitializer& objectInitializer) :
-    Super(objectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
+   Super(objectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(CharacterMovementComponentName))
 {
    PrimaryActorTick.bCanEverTick = true;
    AutoPossessAI                 = EAutoPossessAI::PlacedInWorldOrSpawned;
@@ -37,6 +38,9 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
    RemoveArrowComponent();
 
    abilitySystemComponent = CreateDefaultSubobject<URTSAbilitySystemComponent>(TEXT("AbilitySystem"));
+
+   statComponent   = CreateDefaultSubobject<UUpStatComponent>(TEXT("Stats"));
+   targetComponent = CreateDefaultSubobject<UTargetComponent>(TEXT("Targeting"));
 
    visionComponent = CreateDefaultSubobject<URTSVisionComponent>(TEXT("VisionRadius"));
    visionComponent->SetupAttachment(RootComponent);
@@ -50,9 +54,9 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
 
    SetupMovementComponent();
 
-   combatInfo                  = MakeUnique<UpCombatInfo>();
-   combatInfo->combatStyle     = ECombatType::Melee;
-   
+   combatInfo              = MakeUnique<UpCombatInfo>();
+   combatInfo->combatStyle = ECombatType::Melee;
+
    // Turn this off to make sure the unit highlights when hovered over
    GetMesh()->SetRenderCustomDepth(false);
 }
@@ -95,12 +99,14 @@ void AUnit::RemoveArrowComponent() const
 
 void AUnit::SetupAbilitiesAndStats()
 {
-   if(GetAbilitySystemComponent()) {
+   if(GetAbilitySystemComponent())
+   {
       // ! Make sure owner is player controller else the whole ability system fails to function (maybe it should be set to RTSPawn I'll have to double check)
       GetAbilitySystemComponent()->InitAbilityActorInfo(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(), this); // setup owner and avatar
       GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed);
 
-      for(TSubclassOf<UMySpell> ability : GetAbilitySystemComponent()->GetAbilities()) {
+      for(TSubclassOf<UMySpell> ability : GetAbilitySystemComponent()->GetAbilities())
+      {
          if(ability.GetDefaultObject()) // if client tries to give himself ability assert fails
          {
             GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(ability.GetDefaultObject(), 1));
@@ -111,7 +117,8 @@ void AUnit::SetupAbilitiesAndStats()
 
 void AUnit::AlignSelectionCircleWithGround() const
 {
-   if(selectionCircleDecal) {
+   if(selectionCircleDecal)
+   {
       selectionCircleDecal->DecalSize = FVector(GetCapsuleComponent()->GetScaledCapsuleRadius());
       selectionCircleDecal->SetRelativeRotation(FRotator(90, 0, 0));
       selectionCircleDecal->SetRelativeLocation(FVector(0, 0, -90));
@@ -127,19 +134,25 @@ void AUnit::StoreUnitHeight()
 
 void AUnit::BeginPlay()
 {
-   if(UNLIKELY(!IsValid(controllerRef))) controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+   Super::BeginPlay();
+
+   if(UNLIKELY(!IsValid(controllerRef)))
+   {
+      controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+   }
 
    StoreUnitHeight();
 
    AlignSelectionCircleWithGround();
 
-   if(auto gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState())) { gameStateRef->OnGameSpeedUpdated().AddDynamic(this, &AUnit::OnUpdateGameSpeed); }
-   
+   if(const ARTSGameState* gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState()))
+   {
+      gameStateRef->OnGameSpeedUpdated().AddDynamic(this, &AUnit::OnUpdateGameSpeed);
+   }
+
    SetupAbilitiesAndStats();
 
    visionComponent->SetRelativeLocation(FVector::ZeroVector);
-
-   Super::BeginPlay();
 }
 
 void AUnit::PossessedBy(AController* newController)
@@ -155,12 +168,17 @@ void AUnit::Tick(float deltaSeconds)
 
 EUnitState AUnit::GetState() const
 {
-   return FindComponentByClass<URTSStateComponent>()->GetState();
+   if(URTSStateComponent* stateComp = FindComponentByClass<URTSStateComponent>())
+   {
+      return stateComp->GetState();
+   }
+   return EUnitState::STATE_IDLE;
 }
 
 void AUnit::SetEnabled(bool bEnabled)
 {
-   if(bEnabled) {
+   if(bEnabled)
+   {
       SetSelected(false);
       GetCapsuleComponent()->SetVisibility(true, true);
       SetActorEnableCollision(true);
@@ -169,7 +187,9 @@ void AUnit::SetEnabled(bool bEnabled)
       GetCharacterMovement()->GravityScale = 1;
       GetCapsuleComponent()->SetSimulatePhysics(false); // can't move w/o physics
       bCanAffectNavigationGeneration = true;
-   } else {
+      unitProperties.bIsEnabled = true;
+   } else
+   {
       GetUnitController()->Stop();
       GetCapsuleComponent()->SetVisibility(false, true);
       SetActorEnableCollision(false);
@@ -179,6 +199,7 @@ void AUnit::SetEnabled(bool bEnabled)
       GetCapsuleComponent()->SetSimulatePhysics(true); // but will drop if physics isn't set to true
       GetCapsuleComponent()->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
       bCanAffectNavigationGeneration = false;
+      unitProperties.bIsEnabled = false;
    }
 }
 
@@ -203,7 +224,8 @@ FBox2D AUnit::FindBoundary() const
    static const int                                 CORNER_COUNT = 8;
    TArray<FVector2D, TFixedAllocator<CORNER_COUNT>> corners; // Get 8 corners of box
 
-   for(int i = 0; i < CORNER_COUNT; ++i) {
+   for(int i = 0; i < CORNER_COUNT; ++i)
+   {
       controllerRef->ProjectWorldLocationToScreen(origin + extent * UpResourceManager::BoundsPointMapping[i], screenLocation, true);
       corners.Add(screenLocation);
       boundary += corners[i];

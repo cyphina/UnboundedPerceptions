@@ -9,6 +9,7 @@ void UGameSpeedWidget::NativeOnInitialized()
 {
    Btn_IncGameSpeed->OnClicked.AddDynamic(this, &UGameSpeedWidget::IncreaseGameSpeed);
    Btn_IncGameSpeed->OnClicked.AddDynamic(this, &UGameSpeedWidget::DecreaseGameSpeed);
+   gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
 }
 
 void UGameSpeedWidget::IncreaseGameSpeed()

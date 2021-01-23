@@ -19,4 +19,7 @@ struct FUnitProperties {
 
    /** Capsule height of unit */
    float height;
+
+   /** If this unit is disabled it shouldn't be able to do anything at all. */
+   bool bIsEnabled = false;
 };

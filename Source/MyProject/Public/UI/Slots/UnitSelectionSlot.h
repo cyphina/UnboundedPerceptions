@@ -26,6 +26,7 @@ protected:
    UImage* Img_UnitIcon;
 
 private:
+   UFUNCTION()
    void OnBtnSelectUnitClicked();
    
    AUnit* unitRef;

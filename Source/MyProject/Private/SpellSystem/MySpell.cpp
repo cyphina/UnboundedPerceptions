@@ -16,8 +16,7 @@
 #include "TargetComponent.h"
 #include "SpellTargetingTypes.h"
 
-UMySpell::UMySpell() :
-   UGameplayAbility()
+UMySpell::UMySpell() : UGameplayAbility()
 {
    CooldownGameplayEffectClass = UCoolDownEffect::StaticClass();
 }
@@ -39,7 +38,10 @@ bool UMySpell::CheckCooldown(const FGameplayAbilitySpecHandle Handle, const FGam
       {
          const FGameplayTag& CooldownTag = UAbilitySystemGlobals::Get().ActivateFailCooldownTag;
 
-         if(OptionalRelevantTags && CooldownTag.IsValid()) { OptionalRelevantTags->AddTag(CooldownTag); }
+         if(OptionalRelevantTags && CooldownTag.IsValid())
+         {
+            OptionalRelevantTags->AddTag(CooldownTag);
+         }
          // GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "Cooldown checked");
          return false;
       }
@@ -79,8 +81,7 @@ float UMySpell::GetCooldownTimeRemaining(const FGameplayAbilityActorInfo* ActorI
       const FGameplayTagContainer c         = FGameplayTagContainer(spellDefaults.nameTag);
       FGameplayEffectQuery const  Query     = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(c);
       TArray<float>               Durations = ActorInfo->AbilitySystemComponent->GetActiveEffectsTimeRemaining(Query);
-      if(Durations.Num() > 0)
-         return Durations[Durations.Num() - 1];
+      if(Durations.Num() > 0) return Durations[Durations.Num() - 1];
    }
 
    return 0.f;
@@ -88,51 +89,28 @@ float UMySpell::GetCooldownTimeRemaining(const FGameplayAbilityActorInfo* ActorI
 
 bool UMySpell::IsOnCD(const UAbilitySystemComponent* abilityComponent) const
 {
-   if(abilityComponent->HasMatchingGameplayTag(AbilityTags.GetByIndex(0)))
-      return true;
+   if(abilityComponent->HasMatchingGameplayTag(AbilityTags.GetByIndex(0))) return true;
    return false;
 }
 
 float UMySpell::GetCDDuration(UAbilitySystemComponent* abilityComponent) const
 {
-   FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
-   if(!abilitySpec)
-   {
-      UE_LOG(LogTemp, Error, TEXT("%s"),
-             *(FString("No ability system component found. Spell queried: ") + GetSpellName().ToString()));
-      return -1.f;
-   }
-
-   const int numUpgrades = spellDefaults.Cooldown.Num();
-   return spellDefaults.Cooldown[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
+   return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.Cooldown);
 }
 
 int UMySpell::GetRange(UAbilitySystemComponent* abilityComponent) const
 {
-   FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
-   checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   const int numUpgrades = spellDefaults.Range.Num();
-   if(numUpgrades > 0)
-      return spellDefaults.Range[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
-   return 0;
+   return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.Range);
 }
 
 int UMySpell::GetReqLevel(UAbilitySystemComponent* abilityComponent) const
 {
-   FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
-   checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   const int numUpgrades = spellDefaults.LevelReq.Num();
-   return spellDefaults.LevelReq[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
+   return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.LevelReq);
 }
 
-int UMySpell::GetCost(const URTSAbilitySystemComponent* abilityComponent) const
+int UMySpell::GetCost(const UAbilitySystemComponent* abilityComponent) const
 {
-   const FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
-   checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   const int numUpgrades = spellDefaults.Cost.Num();
-   if(numUpgrades > 0)
-      return spellDefaults.Cost[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
-   return 0;
+   return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.Cost);
 }
 
 TArray<FText> UMySpell::GetPreReqNames() const
@@ -147,76 +125,53 @@ TArray<FText> UMySpell::GetPreReqNames() const
 
 float UMySpell::GetSpellDuration(UAbilitySystemComponent* abilityComponent) const
 {
-   FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
-   checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   const int numUpgrades = spellDefaults.Duration.Num();
-   if(numUpgrades > 0)
-      return spellDefaults.Duration[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
-   return 0;
+   return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.Duration);
 }
 
 FDamageScalarStruct UMySpell::GetDamage(UAbilitySystemComponent* abilityComponent) const
 {
-   FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
-   checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   const int           numUpgrades         = spellDefaults.Damage.Num();
-   FDamageScalarStruct damageScalerScalars = FDamageScalarStruct();
-   if(numUpgrades > 0)
-   {
-      const int damageOffsetIndex = GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel());
-      damageScalerScalars         = spellDefaults.Damage[damageOffsetIndex];
-   }
-   return damageScalerScalars;
+   return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.Damage);
 }
 
 float UMySpell::GetPeriod(UAbilitySystemComponent* abilityComponent) const
 {
-   FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
-   checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   const int numUpgrades = spellDefaults.Period.Num();
-   if(numUpgrades > 0)
-      return spellDefaults.Period[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
-   return 0;
+   return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.Period);
 }
 
 float UMySpell::GetCastTime(UAbilitySystemComponent* abilityComponent) const
 {
-   FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
-   checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   return spellDefaults.CastTime;
+   return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.CastTime);
 }
 
 float UMySpell::GetSecondaryTime(UAbilitySystemComponent* abilityComponent) const
 {
-   FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
-   checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   return spellDefaults.SecondaryTime;
+   return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.SecondaryTime);
 }
 
 float UMySpell::GetAOE(UAbilitySystemComponent* abilityComponent) const
 {
-   FGameplayAbilitySpec* abilitySpec = abilityComponent->FindAbilitySpecFromClass(GetClass());
-   checkf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
-   const int numUpgrades = spellDefaults.AOE.Num();
-   if(numUpgrades > 0)
-      return spellDefaults.AOE[GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel())];
-   return 0;
+   return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.AOE);
 }
 
 int UMySpell::GetLevel(UAbilitySystemComponent* abilityComponent) const
 {
-   return abilityComponent->FindAbilitySpecFromClass(GetClass())->Level;
+  FGameplayAbilitySpec* spec = GetAbilitySpec(abilityComponent);
+  if(spec)
+  {
+     return spec->Level;
+  }
+  return 0;
 }
 
 FGameplayEffectSpecHandle UMySpell::SetScaling(FGameplayEffectSpecHandle specHandle)
 {
    const FDamageScalarStruct damageScalings = GetDamage(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo()));
-   specHandle                               =
-   UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(specHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Strength"), damageScalings.strength);
+   specHandle =
+       UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(specHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Strength"), damageScalings.strength);
    specHandle = UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(specHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Intelligence"),
                                                                               damageScalings.intelligence);
    specHandle =
-   UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(specHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), damageScalings.agility);
+       UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(specHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), damageScalings.agility);
    specHandle = UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(specHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Understanding"),
                                                                               damageScalings.understanding);
    return specHandle;
@@ -228,7 +183,8 @@ FGameplayEffectSpecHandle UMySpell::SetPeriod(FGameplayEffectSpecHandle specHand
    if(Spec)
    {
       Spec->Period = period;
-   } else
+   }
+   else
    {
       ABILITY_LOG(Warning, TEXT("UMySpell::SetPeriod called with invalid SpecHandle"));
    }
@@ -250,8 +206,7 @@ FGameplayEffectSpecHandle UMySpell::CreateGameplayEffectFromTableValues(TSubclas
       effect.Data->SetDuration(GetSpellDuration(abilityComp), true);
    }
 
-   if(effectClass->IsChildOf(URTSDamageEffect::StaticClass()))
-      SetScaling(effect);
+   if(effectClass->IsChildOf(URTSDamageEffect::StaticClass())) SetScaling(effect);
    return effect;
 }
 
@@ -319,11 +274,11 @@ TArray<TEnumAsByte<ECollisionChannel>> UMySpell::GetTraceChannelForEnemy() const
    AUnit* unit = GetAvatarUnit();
    if(unit->GetIsEnemy())
    {
-      return { FRIENDLY_CHANNEL };
+      return {FRIENDLY_CHANNEL};
    }
    else
    {
-      return { ENEMY_CHANNEL }; 
+      return {ENEMY_CHANNEL};
    }
 }
 
@@ -332,18 +287,31 @@ TArray<TEnumAsByte<ECollisionChannel>> UMySpell::GetTraceChannelForFriendly() co
    AUnit* unit = GetAvatarUnit();
    if(unit->GetIsEnemy())
    {
-      return { ENEMY_CHANNEL };
+      return {ENEMY_CHANNEL};
    }
    else
    {
-      return { FRIENDLY_CHANNEL }; 
+      return {FRIENDLY_CHANNEL};
    }
 }
 
-int UMySpell::GetIndex(int currentLevel, int numCategories, int maxLevel) const
+FGameplayAbilitySpec* UMySpell::GetAbilitySpec(const UAbilitySystemComponent* abilityComponent) const
+{
+   FGameplayAbilitySpec* abilitySpec = const_cast<UAbilitySystemComponent*>(abilityComponent)->FindAbilitySpecFromClass(GetClass());
+   ensureMsgf(abilitySpec,  TEXT("Ability hasn't been registered to unit"));
+   return abilitySpec;
+}
+
+int UMySpell::GetIndex(int currentLevel, int numCategories, int maxLevel)
 {
    const int denom = maxLevel * currentLevel;
+   if(numCategories <= 0)
+   {
+      UE_LOG(LogTemp, Error, TEXT("Attempting to access some out of bounds spell property!"));
+   }
    if(denom != 0)
+   {
       return FMath::CeilToInt(static_cast<float>(numCategories) / denom) - 1;
-   return 0;
+   }
+   return -1;
 }

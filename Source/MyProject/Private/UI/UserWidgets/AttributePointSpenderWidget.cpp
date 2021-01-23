@@ -17,6 +17,7 @@ UAttributePointSpenderWidget* UAttributePointSpenderWidget::MakePointSpenderWidg
 
 void UAttributePointSpenderWidget::NativeOnInitialized()
 {
+   Super::NativeOnInitialized();
    Text_Category->SetText(UEnum::GetDisplayValueAsText(attCategory));
 }
 

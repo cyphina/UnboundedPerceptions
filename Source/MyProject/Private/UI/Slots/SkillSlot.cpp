@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "SkillSlot.h"
 #include "ActionSlot.h"
@@ -17,10 +15,10 @@
 #include "ToolTipWidget.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
-#include "SpellDelegateStore.h"
 #include "UMG/Public/Components/Image.h"
 #include "UMG/Public/Components/TextBlock.h"
 
+class UUIDelegateContext;
 UMaterialInterface* USkillSlot::matInstance = nullptr;
 
 USkillSlot::USkillSlot(const FObjectInitializer& o) : UActionSlot(o)
@@ -97,6 +95,8 @@ void USkillSlot::ShowCDVisuals() const
    Text_CDTime->SetVisibility(ESlateVisibility::HitTestInvisible);
 }
 
+
+
 URTSAbilitySystemComponent* USkillSlot::GetOwningAbilityComponent() const
 {
    if(const AUnit* focusedUnit = GetOwningPlayer<AUserInput>()->GetBasePlayer()->GetFocusedUnit()) {
@@ -112,11 +112,9 @@ void USkillSlot::SetSlotImage(UTexture2D* image)
       SetImageFromMaterial(imageDMatInst);
       cdDMatInst->SetTextureParameterValue("RadialTexture", image); // update the cooldown image
       Image_CD->SetBrushFromMaterial(cdDMatInst);
-      SetIsEnabled(true);
    } else {
       imageDMatInst->SetTextureParameterValue("RadialTexture", defaultSlotTexture);
       SetImageFromMaterial(imageDMatInst);
-      SetIsEnabled(false);
    }
 }
 

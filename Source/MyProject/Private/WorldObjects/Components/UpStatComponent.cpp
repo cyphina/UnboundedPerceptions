@@ -12,7 +12,8 @@ UUpStatComponent::UUpStatComponent()
 
 void UUpStatComponent::UpdateStats(const FGameplayAttribute& updatedStat) const
 {
-   baseC->StatUpdate(updatedStat);
+   // There's one time at the start this can be called without a base character since this function is called when we initialize the base attribute values in baseC
+   if(baseC) { baseC->StatUpdate(updatedStat); }
 }
 
 void UUpStatComponent::BeginPlay()

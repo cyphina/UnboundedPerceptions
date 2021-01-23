@@ -15,7 +15,7 @@
 #include "WorldObjects/ShopNPC.h"
 #include "ItemManager.h"
 
-#include "ItemDelegateStore.h"
+#include "ItemDelegateContext.h"
 
 const FText UStoreInventory::NotEnoughItemsText       = NSLOCTEXT("HelpMessages", "MisisngItems", "Missing required items for trade");
 const FText UStoreInventory::NotEnoughMoneyText       = NSLOCTEXT("HelpMessages", "NotEnoughSqueezies", "You don't have enough squeezies...");
@@ -38,7 +38,7 @@ bool UStoreInventory::OnItemPurchased() const
       GetInteractingHeroBackpack()->AddItem(newItemPurchased);
 
       CPC->GetWidgetProvider()->GetIngameHUD()->GetInventoryHUD()->LoadItems();
-      ItemChangeEvents::OnItemPurchasedEvent.Broadcast(purchasingHero, newItemPurchased);
+      CPC->GetLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemPurchased().Broadcast(purchasingHero, newItemPurchased);
       return true;
    }
    return false;
@@ -54,7 +54,7 @@ bool UStoreInventory::OnItemsPurchased(FString howManyItems)
          FMyItem newItemPurchased{itemToBuy, num};
          if(GetInteractingHeroBackpack()->AddItem(newItemPurchased)) {
             ABaseHero* purchasingHero = CPC->GetBasePlayer()->heroInBlockingInteraction;
-            ItemChangeEvents::OnItemPurchasedEvent.Broadcast(purchasingHero, newItemPurchased);
+            CPC->GetLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemPurchased().Broadcast(purchasingHero, newItemPurchased);
             return true;
          } else {
             URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("InventoryFull", "NotEnoughSpaceStore", "Not enough space in inventory to purchase item!"));

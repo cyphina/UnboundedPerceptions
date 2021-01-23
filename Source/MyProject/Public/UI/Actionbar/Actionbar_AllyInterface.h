@@ -23,7 +23,7 @@ public:
 
 protected:
    void NativeOnInitialized() override;
-   
+
    UPROPERTY(Meta=(BindWidget))
    UButton* Btn_Passive;
 
@@ -41,15 +41,26 @@ protected:
 
 private:
    void SelectNewAIMode(int modeIndex);
+
+   UFUNCTION()
    void SelectPassiveMode();
+   
+   UFUNCTION()
    void SelectDefensiveMode();
+   
+   UFUNCTION()
    void SelectNeutralMode();
+   
+   UFUNCTION()
    void SelectOffensiveMode();
+   
+   UFUNCTION()
    void SelectAggressiveMode();
-   
+
    TStaticArray<UButton*, 5> AIOptionButtons;
-   
+
    int currentlySelectedButtonIndex = 2;
 
+   UPROPERTY(BlueprintReadOnly, Meta=(AllowPrivateAccess))
    AAlly* focusedAlly;
 };

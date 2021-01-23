@@ -31,7 +31,9 @@ void ABasePlayer::SetFocusedUnit(AUnit* newFocusedUnit)
 void ABasePlayer::ClearSelectedAllies()
 {
    while(selectedAllies.Num() > 0)
+   {
       selectedAllies[0]->SetSelected(false);
+   }
 
    if(focusedUnit) {
       focusedUnit->SetSelected(false);

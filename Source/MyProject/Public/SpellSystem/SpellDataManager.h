@@ -33,9 +33,8 @@ public:
 private:
    static USpellDataManager* SingletonManager;
 
-   TMap<FGameplayTag, TSubclassOf<UMySpell>>                 spellClasses;
+   static TMap<FGameplayTag, TSubclassOf<UMySpell>> spellClasses;
 
-   static void                     InitializeManager();
-   void                            SetupSpells(UDataTable* spellLookupTable);
-   void                            SetupCachedSpellClassMap();
+   static void InitializeManager();
+   static void SetupCachedSpellClassMap();
 };

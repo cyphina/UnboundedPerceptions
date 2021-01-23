@@ -26,7 +26,7 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
 {
    GENERATED_BODY()
 
-public:
+ public:
    UMySpell();
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
@@ -48,7 +48,7 @@ public:
    int GetReqLevel(UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   int GetCost(const URTSAbilitySystemComponent* abilityComponent) const;
+   int GetCost(const UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    FText GetDescription() const { return spellDefaults.Desc; }
@@ -106,9 +106,8 @@ public:
    TSubclassOf<UUpSpellTargeting> GetTargeting() const;
 
    /** Our version of cooldown just checks for the name tag of this spell */
-   bool CheckCooldown
-   (const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-    OUT FGameplayTagContainer*       OptionalRelevantTags) const override;
+   bool CheckCooldown(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+                      OUT FGameplayTagContainer* OptionalRelevantTags) const override;
 
    /** We want to make the avatar actor the source of the spell since owner is our player controller */
    FGameplayEffectContextHandle MakeEffectContext(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo) const override;
@@ -121,11 +120,11 @@ public:
    // TODO: Maybe have a better way to set this because we have 5 now...
    static const int NUM_SCALING_DAMAGE_ATT = 4;
 
-protected:
+ protected:
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
    FSpellDefaults spellDefaults;
 
-private:
+ private:
    UFUNCTION(BlueprintCallable, Category = "Spell Helper")
    FGameplayEffectSpecHandle SetScaling(FGameplayEffectSpecHandle specHandle);
 
@@ -135,7 +134,7 @@ private:
    ///
    /// Active accessors allow us to get data for a spell that is being activated since the actor info is already set and we can find the ability system component from that.
    /// Only use them within a BP derived from UMySpell.
-   /// 
+   ///
 
    /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
    UFUNCTION(BlueprintCallable, Category = "Spell Helper")
@@ -194,7 +193,36 @@ private:
    */
    UFUNCTION(BlueprintCallable, Category = "Spell Helper")
    TArray<TEnumAsByte<ECollisionChannel>> GetTraceChannelForFriendly() const;
-   
+
+   FGameplayAbilitySpec* GetAbilitySpec(const UAbilitySystemComponent* abilityComponent) const;
+
+   template <typename T>
+   T GetSpellDefaultValueChecked(const UAbilitySystemComponent* abilityComponent, T spellValue) const
+   {
+      FGameplayAbilitySpec* abilitySpec = GetAbilitySpec(abilityComponent);
+      if(abilitySpec)
+      {
+         return spellValue;
+      }
+      return T();
+   }
+
+   template <typename T>
+   T GetSpellDefaultValueChecked(const UAbilitySystemComponent* abilityComponent, const TArray<T>& spellValues) const
+   {
+      FGameplayAbilitySpec* abilitySpec = GetAbilitySpec(abilityComponent);
+      if(abilitySpec)
+      {
+         const int numUpgrades = spellValues.Num();
+         const int levelIndex  = GetIndex(abilitySpec->Level, numUpgrades, GetMaxLevel());
+         if(levelIndex >= 0 && numUpgrades > 0)
+         {
+            return spellValues[levelIndex];
+         }
+      }
+      return T();
+   }
+
    /**
     * Used to get the index from some spell information array based on current spell level
     * ! Invariant - AbilityLevels start at 1
@@ -202,5 +230,5 @@ private:
     * @param numCategories : Number of levels in spell property (ex. there may be 3 range upgrades for a spell)
     * @param maxLevel : Number of times this spell can be leveld up (ex. there may 5 total level upgrades for a spell, only 3 upgrades increase range)
     */
-   int GetIndex(int currentLevel, int numCategories, int maxLevel) const;
+   static int GetIndex(int currentLevel, int numCategories, int maxLevel);
 };

@@ -18,9 +18,10 @@ FMyItem UInventory::GetBackpackItemAtSlot(int slotIndex) const
    return GetBackpack()->GetItem(inventoryView->GetCorrespondingBackpackIndex(slotIndex));
 }
 
-void UInventory::NativeConstruct()
+void UInventory::NativeOnInitialized()
 {
-   Super::NativeConstruct();
+   Super::NativeOnInitialized();
+   inventoryView->inventoryRef = this;
 }
 
 bool UInventory::OnWidgetAddToViewport_Implementation()

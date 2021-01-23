@@ -3,11 +3,12 @@
 #include "UnitSelectionSlot.h"
 #include "Button.h"
 #include "Image.h"
-#include "PartyDelegateContext.h"
+#include "UIDelegateContext.h"
 #include "Unit.h"
 
 void UUnitSelectionSlot::NativeOnInitialized()
 {
+   Super::NativeOnInitialized();
    Btn_SelectUnit->OnClicked.AddDynamic(this, &UUnitSelectionSlot::OnBtnSelectUnitClicked);
 }
 
@@ -19,5 +20,5 @@ void UUnitSelectionSlot::SetUnitInformation(AUnit* unit)
 
 void UUnitSelectionSlot::OnBtnSelectUnitClicked()
 {
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnUnitSlotSelected().Broadcast(unitRef);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnUnitSlotSelected().Broadcast(unitRef);
 }

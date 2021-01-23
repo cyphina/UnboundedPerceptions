@@ -22,7 +22,8 @@ using namespace CombatInfo;
  * We never need to use this class directly. A stat component contains this struct and it will expose this classes useful functionality
  */
 USTRUCT(BlueprintType, NoExport)
-struct FBaseCharacter {
+struct FBaseCharacter
+{
    static const int BASE_ATTACK_RANGE   = 500;
    static const int BASE_MOVEMENT_SPEED = 500;
    static const int BASE_ATTACK_POWER   = 100;
@@ -30,9 +31,12 @@ struct FBaseCharacter {
    FBaseCharacter(const UMyAttributeSet& AttSet);
    ~FBaseCharacter();
    FBaseCharacter& operator=(const FBaseCharacter& otherChar) = default;
-   int             GetLevel() const { return level; }
-   void            SetLevel(int newLevel) { level = newLevel; }
-   void            InitializeAttributeBaseValues();
+
+   int GetLevel() const { return level; }
+
+   void SetLevel(int newLevel) { level = newLevel; }
+
+   void InitializeAttributeBaseValues();
 
    /** Recalculate base values of skills from a base attribute change
     * @param updatedStat - Attribute that was modified
@@ -54,27 +58,30 @@ struct FBaseCharacter {
    void SetVitalBase(int skill, float newValue);
    void SetMechanicBase(int skill, float newValue);
 
-   const TArray<FGameplayAttribute*>& GetAttributes() const { return baseAttributes; }
-   const TArray<RTSUnitStat>&         GetSkills() const { return skills; }
-   const TArray<Vital>&               GetVitals() const { return vitals; }
-   const TArray<FGameplayAttribute*>& GetMechanics() const { return mechanics; }
+   const TArray<FGameplayAttribute>& GetAttributes() const { return baseAttributes; }
+
+   const TArray<RTSUnitStat>& GetSkills() const { return skills; }
+
+   const TArray<Vital>& GetVitals() const { return vitals; }
+
+   const TArray<FGameplayAttribute>& GetMechanics() const { return mechanics; }
 
    UMyAttributeSet* GetAttSet() const { return attSet; }
 
- private:
+private:
    UMyAttributeSet* attSet;
    using atts = EAttributes;
-   using sks  = EUnitScalingStats;
+   using sks = EUnitScalingStats;
    using vits = EVitals;
    using mech = EMechanics;
 
-   int level                  = 1;
-   int MIN_STARTING_ATT_VALUE = 20;
+   int level = 1;
 
-   TArray<FGameplayAttribute*> baseAttributes;
-   TArray<RTSUnitStat>         skills; // called them skills here but stats and skills are interchangeable names
-   TArray<Vital>               vitals;
-   TArray<FGameplayAttribute*> mechanics;
+   // TODO: One day fix so we are not storing multiple copies of these property references...
+   TArray<FGameplayAttribute> baseAttributes;
+   TArray<RTSUnitStat>        skills; // called them skills here but stats and skills are interchangeable names
+   TArray<Vital>              vitals;
+   TArray<FGameplayAttribute> mechanics;
 
    void SetupPrimaryAttributes();
    void InitialStatUpdate();

@@ -161,6 +161,9 @@ class MYPROJECT_API UBackpack : public UObject
 
    bool AddStackableItem(FMyItem& newItem);
    bool AddUnstackableItem(FMyItem& newItem);
-
+   bool RemoveStackableItem(FMyItem& removeItem);
+   bool RemoveUnstackableItem(FMyItem& removeItem);
+   bool IsItemStackable(int itemID);
+   void CallBackpackUpdateDelegate();
    void OnItemUsed(const ABaseHero* heroUsingItem, const FMyItem& itemID);
 };

@@ -98,8 +98,7 @@ bool UDialogUI::OnWidgetAddToViewport_Implementation()
 void UDialogUI::Leave()
 {
    hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Social));
-   if(!hudManagerRef->IsWidgetOnScreen(EHUDs::HS_Actionbar))
-      hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Actionbar));
+   if(!hudManagerRef->IsWidgetOnScreen(EHUDs::HS_Actionbar)) { hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Actionbar)); }
    // Reactivate patrolling and remove global reference to current blocking interactable
-   npcRef->OnDoneTalking();
+   if(npcRef) { npcRef->OnDoneTalking(); }
 }

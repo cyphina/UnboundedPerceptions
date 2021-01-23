@@ -12,8 +12,8 @@ class AAIController;
 class UBehaviorTree;
 
 /**
- * Allows us to easily set patrol points for enemy and npc's because it is linked to a visualization
- * AIs that use the patrol task rely on the AIs having a PatrolComponent
+ * Allows us to easily set patrol points for enemy and npc's because it is linked to a editor visualization.
+ * AIs that use the patrol task rely on the AIs having a PatrolComponent.
  */
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -64,6 +64,7 @@ class MYPROJECT_API UPatrolComponent : public USceneComponent
 
  private:
    /** Called in Patrol task to move unit to next point*/
+   UFUNCTION()
    void MoveToNextPatrolPoint(FAIRequestID requestId, EPathFollowingResult::Type moveRes);
 
    bool MoveToNextPointAfterMoveRequestFail(EPathFollowingRequestResult::Type moveRes);

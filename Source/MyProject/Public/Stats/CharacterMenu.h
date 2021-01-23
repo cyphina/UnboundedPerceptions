@@ -22,10 +22,14 @@ public:
    ABaseHero* GetHeroWithInfoDisplayed() const { return baseHeroRef; };
 
 protected:
+   UFUNCTION(BlueprintImplementableEvent)
+   void SetupCharacterPortrait(ABaseHero* heroToPortray);
+   
    void NativeOnInitialized() override;
    bool OnWidgetAddToViewport_Implementation() override;
    void OnAnimationFinished_Implementation(const UWidgetAnimation* Animation) override;
-
+   void ValidateCompiledDefaults(IWidgetCompilerLog& CompileLog) const override;
+   
    UPROPERTY(Meta=(BindWidget))
    UStatgraphWidget* Widget_StatGraph;
 

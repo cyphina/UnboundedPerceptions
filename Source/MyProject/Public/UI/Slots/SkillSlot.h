@@ -21,7 +21,7 @@ class MYPROJECT_API USkillSlot : public UActionSlot
     */
    UFUNCTION(BlueprintCallable, Category = "Update skills")
    void UpdateSkillSlot(TSubclassOf<UMySpell> spell);
-   
+
    /** Resumes cooldown effect for the new skill if a new skill is swapped into this skill slot that is on CD */
    void ShowCooldown();
 

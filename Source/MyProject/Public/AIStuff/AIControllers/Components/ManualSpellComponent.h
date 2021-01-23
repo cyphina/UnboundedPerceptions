@@ -56,12 +56,15 @@ class MYPROJECT_API UManualSpellComponent : public UActorComponent, public IManu
  protected:
    void BeginPlay() override;
    void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-   
+
  private:
+   UFUNCTION()
+   void OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex);
+	
    void OnUnitStopped();
 
-   void OnSkillSlotPressed(int spellIndex);
-   
+   void OnSkillActivated(int spellIndex);
+
    void FinalizeSpellTargeting(const UUpSpellTargeting* spellTargeting, TSubclassOf<UMySpell> spellClass, const FHitResult&) override;
 
    /** Called when we target something we're not suppsoed to. Returns false and prints a message. */

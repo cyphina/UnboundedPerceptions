@@ -12,13 +12,13 @@ void URTSBrowserWidgetBase::StartDisplay(int browserWidth, int browserHeight)
 {
    browser                 = UBluBlueprintFunctionLibrary::NewBluEye(this);
    browser->DefaultURL     = URL;
-   browser->Width          = browserWidth;
-   browser->Height         = browserHeight;
+   browser->Settings.Width          = browserWidth;
+   browser->Settings.Height         = browserHeight;
    browser->BaseMaterial   = renderMaterial;
    browser->bEnabled       = true;
-   browser->bIsTransparent = true;
-   browser->bEnableWebGL   = false;
-   browser->init();
+   browser->Settings.bIsTransparent = true;
+   browser->Settings.bEnableWebGL   = false;
+   browser->Init();
    browserCanvas->SetBrushFromTexture(browser->GetTexture());
 }
 

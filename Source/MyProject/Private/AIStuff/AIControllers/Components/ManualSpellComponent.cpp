@@ -10,10 +10,13 @@
 #include "DefaultCursorClickFunctionality.h"
 #include "NoTargeting.h"
 #include "AOETargeting.h"
+#include "GameplayDelegateContext.h"
 #include "RTSIngameWidget.h"
 #include "RTSPawn.h"
+#include "SpellFunctionLibrary.h"
 #include "SpellTargetingTypes.h"
 #include "TargetComponent.h"
+#include "UIDelegateContext.h"
 #include "Unit.h"
 #include "UnitController.h"
 #include "UpStatComponent.h"
@@ -26,7 +29,8 @@ const FText UManualSpellComponent::ON_COOLDOWN_TEXT     = NSLOCTEXT("HelpMessage
 
 bool UManualSpellComponent::PressedCastSpell(int spellCastingIndex)
 {
-   if(URTSAbilitySystemComponent* abilityComp = GetOwner()->FindComponentByClass<URTSAbilitySystemComponent>()) {
+   if(URTSAbilitySystemComponent* abilityComp = GetOwner()->FindComponentByClass<URTSAbilitySystemComponent>())
+   {
       const bool spellSelected = PressedCastSpell(abilityComp->GetAbilities()[spellCastingIndex]);
       return spellSelected;
    }
@@ -36,41 +40,47 @@ bool UManualSpellComponent::PressedCastSpell(int spellCastingIndex)
 bool UManualSpellComponent::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
 {
    UMySpell* spell = spellToCast.GetDefaultObject();
-   if(IsValid(spell)) {
-      if(AUserInput* CPCRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController())) {
-         if(!spell->IsOnCD(Cast<AUnit>(GetOwner())->GetAbilitySystemComponent())) {
-            if(spell->GetCost(unitOwner->GetAbilitySystemComponent()) <= unitOwner->GetStatComponent()->GetVitalCurValue(EVitals::Mana)) {
-               if(currentlySelectedSpell == spellToCast) {
+   if(IsValid(spell))
+   {
+      if(AUserInput* CPCRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+      {
+         if(!spell->IsOnCD(Cast<AUnit>(GetOwner())->GetAbilitySystemComponent()))
+         {
+            if(spell->GetCost(unitOwner->GetAbilitySystemComponent()) <= unitOwner->GetStatComponent()->GetVitalCurValue(EVitals::Mana))
+            {
+               if(currentlySelectedSpell == spellToCast)
+               {
                   DeselectSpell();
                   return false;
                }
 
-               if(spell->GetTargeting()->GetClass() == TSubclassOf<UUpSpellTargeting_None>()) {
+               if(spell->GetTargeting()->GetClass() == TSubclassOf<UUpSpellTargeting_None>())
+               {
                   unitOwner->GetUnitController()->Stop();
                   unitOwner->GetUnitController()->FindComponentByClass<USpellCastComponent>()->IncantationCheck(spellToCast);
-               } else {
+               } else
+               {
                   CPCRef->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Magic);
                }
 
                currentlySelectedSpell = spellToCast;
 
-               if(spell->GetTargeting()->GetClass() == TSubclassOf<UUpSpellTargeting_Area>()) {
+               if(spell->GetTargeting()->GetClass() == TSubclassOf<UUpSpellTargeting_Area>())
+               {
                   // TODO: depending on the spell area targeting, use different indicators
                   CPCRef->GetCameraPawn()->ShowSpellCircle(spell->GetAOE(unitOwner->GetAbilitySystemComponent()));
-               } else {
+               } else
+               {
                   CPCRef->GetCameraPawn()->HideSpellCircle();
                }
 
                return true;
-            } else {
-               URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NOT_ENOUGH_MANA_TEXT);
-               return false;
             }
-         } else // If spell still not ready
-         {
-            URTSIngameWidget::NativeDisplayHelpText(GetWorld(), ON_COOLDOWN_TEXT);
+            URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NOT_ENOUGH_MANA_TEXT);
             return false;
-         }
+         } // If spell still not ready
+         URTSIngameWidget::NativeDisplayHelpText(GetWorld(), ON_COOLDOWN_TEXT);
+         return false;
       }
    }
    return false;
@@ -87,22 +97,42 @@ void UManualSpellComponent::OnUnitStopped()
    currentlySelectedSpell = nullptr;
 }
 
-void UManualSpellComponent::OnSkillSlotPressed(int spellIndex)
+void UManualSpellComponent::OnSkillActivated(int spellIndex)
 {
    if(unitOwner->IsSelected())
    {
-      if(spellIndex >= 0 && spellIndex < unitOwner->GetAbilitySystemComponent()->GetAbilities().Num())
+      if(spellIndex >= 0 && spellIndex < unitOwner->GetAbilitySystemComponent()->GetAbilities().Num()) { PressedCastSpell(spellIndex); }
+   }
+}
+
+void UManualSpellComponent::OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex)
+{
+   if(AUserInput* CPCRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+   {
+      if(ABasePlayer* basePlayer = CPCRef->GetBasePlayer())
       {
-         PressedCastSpell(spellIndex);
+         if(AUnit* focusedUnit = basePlayer->GetFocusedUnit())
+         {
+            if(focusedUnit == unitOwner)
+            {
+               URTSAbilitySystemComponent* focusedABComp = unitOwner->GetAbilitySystemComponent();
+               const TSubclassOf<UMySpell> droppedSpell  = focusedABComp->GetSpellAtSlot(dropSlotIndex);
+
+               focusedABComp->SetSpellAtSlot(focusedABComp->GetSpellAtSlot(dragSlotIndex), dropSlotIndex);
+               focusedABComp->SetSpellAtSlot(droppedSpell, dragSlotIndex);
+            }
+         }
       }
    }
 }
 
 bool UManualSpellComponent::SetupSpellTargeting(UPARAM(ref) FHitResult& hitResult)
 {
-   if(IsValid(currentlySelectedSpell) && hitResult.IsValidBlockingHit()) {
+   if(IsValid(currentlySelectedSpell) && hitResult.IsValidBlockingHit())
+   {
       const auto spellTargeting = currentlySelectedSpell.GetDefaultObject()->GetTargeting().GetDefaultObject();
-      if(spellTargeting->ManualTargetingCheck(unitOwner, hitResult)) {
+      if(spellTargeting->ManualTargetingCheck(unitOwner, hitResult))
+      {
          spellTargeting->ClickResponse(hitResult, currentlySelectedSpell, *this);
          return true;
       }
@@ -112,20 +142,35 @@ bool UManualSpellComponent::SetupSpellTargeting(UPARAM(ref) FHitResult& hitResul
 
 void UManualSpellComponent::BeginPlay()
 {
+   Super::BeginPlay();
    unitOwner = Cast<AUnit>(Cast<AUnitController>(GetOwner())->GetUnitOwner());
    unitOwner->GetUnitController()->OnUnitStopped().AddUObject(this, &UManualSpellComponent::OnUnitStopped);
-   GetOwner()->FindComponentByClass<USpellCastComponent>()->OnSpellCasted().AddUObject(this, &UManualSpellComponent::OnSpellCasted);
-   Cast<AUserInput>(GetWorld()->GetFirstPlayerController())->GetCameraPawn()->OnSkillSlotPressed().AddUObject(this, &UManualSpellComponent::OnSkillSlotPressed);
+   spellCastComp = GetOwner()->FindComponentByClass<USpellCastComponent>();
+   if(ensure(spellCastComp))
+   {
+      spellCastComp->OnSpellCasted().AddUObject(this, &UManualSpellComponent::OnSpellCasted);
+   }
+
+   if(const AUserInput* userInput = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+   {
+      userInput->GetLocalPlayer()->GetSubsystem<UGameplayDelegateContext>()->OnSkillActivated().AddUObject(this, &UManualSpellComponent::OnSkillActivated);
+      userInput->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedEvent.AddDynamic(this, &UManualSpellComponent::OnSkillSlotDropped);
+   }
 }
 
 void UManualSpellComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-   Cast<AUserInput>(GetWorld()->GetFirstPlayerController())->GetCameraPawn()->OnSkillSlotPressed().RemoveAll(this);
+   Super::EndPlay(EndPlayReason);
+   if(AUserInput* userInput = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+   {
+      userInput->GetLocalPlayer()->GetSubsystem<UGameplayDelegateContext>()->OnSkillActivated().RemoveAll(this);
+   }
 }
 
 void UManualSpellComponent::DeselectSpell()
 {
-   if(AUserInput* cpcRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController())) {
+   if(AUserInput* cpcRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+   {
       currentlySelectedSpell = nullptr;
       cpcRef->GetCameraPawn()->HideSpellCircle();
       cpcRef->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Select);
@@ -134,12 +179,12 @@ void UManualSpellComponent::DeselectSpell()
 
 void UManualSpellComponent::OnSpellCasted(TSubclassOf<UMySpell> spellCasted)
 {
-   if(AUserInput* cpcRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController())) {
-      if(cpcRef->GetBasePlayer()->GetFocusedUnit() == GetOwner()) {
+   if(AUserInput* cpcRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+   {
+      if(cpcRef->GetBasePlayer()->GetFocusedUnit() == GetOwner())
+      {
          const int spellSlotIndex = unitOwner->GetAbilitySystemComponent()->FindSlotIndexOfSpell(spellCasted);
-         if(spellSlotIndex != INDEX_NONE) {
-            SpellHUDEvents::OnFocusedUnitSpellCastedEvent.Broadcast(unitOwner, spellSlotIndex);
-         }
+         if(spellSlotIndex != INDEX_NONE) { SpellHUDEvents::OnFocusedUnitSpellCastedEvent.Broadcast(unitOwner, spellSlotIndex); }
       }
    }
 }
@@ -151,7 +196,8 @@ bool UManualSpellComponent::IsTargetingSelf()
 
 void UManualSpellComponent::FinalizeSpellTargeting(const UUpSpellTargeting* spellTargeting, TSubclassOf<UMySpell> spellClass, const FHitResult& hitResult)
 {
-   if(AUserInput* userInput = Cast<AUserInput>(GetWorld()->GetFirstPlayerController())) {
+   if(AUserInput* userInput = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+   {
       userInput->GetCameraPawn()->HideSpellCircle();
       userInput->GetCameraPawn()->SetSecondaryCursor(); // Just set cursor to to select so the cursor check loop will quickly change the cursor back to normal
       spellTargeting->ManualSetSpellTarget(unitOwner->GetTargetComponent(), hitResult);
