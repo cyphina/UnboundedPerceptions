@@ -22,9 +22,12 @@ class MYPROJECT_API UConfirmationBox : public UPopupWidget
    UPROPERTY()
    class AHUDManager* hudManagerRef;
 
- public:
-   void            Confirm() override;
+public:
+   void Confirm() override;
+
    FOnConfirmation& OnConfirmationMade() const { return OnConfirmationMadeEvent; }
+
+   void SetOnConfirmationMade(const FOnConfirmation& confirmationEvent) { OnConfirmationMadeEvent = confirmationEvent; }
 
 private:
    mutable FOnConfirmation OnConfirmationMadeEvent;

@@ -6,6 +6,8 @@
  * Widget for seeing character stats and allocating points towards attributes.
  */
 
+class AUnit;
+struct FGameplayAttribute;
 class UTextBlock;
 class UStatgraphWidget;
 class UButton;
@@ -27,6 +29,7 @@ protected:
    
    void NativeOnInitialized() override;
    bool OnWidgetAddToViewport_Implementation() override;
+   void OnWidgetRemovedFromViewport_Implementation() override;
    void OnAnimationFinished_Implementation(const UWidgetAnimation* Animation) override;
    void ValidateCompiledDefaults(IWidgetCompilerLog& CompileLog) const override;
    
@@ -93,6 +96,10 @@ private:
 
    UFUNCTION()
    void ShowMechanics();
+
+   void OnBaseStatsUpdated(const FGameplayAttribute& updatedBaseAttribute, float newValue, AUnit* updatedUnit);
+
+   void OnStatsUpdated(const FGameplayAttribute& updatedAttribute, float newValue, AUnit* updatedUnit);
 
    void InitialHeroValueSetup(ABaseHero* heroRef);
    

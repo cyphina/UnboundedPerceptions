@@ -19,15 +19,15 @@ void UCharacterMenu::NativeOnInitialized()
 {
    Super::NativeOnInitialized();
    CreateAttPointSpendingWidgets();
-   
+
    Btn_Affinity->OnClicked.AddDynamic(this, &UCharacterMenu::ShowAffinities);
    Btn_Resist->OnClicked.AddDynamic(this, &UCharacterMenu::ShowDefenses);
    Btn_Vitals->OnClicked.AddDynamic(this, &UCharacterMenu::ShowVitals);
    Btn_Mechanics->OnClicked.AddDynamic(this, &UCharacterMenu::ShowMechanics);
-   
+
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnMoneyGained().AddUObject(this, &UCharacterMenu::OnMoneyGained);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnExpGained().AddUObject(this, &UCharacterMenu::OnEXPGained);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroLevelUp().AddUObject(this, &UCharacterMenu::OnHeroLevelUp); 
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroLevelUp().AddUObject(this, &UCharacterMenu::OnHeroLevelUp);
 }
 
 bool UCharacterMenu::OnWidgetAddToViewport_Implementation()
@@ -37,10 +37,17 @@ bool UCharacterMenu::OnWidgetAddToViewport_Implementation()
    if(baseHeroRef)
    {
       InitialHeroValueSetup(baseHeroRef);
+      GetHeroWithInfoDisplayed()->GetStatComponent()->OnStatsUpdated().AddUObject(this, &UCharacterMenu::OnStatsUpdated);
+
       Widget_StatGraph->Startup();
       return true;
    }
    return false;
+}
+
+void UCharacterMenu::OnWidgetRemovedFromViewport_Implementation()
+{
+   Super::OnWidgetRemovedFromViewport_Implementation();
 }
 
 void UCharacterMenu::OnAnimationFinished_Implementation(const UWidgetAnimation* Animation)
@@ -72,13 +79,11 @@ void UCharacterMenu::ShowAffinities()
 void UCharacterMenu::ShowDefenses()
 {
    Widget_StatGraph->ShowElementalDefense();
-
 }
 
 void UCharacterMenu::ShowVitals()
 {
    Widget_StatGraph->ShowVitals();
-
 }
 
 void UCharacterMenu::ShowMechanics()
@@ -122,10 +127,33 @@ void UCharacterMenu::OnHeroLevelUp(ABaseHero* heroLevelingUp)
 
 void UCharacterMenu::CreateAttPointSpendingWidgets()
 {
-   for(EAttributes attribute : TEnumRange<EAttributes>())
+   UVerticalBoxSlot* attBoxSlot = nullptr;
+   for(int i = 0; i < static_cast<uint8>(EAttributes::Count); ++i)
    {
-      UAttributePointSpenderWidget* attSpendWidget = UAttributePointSpenderWidget::MakePointSpenderWidget(this, AttributePointerWidgetClass, attribute);
-      UVerticalBoxSlot*             attBoxSlot     = Pan_Attributes->AddChildToVerticalBox(attSpendWidget);
+      UAttributePointSpenderWidget* attSpendWidget = UAttributePointSpenderWidget::MakePointSpenderWidget(this, AttributePointerWidgetClass, static_cast<EAttributes>(i));
+      attBoxSlot                                   = Pan_Attributes->AddChildToVerticalBox(attSpendWidget);
       attBoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+      attBoxSlot->SetPadding(FMargin(0, 0, 0, 4.f));
+   }
+   attBoxSlot->SetPadding(FMargin(0.f));
+}
+
+void UCharacterMenu::OnBaseStatsUpdated(const FGameplayAttribute& updatedBaseAttribute, float newValue, AUnit* updatedUnit)
+{
+   // TODO: Maybe play some kind of visual effect
+}
+
+void UCharacterMenu::OnStatsUpdated(const FGameplayAttribute& updatedAttribute, float newValue, AUnit* updatedUnit)
+{
+   if(updatedUnit == GetHeroWithInfoDisplayed())
+   {
+      for(UWidget* widget : Pan_Attributes->GetAllChildren())
+      {
+         UAttributePointSpenderWidget* attWidget = Cast<UAttributePointSpenderWidget>(widget);
+         if(attWidget->GetAttCategory() == static_cast<EAttributes>(UMyAttributeSet::GetAtts().Find(updatedAttribute)))
+         {
+            // TODO: Maybe play some kind of visual effect
+         }
+      }
    }
 }

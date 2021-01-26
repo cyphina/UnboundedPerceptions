@@ -72,8 +72,7 @@ class MYPROJECT_API ABaseHero : public AAlly
    AActor* GetCurrentInteractable() const { return Cast<AActor>(currentInteractable); }
 
    /** Allows us to change this character's base attributes (PERMANENTLY), which can modify their other stats which scale off that attribute */
-   UFUNCTION(BlueprintCallable)
-   void ChangeAttribute(EAttributes att, bool isIncrementing);
+   void OnAttributePointAllocated(ABaseHero* heroWithAttChange, EAttributes att, bool isIncrementing);
 
    /** Get a copy of our spell book which holds all the spells in our skill tree*/
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
@@ -154,7 +153,10 @@ class MYPROJECT_API ABaseHero : public AAlly
     */
    void OnSpellCasted(TSubclassOf<UMySpell> spellCasted);
 
-   void OnItemSelected(int hIndex, int itemUsedSlotIndex);
+   void OnInventoryItemSelected(int hIndex, int itemUsedSlotIndex);
+   void HandleInventoryItemSelected(int itemUsedSlotIndex, FMyItem itemUsed);
+   void HandleDepositItemsToStorage(int itemUsedSlotIndex, FMyItem itemToDeposit);
+   void HandleSellItemToStore(int itemUsedSlotIndex, FMyItem itemToDeposit);
 
    void OnSpellLearned(TSubclassOf<UMySpell> spellLearned);
    void OnSpellUpgraded(TSubclassOf<UMySpell> spellLearned);

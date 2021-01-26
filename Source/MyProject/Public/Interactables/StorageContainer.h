@@ -26,7 +26,8 @@ class MYPROJECT_API AStorageContainer : public AInteractableBase
    void    Interact_Implementation(ABaseHero* hero) override;
    bool    CanInteract_Implementation() const override;
    FVector GetInteractableLocation_Implementation() const override;
-
+   UBackpack* GetBackpack() const { return backpack; }
+   
  protected:
    void BeginPlay() override;
 

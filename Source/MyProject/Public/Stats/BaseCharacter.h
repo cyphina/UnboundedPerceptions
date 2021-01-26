@@ -48,15 +48,15 @@ struct FBaseCharacter
    FGameplayAttributeData* GetVital(int skill) const;
    FGameplayAttributeData* GetMechanic(int skill) const;
 
-   void SetAttributeAdj(int skill, float newValue);
-   void SetSkillAdj(int skill, float newValue);
-   void SetVitalAdj(int skill, float newValue);
-   void SetMechanicAdj(int skill, float newValue);
+   void SetAttributeAdj(int skillIndex, float newValue);
+   void SetSkillAdj(int skillIndex, float newValue);
+   void SetVitalAdj(int skillIndex, float newValue);
+   void SetMechanicAdj(int skillIndex, float newValue);
 
-   void SetAttributeBase(int skill, float newValue);
-   void SetSkillBase(int skill, float newValue);
-   void SetVitalBase(int skill, float newValue);
-   void SetMechanicBase(int skill, float newValue);
+   void SetAttributeBase(int skillIndex, float newValue);
+   void SetSkillBase(int skillIndex, float newValue);
+   void SetVitalBase(int skillIndex, float newValue);
+   void SetMechanicBase(int skillIndex, float newValue);
 
    const TArray<FGameplayAttribute>& GetAttributes() const { return baseAttributes; }
 

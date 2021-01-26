@@ -120,5 +120,6 @@ struct FMyItem
    {
    }
 
+   explicit operator int() = delete;
    operator bool() const { return id > 0; }
 };

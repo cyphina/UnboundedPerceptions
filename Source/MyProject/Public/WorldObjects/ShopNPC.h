@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -12,14 +10,18 @@
  */
 
 USTRUCT(Blueprintable, NoExport)
-struct FItemPrice {
-   FItemPrice() : money(0), tradeItems(TArray<int>()) {}
+struct FItemPrice
+{
+   FItemPrice() :
+      money(0), tradeItems(TArray<int>())
+   {
+   }
 
-   /**How much money this item costs*/
+   /** How much money this item costs */
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
    int money;
 
-   /**How many items to trade in for this item*/
+   /** How many items to trade in for this item */
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
    TArray<FMyItem> tradeItems;
 };
@@ -29,31 +31,56 @@ class MYPROJECT_API AShopNPC : public AIntimateNPC
 {
    GENERATED_BODY()
 
+public:
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   const FItemPrice& BP_GetItemPrice(int itemID) const;
+
    /**
-    *Lists sellable items, and maps them to price
-    */
-   UPROPERTY(EditAnywhere, Category = "Shop Items")
-   TMap<int, FItemPrice> itemPrices;
+   * Accessor to gets an item's price
+   */
+   const FItemPrice* GetItemPrice(int itemID) const;
 
-   void SetupAppropriateView() override;
+   void OnAskToPurchaseItem(int purchaseItemSlotIndex);
 
- public:
-   static FItemPrice defaultItemPrice;
+   UBackpack* GetItemsToSell() const { return itemsToSellBackpack; }
 
+protected:
    void BeginPlay() override;
-
-   /**Backpack containing the items that the shopkeeper will sell and how many the shopkeeper can sell before running out of stock
-    * TODO: Setup some kind of list of what the shopkeeper sells based on what part of the story has occured
-    */
-   UPROPERTY()
-   UBackpack* itemsToSellBackpack;
 
    UPROPERTY(EditAnywhere, Category = "Shop Items")
    TArray<FMyItem> itemsToSell;
 
+private:
+   /** When the player buys a single item and clicks on the confirmation box */
+   bool OnItemPurchased(const FMyItem itemPurchased, const FItemPrice& itemPrice) const;
+
+   /** When the player buys a stackable item and inputs some value */
+   bool OnItemsPurchased(const FMyItem itemToBuy, const FItemPrice& itemPrice, FString howManyItems);
+
+   void       SetupAppropriateView() override;
+   bool       EnoughFunds(const FItemPrice& itemPrice, int numPurchasing) const;
+   UBackpack* GetInteractingHeroBackpack() const;
+
+   TArray<FBackpackUpdateResult> PayItemReqsForEachItemPurchased(const FItemPrice& itemPrice, int numberPurchased) const;
+   
    /**
-    *Accessor to gets an item's price
+    * Lists sellable items, and maps them to price
     */
-   UFUNCTION(BlueprintCallable, BlueprintPure)
-   FItemPrice& GetItemPrice(int itemID);
+   UPROPERTY(EditAnywhere, Category = "Shop Items")
+   TMap<int, FItemPrice> itemPrices;
+
+   /**
+   * Backpack containing the items that the shopkeeper will sell and how many the shopkeeper can sell before running out of stock
+   * TODO: Setup some kind of list of what the shopkeeper sells based on what part of the story has occured
+   */
+   UPROPERTY()
+   UBackpack* itemsToSellBackpack;
+
+   static const FText NotEnoughItemsText;
+   static const FText NotEnoughMoneyText;
+   static const FText ensurePurchaseText;
+   static const FText ensurePurchaseSingleText;
+   static const FText confirmTitleText;
+
+   int purchaseItemId = -1;
 };

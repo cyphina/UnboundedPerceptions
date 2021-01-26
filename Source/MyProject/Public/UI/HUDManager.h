@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
+#include "ConfirmationBox.h"
 #include "GameFramework/Info.h"
 #include "HUDProvider.h"
 #include "WidgetToggler.h"
@@ -10,6 +11,8 @@
 #include "UserWidgetExtensions/MyUserWidget.h"
 #include "EventSystem/Trigger.h"
 #include "DialogStructs.h"
+#include "RTSInputBox.h"
+
 #include "HUDManager.generated.h"
 
 class ARTSGameMode;
@@ -26,36 +29,34 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
 {
    GENERATED_BODY()
 
- public:
+public:
    AHUDManager();
 
-   virtual void BeginPlay() override;
+   void BeginPlay() override;
 
- public:
+public:
    void AddHUD(uint8 newState) override;
+   void HideHUD(EHUDs newState) override;
 
    void ShowDialogWithSource(FName conversationName, EDialogBoxCloseCase dialogSource) override;
    void ShowDialogCustomLines(TArray<FDialogData> linesToDisplay, EDialogBoxCloseCase dialogSource) override;
 
-   void ShowConfirmationBox(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty()) override;
-   void ShowInputBox(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty()) override;
+   void ShowConfirmationBox(const FOnConfirmation& funcToCallOnConfirmed, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty()) override;
+   void ShowInputBox(const FOnInputConfirmed& funcToCallOnConfirmed, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty()) override;
 
    void BP_AddHUD(uint8 newState) override { AddHUD(newState); }
-   void BP_AddHUDDialog(FName conversationName, EDialogBoxCloseCase dialogSource) override { ShowDialogWithSource(conversationName, dialogSource); }
-   void BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, EDialogBoxCloseCase dialogSource) override { ShowDialogCustomLines(linesToDisplay, dialogSource); }
+   void BP_RemoveHUD(EHUDs newState) override { HideHUD(newState); }
    
-   FORCEINLINE void BP_AddConfirmationBox(const FText& newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) override
-   {
-      ShowConfirmationBox(funcName, funcObject, newTitle, newDesc);
-   }
-   FORCEINLINE void BP_AddInputBox(FText newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) override
-   {
-      ShowInputBox(funcName, funcObject, newTitle, newDesc);
-   }
+   void BP_AddHUDDialog(FName conversationName, EDialogBoxCloseCase dialogSource) override { ShowDialogWithSource(conversationName, dialogSource); }
+
+   void BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, EDialogBoxCloseCase dialogSource) override { ShowDialogCustomLines(linesToDisplay, dialogSource); }
+
+   FORCEINLINE void BP_AddConfirmationBox(const FText& newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) override;
+   FORCEINLINE void BP_AddInputBox(FText newTitle, const FText& newDesc, FName funcName = "", UObject* funcObject = nullptr) override;
 
    bool IsWidgetOnScreen(EHUDs hudToCheck) const override final { return currentlyDisplayedWidgetsBitSet[static_cast<int>(hudToCheck)]; }
 
- public:
+public:
    URTSIngameWidget* GetIngameHUD() const override;
    UBreakMenu*       GetBreakMenu() const override;
    USettingsMenu*    GetSettingsMenu() const override;
@@ -63,14 +64,14 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    URTSInputBox*     GetInputBox() const override;
    UStartMenu*       GetStartMenu() const override;
 
- public:
+public:
    /**
    * @brief Class used to show the damage numbers in world space
    */
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<UDIRender> damageIndicatorClass;
 
- protected:
+protected:
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<UMainWidget> mainMenuClass;
 
@@ -95,7 +96,7 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Widgets")
    int numWidgetsBlocking;
 
- private:
+private:
    /** Setup widgets in our reference storage array to toggle them on and off later on through AddHUD*/
    void SetWidget(UMyUserWidget* widgetRef, EHUDs newState);
 
@@ -119,7 +120,7 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    */
    void UpdateWidgetTracking(int removeIndex, bool enableClickEvents, bool canOpenCombat);
 
-   private:
+private:
    /**
    * @brief Uses UE4 reflection to inject this HUDManager into any property named hudManagerRef. Allows us to inject into private members
    * @param objectToInject - The UObject with a property called "hudManagerRef"
@@ -136,7 +137,7 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    * @brief Creates the first widget that goes on screen that holds every other widget
    */
    void CreateMainWidget();
-   
+
    bool ShowHiddenWidget(UMyUserWidget* widgetToApply) const;
    void HideWidgetOnScreen(UMyUserWidget* widgetToApply) const;
 
@@ -151,9 +152,9 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    /**
     * @brief Widgets that are on screen
     */
-   static TBitArray<FDefaultBitArrayAllocator> currentlyDisplayedWidgetsBitSet;
+   TBitArray<FDefaultBitArrayAllocator> currentlyDisplayedWidgetsBitSet = TBitArray<FDefaultBitArrayAllocator>(false, HUDCount);
 
-   int  showMouseCursorCount   = 0;     // Counter to keep track of how many huds are on screen that want us to show the special hud cursor
-   int  enableClickEventsCount = 0;     // Counter to keep track of how many huds are on screen that disable in-game click events
-   bool bBlocked               = false; // Can we open any other widgets right now or are we blocked?
+   int            showMouseCursorCount   = 0;       // Counter to keep track of how many huds are on screen that want us to show the special hud cursor
+   int            enableClickEventsCount = 0;       // Counter to keep track of how many huds are on screen that disable in-game click events
+   UMyUserWidget* blockingWidget         = nullptr; // Can we open any other widgets right now or are we blocked?
 };

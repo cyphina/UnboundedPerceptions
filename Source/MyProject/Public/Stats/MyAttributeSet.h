@@ -19,7 +19,7 @@ GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
 class AUnit;
 
-DECLARE_EVENT_ThreeParams(UMyAttributeSet, FOnStatsUpdated, const FGameplayAttribute&, float&, AUnit*);
+DECLARE_EVENT_ThreeParams(UMyAttributeSet, FOnStatsUpdated, const FGameplayAttribute&, float, AUnit*);
 
 /**
 * Attribute set corresponding to the information held within our units
@@ -196,7 +196,7 @@ class MYPROJECT_API UMyAttributeSet : public UAttributeSet
    ATTRIBUTE_ACCESSORS(UMyAttributeSet, WeaponPower);
    ATTRIBUTE_ACCESSORS(UMyAttributeSet, GlobalDamageModifier);
 
-   TArray<FGameplayAttribute> GetAtts();
+   static const TArray<FGameplayAttribute>& GetAtts();
    TArray<FGameplayAttribute> GetSkills();
    TArray<FGameplayAttribute> GetVitals();
    TArray<FGameplayAttribute> GetMechanics();
@@ -220,6 +220,6 @@ class MYPROJECT_API UMyAttributeSet : public UAttributeSet
     */
    void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override final;
 
-   FOnStatsUpdated statUpdatedEvent;
-   FOnStatsUpdated baseStatUpdatedEvent;
+   mutable FOnStatsUpdated statUpdatedEvent;
+   mutable FOnStatsUpdated baseStatUpdatedEvent;
 };

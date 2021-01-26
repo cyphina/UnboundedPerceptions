@@ -18,6 +18,7 @@ class AEnemy;
 class ANPC;
 class AGoalActor;
 class UNamedInteractableDecorator;
+struct FBackpackUpdateResult;
 
 UCLASS()
 class MYPROJECT_API UQuestMap : public UDataAsset
@@ -142,8 +143,10 @@ private:
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
    void OnTalkNPC(ANPC* talkedToNPC, FGameplayTag conversationTopic);
 
-   void OnItemPickedUp(const ABaseHero* heroPickingItem, const FMyItem& newItem);
+   void OnItemPickedUp(const ABaseHero* heroPickingItem, const FBackpackUpdateResult& itemUpdateResult);
 
+   void OnItemPurchased(const ABaseHero* purchasingHero, const FBackpackUpdateResult& addPurchasedItemResult, const TArray<FBackpackUpdateResult>& removePaymentItemsResults);
+   
    /**
     *Callback when Interactable is successfully interacted with
     * @param decoratorName - Name of the interactable with a "Named Decorator"
@@ -151,5 +154,7 @@ private:
    UFUNCTION(BlueprintCallable, Category = "Callbacks")
    void OnInteracted(const FText& decoratorName);
 
+   void RecalculateItemCountsForGoals(const FMyItem item);
+   
    void SetupWidgetReferences();
 };

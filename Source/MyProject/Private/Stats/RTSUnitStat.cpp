@@ -12,11 +12,11 @@ CombatInfo::ModifyingAttribute& CombatInfo::ModifyingAttribute::operator=(const 
    return *this;
 }
 
-CombatInfo::RTSUnitStat::RTSUnitStat(FGameplayAttribute attData) : attribute{attData}, attMod(ModifyingAttribute(&attribute))
+CombatInfo::RTSUnitStat::RTSUnitStat(FGameplayAttribute attData) : attMod(ModifyingAttribute(&attribute)), attribute{attData}
 {
 }
 
-CombatInfo::RTSUnitStat::RTSUnitStat(FGameplayAttribute att, int baseV, ModifyingAttribute mod, UMyAttributeSet* attSet) : attribute{att}, attMod{mod}
+CombatInfo::RTSUnitStat::RTSUnitStat(FGameplayAttribute att, int baseV, ModifyingAttribute mod, UMyAttributeSet* attSet) : attMod{mod}, attribute{att}
 {
    auto attData = att.GetGameplayAttributeData(attSet);
    float newBaseV = baseV;

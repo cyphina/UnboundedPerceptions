@@ -76,17 +76,17 @@ private:
    /**
     * Sends data to the browser to update one of the stats. If the stat is on screen, it will be updated
     */
-   void UpdateStat(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected);
+   void UpdateStat(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected);
 
    /**
    * Sends data to the browser to update one of the base stats. If the stat is on screen, it will be updated
    */
-   void UpdateBaseStat(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected);
+   void UpdateBaseStat(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected);
 
    /**
     * Helper function for Updating and sending Stats to Browser
     */
-   void CreateAndSendStatUpdate(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected, const FString& keyName);
+   void CreateAndSendStatUpdate(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected, const FString& keyName);
 
    FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override final;
 

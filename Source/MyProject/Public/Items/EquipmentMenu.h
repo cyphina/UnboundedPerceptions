@@ -8,6 +8,7 @@
  * Menu for equipment
  */
 
+struct FBackpackUpdateResult;
 class UEquip;
 class UWeapon;
 class UTextBlock;
@@ -56,7 +57,7 @@ class MYPROJECT_API UEquipmentMenu : public UMyDraggableWidget
    
  private:
    void SetupEquipImages();
-   void OnEquipmentChanged(const ABaseHero* heroThatChanged, const FMyItem& changedEquip);
+   void OnEquipmentChanged(const ABaseHero* heroThatChanged, const FBackpackUpdateResult& equipAddedToInventory);
 
    TStaticArray<UEquipmentSlot*, 8> equipSlots;
 };

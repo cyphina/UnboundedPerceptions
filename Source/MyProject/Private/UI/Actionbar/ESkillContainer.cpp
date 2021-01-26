@@ -34,16 +34,20 @@ void UESkillContainer::NativeOnInitialized()
    skillSlots.Add(skillSlot6);
 }
 
-void UESkillContainer::OnWidgetShown(URTSAbilitySystemComponent* focusedUnitAbilityComp)
+void UESkillContainer::OnWidgetShown(URTSAbilitySystemComponent* focusedUnitAbilityComponent)
 {
-   int index                    = 0;
-   this->focusedUnitAbilityComp = focusedUnitAbilityComp;
-   for(USkillSlot* skillSlot : skillSlots)
+   if(focusedUnitAbilityComp != focusedUnitAbilityComponent)
    {
-      skillSlot->UpdateSkillSlot(focusedUnitAbilityComp->GetSpellAtSlot(index));
-      ++index;
+      focusedUnitAbilityComp = focusedUnitAbilityComponent;
+      
+      int index = 0;
+      for(USkillSlot* skillSlot : skillSlots)
+      {
+         skillSlot->UpdateSkillSlot(focusedUnitAbilityComp->GetSpellAtSlot(index));
+         ++index;
+      }
+      PlayAnimation(flowOutAnim);
    }
-   PlayAnimation(flowOutAnim);
 }
 
 void UESkillContainer::OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex)

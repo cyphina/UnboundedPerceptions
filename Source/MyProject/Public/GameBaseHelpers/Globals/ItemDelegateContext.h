@@ -4,13 +4,14 @@
 
 class ABaseHero;
 struct FMyItem;
+struct FBackpackUpdateResult;
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnItemUsed, const ABaseHero*, const FMyItem&);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnItemPickedUp, const ABaseHero*, const FMyItem&);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnItemDropped, const ABaseHero*, const FMyItem&);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnItemPurchased, const ABaseHero*, const FMyItem&);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEquipmentChanged, const ABaseHero*, const FMyItem&); // Hero that unequipped and the slot in our inventory that's changing
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnBackpackUpdated, UObject*);                           // Hero that has backpack updated
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnItemUsed, const ABaseHero*, const FBackpackUpdateResult&);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnItemPickedUp, const ABaseHero*, const FBackpackUpdateResult&);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnItemDropped, const ABaseHero*, const FBackpackUpdateResult&);
+// Purchasing hero, pack result from adding the new item bought, and pack result from possibly removing existing items
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnItemPurchased, const ABaseHero*, const FBackpackUpdateResult&, const TArray<FBackpackUpdateResult>&);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEquipmentChanged, const ABaseHero*, const FBackpackUpdateResult&); // Hero that unequipped and the slot in our inventory that's changing
 
 UCLASS()
 class UItemDelegateContext : public ULocalPlayerSubsystem
@@ -18,12 +19,15 @@ class UItemDelegateContext : public ULocalPlayerSubsystem
    GENERATED_BODY()
 
 public:
-   FOnItemUsed&         OnItemUsed() { return OnItemUsedEvent; }
-   FOnItemPickedUp&     OnItemPickedUp() { return OnItemPickedUpEvent; }
-   FOnItemDropped&      OnItemDropped() { return OnItemDroppedEvent; }
-   FOnItemPurchased&    OnItemPurchased() { return OnItemPurchasedEvent; }
+   FOnItemUsed& OnItemUsed() { return OnItemUsedEvent; }
+
+   FOnItemPickedUp& OnItemPickedUp() { return OnItemPickedUpEvent; }
+
+   FOnItemDropped& OnItemDropped() { return OnItemDroppedEvent; }
+
+   FOnItemPurchased& OnItemPurchased() { return OnItemPurchasedEvent; }
+
    FOnEquipmentChanged& OnEquipmentChanged() { return OnEquipmentChangedEvent; }
-   FOnBackpackUpdated&  OnBackpackUpdated() { return OnBackpackUpdatedEvent; }
 
 private:
    FOnItemUsed         OnItemUsedEvent;
@@ -31,5 +35,4 @@ private:
    FOnItemDropped      OnItemDroppedEvent;
    FOnItemPurchased    OnItemPurchasedEvent;
    FOnEquipmentChanged OnEquipmentChangedEvent;
-   FOnBackpackUpdated  OnBackpackUpdatedEvent;
 };

@@ -13,6 +13,7 @@
 void UEquipmentMenu::NativeOnInitialized()
 {
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().AddUObject(this, &UEquipmentMenu::OnEquipmentChanged);
+   
    equipSlots[0] = helmetSlot;
    equipSlots[1] = bodySlot;
    equipSlots[2] = gloveSlot;
@@ -55,7 +56,7 @@ void UEquipmentMenu::SetupEquipImages()
    }
 }
 
-void UEquipmentMenu::OnEquipmentChanged(const ABaseHero* heroThatChanged, const FMyItem& changedEquip)
+void UEquipmentMenu::OnEquipmentChanged(const ABaseHero* heroThatChanged, const FBackpackUpdateResult& equipAddedToInventory)
 {
    if(GetVisibility() != ESlateVisibility::Collapsed) {
       if(GetEquippedHero() == heroThatChanged) SetupEquipImages();

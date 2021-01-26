@@ -104,19 +104,19 @@ void URTSSidebarWidget::UpdateSingleHeroSelect(bool bToggled)
    }
 }
 
-void URTSSidebarWidget::UpdateHeroHealth(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected)
+void URTSSidebarWidget::UpdateHeroHealth(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected)
 {
    FString heroInfoString = MakeHeroVitalJson(unitAffected, "hitpoints", newAttributeValue);
    UpdateInformation("updateHeroHealthInfo", heroInfoString);
 }
 
-void URTSSidebarWidget::UpdateHeroMana(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected)
+void URTSSidebarWidget::UpdateHeroMana(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected)
 {
    FString heroInfoString = MakeHeroVitalJson(unitAffected, "mana", newAttributeValue);
    UpdateInformation("updateHeroManaInfo", heroInfoString);
 }
 
-void URTSSidebarWidget::UpdateHeroVitals(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected)
+void URTSSidebarWidget::UpdateHeroVitals(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected)
 {
    if(attributeModified.GetName() == "Health")
    {
@@ -127,19 +127,19 @@ void URTSSidebarWidget::UpdateHeroVitals(const FGameplayAttribute& attributeModi
    }
 }
 
-void URTSSidebarWidget::UpdateHeroMaxHealth(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected)
+void URTSSidebarWidget::UpdateHeroMaxHealth(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected)
 {
    FString heroInfoString = MakeHeroVitalJson(unitAffected, "maxHitpoints", newAttributeValue);
    UpdateInformation("updateHeroMaxHealthInfo", heroInfoString);
 }
 
-void URTSSidebarWidget::UpdateHeroMaxMana(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected)
+void URTSSidebarWidget::UpdateHeroMaxMana(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected)
 {
    FString heroInfoString = MakeHeroVitalJson(unitAffected, "maxMana", newAttributeValue);
    UpdateInformation("updateHeroMaxManaInfo", heroInfoString);
 }
 
-void URTSSidebarWidget::UpdateHeroMaxVitals(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected)
+void URTSSidebarWidget::UpdateHeroMaxVitals(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected)
 {
    if(attributeModified.GetName() == "Health")
    {

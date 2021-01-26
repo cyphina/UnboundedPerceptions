@@ -21,7 +21,7 @@ class MYPROJECT_API UESkillContainer : public UUserWidget
    GENERATED_BODY()
 
  public:
-   void OnWidgetShown(URTSAbilitySystemComponent* focusedUnitAbilityComp);
+   void OnWidgetShown(URTSAbilitySystemComponent* focusedUnitAbilityComponent);
 
  protected:
    void NativePreConstruct() override;

@@ -26,7 +26,7 @@ class MYPROJECT_API UUnitMoveComponent : public UCharacterMovementComponent
 {
    GENERATED_BODY()
 
-   void OnMoveSpeedChanged(const FGameplayAttribute& att, float& newVal, AUnit* unitRef);
+   void OnMoveSpeedChanged(const FGameplayAttribute& att, float newVal, AUnit* unitRef);
 
 protected:
   void BeginPlay() override;

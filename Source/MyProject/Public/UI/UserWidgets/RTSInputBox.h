@@ -22,6 +22,8 @@ class MYPROJECT_API URTSInputBox : public UPopupWidget
 
    FOnInputConfirmed& OnInputConfirmed() const { return OnInputConfirmedEvent; };
 
+   void SetOnInputConfirmed(const FOnInputConfirmed& confirmationEvent) { OnInputConfirmedEvent = confirmationEvent; }
+   
 private:
    UPROPERTY()
    class AHUDManager* hudManagerRef;

@@ -39,22 +39,21 @@ void UMyAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
    }*/
 }
 
-TArray<FGameplayAttribute> UMyAttributeSet::GetAtts()
+const TArray<FGameplayAttribute>& UMyAttributeSet::GetAtts()
 {
-   TArray<FGameplayAttribute> atts = {GetStrengthAttribute(),  GetUnderstandingAttribute(), GetIntelligenceAttribute(), GetExplosivenessAttribute(),
-                                      GetEnduranceAttribute(), GetAgilityAttribute(),       GetLuckAttribute()};
-   return atts;
+   return attList;
 }
 
 TArray<FGameplayAttribute> UMyAttributeSet::GetSkills()
 {
-   TArray<FGameplayAttribute> skills = {
-       GetCritical_ChanceAttribute(), GetCritical_DamageAttribute(), GetAccuracyAttribute(),     GetDodgeAttribute(),         GetAttack_SpeedAttribute(), GetCast_SpeedAttribute(),
-       GetPhysical_AffAttribute(),    GetFire_AffAttribute(),        GetWater_AffAttribute(),    GetWind_AffAttribute(),      GetEarth_AffAttribute(),    GetElectric_AffAttribute(),
-       GetDarkness_AffAttribute(),    GetLight_AffAttribute(),       GetArcane_AffAttribute(),   GetChaos_AffAttribute(),     GetPoison_AffAttribute(),   GetBlood_AffAttribute(),
-       GetEthereal_AffAttribute(),    GetPhysical_ResistAttribute(), GetFire_ResistAttribute(),  GetWater_ResistAttribute(),  GetWind_ResistAttribute(),  GetEarth_ResistAttribute(),
-       GetElectric_ResistAttribute(), GetDarkness_ResistAttribute(), GetLight_ResistAttribute(), GetArcane_ResistAttribute(), GetChaos_ResistAttribute(), GetPoison_ResistAttribute(),
-       GetBlood_ResistAttribute(),    GetEthereal_ResistAttribute()};
+   TArray<FGameplayAttribute> skills = {GetCritical_ChanceAttribute(), GetCritical_DamageAttribute(), GetAccuracyAttribute(),     GetDodgeAttribute(),
+                                        GetAttack_SpeedAttribute(),    GetCast_SpeedAttribute(),      GetPhysical_AffAttribute(), GetFire_AffAttribute(),
+                                        GetWater_AffAttribute(),       GetWind_AffAttribute(),        GetEarth_AffAttribute(),    GetElectric_AffAttribute(),
+                                        GetDarkness_AffAttribute(),    GetLight_AffAttribute(),       GetArcane_AffAttribute(),   GetChaos_AffAttribute(),
+                                        GetPoison_AffAttribute(),      GetBlood_AffAttribute(),       GetEthereal_AffAttribute(), GetPhysical_ResistAttribute(),
+                                        GetFire_ResistAttribute(),     GetWater_ResistAttribute(),    GetWind_ResistAttribute(),  GetEarth_ResistAttribute(),
+                                        GetElectric_ResistAttribute(), GetDarkness_ResistAttribute(), GetLight_ResistAttribute(), GetArcane_ResistAttribute(),
+                                        GetChaos_ResistAttribute(),    GetPoison_ResistAttribute(),   GetBlood_ResistAttribute(), GetEthereal_ResistAttribute()};
    return skills;
 }
 
@@ -78,7 +77,10 @@ FGameplayAttribute UMyAttributeSet::IndexAtts(int index)
 void UMyAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
 {
    AUnit* unit = Cast<AUnit>(GetOwningActor());
-   if(attSet.Contains(Attribute)) { unit->GetStatComponent()->UpdateStats(Attribute); }
+   if(attSet.Contains(Attribute))
+   {
+      unit->GetStatComponent()->UpdateStats(Attribute);
+   }
 
    baseStatUpdatedEvent.Broadcast(Attribute, NewValue, unit);
 }
@@ -86,9 +88,12 @@ void UMyAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute
 void UMyAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
    AUnit* unit = Cast<AUnit>(GetOwningActor());
-   if(Attribute == GetHealthAttribute()) { // Health clamping
+   if(Attribute == GetHealthAttribute())
+   { // Health clamping
       Health.SetCurrentValue(FMath::Clamp(Health.GetCurrentValue(), 0.0f, Health.GetBaseValue()));
-   } else if(attSet.Contains(Attribute)) { // Needs to be run before the broadcast to get proper values to the stat widget in the character menu
+   }
+   else if(attSet.Contains(Attribute))
+   { // Needs to be run before the broadcast to get proper values to the stat widget in the character menu
       unit->GetStatComponent()->UpdateStats(Attribute);
    }
 

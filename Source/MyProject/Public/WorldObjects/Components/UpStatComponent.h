@@ -82,6 +82,7 @@ class MYPROJECT_API UUpStatComponent : public UActorComponent
          } else {
             baseC->SetAttributeBase(specificStatTypeVal, value);
          }
+         UpdateStats(UMyAttributeSet::IndexAtts(static_cast<int>(specificStatTypeVal)));
       } else if constexpr(std::is_same<StatType, EUnitScalingStats>::value) {
          if constexpr(!bModifyBase) {
             baseC->SetSkillAdj(specificStatTypeVal, value);
@@ -104,6 +105,9 @@ class MYPROJECT_API UUpStatComponent : public UActorComponent
          static_assert(std::is_same_v<StatType*, void>, "Error, please ensure you're passing in one of the correct stat enums");
       }
    }
+
+   FOnStatsUpdated& OnBaseStatsUpdated() const;
+   FOnStatsUpdated& OnStatsUpdated() const;
 
  protected:
    void BeginPlay() override;

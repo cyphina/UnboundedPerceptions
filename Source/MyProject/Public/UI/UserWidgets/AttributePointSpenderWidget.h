@@ -4,6 +4,7 @@
 #include "Blueprint/UserWidget.h"
 #include "AttributePointSpenderWidget.generated.h"
 
+class UCharacterMenu;
 class UTextBlock;
 class UButton;
 
@@ -17,6 +18,8 @@ class MYPROJECT_API UAttributePointSpenderWidget : public UUserWidget
 
 public:
    static UAttributePointSpenderWidget* MakePointSpenderWidget(UUserWidget* widgetParent, TSubclassOf<UAttributePointSpenderWidget> widgetClass, EAttributes attCategory);
+
+   EAttributes GetAttCategory() const { return attCategory; }
 
 protected:
    void NativeOnInitialized() override;
@@ -34,9 +37,16 @@ protected:
    UTextBlock* Text_Value;
    
 private:
+   UCharacterMenu* parentWidget;
+
+   UFUNCTION()
+   FText GetAttributeValues();
+
+   UFUNCTION()
    void OnAttributeIncreased();
-   
+
+   UFUNCTION()
    void OnAttributeDecreased();
-   
+
    EAttributes attCategory;
 };

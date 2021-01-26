@@ -6,6 +6,7 @@
 #include "UI/UserWidgetExtensions/MyDraggableWidget.h"
 #include "Inventory.generated.h"
 
+class UActionSlot;
 class UBackpack;
 class ABaseHero;
 class UInventoryView;
@@ -26,11 +27,14 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Inventory Functions")
    void UseItem(int32 iSlot);
 
-   /** Used to update the view whenever change occurs within the backpack corresponding to our inventory
-    * TODO: Try and only have to reload items that changed.
+   /**
+    * Used to update the view whenever change occurs within the backpack corresponding to our inventory
     */
-   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Inventory Functions")
+   UFUNCTION(BlueprintCallable, Category = "Inventory Functions")
    void LoadItems();
+
+   UFUNCTION(BlueprintCallable, Category = "Inventory Functions")
+   void ReloadSlots(TSet<int> slotIndices);
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Functions")
    UBackpack* GetBackpack() const { return backpack; }
@@ -43,6 +47,7 @@ public:
 protected:
    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inventory Functions")
    void UseItemAtInventorySlot(int32 iSlot);
+
    virtual void UseItemAtInventorySlot_Implementation(int32 iSlot) PURE_VIRTUAL(UInventory::UseItemAtInventorySlot,);
 
    void NativeOnInitialized() override;
@@ -51,7 +56,18 @@ protected:
    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
    UInventoryView* inventoryView;
 
+   UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+   TSubclassOf<UActionSlot> slotClass;
+
+   UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+   UTexture2D* defaultSlotTexture;
+
+   UPROPERTY(BlueprintReadWrite)
+   TArray<UActionSlot*> inventorySlots;
+
 private:
+   /** Updates a slot's count and image */
+   void UpdateSlot(int slotIndex);
 
    /**backpack reference for whatever inventory we are displaying*/
    UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "UIInitialParams", Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true))

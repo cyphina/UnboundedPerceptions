@@ -6,10 +6,10 @@
 
 void UUnitMoveComponent::BeginPlay()
 {
-   Cast<AUnit>(GetOwner())->GetStatComponent()->GetAttSet()->statUpdatedEvent.AddUObject(this, &UUnitMoveComponent::OnMoveSpeedChanged);
+   Cast<AUnit>(GetOwner())->GetStatComponent()->OnStatsUpdated().AddUObject(this, &UUnitMoveComponent::OnMoveSpeedChanged);
 }
 
-void UUnitMoveComponent::OnMoveSpeedChanged(const FGameplayAttribute& att, float& newVal, AUnit* unitRef)
+void UUnitMoveComponent::OnMoveSpeedChanged(const FGameplayAttribute& att, float newVal, AUnit* unitRef)
 {
    if(att == UMyAttributeSet::GetMovementSpeedAttribute()) { 
       MaxWalkSpeed = newVal;

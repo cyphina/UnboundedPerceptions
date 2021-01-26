@@ -9,5 +9,5 @@ void UConfirmationBox::Confirm()
 {
    if(OnConfirmationMade().IsBound())
       OnConfirmationMade().Execute();
-   hudManagerRef->ShowConfirmationBox();
+   hudManagerRef->HideHUD(EHUDs::HS_Confirmation);
 }

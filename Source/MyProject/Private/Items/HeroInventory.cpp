@@ -22,7 +22,7 @@ void UHeroInventory::NativeOnInitialized()
    Super::NativeOnInitialized();
    GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().AddUObject(this, &UHeroInventory::OnItemChangeEvent);
    GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemPickedUp().AddUObject(this, &UHeroInventory::OnItemChangeEvent);
-   GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemPurchased().AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+   GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemPurchased().AddUObject(this, &UHeroInventory::OnItemPurchased);
    GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemUsed().AddUObject(this, &UHeroInventory::OnItemChangeEvent);
    GetOwningLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnHeroActiveChanged().AddUObject(this, &UHeroInventory::OnHeroActiveChanged);
 }
@@ -31,23 +31,42 @@ void UHeroInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)
 {
    if(!GetBackpack()->IsEmptySlot(iSlot))
    {
-      OnItemSelected().Broadcast(hIndex, iSlot);
+      OnInventoryItemSelected().Broadcast(hIndex, iSlot);
    }
 }
 
-void UHeroInventory::OnItemChangeEvent(const ABaseHero* heroUsingItem, const FMyItem& item)
+void UHeroInventory::OnItemChangeEvent(const ABaseHero* heroUsingItem, const FBackpackUpdateResult& packUpdateResult)
 {
-   if(GetVisibility() == ESlateVisibility::Visible)
+   if(CPC->GetHUDManager()->IsWidgetOnScreen(EHUDs::HS_Inventory))
    {
-      LoadItems();
+      GetWorld()->GetTimerManager().SetTimerForNextTick([this, packUpdateResult]()
+      {
+         ReloadSlots(TSet<int>(packUpdateResult.updatedBackpackIndices));
+      });
    }
 }
+
+void UHeroInventory::OnItemPurchased(const ABaseHero* heroRef, const FBackpackUpdateResult& addItemResult, const TArray<FBackpackUpdateResult>& removeItemsResults)
+{
+   TSet<int> updatedSlotIndices;
+   updatedSlotIndices.Append(addItemResult.updatedBackpackIndices);
+   for(const FBackpackUpdateResult& removeItemsResult : removeItemsResults)
+   {
+      updatedSlotIndices.Append(removeItemsResult.updatedBackpackIndices);
+   }
+
+   ReloadSlots(updatedSlotIndices);
+}
+
 
 void UHeroInventory::OnHeroActiveChanged(ABaseHero* heroThatChangedActivefState, bool newActiveState)
 {
    // TODO: Refresh inventory and move from the selected page. Also change hIndex... if we plan to keep it around.
    if(!newActiveState)
    {
-      LoadItems();
+      GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+      {
+         LoadItems();
+      });
    }
 }

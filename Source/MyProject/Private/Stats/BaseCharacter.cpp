@@ -26,7 +26,8 @@ FBaseCharacter::~FBaseCharacter()
 
 void FBaseCharacter::SetupPrimaryAttributes()
 {
-   for(FGameplayAttribute& att : attSet->GetAtts()) {
+   for(const FGameplayAttribute& att : attSet->GetAtts())
+   {
       baseAttributes.Add(att);
    }
 }
@@ -46,19 +47,22 @@ void FBaseCharacter::InitialStatUpdate()
 void FBaseCharacter::InitializeAttributeBaseValues()
 {
    static float minVal = 20;
-   for(FGameplayAttribute& att : baseAttributes) {
+   for(FGameplayAttribute& att : baseAttributes)
+   {
       att.GetGameplayAttributeData(attSet)->SetBaseValue(minVal);
       att.SetNumericValueChecked(minVal, attSet);
    }
 
-   for(auto& vital : vitals) {
+   for(auto& vital : vitals)
+   {
       vital.SetAdjustedValue(vital.GetBaseValue(attSet), attSet);
    }
 }
 
 void FBaseCharacter::SetupSkills()
 {
-   for(FGameplayAttribute skillData : attSet->GetSkills()) {
+   for(FGameplayAttribute skillData : attSet->GetSkills())
+   {
       skills.Add(RTSUnitStat(skillData));
    }
    SetupSkillModifiers();
@@ -66,7 +70,8 @@ void FBaseCharacter::SetupSkills()
 
 void FBaseCharacter::SetupVitals()
 {
-   for(FGameplayAttribute vitData : attSet->GetVitals()) {
+   for(FGameplayAttribute vitData : attSet->GetVitals())
+   {
       vitals.Add(Vital(vitData));
    }
    SetupVitalModifiers();
@@ -74,7 +79,8 @@ void FBaseCharacter::SetupVitals()
 
 void FBaseCharacter::SetupMechanics()
 {
-   for(FGameplayAttribute mechData : attSet->GetMechanics()) {
+   for(FGameplayAttribute mechData : attSet->GetMechanics())
+   {
       mechanics.Add(mechData);
    }
 
@@ -201,42 +207,54 @@ FGameplayAttributeData* FBaseCharacter::GetMechanic(int index) const
            .GetGameplayAttributeData(attSet);
 }
 
-void FBaseCharacter::SetAttributeAdj(int skill, float newValue)
+void FBaseCharacter::SetAttributeAdj(int skillIndex, float newValue)
 {
-   baseAttributes[skill].SetNumericValueChecked(newValue, attSet);
+   baseAttributes[skillIndex].SetNumericValueChecked(newValue, attSet);
 }
 
-void FBaseCharacter::SetSkillAdj(int skill, float newValue)
+void FBaseCharacter::SetSkillAdj(int skillIndex, float newValue)
 {
-   skills[skill].SetAdjustedValue(newValue, attSet);
+   skills[skillIndex].SetAdjustedValue(newValue, attSet);
 }
 
-void FBaseCharacter::SetVitalAdj(int skill, float newValue)
+void FBaseCharacter::SetVitalAdj(int skillIndex, float newValue)
 {
-   vitals[skill].SetAdjustedValue(newValue, attSet);
+   vitals[skillIndex].SetAdjustedValue(newValue, attSet);
 }
 
-void FBaseCharacter::SetMechanicAdj(int skill, float newValue)
+void FBaseCharacter::SetMechanicAdj(int skillIndex, float newValue)
 {
-   mechanics[skill].SetNumericValueChecked(newValue, attSet);
+   mechanics[skillIndex].SetNumericValueChecked(newValue, attSet);
 }
 
-void FBaseCharacter::SetAttributeBase(int skill, float newValue)
+void FBaseCharacter::SetAttributeBase(int skillIndex, float newValue)
 {
-   baseAttributes[skill].GetGameplayAttributeData(attSet)->SetBaseValue(newValue);
+   FGameplayAttributeData* skill     = baseAttributes[skillIndex].GetGameplayAttributeData(attSet);
+   const int               valueDiff = newValue - skill->GetBaseValue();
+   skill->SetBaseValue(newValue);
+   skill->SetCurrentValue(skill->GetCurrentValue() + valueDiff);
 }
 
-void FBaseCharacter::SetSkillBase(int skill, float newValue)
+void FBaseCharacter::SetSkillBase(int skillIndex, float newValue)
 {
-   skills[skill].SetBaseValue(newValue, attSet);
+   RTSUnitStat& skill     = skills[skillIndex];
+   const int    valueDiff = newValue - skill.GetBaseValue(attSet);
+   skill.SetBaseValue(newValue, attSet);
+   skill.SetAdjustedValue(skill.GetAdjustedValue(attSet) + valueDiff, attSet);
 }
 
-void FBaseCharacter::SetVitalBase(int skill, float newValue)
+void FBaseCharacter::SetVitalBase(int skillIndex, float newValue)
 {
-   vitals[skill].SetBaseValue(newValue, attSet);
+   Vital&    vital     = vitals[skillIndex];
+   const int valueDiff = newValue - vital.GetBaseValue(attSet);
+   vital.SetBaseValue(newValue, attSet);
+   vital.SetAdjustedValue(vital.GetAdjustedValue(attSet) + valueDiff, attSet);
 }
 
-void FBaseCharacter::SetMechanicBase(int skill, float newValue)
+void FBaseCharacter::SetMechanicBase(int skillIndex, float newValue)
 {
-   mechanics[skill].GetGameplayAttributeData(attSet)->SetBaseValue(newValue);
+   FGameplayAttributeData* mechanic  = mechanics[skillIndex].GetGameplayAttributeData(attSet);
+   const int               valueDiff = newValue - mechanic->GetBaseValue();
+   mechanic->SetBaseValue(newValue);
+   mechanic->SetCurrentValue(mechanic->GetCurrentValue() + valueDiff);
 }

@@ -1,17 +1,15 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "UI/UserWidgetExtensions/MyUserWidget.h"
 #include "InventoryView.generated.h"
 
-/**
- * An inventory view is a way to display the inventories contents.  Examples include paged inventory and scrollbar inventory views.
- */
-
+class UItemSlot;
 class UInventory;
 
+/**
+* An inventory view is a way to display the inventories contents.  Examples include paged inventory and scrollbar inventory views.
+*/
 UCLASS()
 class MYPROJECT_API UInventoryView : public UMyUserWidget
 {
@@ -33,4 +31,7 @@ public:
    /**Reference to the container that lists the items we have.  The slots need this.*/
    UPROPERTY(BlueprintReadWrite, Category = "References")
    UInventory* inventoryRef;
+
+   UPROPERTY(BlueprintReadWrite)
+   TArray<UItemSlot*> inventorySlots;
 };
