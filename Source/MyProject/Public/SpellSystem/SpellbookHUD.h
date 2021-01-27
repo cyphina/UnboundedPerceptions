@@ -1,11 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 
 #include "MySpell.h"
-#include "UI/UserWidgetExtensions/MyDraggableWidget.h"
+#include "SlotContainer.h"
 #include "SpellbookHUD.generated.h"
 
 class ABaseHero;
@@ -14,21 +12,17 @@ class UBorder;
 class UTextBlock;
 class USpellbookSlot;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnSpellSlotSelected, int);
-
 /**
  * HUD for leveling up and setting spells
  */
 UCLASS()
-class MYPROJECT_API USpellbookHUD : public UMyDraggableWidget
+class MYPROJECT_API USpellbookHUD : public USlotContainer
 {
    GENERATED_BODY()
 
 public:
    ABaseHero* GetHeroRef() const { return heroWithOpenSpellbookRef; }
-
-   FOnSpellSlotSelected OnSpellSlotSelected() { return OnSpellSlotSelectedEvent; }
-
+   
    UPROPERTY()
    class AHUDManager* hudManagerRef;
 
@@ -42,6 +36,7 @@ public:
    void ChangeBackgroundColorWhenLeveling();
 
 protected:
+   FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
    void NativeOnInitialized() override;
    bool OnWidgetAddToViewport_Implementation() override;
    
@@ -76,7 +71,4 @@ private:
 
    const FLinearColor canLearnSpellColor    = FLinearColor(0.62, 0.61, 0, 1.0);
    const FLinearColor tooHighLevelSpellColor = FLinearColor(0.6, 0, 0.02, 1.0);
-
-   
-   FOnSpellSlotSelected OnSpellSlotSelectedEvent;
 };

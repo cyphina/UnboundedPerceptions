@@ -22,8 +22,6 @@
 #include "MyGameInstance.h"
 #include "UpStatComponent.h"
 
-CSV_DEFINE_CATEGORY(UpLevelLoading, false);
-
 USaveLoadClass::~USaveLoadClass()
 {
 }

@@ -27,10 +27,11 @@ bool UEquipmentMenu::OnWidgetAddToViewport_Implementation()
 {
    if(CPC->GetBasePlayer()->selectedHeroes.Num() > 0)
    {
-      if(ABaseHero* hero = CPC->GetBasePlayer()->selectedHeroes[0])
+      heroRef = CPC->GetBasePlayer()->selectedHeroes[0];
+      if(heroRef)
       {
          SetupEquipImages();
-         Text_MenuTitle->SetText(FText::Format(NSLOCTEXT("EquipMenu", "EquipMenuTitle", "{0}'s Equipment"), hero->GetGameName()));
+         Text_MenuTitle->SetText(FText::Format(NSLOCTEXT("EquipMenu", "EquipMenuTitle", "{0}'s Equipment"), heroRef->GetGameName()));
          return true;
       }
    }

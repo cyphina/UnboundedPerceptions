@@ -34,7 +34,7 @@ void USpellBook::Init()
       }
 
       SetupInitialSpellNodeConnections();
-      cpcRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->OnSpellSlotSelected().AddUObject(this, &USpellBook::OnSpellSlotSelected);
+      cpcRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->OnSlotSelected().AddUObject(this, &USpellBook::OnSpellSlotSelected);
    }
 }
 

@@ -3,8 +3,6 @@
 #include "LevelSaveStructs.h"
 #include "SaveLoadClass.generated.h"
 
-CSV_DECLARE_CATEGORY_EXTERN(UpLevelLoading);
-
 class AUserInput;
 class ABasePlayer;
 class UUpStatComponent;

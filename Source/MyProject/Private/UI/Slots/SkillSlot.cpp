@@ -12,7 +12,9 @@
 #include "BasePlayer.h"
 #include "ManualSpellComponent.h"
 #include "RTSAbilitySystemComponent.h"
+#include "RTSActionBarSkillDrag.h"
 #include "ToolTipWidget.h"
+#include "UIDelegateContext.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UMG/Public/Components/Image.h"
@@ -40,23 +42,52 @@ void USkillSlot::NativeConstruct()
    Image_CD->SetBrushFromMaterial(cdDMatInst);
 }
 
+void USkillSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
+{
+   if(const TSubclassOf<UMySpell> spellCorrespondingToSlot = GetOwningAbilityComponent()->GetSpellAtSlot(slotIndex))
+   {
+      UDraggedActionWidget* dragVisual = CreateWidget<UDraggedActionWidget>(this, draggedActionWidgetClass);
+      dragVisual->SetDraggedImage(spellCorrespondingToSlot.GetDefaultObject()->GetSpellDefaults().image);
+
+      URTSActionBarSkillDrag* dragOp = NewObject<URTSActionBarSkillDrag>(this);
+      dragOp->Pivot                  = EDragPivot::CenterCenter;
+      dragOp->DefaultDragVisual      = dragVisual;
+      dragOp->slotIndex              = slotIndex;
+      OutOperation                   = MoveTemp(dragOp);
+   }
+}
+
+bool USkillSlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+   URTSActionBarSkillDrag* dragOp = Cast<URTSActionBarSkillDrag>(InOperation);
+   GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedEvent.Broadcast(dragOp->slotIndex, slotIndex);
+   return true;
+}
+
 void USkillSlot::UpdateSkillSlot(TSubclassOf<UMySpell> spellClass)
 {
-   if(IsValid(spellClass)) {
+   if(IsValid(spellClass))
+   {
       UMySpell* spellObject = spellClass.GetDefaultObject();
 
       SetSlotImage(spellObject->GetSpellDefaults().image);
 
-      if(URTSAbilitySystemComponent* ownerAbilitySystemComp = GetOwningAbilityComponent()) {
+      if(URTSAbilitySystemComponent* ownerAbilitySystemComp = GetOwningAbilityComponent())
+      {
          const bool bIsSpellOffCooldown = spellObject->GetCooldownTimeRemaining(ownerAbilitySystemComp->AbilityActorInfo.Get()) > SMALL_NUMBER;
 
-         if(bIsSpellOffCooldown) {
+         if(bIsSpellOffCooldown)
+         {
             ShowCooldown();
-         } else {
+         }
+         else
+         {
             OnCDFinished();
          }
       }
-   } else {
+   }
+   else
+   {
       ResetSkillSlot();
    }
 }
@@ -68,10 +99,13 @@ void USkillSlot::UpdateCD()
        abilityComponent->GetAbilities()[slotIndex].GetDefaultObject()->GetCooldownTimeRemaining(GetOwningAbilityComponent()->AbilityActorInfo.Get());
    const float cdDuration = abilityComponent->GetAbilities()[slotIndex].GetDefaultObject()->GetCDDuration(GetOwningAbilityComponent());
 
-   if(LIKELY(cdTimeRemaining > 0)) {
+   if(LIKELY(cdTimeRemaining > 0))
+   {
       cdDMatInst->SetScalarParameterValue("Percent", cdTimeRemaining / cdDuration);
       Text_CDTime->SetText(FText::AsNumber(static_cast<int>(cdTimeRemaining)));
-   } else {
+   }
+   else
+   {
       OnCDFinished();
    }
 }
@@ -95,24 +129,29 @@ void USkillSlot::ShowCDVisuals() const
    Text_CDTime->SetVisibility(ESlateVisibility::HitTestInvisible);
 }
 
-
-
 URTSAbilitySystemComponent* USkillSlot::GetOwningAbilityComponent() const
 {
-   if(const AUnit* focusedUnit = GetOwningPlayer<AUserInput>()->GetBasePlayer()->GetFocusedUnit()) {
-      if(URTSAbilitySystemComponent* abilityComp = focusedUnit->FindComponentByClass<URTSAbilitySystemComponent>()) { return abilityComp; }
+   if(const AUnit* focusedUnit = GetOwningPlayer<AUserInput>()->GetBasePlayer()->GetFocusedUnit())
+   {
+      if(URTSAbilitySystemComponent* abilityComp = focusedUnit->FindComponentByClass<URTSAbilitySystemComponent>())
+      {
+         return abilityComp;
+      }
    }
    return nullptr;
 }
 
 void USkillSlot::SetSlotImage(UTexture2D* image)
 {
-   if(IsValid(image)) {
+   if(IsValid(image))
+   {
       imageDMatInst->SetTextureParameterValue("RadialTexture", image);
       SetImageFromMaterial(imageDMatInst);
       cdDMatInst->SetTextureParameterValue("RadialTexture", image); // update the cooldown image
       Image_CD->SetBrushFromMaterial(cdDMatInst);
-   } else {
+   }
+   else
+   {
       imageDMatInst->SetTextureParameterValue("RadialTexture", defaultSlotTexture);
       SetImageFromMaterial(imageDMatInst);
    }
@@ -120,7 +159,8 @@ void USkillSlot::SetSlotImage(UTexture2D* image)
 
 void USkillSlot::ResetSkillSlot()
 {
-   if(auto ownerAbilityComp = GetOwningAbilityComponent()) {
+   if(auto ownerAbilityComp = GetOwningAbilityComponent())
+   {
       SetSlotImage(nullptr);
       OnCDFinished();
    }
@@ -128,21 +168,16 @@ void USkillSlot::ResetSkillSlot()
 
 void USkillSlot::ShowDesc(UToolTipWidget* tooltip)
 {
-   if(const auto ownerAbilityComp = GetOwningAbilityComponent()) {
-      if(const TSubclassOf<UMySpell> spellClass = ownerAbilityComp->GetSpellAtSlot(slotIndex)) {
+   if(const auto ownerAbilityComp = GetOwningAbilityComponent())
+   {
+      if(const TSubclassOf<UMySpell> spellClass = ownerAbilityComp->GetSpellAtSlot(slotIndex))
+      {
          UMySpell*     spellAtSlot       = spellClass.GetDefaultObject();
          const FString relevantSpellInfo = "Costs " + FString::FromInt(spellAtSlot->GetCost(ownerAbilityComp)) + " mana\r\n" +
                                            FString::FromInt(spellAtSlot->GetCDDuration(ownerAbilityComp)) + " second CD \r\n" +
                                            FString::FromInt(spellAtSlot->GetRange(ownerAbilityComp)) + " range";
-         tooltip->SetupTTBoxText(spellAtSlot->GetSpellName(), spellAtSlot->GetDescription(), spellAtSlot->GetElem(), FText::FromString(relevantSpellInfo), FText::GetEmpty());
+         tooltip->SetupTTBoxText(spellAtSlot->GetSpellName(), spellAtSlot->GetDescription(), spellAtSlot->GetElem(), FText::FromString(relevantSpellInfo),
+                                 FText::GetEmpty());
       }
-   }
-}
-
-void USkillSlot::OnBtnClick()
-{
-   // One place the UI drives gameplay logic since the extra rebindings to invert the dependency would be suboptimal
-   if(const AUnit* focusedUnit = GetOwningPlayer<AUserInput>()->GetBasePlayer()->GetFocusedUnit()) {
-      if(UManualSpellComponent* manualSpellComp = focusedUnit->FindComponentByClass<UManualSpellComponent>()) { manualSpellComp->PressedCastSpell(slotIndex); }
    }
 }

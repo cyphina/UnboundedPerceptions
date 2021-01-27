@@ -12,6 +12,7 @@
 #include "UI/HUDManager.h"
 #include "DialogSystem/DialogUI.h"
 #include "RTSIngameWidget.h"
+#include "StoreInventory.h"
 #include "UIDelegateContext.h"
 
 const FText AShopNPC::NotEnoughItemsText       = NSLOCTEXT("HelpMessages", "MisisngItems", "Missing required items for trade");
@@ -29,8 +30,7 @@ void AShopNPC::BeginPlay()
    {
       itemsToSellBackpack->AddItem(item);
    }
-
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnStoreSlotSelected().AddUObject(this, &AShopNPC::OnAskToPurchaseItem);
+   controllerRef->GetHUDManager()->GetIngameHUD()->GetShopHUD()->OnSlotSelected().AddUObject(this, &AShopNPC::OnAskToPurchaseItem);
 }
 
 void AShopNPC::OnAskToPurchaseItem(int purchaseItemSlotIndex)

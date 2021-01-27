@@ -1,7 +1,6 @@
 #pragma once
 
-#include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "SlotContainer.h"
 #include "ESkillContainer.generated.h"
 
 class USkillSlot;
@@ -16,7 +15,7 @@ class URTSAbilitySystemComponent;
  * Component currently resides inside the "Single Unit Views".
  */
 UCLASS()
-class MYPROJECT_API UESkillContainer : public UUserWidget
+class MYPROJECT_API UESkillContainer : public USlotContainer
 {
    GENERATED_BODY()
 
@@ -50,7 +49,7 @@ class MYPROJECT_API UESkillContainer : public UUserWidget
 
    UPROPERTY(Transient, Meta = (BindWidgetAnim))
    UWidgetAnimation* flowInAnim;
-
+   
  private:
    UFUNCTION()
    void OnKeybindsChanged(FInputActionKeyMapping newKeyMap);

@@ -273,19 +273,19 @@ TPair<FBackpackUpdateResult, FBackpackUpdateResult> UBackpack::TransferItems(UBa
    return TPair<FBackpackUpdateResult, FBackpackUpdateResult>();
 }
 
-void UBackpack::SwapItems(UBackpack* otherPack, const int slot1, const int slot2)
+void UBackpack::SwapItems(UBackpack* pack1, UBackpack* pack2, const int slot1, const int slot2)
 {
-   if(otherPack->items.IsAllocated(slot2))
+   if(pack2->items.IsAllocated(slot2))
    {
-      if(items.IsAllocated(slot1)) // if there's an item in the slot we want to swap
+      if(pack1->items.IsAllocated(slot1)) // if there's an item in the slot we want to swap
       {
-         const FMyItem itemFromOtherPack = otherPack->items[slot2];
-         otherPack->items[slot2]         = items[slot1];
-         items[slot1]                    = itemFromOtherPack;
+         const FMyItem itemFromOtherPack = pack2->items[slot2];
+         pack2->items[slot2]             = pack1->items[slot1];
+         pack1->items[slot1]             = itemFromOtherPack;
       } else // if not, just insert an item there
       {
-         items.Insert(slot1, otherPack->items[slot2]);
-         otherPack->EmptySlot(slot2);
+         pack1->items.Insert(slot1, pack2->items[slot2]);
+         pack2->EmptySlot(slot2);
       }
    }
 }

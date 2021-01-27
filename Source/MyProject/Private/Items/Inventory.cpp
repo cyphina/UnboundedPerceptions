@@ -6,12 +6,15 @@
 #include "BaseHero.h"
 #include "ForEach.h"
 #include "InventoryView.h"
+#include "ItemDelegateContext.h"
 #include "ItemManager.h"
 
 void UInventory::NativeOnInitialized()
 {
    Super::NativeOnInitialized();
    inventoryView->inventoryRef = this;
+   GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemsTransferred().AddUObject(this, &UInventory::OnItemsTransferred);
+   GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemsSwapped().AddUObject(this, &UInventory::OnItemsSwapped);
 }
 
 bool UInventory::OnWidgetAddToViewport_Implementation()
@@ -22,18 +25,14 @@ bool UInventory::OnWidgetAddToViewport_Implementation()
    {
       return false;
    }
-   
+
    LoadItems();
    return true;
 }
 
-void UInventory::UseItem(int32 iSlot)
+TArray<UActionSlot*>& UInventory::GetInventorySlots() const
 {
-   if(!GetBackpack()->IsEmptySlot(iSlot))
-   {
-      UseItemAtInventorySlot(inventoryView->GetCorrespondingBackpackIndex(iSlot));
-      LoadItems();
-   }
+   return inventoryView->inventorySlots;
 }
 
 void UInventory::LoadItems()
@@ -46,9 +45,9 @@ void UInventory::LoadItems()
          actionSlot->SetInfo(FText::GetEmpty());
       };
 
-      Algo::ForEach(inventorySlots, resetSlot);
+      Algo::ForEach(GetInventorySlots(), resetSlot);
 
-      for(int i = 0; i < inventorySlots.Num(); ++i)
+      for(int i = 0; i < GetInventorySlots().Num(); ++i)
       {
          UpdateSlot(i);
       }
@@ -65,7 +64,7 @@ void UInventory::ReloadSlots(TSet<int> slotIndices)
 
 void UInventory::UpdateSlot(int slotIndex)
 {
-   UActionSlot* actionSlot = inventorySlots[slotIndex];
+   UActionSlot* actionSlot = GetInventorySlots()[slotIndex];
    if(const FMyItem item = GetBackpackItemAtSlot(slotIndex))
    {
       FItemLookupRow* itemInfo = UItemManager::Get().GetItemInfo(item.id);
@@ -75,6 +74,40 @@ void UInventory::UpdateSlot(int slotIndex)
          actionSlot->SetInfo(FText::AsNumber(item.count));
       }
    }
+}
+
+void UInventory::OnItemsTransferred
+(const UBackpack& originalBackpack, const UBackpack& newBackpack, const FBackpackUpdateResult& removeResult, const FBackpackUpdateResult& addResult)
+{
+   if(GetBackpack() == &originalBackpack)
+   {
+      ReloadSlots(TSet<int>(removeResult.updatedBackpackIndices));
+   }
+
+   if(GetBackpack() == &newBackpack)
+   {
+      ReloadSlots(TSet<int>(addResult.updatedBackpackIndices));
+   }
+}
+
+void UInventory::OnItemsSwapped(const UBackpack& pack1, const UBackpack& pack2, int slot1, int slot2)
+{
+   TSet<int> updatedSlots;
+   if(&pack1 == GetBackpack())
+   {
+      updatedSlots.Add(slot1);
+   }
+   if(&pack2 == GetBackpack())
+   {
+      updatedSlots.Add(slot2);
+   }
+
+   ReloadSlots(updatedSlots);
+}
+
+int UInventory::GetCorrespondingBackpackIndex(int slotIndex) const
+{
+   return inventoryView->GetCorrespondingBackpackIndex(slotIndex);
 }
 
 FMyItem UInventory::GetBackpackItemAtSlot(int slotIndex) const

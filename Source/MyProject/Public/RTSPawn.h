@@ -1,10 +1,12 @@
 #pragma once
 
 #include "ECursorStates.h"
+#include "Item.h"
 #include "GameFramework/Pawn.h"
 #include "GameBaseHelpers/CursorClickFunctionality.h"
 #include "RTSPawn.generated.h"
 
+class UBackpack;
 class ARTSPawn;
 class ABaseHero;
 class AUnit;
@@ -233,10 +235,6 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Action")
    void StopSelectedAllyCommands();
 
-
-protected:
-
-
 private:
    void RightClick();
    void RightClickShift();
@@ -283,8 +281,22 @@ private:
    void MakeControlGroup(int controlGroupIndex);
    DECLARE_DELEGATE_OneParam(FMakeControlGroupDelegate, int);
 
-
+   void OnSkillSlotSelected(int skillIndex);
    void OnUnitSlotSelected(AUnit* unitSelected);
+   void OnInventorySlotSelected(int slotIndex);
+   void OnStorageSlotSelected(int slotIndex);
+   void OnEquipmentSlotSelected(int slotIndex);
+   void OnShopSlotSelected(int slotIndex);
+
+   UFUNCTION()
+   void OnItemSlotDroppedFromInventory(int dragSlotIndex, int dropSlotIndex, UBackpack* dragPack, UBackpack* dropPack);
+
+   UFUNCTION()
+   void OnItemSlotDroppedFromStorage(int dragSlotIndex, int dropSlotIndex, UBackpack* dragPack, UBackpack* dropPack);
+   
+   void HandleInventoryItemSelected(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemUsed) const;
+   void HandleTransferStorageItems(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemToDeposit) const;
+   void HandleSellItemToStore(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemToDeposit) const;
 
 #pragma endregion
 

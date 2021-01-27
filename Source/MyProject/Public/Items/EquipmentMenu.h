@@ -1,7 +1,7 @@
 #pragma once
 
 #include "EquipmentSlot.h"
-#include "UI/UserWidgetExtensions/MyDraggableWidget.h"
+#include "SlotContainer.h"
 #include "EquipmentMenu.generated.h"
 
 /**
@@ -16,7 +16,7 @@ class ABaseHero;
 struct FMyItem;
 
 UCLASS()
-class MYPROJECT_API UEquipmentMenu : public UMyDraggableWidget
+class MYPROJECT_API UEquipmentMenu : public USlotContainer
 {
    GENERATED_BODY()
 

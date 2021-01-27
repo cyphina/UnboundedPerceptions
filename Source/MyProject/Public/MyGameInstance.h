@@ -4,7 +4,7 @@
 #include "LevelSaveStructs.h"
 #include "MyGameInstance.generated.h"
 
-CSV_DECLARE_CATEGORY_EXTERN(UpLevelLoading);
+DECLARE_STATS_GROUP(TEXT("Save and Loading"), STATGROUP_SaveAndLoading, STATCAT_Advanced);
 
 class UEventManager;
 class AHUDManager;

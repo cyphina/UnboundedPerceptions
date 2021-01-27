@@ -10,12 +10,15 @@
 
 #include "ItemDelegateContext.h"
 #include "PartyDelegateContext.h"
-
 #include "AIStuff/AIControllers/HeroAIController.h"
-
-#include "ItemManager.h"
-
 #include "Backpack.h"
+#include "InventoryView.h"
+
+FReply UHeroInventory::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+   OnSlotSelected().Broadcast(inventoryView->GetCorrespondingBackpackIndex(GetSelectedSlotIndex()));
+   return FReply::Handled();
+}
 
 void UHeroInventory::NativeOnInitialized()
 {
@@ -25,14 +28,6 @@ void UHeroInventory::NativeOnInitialized()
    GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemPurchased().AddUObject(this, &UHeroInventory::OnItemPurchased);
    GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemUsed().AddUObject(this, &UHeroInventory::OnItemChangeEvent);
    GetOwningLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnHeroActiveChanged().AddUObject(this, &UHeroInventory::OnHeroActiveChanged);
-}
-
-void UHeroInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)
-{
-   if(!GetBackpack()->IsEmptySlot(iSlot))
-   {
-      OnInventoryItemSelected().Broadcast(hIndex, iSlot);
-   }
 }
 
 void UHeroInventory::OnItemChangeEvent(const ABaseHero* heroUsingItem, const FBackpackUpdateResult& packUpdateResult)
@@ -57,7 +52,6 @@ void UHeroInventory::OnItemPurchased(const ABaseHero* heroRef, const FBackpackUp
 
    ReloadSlots(updatedSlotIndices);
 }
-
 
 void UHeroInventory::OnHeroActiveChanged(ABaseHero* heroThatChangedActivefState, bool newActiveState)
 {

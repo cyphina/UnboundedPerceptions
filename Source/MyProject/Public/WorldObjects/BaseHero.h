@@ -153,11 +153,6 @@ class MYPROJECT_API ABaseHero : public AAlly
     */
    void OnSpellCasted(TSubclassOf<UMySpell> spellCasted);
 
-   void OnInventoryItemSelected(int hIndex, int itemUsedSlotIndex);
-   void HandleInventoryItemSelected(int itemUsedSlotIndex, FMyItem itemUsed);
-   void HandleDepositItemsToStorage(int itemUsedSlotIndex, FMyItem itemToDeposit);
-   void HandleSellItemToStore(int itemUsedSlotIndex, FMyItem itemToDeposit);
-
    void OnSpellLearned(TSubclassOf<UMySpell> spellLearned);
    void OnSpellUpgraded(TSubclassOf<UMySpell> spellLearned);
 

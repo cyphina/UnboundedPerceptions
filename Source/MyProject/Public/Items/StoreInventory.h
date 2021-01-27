@@ -22,9 +22,7 @@ class MYPROJECT_API UStoreInventory : public UInventory
 public:
    UFUNCTION()
    AShopNPC* GetShopkeeper() const { return shopkeeper; }
-
-   void UseItemAtInventorySlot_Implementation(int32 iSlot) override;
-
+   
 protected:
    void NativeOnInitialized() override;
    bool OnWidgetAddToViewport_Implementation() override;

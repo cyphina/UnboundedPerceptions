@@ -65,10 +65,6 @@ void ABaseHero::BeginPlay()
    spellbook = USpellBook::CreateSpellBook(this);
    SpellHUDEvents::OnSpellLearnedEvent.AddUObject(this, &ABaseHero::OnSpellLearned);
    SpellHUDEvents::OnSpellUpgradedEvent.AddUObject(this, &ABaseHero::OnSpellUpgraded);
-
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnAttributePointAllocated().AddUObject(this,
-      &ABaseHero::OnAttributePointAllocated);
-   OnPickupItem().BindUObject(this, &ABaseHero::OnItemPickup);
 }
 
 void ABaseHero::Tick(float deltaSeconds)
@@ -100,10 +96,13 @@ void ABaseHero::SetEnabled(bool bEnabled)
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroActiveChanged().Broadcast(this, bEnabled);
    if(bEnabled)
    {
-      controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->OnInventoryItemSelected().AddUObject(this, &ABaseHero::OnInventoryItemSelected);
+      GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnAttributePointAllocated().AddUObject(this,
+         &ABaseHero::OnAttributePointAllocated);
+      OnPickupItem().BindUObject(this, &ABaseHero::OnItemPickup);
    } else
    {
-      controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->OnInventoryItemSelected().RemoveAll(this);
+      GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnAttributePointAllocated().RemoveAll(this);
+      OnPickupItem().Unbind();
    }
 }
 
@@ -230,53 +229,6 @@ void ABaseHero::OnSpellCasted(TSubclassOf<UMySpell> spellCasted)
          currentItemId = INDEX_NONE;
       }
    }
-}
-
-void ABaseHero::OnInventoryItemSelected(int hIndex, int itemUsedSlotIndex)
-{
-   if(this->heroIndex == hIndex)
-   {
-      const FMyItem itemUsed = GetBackpack().GetItem(itemUsedSlotIndex);
-      if(controllerRef->GetHUDManager()->IsWidgetOnScreen(EHUDs::HS_Storage))
-      {
-         HandleDepositItemsToStorage(itemUsedSlotIndex, itemUsed);
-      } else if(controllerRef->GetHUDManager()->IsWidgetOnScreen(EHUDs::HS_Shop_General))
-      {
-         HandleSellItemToStore(itemUsedSlotIndex, itemUsed);
-      } else
-      {
-         HandleInventoryItemSelected(itemUsedSlotIndex, itemUsed);
-      }
-   }
-}
-
-void ABaseHero::HandleInventoryItemSelected(int itemUsedSlotIndex, const FMyItem itemUsed)
-{
-   const FGameplayTag itemType = UItemManager::Get().GetItemInfo(itemUsed.id)->itemType;
-
-   if(itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Equippable")))
-   {
-      Equip(itemUsedSlotIndex);
-   } else if(itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Consumeable")))
-   {
-      GetHeroController()->BeginUseItem(itemUsed.id, itemUsedSlotIndex);
-   } else
-   {
-      UE_LOG(LogTemp, Log, TEXT("ERROR WITH ITEM TYPE"));
-   }
-}
-
-void ABaseHero::HandleDepositItemsToStorage(int itemUsedSlotIndex, FMyItem itemToDeposit)
-{
-   Cast<AStorageContainer>(GetCurrentInteractable())->GetBackpack()->TransferItems(&GetBackpack(), itemUsedSlotIndex);
-   // TODO: OnItemDeposited
-}
-
-void ABaseHero::HandleSellItemToStore(int itemUsedSlotIndex, FMyItem itemToDeposit)
-{
-   // TODO: Calculate price and trigger some kind of event
-   //Cast<AShopNPC>(GetCurrentInteractable())->
-
 }
 
 void ABaseHero::OnSpellLearned(TSubclassOf<UMySpell> spellLearned)

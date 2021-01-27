@@ -18,11 +18,6 @@ void UEquipmentSlot::NativeConstruct()
    infoText->SetVisibility(ESlateVisibility::Hidden);
 }
 
-void UEquipmentSlot::OnBtnClick()
-{
-   CPCRef->GetWidgetProvider()->GetIngameHUD()->GetEquipHUD()->GetEquippedHero()->Unequip(slotIndex);
-}
-
 void UEquipmentSlot::ShowDesc(UToolTipWidget* tooltip)
 {
    // Show information about the equipment in the slot

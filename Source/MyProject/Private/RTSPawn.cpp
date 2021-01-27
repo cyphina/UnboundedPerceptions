@@ -16,17 +16,23 @@
 
 #include "UI/HUDManager.h"
 #include "UI/UserWidgets/RTSIngameWidget.h"
+#include "ShopNPC.h"
 #include "Quests/QuestManager.h"
 #include "AbilitySystemComponent.h"
 #include "ActionbarInterface.h"
+#include "EquipmentMenu.h"
 #include "GameplayDelegateContext.h"
+#include "HeroAIController.h"
+#include "HeroInventory.h"
+#include "ItemDelegateContext.h"
+#include "ItemManager.h"
 #include "ManualSpellComponent.h"
 #include "PartyDelegateContext.h"
 #include "SceneViewport.h"
-#include "SpellFunctionLibrary.h"
-#include "TargetedAttackComponent.h"
+#include "StorageContainer.h"
+#include "StoreInventory.h"
+
 #include "UIDelegateContext.h"
-#include "Actionbar/ActionbarInterface.h"
 
 #include "Algo/Transform.h"
 #include "GameBaseHelpers/DefaultCursorClickFunctionality.h"
@@ -177,7 +183,17 @@ void ARTSPawn::PossessedBy(AController* newController)
    if(controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()); controllerRef)
    {
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnUnitSlotSelected().AddUObject(this, &ARTSPawn::OnUnitSlotSelected);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnItemSlotDroppedInventoryEvent.AddDynamic(this, &ARTSPawn::OnItemSlotDroppedFromInventory);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnItemSlotDroppedStorageEvent.AddDynamic(this, &ARTSPawn::OnItemSlotDroppedFromStorage);
+      GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+         controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnSkillSlotSelected);
+         controllerRef->GetHUDManager()->GetIngameHUD()->GetEquipHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnEquipmentSlotSelected);
+         controllerRef->GetHUDManager()->GetIngameHUD()->GetShopHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnShopSlotSelected);
+         controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnInventorySlotSelected);
+         controllerRef->GetHUDManager()->GetIngameHUD()->GetStorageHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnStorageSlotSelected);
+      });
    }
+
    EnableInput(controllerRef);
 }
 
@@ -705,6 +721,13 @@ void ARTSPawn::MakeControlGroup(int controlGroupIndex)
    Algo::Transform(allies, cgroup, [](AAlly* ally) { return MakeWeakObjectPtr(ally); });
 }
 
+void ARTSPawn::OnSkillSlotSelected(int skillIndex)
+{
+   if(const AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit()) {
+      if(UManualSpellComponent* manualSpellComp = focusedUnit->FindComponentByClass<UManualSpellComponent>()) { manualSpellComp->PressedCastSpell(skillIndex); }
+   }
+}
+
 void ARTSPawn::OnUnitSlotSelected(AUnit* unitSelected)
 {
    if(IsValid(unitSelected))
@@ -715,3 +738,99 @@ void ARTSPawn::OnUnitSlotSelected(AUnit* unitSelected)
       controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.Broadcast(true);
    }
 }
+
+void ARTSPawn::OnInventorySlotSelected(int slotIndex)
+{
+   if(ABaseHero* heroWithInvShown = controllerRef->GetBasePlayer()->GetHeroes()[controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->GetHeroIndex()])
+   {
+      const FMyItem itemUsed = heroWithInvShown->GetBackpack().GetItem(slotIndex);
+      if(controllerRef->GetHUDManager()->IsWidgetOnScreen(EHUDs::HS_Storage))
+      {
+         HandleTransferStorageItems(heroWithInvShown, slotIndex, itemUsed);
+      } else if(controllerRef->GetHUDManager()->IsWidgetOnScreen(EHUDs::HS_Shop_General))
+      {
+         HandleSellItemToStore(heroWithInvShown, slotIndex, itemUsed);
+      } else
+      {
+         HandleInventoryItemSelected(heroWithInvShown, slotIndex, itemUsed);
+      }
+   }
+}
+
+void ARTSPawn::HandleInventoryItemSelected(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, const FMyItem itemUsed) const
+{
+   const FGameplayTag itemType = UItemManager::Get().GetItemInfo(itemUsed.id)->itemType;
+
+   if(itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Equippable")))
+   {
+      heroWithInvShown->Equip(itemUsedSlotIndex);
+   } else if(itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Consumeable")))
+   {
+      heroWithInvShown->GetHeroController()->BeginUseItem(itemUsed.id, itemUsedSlotIndex);
+   } else
+   {
+      UE_LOG(LogTemp, Log, TEXT("ERROR WITH ITEM TYPE"));
+   }
+}
+
+void ARTSPawn::HandleTransferStorageItems(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemToDeposit) const
+{
+   UBackpack* originalBackpack   = &heroWithInvShown->GetBackpack();
+   UBackpack* transferToBackpack = Cast<AStorageContainer>(heroWithInvShown->GetCurrentInteractable())->GetBackpack();
+
+   if(originalBackpack && transferToBackpack)
+   {
+      auto  itemTransferResults = transferToBackpack->TransferItems(originalBackpack, itemUsedSlotIndex);
+      auto& removeResult        = itemTransferResults.Key;
+      auto& addResult           = itemTransferResults.Value;
+      GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemsTransferred().Broadcast(
+      *originalBackpack, *transferToBackpack, removeResult, addResult);
+   }
+}
+
+void ARTSPawn::HandleSellItemToStore(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemToDeposit) const
+{
+   // TODO: Calculate price and trigger some kind of event
+   //Cast<AShopNPC>(GetCurrentInteractable())->
+}
+
+void ARTSPawn::OnStorageSlotSelected(int slotIndex)
+{
+   if(ABaseHero* heroUsingStorage = controllerRef->GetBasePlayer()->heroInBlockingInteraction)
+   {
+      if(AStorageContainer* storageContainer = Cast<AStorageContainer>(heroUsingStorage->GetCurrentInteractable()))
+      {
+         UBackpack* originalBackpack = Cast<AStorageContainer>(heroUsingStorage->GetCurrentInteractable())->GetBackpack();
+         UBackpack* transferToBackpack   = &heroUsingStorage->GetBackpack();
+  
+         auto  itemTransferResults = transferToBackpack->TransferItems(originalBackpack, slotIndex);
+         auto& removeResult        = itemTransferResults.Key;
+         auto& addResult           = itemTransferResults.Value;
+         GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemsTransferred().Broadcast(
+         *originalBackpack, *transferToBackpack, removeResult, addResult);
+      }
+   }
+}
+
+void ARTSPawn::OnEquipmentSlotSelected(int slotIndex)
+{
+   controllerRef->GetHUDManager()->GetIngameHUD()->GetEquipHUD()->GetEquippedHero()->Unequip(slotIndex);
+}
+
+void ARTSPawn::OnShopSlotSelected(int slotIndex)
+{
+   Cast<AShopNPC>(controllerRef->GetBasePlayer()->heroInBlockingInteraction->GetCurrentInteractable())->OnAskToPurchaseItem(slotIndex);
+}
+
+void ARTSPawn::OnItemSlotDroppedFromInventory(int dragSlotIndex, int dropSlotIndex, UBackpack* dragPack, UBackpack* dropPack)
+{
+   UBackpack::SwapItems(dragPack, dropPack, dragSlotIndex, dropSlotIndex);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemsSwapped().Broadcast(*dragPack, *dropPack, dragSlotIndex, dropSlotIndex);
+}
+
+void ARTSPawn::OnItemSlotDroppedFromStorage(int dragSlotIndex, int dropSlotIndex, UBackpack* dragPack, UBackpack* dropPack)
+{
+   UBackpack::SwapItems(dragPack, dropPack, dragSlotIndex, dropSlotIndex);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemsSwapped().Broadcast(*dragPack, *dropPack, dragSlotIndex, dropSlotIndex);
+}
+

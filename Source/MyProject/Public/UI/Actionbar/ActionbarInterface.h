@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "UI/UserWidgetExtensions/MyUserWidget.h"
@@ -12,6 +10,7 @@ class AUnit;
 class URTSWidgetSwitcher;
 class UChannelingBar;
 class AAlly;
+class FOnSlotSelected;
 
 /*
  * Class that represents the action bar we see when selecting a unit/enemy
@@ -32,6 +31,8 @@ class MYPROJECT_API UActionbarInterface : public UMyUserWidget
    UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "View")
    void DeadUnitView();
 
+   FOnSlotSelected& OnSlotSelected();
+   
  protected:
    UPROPERTY(meta=(BindWidget))
    URTSWidgetSwitcher* WS_UnitTypeView;

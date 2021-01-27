@@ -19,8 +19,7 @@ ARTSDoor::ARTSDoor() : AInteractableBase()
    doorCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("DoorCollision"));
    doorCollision->SetupAttachment(RootComponent);
    doorCollision->SetCollisionObjectType(INTERACTABLE_CHANNEL);
-
-   static ConstructorHelpers::FObjectFinder<UStaticMesh> doorFrameMesh(TEXT("/Game/StarterContent/Props/SM_DoorFrame"));
+   static ConstructorHelpers::FObjectFinder<UStaticMesh> doorFrameMesh(TEXT("/Game/RTS_Tutorial/Meshes/SM_DoorFrame"));
    // Caching the data table information can be problematic if we reimport
    if(doorFrameMesh.Object)
       interactableMesh->SetStaticMesh(doorFrameMesh.Object);

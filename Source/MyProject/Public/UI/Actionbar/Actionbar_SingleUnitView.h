@@ -4,6 +4,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Actionbar_SingleUnitView.generated.h"
 
+class FOnSlotSelected;
 class UActionbar_DeadInterface;
 class AUnit;
 class URTSWidgetSwitcher;
@@ -23,6 +24,8 @@ class MYPROJECT_API UActionbar_SingleUnitView : public UUserWidget
 
 public:
    void OnWidgetShown(AUnit* focusedUnit);
+
+   FOnSlotSelected& OnSlotSelected();
 
 protected:
    void NativeOnInitialized() override;

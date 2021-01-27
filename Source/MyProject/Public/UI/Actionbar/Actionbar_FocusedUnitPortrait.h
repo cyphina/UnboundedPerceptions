@@ -4,6 +4,7 @@
 #include "UserWidget.h"
 #include "Actionbar_FocusedUnitPortrait.generated.h"
 
+class FOnSlotSelected;
 class UESkillContainer;
 class UTextBlock;
 class AUnit;
@@ -15,7 +16,9 @@ class MYPROJECT_API UActionbar_FocusedUnitPortrait : public UUserWidget
 
 public:
    void OnWidgetShown(AUnit* focusedUnit);
-   
+
+   FOnSlotSelected& OnSlotSelected();
+
 protected:
    UPROPERTY(meta=(BindWidget))
    UTextBlock* Text_Name;

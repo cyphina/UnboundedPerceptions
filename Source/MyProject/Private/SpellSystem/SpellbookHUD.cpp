@@ -10,6 +10,7 @@
 #include "Border.h"
 #include "HUDManager.h"
 #include "MySpell.h"
+#include "RTSIngameWidget.h"
 #include "SpellBook.h"
 #include "SpellbookSlot.h"
 #include "SpellDelegateStore.h"
@@ -45,6 +46,18 @@ void USpellbookHUD::ChangeBackgroundColorWhenLeveling()
    const auto paleBlue = FLinearColor(0.78, 0.85, 0.91, 1);
    bLevelingUp         = !bLevelingUp;
    bLevelingUp ? hudBackground->SetBrushColor(red) : hudBackground->SetBrushColor(paleBlue);
+}
+
+FReply USpellbookHUD::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+   if(bLevelingUp)
+   {
+     Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+   } else
+   {
+      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("SpellbookHUD", "PressUpgradeButtonSpellLevelup", "Press the upgrade button before levling up a spell!"));
+   }
+   return FReply::Handled();
 }
 
 void USpellbookHUD::ResetHUDForNewHero()

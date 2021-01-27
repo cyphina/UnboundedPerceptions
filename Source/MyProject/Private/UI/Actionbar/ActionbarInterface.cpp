@@ -22,6 +22,11 @@ void UActionbarInterface::NativeOnInitialized()
    }
 }
 
+FOnSlotSelected& UActionbarInterface::OnSlotSelected()
+{
+   return singleUnitView->OnSlotSelected();
+}
+
 void UActionbarInterface::OnAllySelected(bool bToggled)
 {
    if(CPC->GetBasePlayer()->selectedAllies.Num() > 1)

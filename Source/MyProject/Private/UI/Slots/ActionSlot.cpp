@@ -1,10 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "ActionSlot.h"
 
+
+#include "SlotContainer.h"
 #include "TextBlock.h"
 #include "UserInput.h"
+#include "UWidgetHelperLibrary.h"
 #include "UI/HUDManager.h"
 
 #include "UI/UserWidgets/ToolTipWidget.h"
@@ -49,9 +50,14 @@ UTexture2D* UActionSlot::GetImage() const
 void UActionSlot::NativeOnInitialized()
 {
    Super::NativeOnInitialized();
-   btnAction->OnClicked.AddDynamic(this, &UActionSlot::OnBtnClick);
    btnAction->OnHovered.AddDynamic(this, &UActionSlot::OnBtnHover);
    CPCRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
+}
+
+FReply UActionSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+   UUWidgetHelperLibrary::GetUserWidgetParent<USlotContainer>(this)->SetSelectedSlotIndex(slotIndex);
+   return FReply::Unhandled();
 }
 
 void UActionSlot::OnBtnHover()

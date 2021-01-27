@@ -13,8 +13,6 @@ UCLASS()
 class MYPROJECT_API UShopSlot : public UActionSlot
 {
    GENERATED_BODY()
-
-   void OnBtnClick() override;
    
    void ShowDesc(UToolTipWidget* tooltip) override;
 

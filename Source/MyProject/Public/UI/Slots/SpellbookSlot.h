@@ -18,10 +18,11 @@ public:
 
    /** Updates the level indicator text (telling us what level this spell is at)*/
    void UpdateSlotLevelText();
+
+protected:
+   void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
    
 private:
-   void OnSpellSlotSelected();
-   void OnBtnClick() override;
    void ShowDesc(UToolTipWidget* tooltip) override;
    
    static const inline FLinearColor tooHighLevelSpellColor = FLinearColor(0.6, 0, 0.02, 1.0);

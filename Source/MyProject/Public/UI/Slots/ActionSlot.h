@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "DraggedActionWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "ActionSlot.generated.h"
 
@@ -40,9 +42,6 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    int GetSlotIndex() const { return slotIndex; }
     
  protected:
-   UFUNCTION()
-   virtual void OnBtnClick() PURE_VIRTUAL(UActionSlot::OnBtnClick, );
-
    /** Sets up the text to be displayed for a tooltip*/
    UFUNCTION()
    void OnBtnHover();
@@ -50,6 +49,8 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    /** Setup information on the tooltip widget*/
    UFUNCTION()
    virtual void ShowDesc(UToolTipWidget* tooltip) PURE_VIRTUAL(UActionSlot::ShowDesc, );
+   
+   FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
    void NativeOnInitialized() override;
 
@@ -76,6 +77,10 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Action", Meta = (ExposeOnSpawn = true))
    int slotIndex;
 
+   // TODO: Maybe make this a simple slate widget?
+   UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+   TSubclassOf<UDraggedActionWidget> draggedActionWidgetClass;
+   
  private:
    static TSubclassOf<UToolTipWidget> toolTipWidgetClass;
 };

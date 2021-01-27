@@ -11,12 +11,6 @@
 #include "WorldObjects/BaseHero.h"
 #include "Items/ItemManager.h"
 
-void UShopSlot::OnBtnClick()
-{
-   UStoreInventory* widgetRef = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetShopHUD();
-   widgetRef->UseItem(slotIndex);
-}
-
 void UShopSlot::ShowDesc(UToolTipWidget* tooltip)
 {
    const UStoreInventory* shopWidgetRef = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetShopHUD();

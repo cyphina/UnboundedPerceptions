@@ -27,6 +27,8 @@ class MYPROJECT_API USkillSlot : public UActionSlot
 
  protected:
    void NativeConstruct() override;
+   void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
+   bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 
    // Cooldown radial coloring
    UPROPERTY(BlueprintReadWrite, Category = "Action", Meta = (BindWidget))
@@ -71,8 +73,6 @@ class MYPROJECT_API USkillSlot : public UActionSlot
    void ResetSkillSlot();
 
    void SetSlotImage(UTexture2D* image) override;
-
-   void OnBtnClick() override;
 
    /**
     * @brief Timer used to update the slot radial effect and cooldown text

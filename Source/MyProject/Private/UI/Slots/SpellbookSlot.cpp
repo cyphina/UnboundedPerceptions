@@ -1,30 +1,19 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "SpellbookSlot.h"
+
+#include "DraggedActionWidget.h"
 #include "UserInput.h"
 #include "HUDManager.h"
 #include "SpellbookHUD.h"
 #include "RTSIngameWidget.h"
+#include "RTSSpellbookDrag.h"
 #include "SpellBook.h"
 #include "ToolTipWidget.h"
 #include "SpellSystem/MySpell.h"
-#include "SpellDelegateStore.h"
 #include "WorldObjects/BaseHero.h"
 #include "UMG/Public/Components/TextBlock.h"
 
 #define LOCTEXT_NAMESPACE "SpellbookSlot"
-
-void USpellbookSlot::OnBtnClick()
-{
-   if(CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->bLevelingUp)
-   {
-      CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->OnSpellSlotSelected().Broadcast(slotIndex);
-   } else
-   {
-      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), LOCTEXT("PressUpgradeButtonSpellLevelup", "Press the upgrade button before levling up a spell!"));
-   }
-}
 
 void USpellbookSlot::UpdateSlotColor()
 {
@@ -47,11 +36,39 @@ void USpellbookSlot::UpdateSlotColor()
 
 void USpellbookSlot::UpdateSlotLevelText()
 {
-   const ABaseHero* heroRef   = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef();
-   USpellBook*      spellBook = heroRef->GetSpellBook();
+   if(const ABaseHero* heroRef = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef())
+   {
+      if(USpellBook* spellBook = heroRef->GetSpellBook())
+      {
+         const int newLevel = spellBook->GetSpellFromIndex(slotIndex).GetDefaultObject()->GetLevel(heroRef->GetAbilitySystemComponent());
+         infoText->SetText(FText::FromString(FString::FromInt(newLevel + 1)));
+      }
+   }
+}
 
-   const int newLevel = spellBook->GetSpellFromIndex(slotIndex).GetDefaultObject()->GetLevel(heroRef->GetAbilitySystemComponent());
-   infoText->SetText(FText::FromString(FString::FromInt(newLevel + 1)));
+void USpellbookSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
+{
+   if(const ABaseHero* heroRef = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef())
+   {
+      if(USpellBook* spellBook = heroRef->GetSpellBook())
+      {
+         if(const TSubclassOf<UMySpell> spellClass = spellBook->GetSpellFromIndex(slotIndex))
+         {
+            if(spellBook->HasLearnedSpell(slotIndex))
+            {
+               UDraggedActionWidget* dragVisual = CreateWidget<UDraggedActionWidget>(this, draggedActionWidgetClass);
+               dragVisual->SetDraggedImage(spellClass.GetDefaultObject()->GetSpellDefaults().image);
+
+               URTSSpellbookDrag* dragOp = NewObject<URTSSpellbookDrag>(this);
+               dragOp->Pivot = EDragPivot::CenterCenter;
+               dragOp->DefaultDragVisual = dragVisual;
+               dragOp->slotIndex = slotIndex;
+               OutOperation = MoveTemp(dragOp);
+            }
+         }
+      }
+   }
+
 }
 
 void USpellbookSlot::ShowDesc(UToolTipWidget* tooltip)

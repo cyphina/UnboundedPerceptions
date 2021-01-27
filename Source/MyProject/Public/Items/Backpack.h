@@ -88,7 +88,7 @@ public:
     * @param slot1 - Index of the slot in this backpack which is going to be swapped
     * @param slot2 - Index of the slot in the other backpack which we're swapping to
     */
-   void SwapItems(UBackpack* otherPack, const int slot1, const int slot2);
+   static void SwapItems(UBackpack* pack1, UBackpack* pack2, const int slot1, const int slot2);
 
    /** Gets information about the item in a slot. Returns a copy so it can't actually modify the backpack
     * @param slot - The slot of the item to grab

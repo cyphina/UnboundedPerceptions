@@ -4,7 +4,7 @@
 #include "UI/UserWidgetExtensions/MyUserWidget.h"
 #include "InventoryView.generated.h"
 
-class UItemSlot;
+class UActionSlot;
 class UInventory;
 
 /**
@@ -33,5 +33,5 @@ public:
    UInventory* inventoryRef;
 
    UPROPERTY(BlueprintReadWrite)
-   TArray<UItemSlot*> inventorySlots;
+   TArray<UActionSlot*> inventorySlots;
 };

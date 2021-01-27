@@ -13,6 +13,5 @@ class MYPROJECT_API UEquipmentSlot : public UActionSlot
    GENERATED_BODY()
 
    void NativeConstruct() override;
-   void OnBtnClick() override;
    void ShowDesc(UToolTipWidget* tooltip) override;
 };

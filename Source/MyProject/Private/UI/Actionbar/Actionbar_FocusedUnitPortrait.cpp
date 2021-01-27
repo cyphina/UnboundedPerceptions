@@ -24,3 +24,8 @@ void UActionbar_FocusedUnitPortrait::OnWidgetShown(AUnit* focusedUnit)
       }
    }
 }
+
+FOnSlotSelected& UActionbar_FocusedUnitPortrait::OnSlotSelected()
+{
+   return skillWheel->OnSlotSelected();
+}

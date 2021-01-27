@@ -2,31 +2,28 @@
 
 #pragma once
 
+#include "SlotContainer.h"
 #include "Items/Item.h"
 #include "UI/UserWidgetExtensions/MyDraggableWidget.h"
 #include "Inventory.generated.h"
 
+struct FBackpackUpdateResult;
 class UActionSlot;
 class UBackpack;
 class ABaseHero;
 class UInventoryView;
 
+DECLARE_EVENT_OneParam(UInventory, FOnInventoryItemSelected, int);
+
 /**
  * @brief Inventory C++ base class. Should be used UI for any item management system like character inventory, treasure chests, etc.
  */
 UCLASS(Blueprintable)
-class MYPROJECT_API UInventory : public UMyDraggableWidget
+class MYPROJECT_API UInventory : public USlotContainer
 {
    GENERATED_BODY()
 
-public:
-   /**
-    * Runs when an itemSlot in the inventoryView is clicked on.  Depending on the inventory type, different things may occur.
-    * @iSlot - Index of the slot in the backpack to be used
-    */
-   UFUNCTION(BlueprintCallable, Category = "Inventory Functions")
-   void UseItem(int32 iSlot);
-
+ public:
    /**
     * Used to update the view whenever change occurs within the backpack corresponding to our inventory
     */
@@ -42,16 +39,18 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Inventory Functions")
    void SetBackPack(UBackpack* bPack) { backpack = bPack; }
 
+   /** Maps slot index in the list of displayed widget to the actual index in the backpack (they can be different due to things like pagination) */
+   int GetCorrespondingBackpackIndex(int slotIndex) const;
+
    FMyItem GetBackpackItemAtSlot(int slotIndex) const;
 
-protected:
-   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inventory Functions")
-   void UseItemAtInventorySlot(int32 iSlot);
+   FOnInventoryItemSelected& OnInventoryItemSelected() { return OnItemSelectedEvent; }
 
-   virtual void UseItemAtInventorySlot_Implementation(int32 iSlot) PURE_VIRTUAL(UInventory::UseItemAtInventorySlot,);
-
+ protected:
    void NativeOnInitialized() override;
    bool OnWidgetAddToViewport_Implementation() override;
+
+   TArray<UActionSlot*>& GetInventorySlots() const;
 
    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
    UInventoryView* inventoryView;
@@ -62,12 +61,13 @@ protected:
    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
    UTexture2D* defaultSlotTexture;
 
-   UPROPERTY(BlueprintReadWrite)
-   TArray<UActionSlot*> inventorySlots;
-
-private:
+ private:
    /** Updates a slot's count and image */
    void UpdateSlot(int slotIndex);
+
+   void OnItemsTransferred(const UBackpack& originalBackpack, const UBackpack& newBackpack, const FBackpackUpdateResult& removeResult,
+                           const FBackpackUpdateResult& addResult);
+   void OnItemsSwapped(const UBackpack& pack1, const UBackpack& pack2, int slot1, int slot2);
 
    /**backpack reference for whatever inventory we are displaying*/
    UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "UIInitialParams", Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true))
@@ -79,4 +79,6 @@ private:
 
    UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "UIInitialParams", Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true))
    int columns;
+
+   FOnInventoryItemSelected OnItemSelectedEvent;
 };

@@ -40,8 +40,3 @@ void UStoreInventory::OnItemPurchased(const ABaseHero* heroRef, const FBackpackU
 
    ReloadSlots(updatedSlotIndices);
 }
-
-void UStoreInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)
-{
-   GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnStoreSlotSelected().Broadcast(iSlot);
-}
