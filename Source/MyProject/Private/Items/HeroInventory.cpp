@@ -16,14 +16,17 @@
 
 FReply UHeroInventory::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-   OnSlotSelected().Broadcast(inventoryView->GetCorrespondingBackpackIndex(GetSelectedSlotIndex()));
-   return FReply::Handled();
+   if(GetSelectedSlotIndex() != INDEX_NONE)
+   {
+      SetSelectedSlotIndex(inventoryView->GetCorrespondingBackpackIndex(GetSelectedSlotIndex()));
+   }
+   return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 }
 
 void UHeroInventory::NativeOnInitialized()
 {
    Super::NativeOnInitialized();
-   GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().AddUObject(this, &UHeroInventory::OnItemChangeEvent);
+   GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().AddUObject(this, &UHeroInventory::OnItemEquipped);
    GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemPickedUp().AddUObject(this, &UHeroInventory::OnItemChangeEvent);
    GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemPurchased().AddUObject(this, &UHeroInventory::OnItemPurchased);
    GetOwningLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemUsed().AddUObject(this, &UHeroInventory::OnItemChangeEvent);
@@ -41,6 +44,15 @@ void UHeroInventory::OnItemChangeEvent(const ABaseHero* heroUsingItem, const FBa
    }
 }
 
+void UHeroInventory::OnItemEquipped(const ABaseHero* heroSwappingEquips, TArray<int> affectedInventoryIndices)
+{
+   if(CPC->GetHUDManager()->IsWidgetOnScreen(EHUDs::HS_Inventory))
+   {
+      ReloadSlots(TSet<int>(affectedInventoryIndices));
+   }
+}
+
+
 void UHeroInventory::OnItemPurchased(const ABaseHero* heroRef, const FBackpackUpdateResult& addItemResult, const TArray<FBackpackUpdateResult>& removeItemsResults)
 {
    TSet<int> updatedSlotIndices;
@@ -53,7 +65,7 @@ void UHeroInventory::OnItemPurchased(const ABaseHero* heroRef, const FBackpackUp
    ReloadSlots(updatedSlotIndices);
 }
 
-void UHeroInventory::OnHeroActiveChanged(ABaseHero* heroThatChangedActivefState, bool newActiveState)
+void UHeroInventory::OnHeroActiveChanged(ABaseHero* heroThatChangedActiveState, bool newActiveState)
 {
    // TODO: Refresh inventory and move from the selected page. Also change hIndex... if we plan to keep it around.
    if(!newActiveState)

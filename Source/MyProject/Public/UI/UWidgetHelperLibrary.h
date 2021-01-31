@@ -35,7 +35,7 @@ class MYPROJECT_API UUWidgetHelperLibrary : public UBlueprintFunctionLibrary
                {
                   return Cast<WidgetT>(parentWidget);
                }
-               return nullptr;
+               currentWidget = parentWidget;
             }
          }
       }

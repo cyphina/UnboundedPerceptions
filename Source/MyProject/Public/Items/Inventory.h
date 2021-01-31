@@ -46,6 +46,8 @@ class MYPROJECT_API UInventory : public USlotContainer
 
    FOnInventoryItemSelected& OnInventoryItemSelected() { return OnItemSelectedEvent; }
 
+   int GetNumSlots() const override { return GetInventorySlots().Num(); }
+   
  protected:
    void NativeOnInitialized() override;
    bool OnWidgetAddToViewport_Implementation() override;
@@ -65,6 +67,8 @@ class MYPROJECT_API UInventory : public USlotContainer
    /** Updates a slot's count and image */
    void UpdateSlot(int slotIndex);
 
+   void ResetSlot(UActionSlot* actionSlot);
+	
    void OnItemsTransferred(const UBackpack& originalBackpack, const UBackpack& newBackpack, const FBackpackUpdateResult& removeResult,
                            const FBackpackUpdateResult& addResult);
    void OnItemsSwapped(const UBackpack& pack1, const UBackpack& pack2, int slot1, int slot2);

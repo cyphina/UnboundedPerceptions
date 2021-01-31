@@ -77,7 +77,7 @@ public:
     * Transfers an item from a specific slot in another backpack to the first available slot in this one (like when we click on items in storage)
     * @param otherPack - Reference to backpack we're moving items from
     * @param transferSlot - Slot index of the item we're moving
-    * @return - Returns a pair containing results of adding the item from the other pack to this pack, and removing the item from the other pack
+    * @return - Returns a pair containing first the removal result (from removing an item in other pack), then the add result (from adding an item to this pack)
     */
    TPair<FBackpackUpdateResult, FBackpackUpdateResult> TransferItems(UBackpack* otherPack, const int transferSlot);
 

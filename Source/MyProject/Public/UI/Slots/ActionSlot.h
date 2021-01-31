@@ -40,23 +40,20 @@ class MYPROJECT_API UActionSlot : public UUserWidget
 
    UFUNCTION(BlueprintCallable, Category = "Action")
    int GetSlotIndex() const { return slotIndex; }
-    
+
  protected:
    /** Sets up the text to be displayed for a tooltip*/
    UFUNCTION()
-   void OnBtnHover();
+   void OnHover();
 
    /** Setup information on the tooltip widget*/
    UFUNCTION()
    virtual void ShowDesc(UToolTipWidget* tooltip) PURE_VIRTUAL(UActionSlot::ShowDesc, );
-   
+
    FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
    void NativeOnInitialized() override;
-
-   // A button we can press to trigger the slot
-   UPROPERTY(BlueprintReadOnly, Meta = (BindWidget))
-   UButton* btnAction;
+   void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent);
 
    // An image covering the slot (used for items, spells, etc.)
    UPROPERTY(Meta = (BindWidget))
@@ -68,7 +65,7 @@ class MYPROJECT_API UActionSlot : public UUserWidget
 
    UPROPERTY(BlueprintReadOnly)
    AUserInput* CPCRef;
-
+	
    /**
     * Can only be edited in the designer or in the "CreateWidget" node since it shouldn't be modified anywhere else but there.
     * When using loops to create many slots use the setter in the "CreateWidget" node and when there's a few set number of slots
@@ -80,7 +77,4 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    // TODO: Maybe make this a simple slate widget?
    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
    TSubclassOf<UDraggedActionWidget> draggedActionWidgetClass;
-   
- private:
-   static TSubclassOf<UToolTipWidget> toolTipWidgetClass;
 };

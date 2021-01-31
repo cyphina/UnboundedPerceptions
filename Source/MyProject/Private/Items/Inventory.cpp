@@ -39,15 +39,10 @@ void UInventory::LoadItems()
 {
    if(GetBackpack())
    {
-      auto resetSlot = [this](UActionSlot* actionSlot)
-      {
-         actionSlot->SetSlotImage(defaultSlotTexture);
-         actionSlot->SetInfo(FText::GetEmpty());
-      };
+      Algo::ForEach(GetInventorySlots(), [this](UActionSlot* actionSlot) { ResetSlot(actionSlot); });
 
-      Algo::ForEach(GetInventorySlots(), resetSlot);
-
-      for(int i = 0; i < GetInventorySlots().Num(); ++i)
+      const int maxUpdateIndex = FMath::Min(GetInventorySlots().Num(), GetBackpack()->GetItemMax());
+      for(int i = 0; i < maxUpdateIndex; ++i)
       {
          UpdateSlot(i);
       }
@@ -74,10 +69,20 @@ void UInventory::UpdateSlot(int slotIndex)
          actionSlot->SetInfo(FText::AsNumber(item.count));
       }
    }
+   else
+   {
+      ResetSlot(actionSlot);
+   }
 }
 
-void UInventory::OnItemsTransferred
-(const UBackpack& originalBackpack, const UBackpack& newBackpack, const FBackpackUpdateResult& removeResult, const FBackpackUpdateResult& addResult)
+void UInventory::ResetSlot(UActionSlot* actionSlot)
+{
+   actionSlot->SetSlotImage(defaultSlotTexture);
+   actionSlot->SetInfo(FText::GetEmpty());
+}
+
+void UInventory::OnItemsTransferred(const UBackpack& originalBackpack, const UBackpack& newBackpack, const FBackpackUpdateResult& removeResult,
+                                    const FBackpackUpdateResult& addResult)
 {
    if(GetBackpack() == &originalBackpack)
    {

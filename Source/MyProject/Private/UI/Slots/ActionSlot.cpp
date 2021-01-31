@@ -1,23 +1,18 @@
 #include "MyProject.h"
 #include "ActionSlot.h"
 
-
 #include "SlotContainer.h"
 #include "TextBlock.h"
 #include "UserInput.h"
 #include "UWidgetHelperLibrary.h"
+#include "WidgetBlueprintLibrary.h"
 #include "UI/HUDManager.h"
 
 #include "UI/UserWidgets/ToolTipWidget.h"
 #include "UMG/Public/Components/Image.h"
-#include "UMG/Public/Components/Button.h"
-
-TSubclassOf<UToolTipWidget> UActionSlot::toolTipWidgetClass = nullptr;
 
 UActionSlot::UActionSlot(const FObjectInitializer& o) : UUserWidget(o)
 {
-   ConstructorHelpers::FClassFinder<UToolTipWidget> tooltipClass(TEXT("/Game/RTS_Tutorial/HUDs/HelpUI/GameIndicators/BP_ToolTipBox"));
-   toolTipWidgetClass = tooltipClass.Class;
 }
 
 void UActionSlot::SetSlotImage(UTexture2D* image)
@@ -50,19 +45,33 @@ UTexture2D* UActionSlot::GetImage() const
 void UActionSlot::NativeOnInitialized()
 {
    Super::NativeOnInitialized();
-   btnAction->OnHovered.AddDynamic(this, &UActionSlot::OnBtnHover);
    CPCRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
+}
+
+void UActionSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+   UToolTipWidget* ttWidget = CreateWidget<UToolTipWidget>(CPCRef, CPCRef->GetHUDManager()->toolTipWidgetClass);
+
+   if(ttWidget)
+   {
+      ShowDesc(ttWidget);
+      SetToolTip(ttWidget);
+   }
 }
 
 FReply UActionSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-   UUWidgetHelperLibrary::GetUserWidgetParent<USlotContainer>(this)->SetSelectedSlotIndex(slotIndex);
+   if(InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
+   {
+      if(USlotContainer* slotContainer = UUWidgetHelperLibrary::GetUserWidgetParent<USlotContainer>(this))
+      {
+         slotContainer->SetSelectedSlotIndex(slotIndex);
+      }
+      return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply;
+   }
    return FReply::Unhandled();
 }
 
-void UActionSlot::OnBtnHover()
+void UActionSlot::OnHover()
 {
-   const TWeakObjectPtr<UToolTipWidget> tooltipWidgetRef = CreateWidget<UToolTipWidget>(CPCRef, toolTipWidgetClass);
-   ShowDesc(tooltipWidgetRef.Get());
-   btnAction->SetToolTip(tooltipWidgetRef.Get());
 }

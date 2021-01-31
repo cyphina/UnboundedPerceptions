@@ -8,7 +8,7 @@ class UGameSpeedWidget;
 class ARTSGameState;
 class URTSSidebarWidget;
 class UCharacterMenu;
-class UInventory;
+class UStorageInventory;
 class UHeroInventory;
 class UStoreInventory;
 class UEquipmentMenu;
@@ -55,7 +55,7 @@ public:
    UStoreInventory* GetShopHUD() const { return Inventory_Store; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   UInventory* GetStorageHUD() const { return Inventory_Storage; }
+   UStorageInventory* GetStorageHUD() const { return Inventory_Storage; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
    UActionbarInterface* GetActionbar() const { return Widget_Actionbar; }
@@ -126,7 +126,7 @@ private:
    UStoreInventory* Inventory_Store;
 
    UPROPERTY(BlueprintReadOnly, Meta = (BindWidget), Meta = (AllowPrivateAccess = true))
-   UInventory* Inventory_Storage;
+   UStorageInventory* Inventory_Storage;
 
    UPROPERTY(BlueprintReadOnly, Meta = (BindWidget), Meta = (AllowPrivateAccess = true))
    UActionbarInterface* Widget_Actionbar;

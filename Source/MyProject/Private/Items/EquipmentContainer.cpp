@@ -29,7 +29,7 @@ int UEquipmentContainer::Equip(int equipItemID)
    {
       return SwapEquipsFromInventory(equipItemID, 4);
    }
-   if(itemType.GetTagName() == "Item.Equippable.Weapon")
+   if(itemType.MatchesTag(FGameplayTag::RequestGameplayTag("Item.Equippable.Weapon")))
    {
       return SwapEquipsFromInventory(equipItemID, 5);
    }

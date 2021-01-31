@@ -11,7 +11,7 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnItemPickedUp, const ABaseHero*, const FB
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnItemDropped, const ABaseHero*, const FBackpackUpdateResult&);
 // Purchasing hero, pack result from adding the new item bought, and pack result from possibly removing existing items
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnItemPurchased, const ABaseHero*, const FBackpackUpdateResult&, const TArray<FBackpackUpdateResult>&);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEquipmentChanged, const ABaseHero*, const FBackpackUpdateResult&);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEquipmentChanged, const ABaseHero*, TArray<int>);
 // Hero that unequipped and the slot in our inventory that's changing. Original backpack. New Backpack. Remove Result. Add Result.
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnItemTransferred, const UBackpack&, const UBackpack&, const FBackpackUpdateResult&, const FBackpackUpdateResult&);
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnItemsSwapped, const UBackpack&, const UBackpack&, int, int);

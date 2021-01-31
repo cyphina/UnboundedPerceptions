@@ -34,6 +34,7 @@ protected:
 
 private:
    void OnItemChangeEvent(const ABaseHero* heroUsingItem, const FBackpackUpdateResult& packUpdateResult);
+   void OnItemEquipped(const ABaseHero* heroSwappingEquips, TArray<int> affectedInventoryIndices);
    void OnItemPurchased(const ABaseHero* heroRef, const FBackpackUpdateResult& addItemResult, const TArray<FBackpackUpdateResult>& removeItemsResults);
-   void OnHeroActiveChanged(ABaseHero* heroThatChangedActivefState, bool newActiveState);
+   void OnHeroActiveChanged(ABaseHero* heroThatChangedActiveState, bool newActiveState);
 };

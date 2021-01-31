@@ -57,7 +57,7 @@ void UEquipmentMenu::SetupEquipImages()
    }
 }
 
-void UEquipmentMenu::OnEquipmentChanged(const ABaseHero* heroThatChanged, const FBackpackUpdateResult& equipAddedToInventory)
+void UEquipmentMenu::OnEquipmentChanged(const ABaseHero* heroThatChanged, TArray<int> updatedInventorySlots)
 {
    if(GetVisibility() != ESlateVisibility::Collapsed) {
       if(GetEquippedHero() == heroThatChanged) SetupEquipImages();

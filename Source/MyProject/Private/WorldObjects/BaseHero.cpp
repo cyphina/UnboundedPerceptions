@@ -188,18 +188,21 @@ void ABaseHero::OnAttributePointAllocated(ABaseHero* heroWithAttChange, EAttribu
 
 void ABaseHero::Equip(const int backpackIndex)
 {
-   const int prevEquipInSlot = equipment->Equip(backpack->GetItem(backpackIndex).id);
-   backpack->RemoveItemAtSlot(backpackIndex);
+   TArray<int>                 updatedSlots;
+   const int                   prevEquipInSlot           = equipment->Equip(backpack->GetItem(backpackIndex).id);
+   const FBackpackUpdateResult removeEquipFromPackResult = backpack->RemoveItemAtSlot(backpackIndex);
+   updatedSlots.Append(removeEquipFromPackResult.updatedBackpackIndices);
 
    if(prevEquipInSlot)
    {
       const FBackpackUpdateResult addItemToPackResult = backpack->AddItem(FMyItem(prevEquipInSlot));
+      updatedSlots.Append(addItemToPackResult.updatedBackpackIndices);
       if(!ensure(addItemToPackResult.bSuccessfulOperation))
       {
          UE_LOG(LogTemp, Error, TEXT("Impossible case reached. No space to swap equipment even after freeing slot from inventory!"));
       }
-      GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().Broadcast(this, addItemToPackResult);
    }
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().Broadcast(this, updatedSlots);
 }
 
 void ABaseHero::Unequip(const int unequipSlot) const
@@ -208,10 +211,10 @@ void ABaseHero::Unequip(const int unequipSlot) const
    {
       if(backpack->Count() < backpack->GetItemMax())
       {
-         FMyItem                     changedEquip        = FMyItem(equipId);
+         const FMyItem               changedEquip        = FMyItem(equipId);
          const FBackpackUpdateResult addItemToPackResult = backpack->AddItem(changedEquip);
          equipment->Unequip(unequipSlot);
-         GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().Broadcast(this, addItemToPackResult);
+         GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().Broadcast(this, addItemToPackResult.updatedBackpackIndices);
       } else
          URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Equipment", "NotEnoughSpaceUnequip", "Not enough space to unequip!"));
    }

@@ -15,6 +15,7 @@
 
 #include "HUDManager.generated.h"
 
+class UToolTipWidget;
 class ARTSGameMode;
 class AUserInput;
 class UMainWidget;
@@ -29,12 +30,12 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
 {
    GENERATED_BODY()
 
-public:
+ public:
    AHUDManager();
 
    void BeginPlay() override;
 
-public:
+ public:
    void AddHUD(uint8 newState) override;
    void HideHUD(EHUDs newState) override;
 
@@ -46,7 +47,7 @@ public:
 
    void BP_AddHUD(uint8 newState) override { AddHUD(newState); }
    void BP_RemoveHUD(EHUDs newState) override { HideHUD(newState); }
-   
+
    void BP_AddHUDDialog(FName conversationName, EDialogBoxCloseCase dialogSource) override { ShowDialogWithSource(conversationName, dialogSource); }
 
    void BP_AddHUDDialogString(TArray<FDialogData> linesToDisplay, EDialogBoxCloseCase dialogSource) override { ShowDialogCustomLines(linesToDisplay, dialogSource); }
@@ -56,7 +57,7 @@ public:
 
    bool IsWidgetOnScreen(EHUDs hudToCheck) const override final { return currentlyDisplayedWidgetsBitSet[static_cast<int>(hudToCheck)]; }
 
-public:
+ public:
    URTSIngameWidget* GetIngameHUD() const override;
    UBreakMenu*       GetBreakMenu() const override;
    USettingsMenu*    GetSettingsMenu() const override;
@@ -64,14 +65,17 @@ public:
    URTSInputBox*     GetInputBox() const override;
    UStartMenu*       GetStartMenu() const override;
 
-public:
+ public:
    /**
    * @brief Class used to show the damage numbers in world space
    */
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<UDIRender> damageIndicatorClass;
 
-protected:
+   UPROPERTY(EditDefaultsOnly)
+   TSubclassOf<UToolTipWidget> toolTipWidgetClass;
+
+ protected:
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<UMainWidget> mainMenuClass;
 
@@ -96,7 +100,7 @@ protected:
    UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Widgets")
    int numWidgetsBlocking;
 
-private:
+ private:
    /** Setup widgets in our reference storage array to toggle them on and off later on through AddHUD*/
    void SetWidget(UMyUserWidget* widgetRef, EHUDs newState);
 
@@ -120,7 +124,7 @@ private:
    */
    void UpdateWidgetTracking(int removeIndex, bool enableClickEvents, bool canOpenCombat);
 
-private:
+ private:
    /**
    * @brief Uses UE4 reflection to inject this HUDManager into any property named hudManagerRef. Allows us to inject into private members
    * @param objectToInject - The UObject with a property called "hudManagerRef"

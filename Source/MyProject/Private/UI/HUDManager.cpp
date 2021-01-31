@@ -10,13 +10,13 @@
 #include "RTSPawn.h"
 #include "SpellBook.h"
 #include "StorageContainer.h"
+#include "StorageInventory.h"
 #include "UserWidgets/MainWidget.h"
 
 #include "Actionbar/ActionbarInterface.h"
 #include "Stats/CharacterMenu.h"
 #include "Items/EquipmentMenu.h"
 
-#include "Items/Inventory.h"
 #include "Items/HeroInventory.h"
 #include "Items/StoreInventory.h"
 #include "Items/ItemExamineWidget.h"
@@ -44,6 +44,8 @@
 #include "Minigames/MinigameManager.h"
 #include "Quests/QuestManager.h"
 
+#include "ToolTipWidget.h"
+
 AHUDManager::AHUDManager() :
    Super()
 {
@@ -58,20 +60,27 @@ void AHUDManager::BeginPlay()
 
    playerControllerRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
    if(!ensure(playerControllerRef != nullptr))
+   {
       return;
+   }
 
    ARTSPawn* playerPawn = Cast<ARTSPawn>(playerControllerRef->GetPawn());
    if(!ensure(playerPawn != nullptr))
+   {
       return;
+   }
 
    gameMode = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
    if(!ensure(gameMode != nullptr))
+   {
       return;
+   }
 
    CreateMainWidget();
 
    startMenu = CreateWidget<UStartMenu>(playerControllerRef, startMenuClass, "Start Menu");
    InjectDependency(startMenu);
+
 
    // For some reason the hardware cursor doesn't show in a packaged build, so we need to do what was written here:
    // https://forums.unrealengine.com/development-discussion/blueprint-visual-scripting/1700190-custom-hardware-cursor-does-odd-thing
@@ -247,10 +256,10 @@ bool AHUDManager::ApplyHUD(uint8 newState, bool bEnableClickEvents, bool canOpen
    if(currentlyDisplayedWidgetsBitSet[newState]) // if our widget is already on screen, we probably pressed button to take it off
    {
       HideWidgetOnScreen(widgetToApply);
-   } else
+   }
+   else
    {
-      if(!ShowHiddenWidget(widgetToApply))
-         return false;
+      if(!ShowHiddenWidget(widgetToApply)) return false;
    }
 
    if(blockingWidget == widgetToApply)
@@ -259,7 +268,10 @@ bool AHUDManager::ApplyHUD(uint8 newState, bool bEnableClickEvents, bool canOpen
    }
    else
    {
-      blockingWidget = widgetToApply;
+      if(bBlocking)
+      {
+         blockingWidget = widgetToApply;
+      }
    }
 
    UpdateWidgetTracking(newState, bEnableClickEvents, canOpenCombat);

@@ -92,7 +92,8 @@ FBackpackUpdateResult UBackpack::AddUnstackableItem(FMyItem itemToAdd)
             items.Insert(emptySlotIndex, FMyItem(itemToAdd.id, 1));
             itemToAdd.count -= 1;
             updatedSlots.Add(emptySlotIndex);
-         } else
+         }
+         else
          {
             return updateResultData(updatedSlots, false, itemToAdd.count);
          }
@@ -183,7 +184,8 @@ FBackpackUpdateResult UBackpack::RemoveItem(FMyItem itemToRemove)
             if(items[index].count > removeCount)
             {
                items[index].count -= removeCount;
-            } else
+            }
+            else
             {
                EmptySlot(index);
                items[index].count -= 1;
@@ -210,7 +212,8 @@ FBackpackUpdateResult UBackpack::RemoveItemAtSlot(const int slot, const int remo
          {
             updateResultData.numUpdatedItemsRemaining = removeCount - items[slot].count;
             items[slot].count                         = FMath::Min(removeCount, items[slot].count - removeCount);
-         } else
+         }
+         else
          {
             updateResultData.numUpdatedItemsRemaining = removeCount - 1;
             items.RemoveAt(slot);
@@ -261,11 +264,12 @@ TPair<FBackpackUpdateResult, FBackpackUpdateResult> UBackpack::TransferItems(UBa
          if(addItemResult.bSuccessfulOperation) // Check if successfully transferred everything
          {
             removeItemFromOtherPackResult = otherPack->EmptySlot(transferSlot);
-         } else
+         }
+         else
          {
             removeItemFromOtherPackResult = otherPack->RemoveItemAtSlot(transferSlot, addItemResult.numUpdatedItemsRequested - addItemResult.numUpdatedItemsRemaining);
          }
-         return TPair<FBackpackUpdateResult, FBackpackUpdateResult>{addItemResult, removeItemFromOtherPackResult};
+         return TPair<FBackpackUpdateResult, FBackpackUpdateResult>{removeItemFromOtherPackResult, addItemResult};
       }
       UE_LOG(LogTemp, Error, TEXT("When transfering items, found an item that has an invalid id or count"));
       return TPair<FBackpackUpdateResult, FBackpackUpdateResult>();
@@ -282,17 +286,29 @@ void UBackpack::SwapItems(UBackpack* pack1, UBackpack* pack2, const int slot1, c
          const FMyItem itemFromOtherPack = pack2->items[slot2];
          pack2->items[slot2]             = pack1->items[slot1];
          pack1->items[slot1]             = itemFromOtherPack;
-      } else // if not, just insert an item there
+      }
+      else // if not, just insert an item there
       {
          pack1->items.Insert(slot1, pack2->items[slot2]);
          pack2->EmptySlot(slot2);
+      }
+   }
+   else
+   {
+      if(pack1->items.IsAllocated(slot1))
+      {
+         pack2->items.Insert(slot2, pack1->items[slot1]);
+         pack1->EmptySlot(slot1);
       }
    }
 }
 
 FMyItem UBackpack::GetItem(const int slot) const
 {
-   if(items.IsAllocated(slot)) { return items[slot]; }
+   if(items.IsAllocated(slot))
+   {
+      return items[slot];
+   }
    return FMyItem();
 }
 
@@ -325,15 +341,17 @@ int UBackpack::FindEmptySlot() const
 {
    for(int i = 0; i < items.GetMaxIndex(); i++)
    {
-      if(!items.IsAllocated(i)) { return i; }
+      if(!items.IsAllocated(i))
+      {
+         return i;
+      }
    }
    return -1;
 }
 
 bool UBackpack::IsEmptySlot(const int slotIndex) const
 {
-   check(static_cast<unsigned>(slotIndex) < static_cast<unsigned>(GetItemMax()))
-   return !items.IsAllocated(slotIndex) ? true : false;
+   check(static_cast<unsigned>(slotIndex) < static_cast<unsigned>(GetItemMax())) return !items.IsAllocated(slotIndex) ? true : false;
 }
 
 void UBackpack::SetItemMax(const int newMax)
@@ -347,8 +365,7 @@ int UBackpack::FindItem(const int itemID) const
 {
    for(auto it = items.CreateConstIterator(); it; ++it)
    {
-      if((*it).id == itemID)
-         return it.GetIndex();
+      if((*it).id == itemID) return it.GetIndex();
    }
    return INDEX_NONE;
 }
@@ -358,8 +375,7 @@ int UBackpack::FindItemCount(int itemID) const
    int itemCount = 0;
    for(auto it = items.CreateConstIterator(); it; ++it)
    {
-      if((*it).id == itemID)
-         itemCount += (*it).count;
+      if((*it).id == itemID) itemCount += (*it).count;
    }
    return itemCount;
 }

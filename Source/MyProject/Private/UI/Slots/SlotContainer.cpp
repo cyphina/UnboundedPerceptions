@@ -3,9 +3,16 @@
 #include "MyProject.h"
 #include "SlotContainer.h"
 
-FReply USlotContainer::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+FReply USlotContainer::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-   Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
-   OnSlotSelected().Broadcast(selectedSlotIndex);
+   if(selectedSlotIndex != INDEX_NONE)
+   {
+      OnSlotSelected().Broadcast(selectedSlotIndex);
+      selectedSlotIndex = INDEX_NONE;
+   }
+   else
+   {
+      Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+   }
    return FReply::Handled();
 }

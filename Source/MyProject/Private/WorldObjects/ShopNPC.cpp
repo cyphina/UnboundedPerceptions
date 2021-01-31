@@ -1,8 +1,6 @@
 #include "MyProject.h"
 #include "ShopNPC.h"
-
 #include "AllOf.h"
-#include "AnyOf.h"
 #include "BaseHero.h"
 #include "BasePlayer.h"
 #include "ItemDelegateContext.h"
@@ -13,7 +11,6 @@
 #include "DialogSystem/DialogUI.h"
 #include "RTSIngameWidget.h"
 #include "StoreInventory.h"
-#include "UIDelegateContext.h"
 
 const FText AShopNPC::NotEnoughItemsText       = NSLOCTEXT("HelpMessages", "MisisngItems", "Missing required items for trade");
 const FText AShopNPC::NotEnoughMoneyText       = NSLOCTEXT("HelpMessages", "NotEnoughSqueezies", "You don't have enough squeezies...");

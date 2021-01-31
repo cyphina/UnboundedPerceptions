@@ -10,15 +10,13 @@
 #include "Items/Backpack.h"
 #include "UI/HUDManager.h"
 
-#include "BasePlayer.h"
-#include "Inventory.h"
 #include "WorldObjects/BaseHero.h"
 
 #include "LevelSaveStructs.h"
 #include "RTSIngameWidget.h"
+#include "StorageInventory.h"
 
-AStorageContainer::AStorageContainer() :
-   AInteractableBase()
+AStorageContainer::AStorageContainer() : AInteractableBase()
 {
    sphereCollision = CreateDefaultSubobject<USphereComponent>(FName("InteractRange"));
    sphereCollision->SetupAttachment(sceneLocation);
@@ -66,7 +64,7 @@ FVector AStorageContainer::GetInteractableLocation_Implementation() const
 
 void AStorageContainer::OnLeaveRange(UPrimitiveComponent* overlappedComp, AActor* otherActor, UPrimitiveComponent* otherComp, int otherBodyIndex)
 {
-   if(GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Storage) && GetPlayerControllerRef()->GetBasePlayer()->heroInBlockingInteraction == otherActor)
+   if(GetWidgetToggler() && GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Storage) && GetPlayerControllerRef()->GetBasePlayer()->heroInBlockingInteraction == otherActor)
    {
       GetHUDProvider()->GetIngameHUD()->GetStorageHUD()->SetBackPack(nullptr);
       GetWidgetToggler()->AddHUD(static_cast<uint8>(EHUDs::HS_Storage));
@@ -96,7 +94,11 @@ void AStorageContainer::LoadInteractable(FMapSaveInfo& mapData)
 
 TScriptInterface<IWidgetToggler> AStorageContainer::GetWidgetToggler() const
 {
-   return GetPlayerControllerRef()->GetWidgetToggler();
+   if(GetPlayerControllerRef())
+   {
+      return GetPlayerControllerRef()->GetWidgetToggler();
+   }
+   return nullptr;
 }
 
 TScriptInterface<IHUDProvider> AStorageContainer::GetHUDProvider() const

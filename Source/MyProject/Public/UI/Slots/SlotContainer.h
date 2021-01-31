@@ -17,25 +17,24 @@ public:
    FOnSlotSelected& OnSlotSelected() const { return OnSlotSelectedEvent; }
 
    int GetSelectedSlotIndex() const { return selectedSlotIndex;}
-   
+
+   virtual int GetNumSlots() const PURE_VIRTUAL(USlotContainer::GetNumSlots, return -1;)
+
    void SetSelectedSlotIndex(int slotIndex)
    {
-      check(slotIndex >= 0 && slotIndex < actionSlots.Num())
+      check(slotIndex >= 0 && slotIndex < GetNumSlots())
       selectedSlotIndex = slotIndex;
    }
-   
+
 protected:
    /** Handles bubbling slot logic */
-   FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+   FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
    
    TSubclassOf<UActionSlot> actionSlotClass;
-
-   UPROPERTY(BlueprintReadWrite)
-   TArray<UActionSlot*>    actionSlots;
 
 private:
    mutable FOnSlotSelected OnSlotSelectedEvent;
 
    /** Index of the slot we clicked */
-   int selectedSlotIndex = 0;
+   int selectedSlotIndex = INDEX_NONE;
 };

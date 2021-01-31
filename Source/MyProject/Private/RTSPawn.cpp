@@ -30,6 +30,7 @@
 #include "PartyDelegateContext.h"
 #include "SceneViewport.h"
 #include "StorageContainer.h"
+#include "StorageInventory.h"
 #include "StoreInventory.h"
 
 #include "UIDelegateContext.h"
@@ -189,6 +190,7 @@ void ARTSPawn::PossessedBy(AController* newController)
          controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnSkillSlotSelected);
          controllerRef->GetHUDManager()->GetIngameHUD()->GetEquipHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnEquipmentSlotSelected);
          controllerRef->GetHUDManager()->GetIngameHUD()->GetShopHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnShopSlotSelected);
+         controllerRef->GetHUDManager()->GetIngameHUD()->GetStorageHUD()->OnStorageInventoryClosed().AddUObject(this, &ARTSPawn::OnStorageInventoryClosed);
          controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnInventorySlotSelected);
          controllerRef->GetHUDManager()->GetIngameHUD()->GetStorageHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnStorageSlotSelected);
       });
@@ -743,16 +745,18 @@ void ARTSPawn::OnInventorySlotSelected(int slotIndex)
 {
    if(ABaseHero* heroWithInvShown = controllerRef->GetBasePlayer()->GetHeroes()[controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->GetHeroIndex()])
    {
-      const FMyItem itemUsed = heroWithInvShown->GetBackpack().GetItem(slotIndex);
-      if(controllerRef->GetHUDManager()->IsWidgetOnScreen(EHUDs::HS_Storage))
+      if(const FMyItem itemUsed = heroWithInvShown->GetBackpack().GetItem(slotIndex))
       {
-         HandleTransferStorageItems(heroWithInvShown, slotIndex, itemUsed);
-      } else if(controllerRef->GetHUDManager()->IsWidgetOnScreen(EHUDs::HS_Shop_General))
-      {
-         HandleSellItemToStore(heroWithInvShown, slotIndex, itemUsed);
-      } else
-      {
-         HandleInventoryItemSelected(heroWithInvShown, slotIndex, itemUsed);
+         if(controllerRef->GetHUDManager()->IsWidgetOnScreen(EHUDs::HS_Storage))
+         {
+            HandleTransferStorageItems(heroWithInvShown, slotIndex, itemUsed);
+         } else if(controllerRef->GetHUDManager()->IsWidgetOnScreen(EHUDs::HS_Shop_General))
+         {
+            HandleSellItemToStore(heroWithInvShown, slotIndex, itemUsed);
+         } else
+         {
+            HandleInventoryItemSelected(heroWithInvShown, slotIndex, itemUsed);
+         }
       }
    }
 }
@@ -820,6 +824,11 @@ void ARTSPawn::OnEquipmentSlotSelected(int slotIndex)
 void ARTSPawn::OnShopSlotSelected(int slotIndex)
 {
    Cast<AShopNPC>(controllerRef->GetBasePlayer()->heroInBlockingInteraction->GetCurrentInteractable())->OnAskToPurchaseItem(slotIndex);
+}
+
+void ARTSPawn::OnStorageInventoryClosed()
+{
+   controllerRef->GetBasePlayer()->heroInBlockingInteraction = nullptr;
 }
 
 void ARTSPawn::OnItemSlotDroppedFromInventory(int dragSlotIndex, int dropSlotIndex, UBackpack* dragPack, UBackpack* dropPack)

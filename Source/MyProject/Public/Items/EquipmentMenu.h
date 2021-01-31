@@ -20,14 +20,16 @@ class MYPROJECT_API UEquipmentMenu : public USlotContainer
 {
    GENERATED_BODY()
 
- public:
+public:
    UFUNCTION(BlueprintCallable)
    ABaseHero* GetEquippedHero() const { return heroRef; }
 
- protected:
+   int GetNumSlots() const override { return equipSlots.Num(); }
+
+protected:
    void NativeOnInitialized() override;
    bool OnWidgetAddToViewport_Implementation() override;
-   
+
    UPROPERTY(BlueprintReadWrite, Category = "References")
    ABaseHero* heroRef;
 
@@ -54,10 +56,10 @@ class MYPROJECT_API UEquipmentMenu : public USlotContainer
 
    UPROPERTY(meta=(BindWidget))
    UTextBlock* Text_MenuTitle;
-   
- private:
+
+private:
    void SetupEquipImages();
-   void OnEquipmentChanged(const ABaseHero* heroThatChanged, const FBackpackUpdateResult& equipAddedToInventory);
+   void OnEquipmentChanged(const ABaseHero* heroThatChanged, TArray<int> updatedInventorySlots);
 
    TStaticArray<UEquipmentSlot*, 8> equipSlots;
 };

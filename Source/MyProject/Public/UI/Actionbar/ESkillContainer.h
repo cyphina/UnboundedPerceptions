@@ -19,10 +19,12 @@ class MYPROJECT_API UESkillContainer : public USlotContainer
 {
    GENERATED_BODY()
 
- public:
+public:
    void OnWidgetShown(URTSAbilitySystemComponent* focusedUnitAbilityComponent);
 
- protected:
+   int GetNumSlots() const override { return skillSlots.Num(); }
+
+protected:
    void NativePreConstruct() override;
    void NativeOnInitialized() override;
 
@@ -49,8 +51,8 @@ class MYPROJECT_API UESkillContainer : public USlotContainer
 
    UPROPERTY(Transient, Meta = (BindWidgetAnim))
    UWidgetAnimation* flowInAnim;
-   
- private:
+
+private:
    UFUNCTION()
    void OnKeybindsChanged(FInputActionKeyMapping newKeyMap);
 

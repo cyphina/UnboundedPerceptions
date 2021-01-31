@@ -287,6 +287,7 @@ private:
    void OnStorageSlotSelected(int slotIndex);
    void OnEquipmentSlotSelected(int slotIndex);
    void OnShopSlotSelected(int slotIndex);
+   void OnStorageInventoryClosed();
 
    UFUNCTION()
    void OnItemSlotDroppedFromInventory(int dragSlotIndex, int dropSlotIndex, UBackpack* dragPack, UBackpack* dropPack);
