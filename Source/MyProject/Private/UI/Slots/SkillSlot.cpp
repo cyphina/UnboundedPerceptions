@@ -13,6 +13,7 @@
 #include "ManualSpellComponent.h"
 #include "RTSAbilitySystemComponent.h"
 #include "RTSActionBarSkillDrag.h"
+#include "RTSSpellbookDrag.h"
 #include "ToolTipWidget.h"
 #include "UIDelegateContext.h"
 
@@ -21,23 +22,29 @@
 #include "UMG/Public/Components/TextBlock.h"
 
 class UUIDelegateContext;
-UMaterialInterface* USkillSlot::matInstance = nullptr;
+
+UMaterialInterface* USkillSlot::cdMatInstance = nullptr;
+UMaterialInterface* USkillSlot::skillMatInstance = nullptr;
 
 USkillSlot::USkillSlot(const FObjectInitializer& o) : UActionSlot(o)
 {
    // static ConstructorHelpers::FObjectFinder<UCurveFloat> curve(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/StandardLinear"));
    // checkf(curve.Object, TEXT("Curve for ability timelines not found!"))
 
-   const ConstructorHelpers::FObjectFinder<UMaterialInterface> loadedBaseMaterial(TEXT("/Game/RTS_Tutorial/Materials/UIMats/SkillMats/RadialMatSkill_Instance"));
-   checkf(loadedBaseMaterial.Object, TEXT("Material interface for skillslots not found!"));
-   matInstance = loadedBaseMaterial.Object;
+   const ConstructorHelpers::FObjectFinder<UMaterialInterface> loadedCDMat(TEXT("/Game/RTS_Tutorial/Materials/UIMats/SkillMats/MI_RadialSkillCD"));
+   checkf(loadedCDMat.Object, TEXT("Material interface for skillslots not found!"));
+   cdMatInstance = loadedCDMat.Object;
+
+   const ConstructorHelpers::FObjectFinder<UMaterialInterface> loadedSkillMat(TEXT("/Game/RTS_Tutorial/Materials/UIMats/SkillMats/RadialMatSkill_Instance"));
+   checkf(loadedSkillMat.Object, TEXT("Material interface for skillslots not found!"));
+   skillMatInstance = loadedSkillMat.Object;
 }
 
 void USkillSlot::NativeConstruct()
 {
    Super::NativeConstruct();
-   imageDMatInst = UMaterialInstanceDynamic::Create(matInstance, this);
-   cdDMatInst    = UMaterialInstanceDynamic::Create(matInstance, this);
+   imageDMatInst = UMaterialInstanceDynamic::Create(skillMatInstance, this);
+   cdDMatInst    = UMaterialInstanceDynamic::Create(cdMatInstance, this);
    actionImage->SetBrushFromMaterial(imageDMatInst);
    Image_CD->SetBrushFromMaterial(cdDMatInst);
 }
@@ -59,9 +66,17 @@ void USkillSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointe
 
 bool USkillSlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
-   URTSActionBarSkillDrag* dragOp = Cast<URTSActionBarSkillDrag>(InOperation);
-   GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedEvent.Broadcast(dragOp->slotIndex, slotIndex);
-   return true;
+   if(URTSActionBarSkillDrag* dragOp = Cast<URTSActionBarSkillDrag>(InOperation))
+   {
+      GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedEvent.Broadcast(dragOp->slotIndex, slotIndex);
+      return true;
+   }
+   else if(URTSSpellbookDrag* spellbookDragOp = Cast<URTSSpellbookDrag>(InOperation))
+   {
+      GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedSBEvent.Broadcast(spellbookDragOp->slotIndex, slotIndex);
+      return true;
+   }
+   return false;
 }
 
 void USkillSlot::UpdateSkillSlot(TSubclassOf<UMySpell> spellClass)
@@ -94,19 +109,21 @@ void USkillSlot::UpdateSkillSlot(TSubclassOf<UMySpell> spellClass)
 
 void USkillSlot::UpdateCD()
 {
-   const auto  abilityComponent = GetOwningAbilityComponent();
-   const float cdTimeRemaining =
-       abilityComponent->GetAbilities()[slotIndex].GetDefaultObject()->GetCooldownTimeRemaining(GetOwningAbilityComponent()->AbilityActorInfo.Get());
-   const float cdDuration = abilityComponent->GetAbilities()[slotIndex].GetDefaultObject()->GetCDDuration(GetOwningAbilityComponent());
+   if(const URTSAbilitySystemComponent* abilityComponent = GetOwningAbilityComponent())
+   {
+      const float cdTimeRemaining =
+          abilityComponent->GetAbilities()[slotIndex].GetDefaultObject()->GetCooldownTimeRemaining(GetOwningAbilityComponent()->AbilityActorInfo.Get());
+      const float cdDuration = abilityComponent->GetAbilities()[slotIndex].GetDefaultObject()->GetCDDuration(GetOwningAbilityComponent());
 
-   if(LIKELY(cdTimeRemaining > 0))
-   {
-      cdDMatInst->SetScalarParameterValue("Percent", cdTimeRemaining / cdDuration);
-      Text_CDTime->SetText(FText::AsNumber(static_cast<int>(cdTimeRemaining)));
-   }
-   else
-   {
-      OnCDFinished();
+      if(LIKELY(cdTimeRemaining > 0))
+      {
+         cdDMatInst->SetScalarParameterValue("Percent", cdTimeRemaining / cdDuration);
+         Text_CDTime->SetText(FText::AsNumber(static_cast<int>(cdTimeRemaining)));
+      }
+      else
+      {
+         OnCDFinished();
+      }
    }
 }
 
@@ -161,7 +178,7 @@ void USkillSlot::ResetSkillSlot()
 {
    if(auto ownerAbilityComp = GetOwningAbilityComponent())
    {
-      SetSlotImage(nullptr);
+      SetSlotImage(defaultSlotTexture);
       OnCDFinished();
    }
 }

@@ -35,10 +35,14 @@ public:
    UFUNCTION()
    void ChangeBackgroundColorWhenLeveling();
 
+   int GetNumValidItems() const override;
+
 protected:
-   FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+   FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
    void NativeOnInitialized() override;
    bool OnWidgetAddToViewport_Implementation() override;
+   void OnWidgetRemovedFromViewport_Implementation() override;
    
    UPROPERTY(BlueprintReadWrite, Category = "SpellbookData")
    TArray<USpellbookSlot*> spellbookSlots;
@@ -66,9 +70,10 @@ private:
    void ColorLearnableSpellSlots();
    void ColorUnknownSpellSlots();
 
-   void OnSpellLearned(TSubclassOf<UMySpell> spellClass);
-   void OnSpellUpgraded(TSubclassOf<UMySpell> spellClass);
-
+   void OnSpellLearned(const ABaseHero& heroThatLearnedSpell, TSubclassOf<UMySpell> spellClass);
+   void OnSpellUpgraded(const ABaseHero& heroThatLearnedSpell, TSubclassOf<UMySpell> spellClass);
+   void OnHeroLeveledUp(ABaseHero* heroThatLeveledUp);
+   
    const FLinearColor canLearnSpellColor    = FLinearColor(0.62, 0.61, 0, 1.0);
    const FLinearColor tooHighLevelSpellColor = FLinearColor(0.6, 0, 0.02, 1.0);
 };

@@ -50,7 +50,9 @@ void URTSCheatManager::LevelUpToLevel(FString heroName, int level)
    }))
    {
       while(heroRef->GetStatComponent()->GetUnitLevel() < level)
+      {
          heroRef->LevelUp();
+      }
    }
 }
 

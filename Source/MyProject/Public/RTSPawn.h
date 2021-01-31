@@ -294,7 +294,13 @@ private:
 
    UFUNCTION()
    void OnItemSlotDroppedFromStorage(int dragSlotIndex, int dropSlotIndex, UBackpack* dragPack, UBackpack* dropPack);
-   
+
+   UFUNCTION()
+   void OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex);
+
+   UFUNCTION()
+   void OnSkillSlotDroppedSB(int dragSlotIndex, int dropSlotIndex);
+
    void HandleInventoryItemSelected(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemUsed) const;
    void HandleTransferStorageItems(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemToDeposit) const;
    void HandleSellItemToStore(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemToDeposit) const;

@@ -4,6 +4,7 @@
 #include "ManualTargetingControl.h"
 #include "ManualSpellComponent.generated.h"
 
+class URTSAbilitySystemComponent;
 class USpellCastComponent;
 class AUnit;
 class AUnitController;
@@ -27,11 +28,10 @@ class MYPROJECT_API UManualSpellComponent : public UActorComponent, public IManu
     * Called right after we press our spell key and then click on a target to confirm our spell
     * From a raycast (left click) we can test to see if the target clicked on is a proper target for our spell
     * @param result - Result of the target we found with a click
-    * @param spellClass - Pass in class because we can technically setup targetting for a new spell while casting a spell (and thus can't use currentSpell)
     * @return -  Returns true if the target clicked was a valid spell target
     */
    UFUNCTION(BlueprintCallable, Category = "Spells")
-   bool SetupSpellTargeting(UPARAM(ref) FHitResult& result);
+   bool OnSpellConfirmInput(UPARAM(ref) FHitResult& result);
 
    /** Gets spell that has been selected, but may not be channeled */
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spells")
@@ -57,10 +57,7 @@ class MYPROJECT_API UManualSpellComponent : public UActorComponent, public IManu
    void BeginPlay() override;
    void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
- private:
-   UFUNCTION()
-   void OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex);
-	
+ private:	
    void OnUnitStopped();
 
    void OnSkillActivated(int spellIndex);
@@ -76,15 +73,15 @@ class MYPROJECT_API UManualSpellComponent : public UActorComponent, public IManu
    /** Callback for when casting a spell but placed in this class specifically to limit the triggering of this callback to only units that have manual spell casting */
    void OnSpellCasted(TSubclassOf<UMySpell> spellCasted);
 
-   void OnSpellSlotReplaced(int dropSlotindex, TSubclassOf<UMySpell> spellClass);
-
+   URTSAbilitySystemComponent* GetRTSAbilityComp() const;
+   
    bool IsTargetingSelf() override;
 
    /** Unlike the current spell, this is the one selected by the player, but it may not be the one being channeled */
    TSubclassOf<UMySpell> currentlySelectedSpell;
 
-   AUnit* unitOwner;
+   AUnit* unitWithPlayerControl;
 
-   /** Manual spellcasting still requires us to have a spell cast component */
+   /** Manual Spellcasting still requires us to have a spell cast component */
    USpellCastComponent* spellCastComp;
 };

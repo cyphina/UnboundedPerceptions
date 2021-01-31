@@ -51,6 +51,7 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    virtual void ShowDesc(UToolTipWidget* tooltip) PURE_VIRTUAL(UActionSlot::ShowDesc, );
 
    FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+   FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
    void NativeOnInitialized() override;
    void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent);

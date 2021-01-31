@@ -94,7 +94,10 @@ void AUnit::SetupMovementComponent() const
 void AUnit::RemoveArrowComponent() const
 {
    // Destroy arrow component so there isn't some random arrow sticking out of our units
-   GetComponentByClass(UArrowComponent::StaticClass())->DestroyComponent();
+   if(UArrowComponent* arrowComp = FindComponentByClass<UArrowComponent>())
+   {
+      arrowComp->DestroyComponent();
+   }
 }
 
 void AUnit::SetupAbilitiesAndStats()
@@ -102,13 +105,15 @@ void AUnit::SetupAbilitiesAndStats()
    if(GetAbilitySystemComponent())
    {
       // ! Make sure owner is player controller else the whole ability system fails to function (maybe it should be set to RTSPawn I'll have to double check)
-      GetAbilitySystemComponent()->InitAbilityActorInfo(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(), this); // setup owner and avatar
+      // This sets up the owner and avatar actors for our ability component.
+      GetAbilitySystemComponent()->InitAbilityActorInfo(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(), this); 
       GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed);
 
       for(TSubclassOf<UMySpell> ability : GetAbilitySystemComponent()->GetAbilities())
       {
-         if(ability.GetDefaultObject()) // if client tries to give himself ability assert fails
+         if(ability.GetDefaultObject()) 
          {
+            // If a client tries to give himself ability assert fails
             GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(ability.GetDefaultObject(), 1));
          }
       }
@@ -179,7 +184,7 @@ void AUnit::SetEnabled(bool bEnabled)
 {
    if(bEnabled)
    {
-      SetSelected(false);
+      SetUnitSelected(false);
       GetCapsuleComponent()->SetVisibility(true, true);
       SetActorEnableCollision(true);
       SetActorTickEnabled(true);

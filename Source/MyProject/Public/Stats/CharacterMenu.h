@@ -1,4 +1,5 @@
 #pragma once
+#include "StatEnums.h"
 #include "UI/UserWidgetExtensions/AnimHudWidget.h"
 #include "CharacterMenu.generated.h"
 
@@ -100,6 +101,8 @@ private:
    void OnBaseStatsUpdated(const FGameplayAttribute& updatedBaseAttribute, float newValue, AUnit* updatedUnit);
 
    void OnStatsUpdated(const FGameplayAttribute& updatedAttribute, float newValue, AUnit* updatedUnit);
+   
+   void OnAttributePointAllocated(ABaseHero* heroAllocating, EAttributes upgradedStat, bool bAllocated);
 
    void InitialHeroValueSetup(ABaseHero* heroRef);
    

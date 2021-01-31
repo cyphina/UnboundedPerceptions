@@ -20,13 +20,9 @@ public:
    UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "InventoryViewFunctions")
    void Reset();
 
-   /** Mapping of visible inventory slots to items in backpack. Useful for the paged inventory */
+   /** Mapping of visible inventory slots to items in backpack. Useful for the paged inventory where we have only 30 slots displayed at a time but actually like 100 backpack items */
    UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, BlueprintPure, Category = "InventoryViewFunctions")
    int GetCorrespondingBackpackIndex(int slotNum);
-
-   /**Way to load items from backpack to visible inventory slots */
-   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Inventory Functions")
-   void LoadItems();
 
    /**Reference to the container that lists the items we have.  The slots need this.*/
    UPROPERTY(BlueprintReadWrite, Category = "References")

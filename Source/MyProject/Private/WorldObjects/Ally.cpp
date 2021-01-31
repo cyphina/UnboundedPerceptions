@@ -54,9 +54,9 @@ void AAlly::SetEnabled(bool bEnabled)
    if(ULocalPlayer* player = Cast<ULocalPlayer>(controllerRef->Player)) { player->GetSubsystem<UPartyDelegateContext>()->OnAllyActiveChanged().Broadcast(this, bEnabled); }
 }
 
-void AAlly::SetSelected(bool value)
+void AAlly::SetUnitSelected(bool value)
 {
-   Super::SetSelected(value);
+   Super::SetUnitSelected(value);
    if(value) {
       controllerRef->GetBasePlayer()->selectedAllies.AddUnique(this);
    } else {

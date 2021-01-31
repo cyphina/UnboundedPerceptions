@@ -12,6 +12,7 @@ class UBackpack;
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnAttributePointAllocated, ABaseHero*, EAttributes, bool);
 DECLARE_EVENT_OneParam(ARTSPawn, FOnUnitSlotSelected, AUnit*);      // Pass in unit corresponding to unit lost
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillSlotDropped, int, dragSlotIndex, int, dropSlotIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillSlotDroppedSB, int, dragSlotIndex, int, dropSlotIndex); // Used when we drop from the spell book
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnItemSlotDroppedFromInventory, int, dragSlotIndex, int, dropSlotIndex, UBackpack*, dragPack, UBackpack*, dropPack);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnItemSlotDroppedFromStorage, int, dragSlotIndex, int, dropSlotIndex, UBackpack*, dragPack, UBackpack*, dropPack);
 
@@ -30,11 +31,14 @@ public:
    FOnSkillSlotDropped OnSkillSlotDroppedEvent;
 
    UPROPERTY(BlueprintAssignable, BlueprintCallable)
+   FOnSkillSlotDroppedSB OnSkillSlotDroppedSBEvent;
+   
+   UPROPERTY(BlueprintAssignable, BlueprintCallable)
    FOnItemSlotDroppedFromInventory OnItemSlotDroppedInventoryEvent;
 
    UPROPERTY(BlueprintAssignable, BlueprintCallable)
    FOnItemSlotDroppedFromStorage OnItemSlotDroppedStorageEvent;
-
+   
 private:
    mutable FOnUnitSlotSelected OnUnitSlotSelectedEvent;
 

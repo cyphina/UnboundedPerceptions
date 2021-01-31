@@ -41,7 +41,7 @@ class MYPROJECT_API USpellBook : public UObject
    };
 
 public:
-   static USpellBook* CreateSpellBook(ABaseHero* heroRef);
+   static USpellBook* CreateSpellBook(ABaseHero* heroRef, TSubclassOf<USpellBook> spellBookClass);
 
    /** Spells that we have the reqs to learn */
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spellbook")
@@ -76,7 +76,7 @@ public:
 
 protected:
    /** List of all the spells learnable in this spell book.  Edit this to add/remove skills*/
-   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Spellbook")
+   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spellbook")
    TArray<TSubclassOf<UMySpell>> availableSpells;
 
 private:
@@ -100,9 +100,9 @@ private:
    class AUserInput* cpcRef;
    ABaseHero*        heroRef;
 
-   TDoubleLinkedList<SpellNode*> learnableSpells; // Spells we haven't learned but have the prerequisite skills to learn but may not have the levels
-   TDoubleLinkedList<SpellNode*> learnedSpells;   // Spells we have learned
-   TDoubleLinkedList<SpellNode*> unknownSpells;   // Spells we haven't learned
+   TDoubleLinkedList<TSubclassOf<UMySpell>> learnableSpells; // Spells we haven't learned but have the prerequisite skills to learn but may not have the levels
+   TDoubleLinkedList<TSubclassOf<UMySpell>> learnedSpells;   // Spells we have learned
+   TDoubleLinkedList<TSubclassOf<UMySpell>> unknownSpells;   // Spells we haven't learned
 
    TMap<TSubclassOf<UMySpell>, SpellNode> spellNodes; // Allows us to find the corresponding spell node for a spell. Manages the lifetime of all the SpellNodes.
 };

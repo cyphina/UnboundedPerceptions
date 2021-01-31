@@ -10,6 +10,7 @@
 #include "PartyDelegateContext.h"
 #include "StatgraphWidget.h"
 #include "TextBlock.h"
+#include "UIDelegateContext.h"
 #include "UpStatComponent.h"
 #include "VerticalBox.h"
 #include "VerticalBoxSlot.h"
@@ -28,6 +29,8 @@ void UCharacterMenu::NativeOnInitialized()
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnMoneyGained().AddUObject(this, &UCharacterMenu::OnMoneyGained);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnExpGained().AddUObject(this, &UCharacterMenu::OnEXPGained);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroLevelUp().AddUObject(this, &UCharacterMenu::OnHeroLevelUp);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnAttributePointAllocated().AddUObject(
+   this, &UCharacterMenu::OnAttributePointAllocated);
 }
 
 bool UCharacterMenu::OnWidgetAddToViewport_Implementation()
@@ -56,8 +59,7 @@ void UCharacterMenu::OnAnimationFinished_Implementation(const UWidgetAnimation* 
    if(IsAnimationPlayingForward(Animation))
    {
       Widget_StatGraph->ShowElementalOffensive();
-   }
-   else
+   } else
    {
       Widget_StatGraph->Cleanup();
    }
@@ -122,6 +124,8 @@ void UCharacterMenu::OnHeroLevelUp(ABaseHero* heroLevelingUp)
    if(heroLevelingUp == baseHeroRef)
    {
       Text_Level->SetText(FText::AsNumber(baseHeroRef->GetStatComponent()->GetUnitLevel()));
+      Text_AttPoints->SetText(FText::AsNumber(baseHeroRef->GetAttPoints()));
+      Text_EXP->SetText(FText::AsNumber(baseHeroRef->GetExpToLevel() - baseHeroRef->GetCurrentExp()));
    }
 }
 
@@ -156,4 +160,9 @@ void UCharacterMenu::OnStatsUpdated(const FGameplayAttribute& updatedAttribute, 
          }
       }
    }
+}
+
+void UCharacterMenu::OnAttributePointAllocated(ABaseHero* heroAllocating, EAttributes upgradedStat, bool bAllocated)
+{
+   Text_AttPoints->SetText(FText::AsNumber(baseHeroRef->GetAttPoints()));
 }

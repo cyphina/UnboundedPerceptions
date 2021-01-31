@@ -22,7 +22,7 @@ class MYPROJECT_API UESkillContainer : public USlotContainer
 public:
    void OnWidgetShown(URTSAbilitySystemComponent* focusedUnitAbilityComponent);
 
-   int GetNumSlots() const override { return skillSlots.Num(); }
+   int GetNumValidItems() const override { return skillSlots.Num(); }
 
 protected:
    void NativePreConstruct() override;

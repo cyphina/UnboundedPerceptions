@@ -31,7 +31,7 @@ class MYPROJECT_API AAlly : public AUnit
    AAllyAIController* GetAllyAIController() const { return allyController; }
    
    /** Polymorphic selection override for caching units in basePlayer */
-   void SetSelected(bool value) override;
+   void SetUnitSelected(bool value) override;
 
    void QueueAction(TFunction<void()> actionToQueue); // Queues an action to our action queue
 

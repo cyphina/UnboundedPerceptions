@@ -86,10 +86,10 @@ public:
    UTexture2D* GetImage() const { return unitProperties.image; }
 
    UFUNCTION(BlueprintCallable, Category = "Accessors")
-   virtual void SetSelected(bool value) { unitProperties.isSelected = value; }
+   virtual void SetUnitSelected(bool value) { unitProperties.isSelected = value; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-   virtual bool GetSelected() const { return unitProperties.isSelected; }
+   virtual bool GetUnitSelected() const { return unitProperties.isSelected; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
    virtual bool GetIsEnemy() const PURE_VIRTUAL(AUnit::GetIsEnemy, return false;);

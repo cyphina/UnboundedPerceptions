@@ -63,12 +63,18 @@ FReply UActionSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const F
 {
    if(InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
    {
-      if(USlotContainer* slotContainer = UUWidgetHelperLibrary::GetUserWidgetParent<USlotContainer>(this))
-      {
-         slotContainer->SetSelectedSlotIndex(slotIndex);
-      }
       return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply;
    }
+   return FReply::Handled();
+}
+
+FReply UActionSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+   if(USlotContainer* slotContainer = UUWidgetHelperLibrary::GetUserWidgetParent<USlotContainer>(this))
+   {
+      slotContainer->SetSelectedSlotIndex(slotIndex);
+   }
+
    return FReply::Unhandled();
 }
 

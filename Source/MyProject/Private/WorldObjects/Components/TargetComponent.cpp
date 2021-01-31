@@ -13,7 +13,7 @@ UTargetComponent::UTargetComponent()
 
 AActor* UTargetComponent::GetTargetActorOrUnit() const
 {
-   if(targetData.target.IsType<UTargetComponent*>())
+   if(targetData.target.IsType<AUnit*>())
       return targetData.target.Get<AUnit*>();
    else if(targetData.target.IsType<AActor*>())
       return targetData.target.Get<AActor*>();

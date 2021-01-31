@@ -34,7 +34,8 @@ void USpellBook::Init()
       }
 
       SetupInitialSpellNodeConnections();
-      cpcRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->OnSlotSelected().AddUObject(this, &USpellBook::OnSpellSlotSelected);
+      GetWorld()->GetTimerManager().SetTimerForNextTick(
+          [this]() { cpcRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->OnSlotSelected().AddUObject(this, &USpellBook::OnSpellSlotSelected); });
    }
 }
 
@@ -42,68 +43,66 @@ bool USpellBook::IsSpellLearnable(TSubclassOf<UMySpell> spellClass)
 {
    for(auto preReq : spellClass.GetDefaultObject()->GetSpellDefaults().PreReqs)
    {
-      SpellNode* s = &spellNodes[preReq];
-      if(!learnedSpells.Contains(s))
-         return false;
+      if(!learnedSpells.Contains(preReq)) return false;
    }
    return true;
 }
 
-USpellBook* USpellBook::CreateSpellBook(ABaseHero* heroRef)
+USpellBook* USpellBook::CreateSpellBook(ABaseHero* heroRef, TSubclassOf<USpellBook> spellBookClass)
 {
-   USpellBook* spellbook = NewObject<USpellBook>(heroRef);
+   USpellBook* spellbook = NewObject<USpellBook>(heroRef, spellBookClass);
+   spellbook->heroRef    = heroRef;
    spellbook->Init();
-   spellbook->heroRef = heroRef;
    return spellbook;
 }
 
 TArray<int> USpellBook::GetLearnableSpellsIndices() const
 {
+   TArray<int> spellIndices;
+   for(TSubclassOf<UMySpell> spellClass : learnableSpells)
    {
-      TArray<int> spells;
-      for(const SpellNode* sNode : learnableSpells)
-      {
-         spells.Emplace(sNode->index);
-      }
-      return spells;
+      spellIndices.Add(spellNodes[spellClass].index);
    }
+   return spellIndices;
 }
 
 TArray<int> USpellBook::GetLearnedSpellIndices() const
 {
-   TArray<int> spells;
-   for(const SpellNode* sNode : learnedSpells)
+   TArray<int> spellIndices;
+   for(TSubclassOf<UMySpell> spellClass : learnedSpells)
    {
-      spells.Emplace(sNode->index);
+      spellIndices.Add(spellNodes[spellClass].index);
    }
-   return spells;
+   return spellIndices;
 }
 
 TArray<int> USpellBook::GetUnknownSpellIndices() const
 {
-   TArray<int> spells;
-   for(const SpellNode* sNode : unknownSpells)
+   TArray<int> spellIndices;
+   for(TSubclassOf<UMySpell> spellClass : unknownSpells)
    {
-      spells.Emplace(sNode->index);
+      spellIndices.Add(spellNodes[spellClass].index);
    }
-   return spells;
+   return spellIndices;
 }
 
 void USpellBook::CacheInitialLearnableAndUnknownSpells(TSubclassOf<UMySpell> spell)
 {
    if(spell.GetDefaultObject()->GetSpellDefaults().PreReqs.Num() == 0)
    {
-      learnableSpells.AddTail(&spellNodes[spell]);
-   } else
+      learnableSpells.AddTail(spell);
+   }
+   else
    {
-      unknownSpells.AddTail(&spellNodes[spell]);
+      unknownSpells.AddTail(spell);
    }
 }
 
 void USpellBook::SetupInitialSpellNodeConnections()
 {
-   for(SpellNode* s : unknownSpells)
+   for(TSubclassOf<UMySpell> spellClass : unknownSpells)
    {
+      SpellNode* s = &spellNodes[spellClass];
       for(const TSubclassOf<UMySpell> preReqSpell : s->spellRef.GetDefaultObject()->GetSpellDefaults().PreReqs)
       {
          if(spellNodes.Contains(preReqSpell))
@@ -132,62 +131,75 @@ void USpellBook::OnRespec()
 
 bool USpellBook::LearnNewSpell(TSubclassOf<UMySpell> spellToLearn)
 {
-   URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Spellbook", "LearnNewSpell", "Learned a new spell"));
-   learnedSpells.AddTail(&spellNodes[spellToLearn]);
-   learnableSpells.RemoveNode(&spellNodes[spellToLearn]);
-   SpellHUDEvents::OnSpellLearnedEvent.Broadcast(spellToLearn);
-
-   for(SpellNode* s : spellNodes[spellToLearn].unlockedSpellNodes)
+   if(heroRef)
    {
-      if(IsSpellLearnable(s->spellRef))
+      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Spellbook", "LearnNewSpell", "Learned a new spell"));
+      learnedSpells.AddTail(spellToLearn);
+      learnableSpells.RemoveNode(spellToLearn);
+      SpellGameContext::OnSpellLearnedEvent.Broadcast(*heroRef, spellToLearn);
+
+      for(SpellNode* s : spellNodes[spellToLearn].unlockedSpellNodes)
       {
-         unknownSpells.RemoveNode(s);
-         learnableSpells.AddTail(s);
+         if(IsSpellLearnable(s->spellRef))
+         {
+            unknownSpells.RemoveNode(s->spellRef);
+            learnableSpells.AddTail(spellToLearn);
+         }
       }
+      return true;
    }
-   return true;
+   return false;
 }
 
 bool USpellBook::TryUpgradeSpellLevel(UMySpell* spellObject, FGameplayAbilitySpec* abilityInfo)
 {
-   if(!CheckIfSpellMaxLevel(abilityInfo, spellObject))
+   if(heroRef)
    {
-      ++abilityInfo->Level;
-      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Spellbook", "Upgrade", "Upgraded Ability!"));
-      heroRef->GetAbilitySystemComponent()->MarkAbilitySpecDirty(*abilityInfo);
-      SpellHUDEvents::OnSpellUpgradedEvent.Broadcast(spellObject->GetClass());
-      return true;
+      if(!CheckIfSpellMaxLevel(abilityInfo, spellObject))
+      {
+         ++abilityInfo->Level;
+         URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Spellbook", "Upgrade", "Upgraded Ability!"));
+         heroRef->GetAbilitySystemComponent()->MarkAbilitySpecDirty(*abilityInfo);
+         SpellGameContext::OnSpellUpgradedEvent.Broadcast(*heroRef, spellObject->GetClass());
+         return true;
+      }
+      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Spellbook", "UpgradeFailMax", "Ability Already at Max Level!"));
+      return false;
    }
-   URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Spellbook", "UpgradeFailMax", "Ability Already at Max Level!"));
    return false;
 }
 
 void USpellBook::OnSpellSlotSelected(int index)
 {
-   check(index >= 0 && index < availableSpells.Num());
-   UMySpell* spellObject = availableSpells[index].GetDefaultObject();
-
-   if(spellObject)
+   if(cpcRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef()->GetSpellBook() == this)
    {
-      if(!CheckLevel(spellObject))
-      {
-         return;
-      }
-      if(!CheckPoints())
-      {
-         return;
-      }
-      if(!CheckPrereqs(spellObject))
-      {
-         return;
-      }
-      FGameplayAbilitySpec* abilityInfo = heroRef->GetAbilitySystemComponent()->FindAbilitySpecFromClass(availableSpells[index]);
+      check(index >= 0 && index < availableSpells.Num());
+      UMySpell* spellObject = availableSpells[index].GetDefaultObject();
 
-      if(!GetLearnedSpellIndices().Contains(index))
+      if(spellObject)
       {
-         LearnNewSpell(availableSpells[index]);
+         if(!CheckLevel(spellObject))
+         {
+            return;
+         }
+         if(!CheckPoints())
+         {
+            return;
+         }
+         if(!CheckPrereqs(spellObject))
+         {
+            return;
+         }
+         FGameplayAbilitySpec* abilityInfo = heroRef->GetAbilitySystemComponent()->FindAbilitySpecFromClass(availableSpells[index]);
+
+         if(!GetLearnedSpellIndices().Contains(index))
+         {
+            LearnNewSpell(availableSpells[index]);
+         } else
+         {
+            TryUpgradeSpellLevel(spellObject, abilityInfo);
+         }
       }
-      TryUpgradeSpellLevel(spellObject, abilityInfo);
    }
 }
 
@@ -195,8 +207,7 @@ bool USpellBook::CheckLevel(UMySpell* spellObject) const
 {
    if(heroRef->GetStatComponent()->GetUnitLevel() < spellObject->GetReqLevel(heroRef->GetAbilitySystemComponent()))
    {
-      URTSIngameWidget::NativeDisplayHelpText(GetWorld(),
-                                              NSLOCTEXT("Spellbook", "LevelRequirementNotMet", "You are not high enough level to learn this spell"));
+      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Spellbook", "LevelRequirementNotMet", "You are not high enough level to learn this spell"));
       return false;
    }
    return true;
@@ -216,9 +227,7 @@ bool USpellBook::CheckPrereqs(UMySpell* spellObject)
 {
    for(TSubclassOf<UMySpell> spellPreReqClass : spellObject->GetPreReqs())
    {
-      SpellNode* preReqSpellNode = &spellNodes[spellPreReqClass];
-
-      if(!learnableSpells.Contains(preReqSpellNode))
+      if(!learnedSpells.Contains(spellPreReqClass))
       {
          URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Spellbook", "PrereqsNotMet", "You're missing some prerequisite skill(s)"));
          return false;
@@ -229,8 +238,5 @@ bool USpellBook::CheckPrereqs(UMySpell* spellObject)
 
 bool USpellBook::CheckIfSpellMaxLevel(FGameplayAbilitySpec* abilityInfo, UMySpell* spellObject) const
 {
-   return abilityInfo->Level >
-          spellObject->GetSpellDefaults().MaxLevel;
+   return abilityInfo->Level > spellObject->GetSpellDefaults().MaxLevel;
 }
-
-

@@ -37,12 +37,12 @@ public:
    (UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float                Duration,
     float             Period, FGameplayTag                     Elem, FGameplayTag Name, FGameplayTagContainer assetTags);
 
-   /** Creates gameplay damage effect*/
+   /** Creates gameplay damage effect (the name damageVals cannot be changed for the custom node to work) */
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Damage Effect", BlueprintInternalUseOnly = "true"), Category = "EffectFactory")
    static struct FGameplayEffectSpecHandle MakeDamageEffect
    (UGameplayAbility*   AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float                Duration,
     float               Period, FGameplayTag                     Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
-    FDamageScalarStruct damageValues);
+    FDamageScalarStruct damageVals);
 
    /**
     * TODO: Fix this, it's NOT CURRENTLY WORKING

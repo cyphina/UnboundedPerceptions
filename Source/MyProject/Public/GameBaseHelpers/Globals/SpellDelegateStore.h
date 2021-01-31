@@ -1,17 +1,18 @@
 ﻿#pragma once
 
 class AUnit;
+class ABaseHero;
 class UMySpell;
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnSpellSlotReplaced, AUnit*, TSubclassOf<UMySpell>, int);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnFocusedUnitSpellCasted, AUnit*, int);
-DECLARE_EVENT_OneParam(USpellBook, FOnSpellLearned, TSubclassOf<UMySpell>);
-DECLARE_EVENT_OneParam(USpellBook, FOnSpellUpgraded, TSubclassOf<UMySpell>);
+DECLARE_EVENT_TwoParams(USpellBook, FOnSpellLearned, const ABaseHero&, TSubclassOf<UMySpell>);
+DECLARE_EVENT_TwoParams(USpellBook, FOnSpellUpgraded, const ABaseHero&, TSubclassOf<UMySpell>);
 
-namespace SpellHUDEvents
+namespace SpellGameContext
 {
-   inline FOnSpellSlotReplaced OnSpellSlotReplacedEvent;
+   inline FOnSpellSlotReplaced      OnSpellSlotReplacedEvent;
    inline FOnFocusedUnitSpellCasted OnFocusedUnitSpellCastedEvent;
-   inline FOnSpellLearned  OnSpellLearnedEvent;
-   inline FOnSpellUpgraded OnSpellUpgradedEvent;
+   inline FOnSpellLearned           OnSpellLearnedEvent;
+   inline FOnSpellUpgraded          OnSpellUpgradedEvent;
 }

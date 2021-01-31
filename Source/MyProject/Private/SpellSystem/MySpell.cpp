@@ -307,7 +307,7 @@ int UMySpell::GetIndex(int currentLevel, int numCategories, int maxLevel)
    const int denom = maxLevel * currentLevel;
    if(numCategories <= 0)
    {
-      UE_LOG(LogTemp, Error, TEXT("Attempting to access some out of bounds spell property!"));
+      UE_LOG(LogTemp, Error, TEXT("%s read some out of bounds spell property!"), ANSI_TO_TCHAR(__FUNCTION__));
    }
    if(denom != 0)
    {

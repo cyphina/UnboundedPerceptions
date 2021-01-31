@@ -21,8 +21,8 @@ void UESkillContainer::NativeOnInitialized()
 {
    Super::NativeOnInitialized();
 
-   SpellHUDEvents::OnFocusedUnitSpellCastedEvent.AddUObject(this, &UESkillContainer::OnFocusedUnitSpellCasted);
-   SpellHUDEvents::OnSpellSlotReplacedEvent.AddUObject(this, &UESkillContainer::OnSpellSlotReplaced);
+   SpellGameContext::OnFocusedUnitSpellCastedEvent.AddUObject(this, &UESkillContainer::OnFocusedUnitSpellCasted);
+   SpellGameContext::OnSpellSlotReplacedEvent.AddUObject(this, &UESkillContainer::OnSpellSlotReplaced);
    GetWorld()->GetGameInstance()->GetSubsystem<USettingsContext>()->OnKeybindsChanged().AddDynamic(this, &UESkillContainer::OnKeybindsChanged);
    GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedEvent.AddDynamic(this, &UESkillContainer::OnSkillSlotDropped);
 

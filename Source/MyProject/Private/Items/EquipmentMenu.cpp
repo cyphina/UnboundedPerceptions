@@ -50,7 +50,7 @@ void UEquipmentMenu::SetupEquipImages()
          }
          else
          {
-            equipSlots[index]->SetSlotImage(nullptr);
+            equipSlots[index]->SetSlotImage(defaultSlotTexture);
          }
          ++index;
       }

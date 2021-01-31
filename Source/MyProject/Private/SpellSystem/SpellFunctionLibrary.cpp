@@ -48,17 +48,18 @@ FGameplayEffectSpecHandle USpellFunctionLibrary::MakeGameplayEffect
 FGameplayEffectSpecHandle USpellFunctionLibrary::MakeDamageEffect
 (UGameplayAbility*   AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float                Duration,
  float               Period, FGameplayTag                     Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
- FDamageScalarStruct damageValues)
+ FDamageScalarStruct damageVals)
 {
    FGameplayEffectSpecHandle effect = MakeGameplayEffect(AbilityRef, EffectClass, Level, Duration, Period, Elem, Name, assetTags);
    effect.Data->DynamicAssetTags.AddTag(Elem); // Use add tag to check if tag is valid and prevents duplicate tags.
    effect.Data->DynamicAssetTags.AddTag(Name);
 
    // no period since damage is instant application
-   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Strength"), damageValues.strength);
-   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Intelligence"), damageValues.intelligence);
-   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), damageValues.agility);
-   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Understanding"), damageValues.agility);
+   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Health"), damageVals.hitpoints);
+   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Strength"), damageVals.strength);
+   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Intelligence"), damageVals.intelligence);
+   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), damageVals.agility);
+   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Understanding"), damageVals.understanding);
    return effect;
 }
 

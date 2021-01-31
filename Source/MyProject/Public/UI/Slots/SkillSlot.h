@@ -79,5 +79,7 @@ class MYPROJECT_API USkillSlot : public UActionSlot
     */
    FTimerHandle cooldownProgressTimer;
 
-   static UMaterialInterface* matInstance;
+   static UMaterialInterface* cdMatInstance;
+   static UMaterialInterface* skillMatInstance;
+	
 };

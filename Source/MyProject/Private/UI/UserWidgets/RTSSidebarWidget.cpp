@@ -60,7 +60,7 @@ void URTSSidebarWidget::UpdatePartyInformation()
          heroObj->SetNumberField("maxHitpoints", hero->GetStatComponent()->GetVitalBaseValue(EVitals::Health));
          heroObj->SetNumberField("mana", hero->GetStatComponent()->GetVitalCurValue(EVitals::Mana));
          heroObj->SetNumberField("maxMana", hero->GetStatComponent()->GetVitalBaseValue(EVitals::Mana));
-         heroObj->SetBoolField("bSelected", hero->GetSelected());
+         heroObj->SetBoolField("bSelected", hero->GetUnitSelected());
 
          // Start listening to the health values
          UMyAttributeSet* attSet = const_cast<UMyAttributeSet*>(hero->GetAbilitySystemComponent()->GetSet<UMyAttributeSet>());
@@ -216,10 +216,10 @@ void URTSSidebarWidget::HandleBluEvent(const FString& eventName, const FString& 
       {
          cpcRef->GetBasePlayer()->ClearSelectedAllies();
          cpcRef->GetBasePlayer()->SetFocusedUnit(selectedHeroRef);
-         selectedHeroRef->SetSelected(true);
+         selectedHeroRef->SetUnitSelected(true);
       } else
       {
-         selectedHeroRef->SetSelected(!selectedHeroRef->GetSelected());
+         selectedHeroRef->SetUnitSelected(!selectedHeroRef->GetUnitSelected());
       }
    }
 }

@@ -94,6 +94,6 @@ bool USpellDataLibrary::IsGodMode(const IGameplayTagAssetInterface* abilityCompo
 
 bool USpellDataLibrary::IsAttackable(const IGameplayTagAssetInterface* abilityComponent)
 {
-   return abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Phased")) ||
-          abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Ghost"));
+   return !(abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Phased")) ||
+          abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Ghost")));
 }

@@ -40,8 +40,15 @@ void USpellbookSlot::UpdateSlotLevelText()
    {
       if(USpellBook* spellBook = heroRef->GetSpellBook())
       {
-         const int newLevel = spellBook->GetSpellFromIndex(slotIndex).GetDefaultObject()->GetLevel(heroRef->GetAbilitySystemComponent());
-         infoText->SetText(FText::FromString(FString::FromInt(newLevel + 1)));
+         if(spellBook->HasLearnedSpell(slotIndex))
+         {
+            const int newLevel = spellBook->GetSpellFromIndex(slotIndex).GetDefaultObject()->GetLevel(heroRef->GetAbilitySystemComponent());
+            infoText->SetText(FText::FromString(FString::FromInt(newLevel)));
+         }
+         else
+         {
+            infoText->SetText(FText::GetEmpty());
+         }
       }
    }
 }

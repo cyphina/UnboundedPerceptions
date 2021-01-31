@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "SlotContainer.h"
@@ -26,6 +24,8 @@ class MYPROJECT_API UInventory : public USlotContainer
  public:
    /**
     * Used to update the view whenever change occurs within the backpack corresponding to our inventory
+    * Has to update all the slots at once so it's better to reload only the slots that are changed. Also event driven architecture
+    * could help if we one day learn to implement networking...
     */
    UFUNCTION(BlueprintCallable, Category = "Inventory Functions")
    void LoadItems();
@@ -46,7 +46,7 @@ class MYPROJECT_API UInventory : public USlotContainer
 
    FOnInventoryItemSelected& OnInventoryItemSelected() { return OnItemSelectedEvent; }
 
-   int GetNumSlots() const override { return GetInventorySlots().Num(); }
+   int GetNumValidItems() const override { return GetInventorySlots().Num(); }
    
  protected:
    void NativeOnInitialized() override;
@@ -56,12 +56,6 @@ class MYPROJECT_API UInventory : public USlotContainer
 
    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
    UInventoryView* inventoryView;
-
-   UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
-   TSubclassOf<UActionSlot> slotClass;
-
-   UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
-   UTexture2D* defaultSlotTexture;
 
  private:
    /** Updates a slot's count and image */

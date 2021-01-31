@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "Ally.h"
@@ -62,7 +60,7 @@ class MYPROJECT_API ABaseHero : public AAlly
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Items")
    int GetCurrentItemId() { return currentItemId.IsSet() ? currentItemId.GetValue() : INDEX_NONE; }
-   
+
    /**Set the item set to be used currently by this hero*/
    UFUNCTION(BlueprintCallable, Category = "Items")
    void SetCurrentItem(int newCurrentItemID, int newCurrentItemSlotIndex);
@@ -83,7 +81,7 @@ class MYPROJECT_API ABaseHero : public AAlly
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
    int GetAttPoints() const { return attPoints; }
-   
+
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
    AHeroAIController* GetHeroController() const { return heroController; }
 
@@ -92,7 +90,7 @@ class MYPROJECT_API ABaseHero : public AAlly
    /** Gets the item set to be used currently by this hero */
    TOptional<int> GetCurrentItem() const { return currentItemId.GetValue(); }
 
-   void SetSelected(bool value) override;
+   void SetUnitSelected(bool value) override;
 
    FOnLevelUp& OnLevelUp() { return OnLevelUpEvent; }
 
@@ -153,8 +151,8 @@ class MYPROJECT_API ABaseHero : public AAlly
     */
    void OnSpellCasted(TSubclassOf<UMySpell> spellCasted);
 
-   void OnSpellLearned(TSubclassOf<UMySpell> spellLearned);
-   void OnSpellUpgraded(TSubclassOf<UMySpell> spellLearned);
+   void OnSpellLearned(const ABaseHero& heroThatLearnedSpell, TSubclassOf<UMySpell> spellLearned);
+   void OnSpellUpgraded(const ABaseHero& heroThatLearnedSpell, TSubclassOf<UMySpell> spellLearned);
 
    /**
     * @brief Activates triggers that were supposed to fire off on this hero if it were alive

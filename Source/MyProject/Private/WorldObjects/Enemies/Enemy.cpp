@@ -84,7 +84,7 @@ void AEnemy::Destroyed()
    Super::Destroyed();
 }
 
-void AEnemy::SetSelected(bool value)
+void AEnemy::SetUnitSelected(bool value)
 {
    if(value) {
       controllerRef->GetBasePlayer()->SetFocusedUnit(this);
@@ -92,7 +92,7 @@ void AEnemy::SetSelected(bool value)
       if(controllerRef->GetBasePlayer()->GetFocusedUnit() == this) controllerRef->GetBasePlayer()->SetFocusedUnit(nullptr);
    }
    // Call on unit selected delegate(s) afterwards
-   Super::SetSelected(value);
+   Super::SetUnitSelected(value);
 }
 
 void AEnemy::SetEnabled(bool bEnabled)

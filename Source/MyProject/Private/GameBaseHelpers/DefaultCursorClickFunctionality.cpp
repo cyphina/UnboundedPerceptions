@@ -195,12 +195,12 @@ void UDefaultCursorClickFunctionality::ToggleSingleAllySelection()
    if(IsValid(hitActor)) {
 
       if(AAlly* allyRef = Cast<AAlly>(hitActor)) {
-         if(allyRef->GetSelected()) {
-            allyRef->SetSelected(false);
+         if(allyRef->GetUnitSelected()) {
+            allyRef->SetUnitSelected(false);
             controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllyDeselectedDelegate.Broadcast(allyRef);
 
          } else {
-            allyRef->SetSelected(true);
+            allyRef->SetUnitSelected(true);
             controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.Broadcast(true);
          }
       }
@@ -234,7 +234,7 @@ void UDefaultCursorClickFunctionality::SelectSingleUnitUnderClick()
       controllerRef->GetBasePlayer()->ClearSelectedAllies();
       if(AUnit* selectedUnit = Cast<AUnit>(pawnRef->GetHitActorClick(clickHitResult)))
       {
-         selectedUnit->SetSelected(true);
+         selectedUnit->SetUnitSelected(true);
          controllerRef->GetBasePlayer()->SetFocusedUnit(selectedUnit);
          // Kind of jank but this is what I thought of at the moment so we don't have to check this everywhere we bind to this delegate
          if(selectedUnit->GetClass()->IsChildOf(AAlly::StaticClass()))
@@ -257,7 +257,7 @@ void UDefaultCursorClickFunctionality::SelectEnemy()
 {
    if(AEnemy* selectedEnemy = Cast<AEnemy>(pawnRef->GetHitActorClick(clickHitResult))) {
       controllerRef->GetBasePlayer()->ClearSelectedAllies();
-      selectedEnemy->SetSelected(true);
+      selectedEnemy->SetUnitSelected(true);
       controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnUnitSelectedDelegate.Broadcast();
    }
 }
@@ -293,7 +293,7 @@ void UDefaultCursorClickFunctionality::ClickUseItem()
 
       const auto itemAbility    = UItemFunctionLibrary::GetConsumableInfo(heroUsingInventory->GetCurrentItem().GetValue()).abilityClass;
       const auto heroController = heroUsingInventory->GetHeroController();
-      if(heroController->GetManualSpellComponent()->SetupSpellTargeting(clickHitResult)) {
+      if(heroController->GetManualSpellComponent()->OnSpellConfirmInput(clickHitResult)) {
          heroController->StopAutomation();
          pawnRef->SetSecondaryCursor(ECursorStateEnum::Select);
       }
@@ -319,7 +319,7 @@ bool UDefaultCursorClickFunctionality::CheckAllyWantToCast(const AAlly* ally)
 bool UDefaultCursorClickFunctionality::AttemptAllyCastOnTarget(const AAlly* ally)
 {
    AAllyAIController* allyController = Cast<AAllyAIController>(ally->GetUnitController());
-   return allyController->GetManualSpellComponent()->SetupSpellTargeting(clickHitResult);
+   return allyController->GetManualSpellComponent()->OnSpellConfirmInput(clickHitResult);
 }
 
 void UDefaultCursorClickFunctionality::ClickAttackMove()

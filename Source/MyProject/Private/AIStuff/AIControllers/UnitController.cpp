@@ -116,7 +116,7 @@ void AUnitController::OnDamageReceived(const FUpDamage& d)
 void AUnitController::Die()
 {
    GetUnitOwner()->GetAbilitySystemComponent()->TryActivateAbilityByClass(GetUnitOwner()->GetCustomDeathLogic());
-   GetUnitOwner()->SetSelected(false);
+   GetUnitOwner()->SetUnitSelected(false);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnUnitDieGlobal().Broadcast(GetUnitOwner());
    GetUnitOwner()->OnUnitDie().Broadcast();
    // Eventually this object will get GC'd. If we have something like resurrection, store unit data in the OnUnitDieEvent as opposed to keeping around a deactivated copy.
@@ -176,7 +176,7 @@ void AUnitController::Stop()
    queuedTurnAction = nullptr;
    turnActorTimeline.Stop();
    turnTimeline.Stop();
-   ownerRef->GetTargetComponent()->ResetTarget();
+   // ownerRef->GetTargetComponent()->ResetTarget();
    StopMovement();
    ownerRef->StopAnimMontage();
 }
@@ -209,15 +209,18 @@ void AUnitController::OnActorTurnFinished()
 {
    // If we didn't successfully turn towards the actor, try again (this happens if they moved)
    AActor* targetActor = ownerRef->GetTargetComponent()->GetTargetActorOrUnit();
-   if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetActor->GetActorLocation()))
+   if(targetActor)
    {
-      TurnTowardsActor(targetActor);
-   }
-   else
-   {
-      if(onPosAdjDoneAct)
+      if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetActor->GetActorLocation()))
       {
-         onPosAdjDoneAct();
+         TurnTowardsActor(targetActor);
+      }
+      else
+      {
+         if(onPosAdjDoneAct)
+         {
+            onPosAdjDoneAct();
+         }
       }
    }
 }
@@ -288,7 +291,7 @@ bool AUnitController::AdjustPosition(float range, FVector targetLoc)
 {
    if(!UUpAIHelperLibrary::IsTargetInRange(GetUnitOwner(), targetLoc, range))
    {
-      MoveToLocation(targetLoc, 10, false, true, false, true);
+      MoveToLocation(targetLoc, range, false, true, false, true);
       QueueTurnAfterMovement(targetLoc);
       return false;
    }
@@ -307,7 +310,7 @@ bool AUnitController::AdjustPosition(float range, FVector targetLoc, EPathFollow
 {
    if(!UUpAIHelperLibrary::IsTargetInRange(GetUnitOwner(), targetLoc, range))
    {
-      outPathReqRes = MoveToLocation(targetLoc, 10, false, true, false, false);
+      outPathReqRes = MoveToLocation(targetLoc, range, false, true, false, false);
       QueueTurnAfterMovement(targetLoc);
       return false;
    }
@@ -326,7 +329,7 @@ bool AUnitController::AdjustPosition(float range, AActor* targetActor)
 {
    if(!UUpAIHelperLibrary::IsTargetInRange(GetUnitOwner(), targetActor->GetActorLocation(), range))
    {
-      MoveToActor(targetActor, 10, false, true, false);
+      MoveToActor(targetActor, range, false, true, false);
       QueueTurnAfterMovement(targetActor);
       return false;
    }

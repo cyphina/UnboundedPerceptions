@@ -127,13 +127,13 @@ FText UBPNode_CreateGameplayEffect::GetNodeTitle(ENodeTitleType::Type TitleType)
 
 bool UBPNode_CreateGameplayEffect::IsSpawnVarPin(UEdGraphPin* pin) const
 {
-   return (Super::IsSpawnVarPin(pin) && pin->PinName != *FBPNode_CreateGameplayEffectHelper::periodPinName &&
+   return Super::IsSpawnVarPin(pin) && pin->PinName != *FBPNode_CreateGameplayEffectHelper::periodPinName &&
            pin->PinName != *FBPNode_CreateGameplayEffectHelper::durationPinName && pin->PinName != *FBPNode_CreateGameplayEffectHelper::abilityPinName &&
            pin->PinName != *FBPNode_CreateGameplayEffectHelper::levelPinName && pin->PinName != *FBPNode_CreateGameplayEffectHelper::elemPinName &&
-           pin->PinName != *FBPNode_CreateGameplayEffectHelper::namePinName);
+           pin->PinName != *FBPNode_CreateGameplayEffectHelper::namePinName && pin->PinName != *FBPNode_CreateGameplayEffectHelper::assetPinName;
 }
 
-/**Excpands node for our custom object, with properties set as EditAnywhere and meta=(ExposeOnSpawn)*/
+/**Expands node for our custom object, with properties set as EditAnywhere and meta=(ExposeOnSpawn)*/
 void UBPNode_CreateGameplayEffect::ExpandNode(FKismetCompilerContext& compilerContext, UEdGraph* sourceGraph)
 {
    Super::ExpandNode(compilerContext, sourceGraph);
@@ -199,6 +199,8 @@ void UBPNode_CreateGameplayEffect::ExpandNode(FKismetCompilerContext& compilerCo
    UEdGraphPin* callCreateAssetTagsPin   = callCreateNode->FindPinChecked(assetTagsParamName);
    UEdGraphPin* callCreateRes            = callCreateNode->GetReturnValuePin();
 
+   callCreateAbilityRefPin->DefaultObject = GetBlueprint()->GetBlueprintClass();
+   
    ///Creating links from our node we're creating (The one in blueprints) to a function call node we're creating now
 
    //Move exec connection from this node to the node in our SpellFunctionLibrary

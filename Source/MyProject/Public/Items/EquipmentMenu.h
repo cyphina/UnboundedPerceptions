@@ -24,7 +24,7 @@ public:
    UFUNCTION(BlueprintCallable)
    ABaseHero* GetEquippedHero() const { return heroRef; }
 
-   int GetNumSlots() const override { return equipSlots.Num(); }
+   int GetNumValidItems() const override { return equipSlots.Num(); }
 
 protected:
    void NativeOnInitialized() override;

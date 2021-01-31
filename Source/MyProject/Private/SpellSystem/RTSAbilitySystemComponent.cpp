@@ -278,7 +278,7 @@ void URTSAbilitySystemComponent::SetSpellAtSlot(TSubclassOf<UMySpell> spellClass
    if(slotIndex >= 0 && slotIndex < abilities.Num())
    {
       abilities[slotIndex] = spellClassToSet;
-      SpellHUDEvents::OnSpellSlotReplacedEvent.Broadcast(unitOwnerRef, spellClassToSet, slotIndex);
+      SpellGameContext::OnSpellSlotReplacedEvent.Broadcast(unitOwnerRef, spellClassToSet, slotIndex);
    }
    else
    {

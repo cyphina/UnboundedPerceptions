@@ -29,6 +29,8 @@
 #include "ManualSpellComponent.h"
 #include "PartyDelegateContext.h"
 #include "SceneViewport.h"
+#include "Spellbook.h"
+#include "MySpell.h"
 #include "StorageContainer.h"
 #include "StorageInventory.h"
 #include "StoreInventory.h"
@@ -186,6 +188,9 @@ void ARTSPawn::PossessedBy(AController* newController)
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnUnitSlotSelected().AddUObject(this, &ARTSPawn::OnUnitSlotSelected);
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnItemSlotDroppedInventoryEvent.AddDynamic(this, &ARTSPawn::OnItemSlotDroppedFromInventory);
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnItemSlotDroppedStorageEvent.AddDynamic(this, &ARTSPawn::OnItemSlotDroppedFromStorage);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedEvent.AddDynamic(this, &ARTSPawn::OnSkillSlotDropped);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedSBEvent.AddDynamic(this, &ARTSPawn::OnSkillSlotDroppedSB);
+      
       GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
          controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnSkillSlotSelected);
          controllerRef->GetHUDManager()->GetIngameHUD()->GetEquipHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnEquipmentSlotSelected);
@@ -293,12 +298,12 @@ void ARTSPawn::CreateSelectionRect()
             {
                if(IsValid(allyInSelectRect))
                {
-                  if(allyInSelectRect->IsEnabled() && !allyInSelectRect->GetSelected())
+                  if(allyInSelectRect->IsEnabled() && !allyInSelectRect->GetUnitSelected())
                   {
                      {
                         if(IsUnitOnScreen(allyInSelectRect))
                         {
-                           allyInSelectRect->SetSelected(true);
+                           allyInSelectRect->SetUnitSelected(true);
                            if(!controllerRef->GetBasePlayer()->GetFocusedUnit()) {
                               controllerRef->GetBasePlayer()->SetFocusedUnit(allyInSelectRect);
                            }
@@ -628,7 +633,7 @@ void ARTSPawn::TabSingleSelection() const
          }
       }
       // Don't have any hero selected? Select the first one available
-      controllerRef->GetBasePlayer()->GetHeroes()[0]->SetSelected(true);
+      controllerRef->GetBasePlayer()->GetHeroes()[0]->SetUnitSelected(true);
       controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.Broadcast(false);
    }
 }
@@ -650,7 +655,7 @@ void ARTSPawn::UseAbility(int abilityIndex)
       if(controllerRef->GetHitResultUnderCursor(SELECTABLE_BY_CLICK_CHANNEL, false, hitRes))
          for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies)
          {
-            ally->GetAllyAIController()->GetManualSpellComponent()->SetupSpellTargeting(hitRes);
+            ally->GetAllyAIController()->GetManualSpellComponent()->OnSpellConfirmInput(hitRes);
          }
    }
 }
@@ -677,7 +682,7 @@ void ARTSPawn::SelectControlGroup(int controlIndex)
       for(auto ally : controlGroups[controlIndex])
       {
          if(ally.IsValid())
-            ally->SetSelected(true);
+            ally->SetUnitSelected(true);
       }
    }
 
@@ -726,7 +731,9 @@ void ARTSPawn::MakeControlGroup(int controlGroupIndex)
 void ARTSPawn::OnSkillSlotSelected(int skillIndex)
 {
    if(const AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit()) {
-      if(UManualSpellComponent* manualSpellComp = focusedUnit->FindComponentByClass<UManualSpellComponent>()) { manualSpellComp->PressedCastSpell(skillIndex); }
+      if(UManualSpellComponent* manualSpellComp = focusedUnit->GetUnitController()->FindComponentByClass<UManualSpellComponent>()) {
+         manualSpellComp->PressedCastSpell(skillIndex);
+      }
    }
 }
 
@@ -735,7 +742,7 @@ void ARTSPawn::OnUnitSlotSelected(AUnit* unitSelected)
    if(IsValid(unitSelected))
    {
       controllerRef->GetBasePlayer()->ClearSelectedAllies();
-      unitSelected->SetSelected(true);
+      unitSelected->SetUnitSelected(true);
       controllerRef->GetBasePlayer()->SetFocusedUnit(unitSelected);
       controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.Broadcast(true);
    }
@@ -843,3 +850,37 @@ void ARTSPawn::OnItemSlotDroppedFromStorage(int dragSlotIndex, int dropSlotIndex
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemsSwapped().Broadcast(*dragPack, *dropPack, dragSlotIndex, dropSlotIndex);
 }
 
+void ARTSPawn::OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex)
+{
+   if(AUserInput* CPCRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+   {
+      if(ABasePlayer* basePlayer = CPCRef->GetBasePlayer())
+      {
+         if(AUnit* focusedUnit = basePlayer->GetFocusedUnit())
+         {
+            URTSAbilitySystemComponent* focusedABComp = focusedUnit->GetAbilitySystemComponent();
+            const TSubclassOf<UMySpell> droppedSpell  = focusedABComp->GetSpellAtSlot(dropSlotIndex);
+
+            focusedABComp->SetSpellAtSlot(focusedABComp->GetSpellAtSlot(dragSlotIndex), dropSlotIndex);
+            focusedABComp->SetSpellAtSlot(droppedSpell, dragSlotIndex);
+         }
+      }
+   }
+}
+
+void ARTSPawn::OnSkillSlotDroppedSB(int dragSlotIndex, int dropSlotIndex)
+{
+   if(AUserInput* CPCRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+   {
+      if(ABasePlayer* basePlayer = CPCRef->GetBasePlayer())
+      {
+         if(ABaseHero* focusedHero = Cast<ABaseHero>(basePlayer->GetFocusedUnit()))
+         {
+            const TSubclassOf<UMySpell> spellClass = focusedHero->GetSpellBook()->GetSpellFromIndex(dragSlotIndex);
+            URTSAbilitySystemComponent* focusedABComp = focusedHero->GetAbilitySystemComponent();
+
+            focusedABComp->SetSpellAtSlot(spellClass, dropSlotIndex);
+         }
+      }
+   }
+}

@@ -62,9 +62,9 @@ void ABaseHero::BeginPlay()
    LoadSavedTriggers();
    GiveItemAbilities();
 
-   spellbook = USpellBook::CreateSpellBook(this);
-   SpellHUDEvents::OnSpellLearnedEvent.AddUObject(this, &ABaseHero::OnSpellLearned);
-   SpellHUDEvents::OnSpellUpgradedEvent.AddUObject(this, &ABaseHero::OnSpellUpgraded);
+   spellbook = USpellBook::CreateSpellBook(this, spellbookClass);
+   SpellGameContext::OnSpellLearnedEvent.AddUObject(this, &ABaseHero::OnSpellLearned);
+   SpellGameContext::OnSpellUpgradedEvent.AddUObject(this, &ABaseHero::OnSpellUpgraded);
 }
 
 void ABaseHero::Tick(float deltaSeconds)
@@ -143,7 +143,6 @@ void ABaseHero::SetCurrentExp(int amount)
    while(currentExp >= expForLevel)
    {
       currentExp = currentExp - expForLevel;
-      expForLevel *= NEXT_EXP_MULTIPLIER;
       LevelUp();
    }
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnExpGained().Broadcast(amount);
@@ -159,6 +158,7 @@ void ABaseHero::LevelUp_Implementation()
    attPoints += 5;
    skillPoints += 1;
    statComponent->SetUnitLevel(statComponent->GetUnitLevel() + 1);
+   expForLevel *= NEXT_EXP_MULTIPLIER;
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroLevelUp().Broadcast(this);
 }
 
@@ -223,7 +223,7 @@ void ABaseHero::Unequip(const int unequipSlot) const
 void ABaseHero::OnSpellCasted(TSubclassOf<UMySpell> spellCasted)
 {
    // If the spell was triggered due to using an item, then consume that item.
-   if(currentItemId.GetValue())
+   if(currentItemId.IsSet())
    {
       if(backpack->FindItem(currentItemId.GetValue()) != INDEX_NONE)
       {
@@ -234,14 +234,20 @@ void ABaseHero::OnSpellCasted(TSubclassOf<UMySpell> spellCasted)
    }
 }
 
-void ABaseHero::OnSpellLearned(TSubclassOf<UMySpell> spellLearned)
+void ABaseHero::OnSpellLearned(const ABaseHero& heroThatLearnedSpell, TSubclassOf<UMySpell> spellLearned)
 {
-   --skillPoints;
+   if(&heroThatLearnedSpell == this)
+   {
+      --skillPoints;
+   }
 }
 
-void ABaseHero::OnSpellUpgraded(TSubclassOf<UMySpell> spellLearned)
+void ABaseHero::OnSpellUpgraded(const ABaseHero& heroThatLearnedSpell, TSubclassOf<UMySpell> spellLearned)
 {
-   --skillPoints;
+   if(&heroThatLearnedSpell == this)
+   {
+      --skillPoints;
+   }
 }
 
 void ABaseHero::LoadSavedTriggers() const
@@ -306,9 +312,9 @@ void ABaseHero::OnEquipped(int equipID, bool isEquip) const
       statComponent->ModifyStats<true>(statComponent->GetMechanicBaseValue(x.mech) + x.defaultValue * (2 * isEquip - 1), x.mech);
 }
 
-void ABaseHero::SetSelected(bool value)
+void ABaseHero::SetUnitSelected(bool value)
 {
-   Super::SetSelected(value);
+   Super::SetUnitSelected(value);
    if(value)
    {
       controllerRef->GetBasePlayer()->selectedHeroes.AddUnique(this);

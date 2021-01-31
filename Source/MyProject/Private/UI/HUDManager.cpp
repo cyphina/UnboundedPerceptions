@@ -278,6 +278,7 @@ bool AHUDManager::ApplyHUD(uint8 newState, bool bEnableClickEvents, bool canOpen
    return true;
 }
 
+// TODO: Handle widget tracking for Hide and Add cases
 void AHUDManager::HideWidgetOnScreen(UMyUserWidget* widgetToApply) const
 {
    if(widgetToApply->GetClass()->IsChildOf(UAnimHudWidget::StaticClass()))

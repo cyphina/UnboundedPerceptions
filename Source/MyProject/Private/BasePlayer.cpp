@@ -32,11 +32,11 @@ void ABasePlayer::ClearSelectedAllies()
 {
    while(selectedAllies.Num() > 0)
    {
-      selectedAllies[0]->SetSelected(false);
+      selectedAllies[0]->SetUnitSelected(false);
    }
 
    if(focusedUnit) {
-      focusedUnit->SetSelected(false);
+      focusedUnit->SetUnitSelected(false);
       focusedUnit = nullptr;
    }
 }
@@ -121,7 +121,7 @@ void ABasePlayer::OnAllyActiveChanged(AAlly* allyRef, bool isActive)
       allies.Add(allyRef);
    else {
       allies.RemoveSingle(allyRef);
-      if(allyRef->GetSelected()) { selectedAllies.RemoveSingle(allyRef); }
+      if(allyRef->GetUnitSelected()) { selectedAllies.RemoveSingle(allyRef); }
    }
 }
 

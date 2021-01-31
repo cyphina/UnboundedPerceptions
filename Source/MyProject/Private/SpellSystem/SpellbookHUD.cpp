@@ -10,6 +10,7 @@
 #include "Border.h"
 #include "HUDManager.h"
 #include "MySpell.h"
+#include "PartyDelegateContext.h"
 #include "RTSIngameWidget.h"
 #include "SpellBook.h"
 #include "SpellbookSlot.h"
@@ -21,23 +22,34 @@ void USpellbookHUD::NativeOnInitialized()
    Super::NativeOnInitialized();
    btnClose->OnClicked.AddDynamic(this, &USpellbookHUD::CloseWidget);
    btnSpendSkillPoints->OnClicked.AddDynamic(this, &USpellbookHUD::ChangeBackgroundColorWhenLeveling);
-   SpellHUDEvents::OnSpellLearnedEvent.AddUObject(this, &USpellbookHUD::OnSpellLearned);
-   SpellHUDEvents::OnSpellUpgradedEvent.AddUObject(this, &USpellbookHUD::OnSpellUpgraded);
+   SpellGameContext::OnSpellLearnedEvent.AddUObject(this, &USpellbookHUD::OnSpellLearned);
+   SpellGameContext::OnSpellUpgradedEvent.AddUObject(this, &USpellbookHUD::OnSpellUpgraded);
+   GetOwningLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnHeroLevelUp().AddUObject(this, &USpellbookHUD::OnHeroLeveledUp);
 }
 
 bool USpellbookHUD::OnWidgetAddToViewport_Implementation()
 {
    heroWithOpenSpellbookRef = CPC->GetBasePlayer()->selectedHeroes[0];
-   if(heroWithOpenSpellbookRef) {
+   if(heroWithOpenSpellbookRef && heroWithOpenSpellbookRef->GetSpellBook())
+   {
       ResetHUDForNewHero();
       return true;
    }
    return false;
 }
 
+void USpellbookHUD::OnWidgetRemovedFromViewport_Implementation()
+{
+   heroWithOpenSpellbookRef->OnLevelUp().RemoveAll(this);
+   if(bLevelingUp)
+   {
+      ChangeBackgroundColorWhenLeveling();
+   }
+}
+
 void USpellbookHUD::CloseWidget()
 {
-   hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Spellbook));
+   hudManagerRef->HideHUD(EHUDs::HS_Spellbook);
 }
 
 void USpellbookHUD::ChangeBackgroundColorWhenLeveling()
@@ -48,16 +60,27 @@ void USpellbookHUD::ChangeBackgroundColorWhenLeveling()
    bLevelingUp ? hudBackground->SetBrushColor(red) : hudBackground->SetBrushColor(paleBlue);
 }
 
-FReply USpellbookHUD::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+int USpellbookHUD::GetNumValidItems() const
 {
-   if(bLevelingUp)
+   return heroWithOpenSpellbookRef->GetSpellBook()->GetAvailableSpells().Num();
+}
+
+FReply USpellbookHUD::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+   if(GetSelectedSlotIndex() != INDEX_NONE)
    {
-     Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
-   } else
-   {
-      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("SpellbookHUD", "PressUpgradeButtonSpellLevelup", "Press the upgrade button before levling up a spell!"));
+      if(bLevelingUp)
+      {
+         Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+      } else
+      {
+         URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("SpellbookHUD", "PressUpgradeButtonSpellLevelup",
+                                                                       "Press the upgrade button before levling up a spell!"));
+         SetSelectedSlotIndex(INDEX_NONE);
+      }
+      return FReply::Handled();
    }
-   return FReply::Handled();
+   return FReply::Unhandled();
 }
 
 void USpellbookHUD::ResetHUDForNewHero()
@@ -72,12 +95,21 @@ void USpellbookHUD::ResetHUDForNewHero()
 void USpellbookHUD::UpdateSpellSlotImageAndLevelText()
 {
    const int numAvailableSpellsToUpdate = FMath::Min(heroWithOpenSpellbookRef->GetSpellBook()->GetAvailableSpells().Num(), spellbookSlots.Num());
-   for(int i = 0; i < numAvailableSpellsToUpdate; ++i) {
-      if(TSubclassOf<UMySpell> spell = heroWithOpenSpellbookRef->GetSpellBook()->GetAvailableSpells()[i]) {
+   for(int i = 0; i < numAvailableSpellsToUpdate; ++i)
+   {
+      if(TSubclassOf<UMySpell> spell = heroWithOpenSpellbookRef->GetSpellBook()->GetAvailableSpells()[i])
+      {
          const auto spellDefaultObj = spell.GetDefaultObject();
          spellbookSlots[i]->SetSlotImage(spellDefaultObj->GetSpellDefaults().image);
          spellbookSlots[i]->UpdateSlotLevelText();
       }
+   }
+   
+   for(int i = numAvailableSpellsToUpdate; i < spellbookSlots.Num(); ++i)
+   {
+      spellbookSlots[i]->SetSlotImage(defaultSlotTexture);
+      spellbookSlots[i]->UpdateSlotLevelText();
+      spellbookSlots[i]->SetColorAndOpacity(FColor::White);
    }
 }
 
@@ -85,7 +117,8 @@ void USpellbookHUD::ColorUnknownSpellSlots()
 {
    TArray<int> unknownSpellIndices = heroWithOpenSpellbookRef->GetSpellBook()->GetUnknownSpellIndices();
 
-   for(const int index : unknownSpellIndices) {
+   for(const int index : unknownSpellIndices)
+   {
       if(index < spellbookSlots.Num()) { spellbookSlots[index]->SetColorAndOpacity(tooHighLevelSpellColor); }
    }
 }
@@ -94,7 +127,8 @@ void USpellbookHUD::ColorLearnableSpellSlots()
 {
    TArray<int> learnableSpellIndices = heroWithOpenSpellbookRef->GetSpellBook()->GetLearnableSpellsIndices();
 
-   for(const int index : learnableSpellIndices) {
+   for(const int index : learnableSpellIndices)
+   {
       if(index < spellbookSlots.Num()) { spellbookSlots[index]->SetColorAndOpacity(canLearnSpellColor); }
    }
 }
@@ -102,25 +136,59 @@ void USpellbookHUD::ColorLearnableSpellSlots()
 void USpellbookHUD::ColorLearnedSpellIndices()
 {
    TArray<int> learnedSpellIndices = heroWithOpenSpellbookRef->GetSpellBook()->GetLearnedSpellIndices();
-   for(const int index : learnedSpellIndices) {
+   for(const int index : learnedSpellIndices)
+   {
       if(index < spellbookSlots.Num()) { spellbookSlots[index]->SetColorAndOpacity(FColor::White); }
    }
 }
 
-void USpellbookHUD::OnSpellLearned(TSubclassOf<UMySpell> spellClass)
+void USpellbookHUD::OnSpellLearned(const ABaseHero& heroThatLearnedSpell, TSubclassOf<UMySpell> spellClass)
 {
-   USpellBook*  spellBook                 = heroWithOpenSpellbookRef->GetSpellBook();
-   const uint32 slotWithLearnedSpellIndex = spellBook->GetAvailableSpells().Find(spellClass);
-   spellbookSlots[slotWithLearnedSpellIndex]->SetColorAndOpacity(FColor::White);
-   spellbookSlots[slotWithLearnedSpellIndex]->UpdateSlotLevelText();
+   if(heroWithOpenSpellbookRef && heroWithOpenSpellbookRef == &heroThatLearnedSpell)
+   {
+      USpellBook*  spellBook                 = heroWithOpenSpellbookRef->GetSpellBook();
+      const uint32 slotWithLearnedSpellIndex = spellBook->GetAvailableSpells().Find(spellClass);
+      spellbookSlots[slotWithLearnedSpellIndex]->SetColorAndOpacity(FColor::White);
+      spellbookSlots[slotWithLearnedSpellIndex]->UpdateSlotLevelText();
 
-   for(int i = spellBook->GetLearnableSpellsIndices().Num(); i > 0; ++i) {
-      if(spellBook->GetSpellFromIndex(i).GetDefaultObject()->GetSpellDefaults().PreReqs.Contains(spellClass)) spellbookSlots[i]->SetColorAndOpacity(canLearnSpellColor);
+      for(int i = 0; i < spellBook->GetLearnableSpellsIndices().Num(); ++i)
+      {
+         if(spellBook->GetSpellFromIndex(i).GetDefaultObject()->GetSpellDefaults().PreReqs.Contains(spellClass))
+            spellbookSlots[i]->SetColorAndOpacity(canLearnSpellColor);
+      }
+
+      GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+      {
+         txtPoints->SetText(FText::AsNumber(heroWithOpenSpellbookRef->GetSkillPoints()));
+      });
    }
 }
 
-void USpellbookHUD::OnSpellUpgraded(TSubclassOf<UMySpell> spellClass)
+void USpellbookHUD::OnSpellUpgraded(const ABaseHero& heroThatLearnedSpell, TSubclassOf<UMySpell> spellClass)
 {
-   const uint32 slotWithUpgradedSpellIndex = heroWithOpenSpellbookRef->GetSpellBook()->GetAvailableSpells().Find(spellClass);
-   spellbookSlots[slotWithUpgradedSpellIndex]->UpdateSlotLevelText();
+   if(heroWithOpenSpellbookRef && heroWithOpenSpellbookRef == &heroThatLearnedSpell)
+   {
+      const uint32 slotWithUpgradedSpellIndex = heroWithOpenSpellbookRef->GetSpellBook()->GetAvailableSpells().Find(spellClass);
+      spellbookSlots[slotWithUpgradedSpellIndex]->UpdateSlotLevelText();
+   }
+
+   GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+   {
+      txtPoints->SetText(FText::AsNumber(heroWithOpenSpellbookRef->GetSkillPoints()));
+   });
+}
+
+void USpellbookHUD::OnHeroLeveledUp(ABaseHero* heroThatLeveledUp)
+{
+   if(heroThatLeveledUp && GetHeroRef())
+   {
+      if(heroThatLeveledUp == GetHeroRef())
+      {
+         GetWorld()->GetTimerManager().SetTimerForNextTick(
+         [this]()
+         {
+            txtPoints->SetText(FText::AsNumber(heroWithOpenSpellbookRef->GetSkillPoints()));
+         });
+      }
+   }
 }

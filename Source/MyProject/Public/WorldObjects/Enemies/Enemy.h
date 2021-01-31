@@ -47,7 +47,7 @@ class MYPROJECT_API AEnemy : public AUnit
    const TSet<AUnit*>* GetVisibleEnemies_Impl() const override;
    const TSet<AUnit*>* GetAllies_Impl() const override;
 
-   void SetSelected(bool value) override final;
+   void SetUnitSelected(bool value) override final;
 
  protected:
    void BeginPlay() override;

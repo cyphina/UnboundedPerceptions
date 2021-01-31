@@ -28,16 +28,22 @@ void UUpSpellTargeting_Area::ManualSetSpellTarget(UTargetComponent* targetComp, 
 
 void UUpSpellTargeting_Area::AdjustCastPosition(USpellCastComponent* spellCastComp, TSubclassOf<UMySpell> spellClass, UTargetComponent* targetComp) const
 {
-   if(AActor* targetActor = targetComp->GetTargetUnit()) {
-      spellCastComp->AdjustCastingPosition(spellClass, targetActor);
-   } else {
+   if(targetComp->IsTargetingUnit())
+   {
+      if(AActor* targetActor = targetComp->GetTargetUnit())
+      {
+         spellCastComp->AdjustCastingPosition(spellClass, targetActor);
+      }
+   }
+   else
+   {
       spellCastComp->AdjustCastingPosition(spellClass, targetComp->GetTargetLocation());
    }
 }
 
 bool UUpSpellTargeting_Area::ShouldTryAdjustPosition(AUnit* spellCaster) const
 {
-   return !(FVector::Dist2D(spellCaster->GetTargetComponent()->GetTargetLocation(), spellCaster->GetActorLocation()) < 5.f);
+   return !(FVector::Dist2D(spellCaster->GetTargetComponent()->GetTargetLocationVisit(), spellCaster->GetActorLocation()) < 5.f);
 }
 
 UEnvQuery* UUpSpellTargeting_Area::GetDefaultQueryForTargetingScheme(UDA_DefaultTargetingScheme* scheme) const
