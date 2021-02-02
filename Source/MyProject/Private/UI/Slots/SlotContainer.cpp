@@ -3,6 +3,12 @@
 #include "MyProject.h"
 #include "SlotContainer.h"
 
+void USlotContainer::NativePreConstruct()
+{
+   Super::NativePreConstruct();
+
+}
+
 FReply USlotContainer::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
    if(selectedSlotIndex != INDEX_NONE)

@@ -32,10 +32,11 @@ class MYPROJECT_API ABasePlayer : public APlayerState
 
    void BeginPlay() override;
 
-public:
+ public:
    static const int MAX_NUM_HEROES = 4;
 
    const TArray<ABaseHero*>& GetHeroes() const { return heroes; }
+   const TArray<AAlly*>& GetAllies() const { return allies; }
 
    UFUNCTION(BlueprintCallable, Category = "Party")
    AUnit* GetFocusedUnit() const { return focusedUnit; }
@@ -60,10 +61,6 @@ public:
     */
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    ABaseHero* heroInBlockingInteraction;
-
-   /**Returns list of ALIVE heroes and friendly units.*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-   TArray<AAlly*> allies;
 
    /**List of all alive selected allies*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
@@ -136,18 +133,22 @@ public:
    UFUNCTION(BlueprintCallable)
    void SetMoney(int newMoneyVal);
 
-protected:
+ protected:
    /**
     * List of active heroes.
     * Party leader should always be at slot 0.
     */
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
+   UPROPERTY(BlueprintReadOnly, Category = "Party")
    TArray<ABaseHero*> heroes;
+
+   /**Returns list of ALIVE heroes and friendly units.*/
+   UPROPERTY(BlueprintReadOnly, Category = "Party")
+   TArray<AAlly*> allies;
 
    /** Enemy or hero unit that we see detailed information in our actionbar */
    AUnit* focusedUnit = nullptr;
 
-private:
+ private:
    void OnHeroSelected(ABaseHero* heroRef);
    void OnAllySelected(AAlly* allyRef);
    void OnUnitSelected(AUnit* unitRef);

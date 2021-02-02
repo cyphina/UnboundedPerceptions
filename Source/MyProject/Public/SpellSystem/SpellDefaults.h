@@ -22,13 +22,13 @@ public:
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
    FText Name = FText();
 
-   /** Level required for each spell upgrade */
-   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
-   TArray<int> LevelReq = TArray<int>();
-
    /** Number of times we can upgrade this spell */
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
    int MaxLevel = 0;
+   
+   /** Level required for each spell upgrade */
+   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
+   TArray<int> LevelReq = TArray<int>();
 
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
    TArray<float> Cooldown = TArray<float>();

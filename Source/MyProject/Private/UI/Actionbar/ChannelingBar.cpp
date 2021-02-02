@@ -19,10 +19,13 @@ FText UChannelingBar::GetChannelingName()
    AUnit* channelingUnit = controllerRef->GetBasePlayer()->GetFocusedUnit();
    if(IsValid(channelingUnit))
    {
-      const TSubclassOf<UMySpell> channeledSpellClass = channelingUnit->GetUnitController()->FindComponentByClass<USpellCastComponent>()->GetCurrentSpell();
-      if(IsValid(channeledSpellClass))
+      if(USpellCastComponent* spellCastComp = channelingUnit->GetUnitController()->FindComponentByClass<USpellCastComponent>())
       {
-         return channeledSpellClass.GetDefaultObject()->GetSpellName();
+         const TSubclassOf<UMySpell> channeledSpellClass = spellCastComp->GetCurrentSpell();
+         if(IsValid(channeledSpellClass))
+         {
+            return channeledSpellClass.GetDefaultObject()->GetSpellName();
+         }
       }
    }
    return FText();

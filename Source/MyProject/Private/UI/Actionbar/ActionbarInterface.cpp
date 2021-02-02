@@ -18,7 +18,7 @@ void UActionbarInterface::NativeOnInitialized()
          &UActionbarInterface::OnFocusedUnitChanged);
       partyContext->OnAllySelectedDelegate.AddDynamic(this, &UActionbarInterface::OnAllySelected);
       partyContext->OnAllyDeselectedDelegate.AddDynamic(this, &UActionbarInterface::OnAllyDeselected);
-      partyContext->OnGroundSelectedDelegate.AddDynamic(this, &UActionbarInterface::OnGroundSelected);
+      partyContext->OnAllAlliesClearedDelegate.AddDynamic(this, &UActionbarInterface::OnAllAlliesCleared);
    }
 }
 
@@ -66,7 +66,7 @@ void UActionbarInterface::OnAllyDeselected(AAlly* deselectedAlly)
    }
 }
 
-void UActionbarInterface::OnGroundSelected()
+void UActionbarInterface::OnAllAlliesCleared()
 {
    SetVisibility(ESlateVisibility::Collapsed);
 }

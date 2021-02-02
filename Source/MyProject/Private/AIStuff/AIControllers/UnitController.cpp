@@ -21,6 +21,7 @@
 #include "RTSAttackExecution.h"
 #include "RTSDeathExecution.h"
 #include "RTSMoveExecution.h"
+
 #include "RTSStateComponent.h"
 #include "SpellDataLibrary.h"
 
@@ -35,6 +36,7 @@ void AUnitController::OnPossess(APawn* InPawn)
 {
    Super::OnPossess(InPawn);
    ownerRef = Cast<AUnit>(GetPawn());
+   GetUnitOwner()->OnUnitDamageReceived().AddUObject(this, &AUnitController::OnDamageReceived);
 }
 
 void AUnitController::SetupTurnPointTimeline()
@@ -72,8 +74,6 @@ void AUnitController::BeginPlay()
       SetupTurnPointTimeline();
       SetupTurnActorTimeline();
    }
-
-   GetUnitOwner()->OnUnitDamageReceived().AddUObject(this, &AUnitController::OnDamageReceived);
 }
 
 void AUnitController::Tick(float deltaSeconds)
@@ -107,9 +107,14 @@ void AUnitController::Attack()
 void AUnitController::OnDamageReceived(const FUpDamage& d)
 {
    GetUnitOwner()->GetStatComponent()->ModifyStats<false>(GetUnitOwner()->GetStatComponent()->GetVitalCurValue(EVitals::Health) - d.damage, EVitals::Health);
+
    if(GetUnitOwner()->GetStatComponent()->GetVitalAdjValue(EVitals::Health) < 0)
    {
       Die();
+   }
+   else if(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) >= d.targetUnit->GetStatComponent()->GetVitalBaseValue(EVitals::Health))
+   {
+      d.sourceUnit->GetStatComponent()->ModifyStats<false>(d.sourceUnit->GetStatComponent()->GetVitalBaseValue(EVitals::Health), EVitals::Health);
    }
 }
 
@@ -132,7 +137,7 @@ EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation)
       Stop();
 
       if(ABasePlayer* basePlayer = GetWorld()->GetFirstPlayerController()->GetPlayerState<ABasePlayer>())
-      {    
+      {
          FVector shiftedLocation = newLocation; // Shift location a little bit if we're moving multiple units so they can group together ok
          if(basePlayer->selectedAllies.Num() > 1)
          {

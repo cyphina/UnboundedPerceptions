@@ -26,7 +26,7 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsConte
 {
    GENERATED_BODY()
 
-public:
+ public:
    ARTSGameState();
 
    UFUNCTION(BlueprintCallable)
@@ -45,15 +45,6 @@ public:
    UFUNCTION()
    void UpdateGameSpeed(float newSpeedMultiplier);
 
-   /** Registers an ally in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
-   void RegisterFriendlyUnit(AAlly* friendlyUnit) override;
-   /** Registers an enemy in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
-   void RegisterEnemyUnit(AEnemy* enemyUnit) override;
-   /** Removes an ally in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
-   void UnRegisterFriendlyUnit(AAlly* friendlyUnit) override;
-   /** Removes an enemy in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
-   void UnRegisterEnemyUnit(AEnemy* enemyUnit) override;
-
    const FUpGameClock* GetGameClock() const { return clock.Get(); }
 
    void AddGameTime(FUpTime timeToAdd, FUpDate daysToAdd);
@@ -63,14 +54,22 @@ public:
 
    FUpdateGameSpeed OnGameSpeedUpdated() const override { return UpdateGameSpeedDelegate; }
 
-protected:
+ protected:
    void Tick(float deltaSeconds) override;
    void BeginPlay() override;
 
-private:
-
+ private:
    void OnAllyActiveChanged(AAlly* allyRef, bool isActive);
    void OnEnemyActiveChanged(AEnemy* enemyRef, bool isActive);
+
+   /** Registers an ally in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
+   void RegisterFriendlyUnit(AAlly* friendlyUnit) override;
+   /** Registers an enemy in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
+   void RegisterEnemyUnit(AEnemy* enemyUnit) override;
+   /** Removes an ally in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
+   void UnRegisterFriendlyUnit(AAlly* friendlyUnit) override;
+   /** Removes an enemy in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
+   void UnRegisterEnemyUnit(AEnemy* enemyUnit) override;
 
    /** As units get killed off due to level unload, we need to make sure these data structures are on good shape when we resume playing in the next level */
    UFUNCTION()

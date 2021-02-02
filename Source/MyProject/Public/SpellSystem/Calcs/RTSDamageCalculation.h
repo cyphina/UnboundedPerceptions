@@ -17,7 +17,11 @@ class MYPROJECT_API URTSDamageCalculation : public UGameplayEffectExecutionCalcu
 {
    GENERATED_UCLASS_BODY()
 
- protected:    
+ public:
+   /** Create some text to display the damage dealt to this unit */
+   static void ShowDamageDealt(const FUpDamage& damageInfo);
+
+ protected:
    void BroadcastDamageEvents(FUpDamage& d) const;
 
    /** Damage a target from a unit source*/
@@ -37,9 +41,6 @@ class MYPROJECT_API URTSDamageCalculation : public UGameplayEffectExecutionCalcu
     * AUnit declares this as a friend function so we can access the setter methods
     */
    void CalculateDamageReduction(FUpDamage& damage, FGameplayTagContainer& effects) const;
-
-   /** Create some text to display the damage dealt to this unit */
-   static void ShowDamageDealt(UWorld* worldRef, const FUpDamage& damageInfo);
 
    /** Helper function to quickly calculate attack and defense bonuses due to affinity and resistance */
    static void CalculatePiercing(AUnit* unit, FUpDamage& d, bool isAtt);

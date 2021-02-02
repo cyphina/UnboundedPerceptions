@@ -17,11 +17,12 @@ class MYPROJECT_API UDIRender : public UTextRenderComponent
 {
    GENERATED_BODY()
 
-   FTimeline tL;
+ protected:
+   UPROPERTY(EditDefaultsOnly)
+   UCurveFloat* jumpCurve;
 
- public:
-   FVector            start, end;
-   TWeakObjectPtr<APawn> cameraPawnRef;
+   UPROPERTY(EditDefaultsOnly)
+   UMaterialInstance* defaultTextMaterial;
 
    UPROPERTY(EditDefaultsOnly)
    float jumpHeight = 80.f;
@@ -29,10 +30,14 @@ class MYPROJECT_API UDIRender : public UTextRenderComponent
    UPROPERTY(EditDefaultsOnly)
    float textSize = 35.f;
 
+   UPROPERTY(EditDefaultsOnly)
+   FRotator rotationOffset = FRotator(0, -180, 0);
+	
    UDIRender();
    void BeginPlay() override final;
    void TickComponent(float deltaSeconds, ELevelTick tickType, FActorComponentTickFunction* thisTickFunction) override final;
 
+ private:
    // Function called from the timeline on a tick
    UFUNCTION()
    void TimelineEffect(float val);
@@ -40,4 +45,9 @@ class MYPROJECT_API UDIRender : public UTextRenderComponent
    // Function called when timeline ends
    UFUNCTION()
    void OnTimelineFinished();
+
+   FTimeline tL;
+
+   FVector               start, end;
+   TWeakObjectPtr<APawn> cameraPawnRef;
 };

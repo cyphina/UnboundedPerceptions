@@ -1,9 +1,7 @@
 #include "MyProject.h"
 #include "Inventory.h"
-
 #include "ActionSlot.h"
 #include "Backpack.h"
-#include "BaseHero.h"
 #include "ForEach.h"
 #include "InventoryView.h"
 #include "ItemDelegateContext.h"
@@ -77,7 +75,7 @@ void UInventory::UpdateSlot(int slotIndex)
 
 void UInventory::ResetSlot(UActionSlot* actionSlot)
 {
-   actionSlot->SetSlotImage(defaultSlotTexture);
+   actionSlot->SetSlotImage(nullptr);
    actionSlot->SetInfo(FText::GetEmpty());
 }
 

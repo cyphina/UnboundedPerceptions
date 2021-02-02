@@ -248,7 +248,7 @@ void UDefaultCursorClickFunctionality::SelectSingleUnitUnderClick()
       {
          // We selected the ground
          pawnRef->ChangeCursor(ECursorStateEnum::Select);
-         controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnGroundSelectedDelegate.Broadcast();
+         controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllAlliesClearedDelegate.Broadcast();
       }
    }
 }

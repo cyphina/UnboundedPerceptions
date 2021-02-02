@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "RTSDamageCalculation.h"
 #include "WorldObjects/Unit.h"
@@ -79,7 +77,8 @@ void URTSDamageCalculation::ReceiveEffects(FUpDamage& d, FGameplayTagContainer& 
 
 void URTSDamageCalculation::PrintDamageCalcsBeforeProcessing(FUpDamage& d, const int damageRange)
 {
-   if(CVARDamageDebugging.GetValueOnGameThread()) {
+   if(CVARDamageDebugging.GetValueOnGameThread())
+   {
       GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald,
                                        FString::Printf(TEXT("Printing information for unit %s"), *d.sourceUnit->GetStatComponent()->GetName()));
       GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, FString::Printf(TEXT("Rolled %d in damage roll"), damageRange));
@@ -89,7 +88,8 @@ void URTSDamageCalculation::PrintDamageCalcsBeforeProcessing(FUpDamage& d, const
 
 void URTSDamageCalculation::PrintPreDamageReductionValues(FUpDamage& d)
 {
-   if(CVARDamageDebugging.GetValueOnGameThread()) {
+   if(CVARDamageDebugging.GetValueOnGameThread())
+   {
       GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, FString("Piercing value: ") + FString::FromInt(d.piercing));
       GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, FString("Damage b4 piercing: ") + FString::FromInt(d.damage));
    }
@@ -117,7 +117,8 @@ void URTSDamageCalculation::CalculateDamageReduction(FUpDamage& d, FGameplayTagC
    d.damage                         = d.damage * (100 + percentageConversion) / 100;
    const float critRoll             = FMath::FRandRange(1, 100);
 
-   if(CVARDamageDebugging.GetValueOnGameThread()) {
+   if(CVARDamageDebugging.GetValueOnGameThread())
+   {
       GEngine->AddOnScreenDebugMessage(
           -1, 5.0f, FColor::Red,
           FString("Calculated CritPerc! ") +
@@ -126,13 +127,15 @@ void URTSDamageCalculation::CalculateDamageReduction(FUpDamage& d, FGameplayTagC
    }
 
    /// 2 - Piercing also increase critical chance
-   if(critRoll + percentageConversion > 100 - d.sourceUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Critical_Chance)) {
+   if(critRoll + percentageConversion > 100 - d.sourceUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Critical_Chance))
+   {
       d.crit = true;
 
       PrintCritOccurrence(d);
 
       d.damage = d.damage * d.sourceUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Critical_Damage);
-   } else
+   }
+   else
       d.crit = false;
    ///--End of piercing application
 
@@ -149,65 +152,102 @@ void URTSDamageCalculation::CalculateDamageReduction(FUpDamage& d, FGameplayTagC
 void URTSDamageCalculation::CalculatePiercing(AUnit* unit, FUpDamage& d, bool isAtt)
 {
    // Apply effects from buffs and weapons
-   if(d.element.GetTagName() == "Combat.Element.Arcane") {
+   if(d.element.GetTagName() == "Combat.Element.Arcane")
+   {
       d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Arcane_Aff) * isAtt -
                     !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Arcane_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Blood") {
+   }
+   else if(d.element.GetTagName() == "Combat.Element.Blood")
+   {
       d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Blood_Aff) * isAtt -
                     !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Blood_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Chaos") {
+   }
+   else if(d.element.GetTagName() == "Combat.Element.Chaos")
+   {
       d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Chaos_Aff) * isAtt -
                     !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Chaos_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Dark") {
+   }
+   else if(d.element.GetTagName() == "Combat.Element.Dark")
+   {
       d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Darkness_Aff) * isAtt -
                     !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Darkness_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Earth") {
+   }
+   else if(d.element.GetTagName() == "Combat.Element.Earth")
+   {
       d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Earth_Aff) * isAtt -
                     !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Earth_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Electric") {
+   }
+   else if(d.element.GetTagName() == "Combat.Element.Electric")
+   {
       d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Electric_Aff) * isAtt -
                     !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Electric_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Ethereal") {
+   }
+   else if(d.element.GetTagName() == "Combat.Element.Ethereal")
+   {
       d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Ethereal_Aff) * isAtt -
                     !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Ethereal_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Fire") {
+   }
+   else if(d.element.GetTagName() == "Combat.Element.Fire")
+   {
       d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Fire_Aff) * isAtt -
                     !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Fire_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Force") {
+   }
+   else if(d.element.GetTagName() == "Combat.Element.Force")
+   {
       d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Physical_Aff) * isAtt -
                     !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Physical_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Light") {
+   }
+   else if(d.element.GetTagName() == "Combat.Element.Light")
+   {
       d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Light_Aff) * isAtt -
                     !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Light_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Poison") {
+   }
+   else if(d.element.GetTagName() == "Combat.Element.Poison")
+   {
       d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Poison_Aff) * isAtt -
                     !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Poison_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Water") {
+   }
+   else if(d.element.GetTagName() == "Combat.Element.Water")
+   {
       d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Water_Aff) * isAtt -
                     !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Water_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Wind") {
+   }
+   else if(d.element.GetTagName() == "Combat.Element.Wind")
+   {
       d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Wind_Aff) * isAtt -
                     !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Wind_Resist);
    }
 }
 
-void URTSDamageCalculation::ShowDamageDealt(UWorld* worldRef, const FUpDamage& damageInfo)
+void URTSDamageCalculation::ShowDamageDealt(const FUpDamage& damageInfo)
 {
+   if(!damageInfo.targetUnit)
+   {
+      UE_LOG(LogTemp, Error, TEXT("Attempting to deal damage to no target..."));
+      return;     
+   }
+
+   UWorld* worldRef = damageInfo.targetUnit->GetWorld();
    UDIRender* tRC = NewObject<UDIRender>(damageInfo.targetUnit,
                                          Cast<AUserInput>(worldRef->GetGameInstance()->GetFirstLocalPlayerController(worldRef))->GetHUDManager()->damageIndicatorClass);
-   if(tRC) {
+   if(tRC)
+   {
       tRC->AttachToComponent(damageInfo.targetUnit->GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
       tRC->RegisterComponent();
 
       if(damageInfo.accuracy > 100)
+      {
          tRC->Text = (NSLOCTEXT("Combat", "Dodge", "Dodged!"));
+      }
       else
+      {
          tRC->Text = FText::AsNumber(damageInfo.damage);
+      }
 
       if(damageInfo.crit)
-         tRC->SetWorldSize(tRC->textSize * 2);
-      else
-         tRC->SetWorldSize(tRC->textSize);
+      {
+         tRC->SetRelativeScale3D(FVector(2.f));
+      }
 
       tRC->SetTextRenderColor(USpellDataLibrary::elementalMap[damageInfo.element]);
       tRC->SetHorizontalAlignment(EHorizTextAligment::EHTA_Center);

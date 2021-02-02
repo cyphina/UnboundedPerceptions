@@ -149,7 +149,7 @@ void UVisionSubsystem::UpdateVisiblePlayerUnits()
    visiblePlayerUnits.Empty(visiblePlayerUnits.Num());
    const TSet<const URTSVisionComponent*> enemyVisionToIterateOver = GetEnemyVisionComps();
 
-   ParallelFor(gameStateRef->GetAllEnemyUnits().Num(), [this, &enemyVisionToIterateOver](const int32 curIndx) {
+   ParallelFor(enemyVisionToIterateOver.Num(), [this, &enemyVisionToIterateOver](const int32 curIndx) {
       const URTSVisionComponent* enemyVision = enemyVisionToIterateOver[FSetElementId::FromInteger(curIndx)];
       enemyVision->visionMutex.ReadLock();
 
@@ -198,7 +198,8 @@ void UVisionSubsystem::MakeEnemiesInVisionVisible()
    for(auto enemy : visibleEnemies) {
       if(!enemy->GetCapsuleComponent()->IsVisible()) {
          // Can't change flags like visibility in threads
-         enemy->GetCapsuleComponent()->SetVisibility(true, true);
+         // enemy->GetCapsuleComponent()->SetVisibility(true, true);
+         enemy->SetActorHiddenInGame(false);
          enemy->GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECollisionResponse::ECR_Block); // not selectable by clicks
       }
    }
@@ -208,7 +209,8 @@ void UVisionSubsystem::MakeEnemiesOutOfVisionInvisible(TSet<AUnit*>& lastVisible
 {
    for(AUnit* visibleEnemy : lastVisibleEnemies) {
       if(!visibleEnemies.Contains(visibleEnemy)) {
-         visibleEnemy->GetCapsuleComponent()->SetVisibility(false, true);
+         // visibleEnemy->GetCapsuleComponent()->SetVisibility(false, true);
+         visibleEnemy->SetActorHiddenInGame(true);
          visibleEnemy->GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECollisionResponse::ECR_Ignore);
       }
    }

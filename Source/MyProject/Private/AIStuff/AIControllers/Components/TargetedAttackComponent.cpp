@@ -26,12 +26,14 @@
 #include "UpStatComponent.h"
 
 UTargetedAttackComponent::UTargetedAttackComponent()
-{   attackAnimClass = UNullAttackAnim::StaticClass();
+{
+   attackAnimClass = UNullAttackAnim::StaticClass();
 }
 
 void UTargetedAttackComponent::BeginAttack(AUnit* target)
 {
-   if(USpellDataLibrary::IsAttackable(target->GetAbilitySystemComponent()) && !USpellDataLibrary::IsStunned(agent->GetAbilitySystemComponent())) {
+   if(USpellDataLibrary::IsAttackable(target->GetAbilitySystemComponent()) && !USpellDataLibrary::IsStunned(agent->GetAbilitySystemComponent()))
+   {
       agent->GetUnitController()->Stop();
       agent->GetTargetComponent()->SetTarget(target);
       if(URTSStateComponent* stateComp = agent->FindComponentByClass<URTSStateComponent>())
@@ -66,7 +68,8 @@ void UTargetedAttackComponent::OnUnitAttackSwingDone()
    OnAttackSwingDoneEffect();
    const FAIMessage msg(UnitMessages::AIMessage_Hit, agent);
    FAIMessage::Send(agent->GetUnitController(), msg);
-   if(USpellDataLibrary::IsInvisible(agent->GetAbilitySystemComponent())) {
+   if(USpellDataLibrary::IsInvisible(agent->GetAbilitySystemComponent()))
+   {
       agent->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
    }
    GetWorld()->GetTimerManager().SetTimer(attackUpdateHandle, this, &UTargetedAttackComponent::FollowAndTryAttackTarget, AttackTimerThreshold(), true, 0.f);
@@ -75,24 +78,35 @@ void UTargetedAttackComponent::OnUnitAttackSwingDone()
 void UTargetedAttackComponent::InitializeAttackParams()
 {
    attackAnimationPlaying = false;
-   if(AttemptReposition()) {
+   if(AttemptReposition())
+   {
       bMvingTwdTarg = true;
-   } else {
+   }
+   else
+   {
       bMvingTwdTarg = false;
    }
 }
 
 void UTargetedAttackComponent::FollowAndTryAttackTarget()
 {
-   if(bMvingTwdTarg) {
+   if(bMvingTwdTarg)
+   {
       if(CheckAndHandleCancelConditions()) return;
-   } else {
-      if(CheckAndHandleCancelConditions()) {
-         if(!attackAnimationPlaying) {
-            if(HandlePositionalAdjustments()) {
+   }
+   else
+   {
+      if(CheckAndHandleCancelConditions())
+      {
+         if(!attackAnimationPlaying)
+         {
+            if(HandlePositionalAdjustments())
+            {
                if(readyToAttack) PlayAttackAnimation();
             }
-         } else {
+         }
+         else
+         {
             LockOnTarget();
             CheckAndHandleTargetOutsideAnimationRange();
          }
@@ -102,7 +116,8 @@ void UTargetedAttackComponent::FollowAndTryAttackTarget()
 
 void UTargetedAttackComponent::SearchForTargetInRange()
 {
-   if(AUnit* closestUnit = UUpAIHelperLibrary::FindClosestUnit(agent, agent->GetVisionComponent()->GetPossibleVisibleEnemies())) {
+   if(AUnit* closestUnit = UUpAIHelperLibrary::FindClosestUnit(agent, agent->GetVisionComponent()->GetPossibleVisibleEnemies()))
+   {
       BeginAttack(closestUnit);
       GetWorld()->GetTimerManager().ClearTimer(targetSearchHandle);
    }
@@ -122,11 +137,13 @@ void UTargetedAttackComponent::OnFinishReposition()
 
 bool UTargetedAttackComponent::CheckAndHandleCancelConditions() const
 {
-   if(UNLIKELY(CheckTargetVisionLost())) {
+   if(UNLIKELY(CheckTargetVisionLost()))
+   {
       TransitionToChaseState();
       return false;
    }
-   if(UNLIKELY(!CheckTargetAttackable())) {
+   if(UNLIKELY(!CheckTargetAttackable()))
+   {
       StopAgent();
       return false;
    }
@@ -155,14 +172,20 @@ void UTargetedAttackComponent::StopAgent() const
 
 bool UTargetedAttackComponent::HandlePositionalAdjustments()
 {
-   if(AttemptReposition()) { return true; }
+   if(AttemptReposition())
+   {
+      return true;
+   }
    return false;
 }
 
 void UTargetedAttackComponent::PlayAttackAnimation()
 {
    attackAnimationPlaying = true;
-   attackAnim->PlayAttackAnimation();
+   if(attackAnim)
+   {
+      attackAnim->PlayAttackAnimation();
+   }
 }
 
 float UTargetedAttackComponent::AttackTimerThreshold() const
@@ -181,22 +204,29 @@ void UTargetedAttackComponent::OnUnitStopped()
 
 void UTargetedAttackComponent::LockOnTarget() const
 {
-   if(!UUpAIHelperLibrary::IsFacingTarget(agent, AgentTargetLocation())) { agent->SetActorRotation(UUpAIHelperLibrary::FindLookRotation(agent, AgentTargetLocation())); }
+   if(!UUpAIHelperLibrary::IsFacingTarget(agent, AgentTargetLocation()))
+   {
+      agent->SetActorRotation(UUpAIHelperLibrary::FindLookRotation(agent, AgentTargetLocation()));
+   }
 }
 
 void UTargetedAttackComponent::OnAttackSwingDoneEffect()
 {
-   switch(agent->GetCombatInfo()->combatStyle) {
-      case ECombatType::Melee: {
+   switch(agent->GetCombatInfo()->combatStyle)
+   {
+      case ECombatType::Melee:
+      {
          agent->GetAbilitySystemComponent()->ApplyDamageToTarget(agent->GetTargetComponent()->GetTargetUnit()->GetAbilitySystemComponent(),
                                                                  FDamageScalarStruct(0, 100, 0, 0, 0), GetAttackElement());
          break;
       }
-      case ECombatType::Ranged: {
+      case ECombatType::Ranged:
+      {
          CreateRangedProjectile(FDamageScalarStruct(0, 0, 0, 100, 0));
          break;
       }
-      case ECombatType::Magic: {
+      case ECombatType::Magic:
+      {
          CreateRangedProjectile(FDamageScalarStruct(0, 0, 100, 0, 0));
          break;
       }
@@ -205,16 +235,21 @@ void UTargetedAttackComponent::OnAttackSwingDoneEffect()
 
 void UTargetedAttackComponent::HandleAutoAttackModifierTags()
 {
-   
 }
 
 FGameplayTag UTargetedAttackComponent::GetAttackElement() const
 {
    // TODO: Flesh this out more...
-   if(agent->GetIsEnemy()) {
+   if(agent->GetIsEnemy())
+   {
       return Cast<AEnemy>(agent)->GetInitialStats().element;
-   } else {
-      if(ABaseHero* hero = Cast<ABaseHero>(agent)) { UItemFunctionLibrary::GetEquipInfo(hero->GetEquipment()->GetWeaponId()).stats.element; }
+   }
+   else
+   {
+      if(ABaseHero* hero = Cast<ABaseHero>(agent))
+      {
+         UItemFunctionLibrary::GetEquipInfo(hero->GetEquipment()->GetWeaponId()).stats.element;
+      }
    }
    return FGameplayTag::RequestGameplayTag("Combat.Element.None");
 }
@@ -230,10 +265,14 @@ void UTargetedAttackComponent::CreateRangedProjectile(FDamageScalarStruct projec
 
 bool UTargetedAttackComponent::CheckAndHandleTargetOutsideAnimationRange()
 {
-   if(!UUpAIHelperLibrary::IsTargetInRange(agent, AgentTargetLocation(), AgentBufferAttackRange())) {
-      attackAnim->StopAttackAnimation();
-      attackAnimationPlaying = false;
-      return false;
+   if(!UUpAIHelperLibrary::IsTargetInRange(agent, AgentTargetLocation(), AgentBufferAttackRange()))
+   {
+      if(attackAnim)
+      {
+         attackAnim->StopAttackAnimation();
+         attackAnimationPlaying = false;
+         return false;
+      }
    }
    return true;
 }

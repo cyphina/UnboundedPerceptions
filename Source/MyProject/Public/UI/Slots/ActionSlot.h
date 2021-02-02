@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -12,11 +10,13 @@
  * Slot a use can press to trigger some kind of effect
  */
 
+class UBorder;
 class AUserInput;
 class UButton;
 class UTextBlock;
 class UImage;
 class UToolTipWidget;
+class UActionSlotStyle;
 
 UCLASS(Abstract)
 class MYPROJECT_API UActionSlot : public UUserWidget
@@ -33,6 +33,9 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    virtual void SetSlotImage(UTexture2D* image);
 
    UFUNCTION(BlueprintCallable, Category = "Action")
+   void SetSlotStyle(TSubclassOf<UActionSlotStyle> newStyle);
+
+   UFUNCTION(BlueprintCallable, Category = "Action")
    void SetInfo(FText newInfo);
 
    UFUNCTION(BlueprintCallable, Category = "Action")
@@ -41,11 +44,9 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    UFUNCTION(BlueprintCallable, Category = "Action")
    int GetSlotIndex() const { return slotIndex; }
 
- protected:
-   /** Sets up the text to be displayed for a tooltip*/
-   UFUNCTION()
-   void OnHover();
+   void SetIsEnabled(bool bInIsEnabled) override;
 
+ protected:
    /** Setup information on the tooltip widget*/
    UFUNCTION()
    virtual void ShowDesc(UToolTipWidget* tooltip) PURE_VIRTUAL(UActionSlot::ShowDesc, );
@@ -53,8 +54,15 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
    FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
+   void NativePreConstruct() override;
    void NativeOnInitialized() override;
    void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent);
+   void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
+
+   UActionSlotStyle* GetStyleCDO() const;
+
+   UPROPERTY(Meta = (BindWidget))
+   UBorder* actionBorder;
 
    // An image covering the slot (used for items, spells, etc.)
    UPROPERTY(Meta = (BindWidget))
@@ -66,7 +74,10 @@ class MYPROJECT_API UActionSlot : public UUserWidget
 
    UPROPERTY(BlueprintReadOnly)
    AUserInput* CPCRef;
-	
+
+   UPROPERTY(EditANywhere, BlueprintReadOnly)
+   TSubclassOf<UActionSlotStyle> style;
+
    /**
     * Can only be edited in the designer or in the "CreateWidget" node since it shouldn't be modified anywhere else but there.
     * When using loops to create many slots use the setter in the "CreateWidget" node and when there's a few set number of slots

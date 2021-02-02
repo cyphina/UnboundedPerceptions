@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "GameplayTags.h"
 
 class UEnvQueryTest;
 

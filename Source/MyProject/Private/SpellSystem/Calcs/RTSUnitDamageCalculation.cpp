@@ -87,13 +87,7 @@ void URTSUnitDamageCalculation::DamageTarget(FUpDamage& d, FGameplayTagContainer
    {
       d.damage *= -1;
 
-      // Kill the unit if it's health drops below 0 and stop us from attacking anymore (if we were auto attacking)
-      // TODO: Change this to a delegate on UnitController
-      if(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) <= 0)
-      {
-         if(!USpellDataLibrary::IsImmortal(d.targetUnit->GetAbilitySystemComponent())) { d.targetUnit->GetUnitController()->Die(); }
-      }
-
+      // URTSDamageCalculation::ShowDamageDealt(d);
       BroadcastDamageEvents(d);
    }
 }

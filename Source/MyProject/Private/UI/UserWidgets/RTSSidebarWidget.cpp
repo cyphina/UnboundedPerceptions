@@ -23,7 +23,7 @@ void URTSSidebarWidget::NativeConstruct()
    cpcRef->GetBasePlayer()->partyUpdatedEvent.AddUObject(this, &URTSSidebarWidget::UpdatePartyInformation);
    cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateSingleHeroSelect);
    cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllyDeselectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateHeroToggleDeselected);
-   cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnGroundSelectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateDeselectAllHeroes);
+   cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllAlliesClearedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateDeselectAllHeroes);
    StartDisplay(width, height);
    browser->ScriptEventEmitter.AddDynamic(this, &URTSSidebarWidget::HandleBluEvent);
 }
@@ -43,7 +43,10 @@ void URTSSidebarWidget::UpdatePartyInformation()
             attributeSet->statUpdatedEvent.Remove(handles.Key);
             attributeSet->baseStatUpdatedEvent.Remove(handles.Value);
          } else
+         {
             break;
+         }
+         ++index;
       }
 
       // Create the string to send to the browser
@@ -87,7 +90,7 @@ void URTSSidebarWidget::UpdateHeroToggleDeselected(AAlly* deselectedHeroRef)
    if(deselectedHeroRef->GetClass()->IsChildOf(ABaseHero::StaticClass()))
    {
       // RVO should optimize this
-      FString heroInfoString = MakeSingleHeroSelectedJson(deselectedHeroRef);
+      const FString heroInfoString = MakeSingleHeroSelectedJson(deselectedHeroRef);
       UpdateInformation("updateHeroToggleDeselect", heroInfoString);
    }
 }

@@ -20,6 +20,7 @@
 #include "WorldObject.h"
 #include "Unit.generated.h"
 
+class UWidgetComponent;
 class URTSDamageEffect;
 class UUpStatComponent;
 class URTSVisionComponent;
@@ -162,6 +163,9 @@ protected:
    UTargetComponent* targetComponent;
 
    UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+   UWidgetComponent* damageIndicatorWidget;
+   
+   UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
    URTSAbilitySystemComponent* abilitySystemComponent;
 
    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
@@ -205,6 +209,7 @@ private:
    void SetupHealthbarComponent();
    void SetupCharacterCollision() const;
    void SetupMovementComponent() const;
+   void SetupDamageInidicatorContainerWidget();
    void RemoveArrowComponent() const;
 
    void SetupAbilitiesAndStats();

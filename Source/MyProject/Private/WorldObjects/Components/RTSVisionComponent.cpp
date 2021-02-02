@@ -10,16 +10,19 @@ URTSVisionComponent::URTSVisionComponent()
    PrimaryComponentTick.bCanEverTick = true;
    UPrimitiveComponent::SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
    UPrimitiveComponent::SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-   SphereRadius = 1000.f;
+   SphereRadius          = 1000.f;
    bUseAttachParentBound = true;
    UPrimitiveComponent::SetCollisionObjectType(TRIGGER_CHANNEL);
 }
 
 bool URTSVisionComponent::IsUnitVisible() const
 {
-   if(unitOwnerRef->GetIsEnemy()) {
+   if(unitOwnerRef->GetIsEnemy())
+   {
       return Cast<ARTSGameState>(GetWorld()->GetGameState())->GetVisibleEnemies().Contains(unitOwnerRef);
-   } else {
+   }
+   else
+   {
       return Cast<ARTSGameState>(GetWorld()->GetGameState())->GetVisiblePlayerUnits().Contains(unitOwnerRef);
    }
 }
@@ -27,6 +30,7 @@ bool URTSVisionComponent::IsUnitVisible() const
 void URTSVisionComponent::BeginPlay()
 {
    Super::BeginPlay();
+   unitOwnerRef = Cast<AUnit>(GetOwner());
    OnComponentBeginOverlap.AddDynamic(this, &URTSVisionComponent::OnVisionSphereOverlap);
    OnComponentEndOverlap.AddDynamic(this, &URTSVisionComponent::OnVisionSphereEndOverlap);
    SetCollisionProfileName("FriendlyVision");
@@ -35,24 +39,34 @@ void URTSVisionComponent::BeginPlay()
 void URTSVisionComponent::OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex,
                                                 bool fromSweep, const FHitResult& sweepRes)
 {
-   if(GetOwnerRole() == ROLE_Authority) {
-      if(AUnit* collidedUnit = Cast<AUnit>(otherActor)) {
-         if(collidedUnit->GetIsEnemy() != Cast<AUnit>(GetOwner())->GetIsEnemy()) {
+   if(GetOwnerRole() == ROLE_Authority)
+   {
+      if(AUnit* collidedUnit = Cast<AUnit>(otherActor))
+      {
+         if(collidedUnit->GetIsEnemy() != Cast<AUnit>(GetOwner())->GetIsEnemy())
+         {
             possibleVisibleEnemies.Add(collidedUnit);
-            if(URTSVisionComponent* visionComp = collidedUnit->FindComponentByClass<URTSVisionComponent>()) { visionComp->IncVisionCount(); }
+            if(URTSVisionComponent* visionComp = collidedUnit->FindComponentByClass<URTSVisionComponent>())
+            {
+               visionComp->IncVisionCount();
+            }
          }
       }
    }
 }
 
-
 void URTSVisionComponent::OnVisionSphereEndOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex)
 {
-   if(GetOwnerRole() == ROLE_Authority) {
-      if(otherActor) {
-         if(AUnit* collidedUnit = Cast<AUnit>(otherActor)) {
-            if(AUnit* ownerRef = Cast<AUnit>(GetOwner())) {
-               if(collidedUnit->GetIsEnemy() != ownerRef->GetIsEnemy()) {
+   if(GetOwnerRole() == ROLE_Authority)
+   {
+      if(otherActor)
+      {
+         if(AUnit* collidedUnit = Cast<AUnit>(otherActor))
+         {
+            if(AUnit* ownerRef = Cast<AUnit>(GetOwner()))
+            {
+               if(collidedUnit->GetIsEnemy() != ownerRef->GetIsEnemy())
+               {
                   possibleVisibleEnemies.Remove(collidedUnit);
                   URTSVisionComponent* enemyVisionComponent = collidedUnit->FindComponentByClass<URTSVisionComponent>();
                   enemyVisionComponent->DecVisionCount();

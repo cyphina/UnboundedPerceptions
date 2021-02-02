@@ -58,10 +58,6 @@ const TSet<AUnit*>* AEnemy::GetAllies_Impl() const
 void AEnemy::BeginPlay()
 {
    Super::BeginPlay();
-   auto gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
-
-   gameStateRef->RegisterEnemyUnit(this);
-
    // Setup status as customized in level editor
    InitializeStats();
    SetActorHiddenInGame(true); //Set hidden by default so won't be revealed by vision
@@ -100,12 +96,6 @@ void AEnemy::SetEnabled(bool bEnabled)
    Super::SetEnabled(bEnabled);
    if(UPartyDelegateContext* store = Cast<ULocalPlayer>(controllerRef->Player)->GetSubsystem<UPartyDelegateContext>()) {
       store->OnEnemyActiveChanged().Broadcast(this, bEnabled);
-   }
-
-   if(bEnabled) {
-      controllerRef->GetGameState()->RegisterEnemyUnit(this);
-   } else {
-      controllerRef->GetGameState()->UnRegisterEnemyUnit(this);
    }
 }
 

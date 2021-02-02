@@ -107,7 +107,7 @@ void USpellbookHUD::UpdateSpellSlotImageAndLevelText()
    
    for(int i = numAvailableSpellsToUpdate; i < spellbookSlots.Num(); ++i)
    {
-      spellbookSlots[i]->SetSlotImage(defaultSlotTexture);
+      spellbookSlots[i]->SetSlotImage(nullptr);
       spellbookSlots[i]->UpdateSlotLevelText();
       spellbookSlots[i]->SetColorAndOpacity(FColor::White);
    }

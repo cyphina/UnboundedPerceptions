@@ -1,6 +1,8 @@
 #include "MyProject.h"
 #include "ActionSlot.h"
 
+#include "ActionSlotStyle.h"
+#include "Border.h"
 #include "SlotContainer.h"
 #include "TextBlock.h"
 #include "UserInput.h"
@@ -17,7 +19,27 @@ UActionSlot::UActionSlot(const FObjectInitializer& o) : UUserWidget(o)
 
 void UActionSlot::SetSlotImage(UTexture2D* image)
 {
-   actionImage->SetBrushFromTexture(image, false);
+   if(image)
+   {
+      actionImage->SetBrushFromTexture(image, false);
+   }
+   else
+   {
+      if(GetStyleCDO())
+      {
+         actionImage->SetBrushFromTexture(GetStyleCDO()->GetDefaultSlotImage(), false);
+      }
+   }
+}
+
+void UActionSlot::SetSlotStyle(TSubclassOf<UActionSlotStyle> newStyle)
+{
+   if(newStyle)
+   {
+      style = newStyle;
+      actionImage->SetBrushFromTexture(GetStyleCDO()->GetDefaultSlotImage(), false);
+      actionBorder->SetBrush(GetStyleCDO()->GetDefaultBrush());
+   }
 }
 
 void UActionSlot::SetInfo(FText newInfo)
@@ -48,6 +70,56 @@ void UActionSlot::NativeOnInitialized()
    CPCRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
 }
 
+void UActionSlot::SetIsEnabled(bool bInIsEnabled)
+{
+   Super::SetIsEnabled(bInIsEnabled);
+   if(bIsEnabled)
+   {
+      if(GetStyleCDO())
+      {
+         actionBorder->SetBrush(GetStyleCDO()->GetDisabledBrush());
+      }
+   }
+   else
+   {
+      actionBorder->SetBrush(GetStyleCDO()->GetDefaultBrush());
+   }
+}
+
+UActionSlotStyle* UActionSlot::GetStyleCDO() const
+{
+   return style ? style.GetDefaultObject() : nullptr;
+}
+
+FReply UActionSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+   if(GetStyleCDO())
+   {
+      actionBorder->SetBrush(GetStyleCDO()->GetPressedBrush());
+   }
+
+   if(InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
+   {
+      return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply;
+   }
+
+   return FReply::Handled();
+}
+
+FReply UActionSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+   if(USlotContainer* slotContainer = UUWidgetHelperLibrary::GetUserWidgetParent<USlotContainer>(this))
+   {
+      slotContainer->SetSelectedSlotIndex(slotIndex);
+   }
+
+   if(GetStyleCDO())
+   {
+      actionBorder->SetBrush(GetStyleCDO()->GetDefaultBrush());
+   }
+   return FReply::Unhandled();
+}
+
 void UActionSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
    UToolTipWidget* ttWidget = CreateWidget<UToolTipWidget>(CPCRef, CPCRef->GetHUDManager()->toolTipWidgetClass);
@@ -59,25 +131,16 @@ void UActionSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointer
    }
 }
 
-FReply UActionSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+void UActionSlot::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
-   if(InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
+   if(GetStyleCDO())
    {
-      return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply;
+      actionBorder->SetBrush(GetStyleCDO()->GetDefaultBrush());
    }
-   return FReply::Handled();
 }
 
-FReply UActionSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+void UActionSlot::NativePreConstruct()
 {
-   if(USlotContainer* slotContainer = UUWidgetHelperLibrary::GetUserWidgetParent<USlotContainer>(this))
-   {
-      slotContainer->SetSelectedSlotIndex(slotIndex);
-   }
-
-   return FReply::Unhandled();
-}
-
-void UActionSlot::OnHover()
-{
+   Super::NativePreConstruct();
+   SetSlotStyle(style);
 }

@@ -21,6 +21,7 @@ class AUserInput;
 class UMainWidget;
 class AShopNPC;
 class UDIRender;
+class URTSDamageNumberContainer;
 
 /**
  * @brief Provides functionality to toggle HUDs on and off, and provides a place to get references to all the HUDs
@@ -72,6 +73,9 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<UDIRender> damageIndicatorClass;
 
+   UPROPERTY(EditDefaultsOnly)
+   TSubclassOf<URTSDamageNumberContainer> damageIndicatorContainerClass;
+   
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<UToolTipWidget> toolTipWidgetClass;
 

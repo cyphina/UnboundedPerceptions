@@ -29,7 +29,8 @@ void AAlly::Tick(float deltaSeconds)
 {
    Super::Tick(deltaSeconds);
 
-   if(!controllerRef->IsInputKeyDown(EKeys::LeftShift) && GetState() == EUnitState::STATE_IDLE && !commandQueue.IsEmpty()) {
+   if(!controllerRef->IsInputKeyDown(EKeys::LeftShift) && GetState() == EUnitState::STATE_IDLE && !commandQueue.IsEmpty())
+   {
       TFunction<void()> command;
       commandQueue.Dequeue(command);
       --queueCount;
@@ -51,15 +52,21 @@ void AAlly::PossessedBy(AController* newAllyControllerRef)
 void AAlly::SetEnabled(bool bEnabled)
 {
    Super::SetEnabled(bEnabled);
-   if(ULocalPlayer* player = Cast<ULocalPlayer>(controllerRef->Player)) { player->GetSubsystem<UPartyDelegateContext>()->OnAllyActiveChanged().Broadcast(this, bEnabled); }
+   if(ULocalPlayer* player = Cast<ULocalPlayer>(controllerRef->Player))
+   {
+      player->GetSubsystem<UPartyDelegateContext>()->OnAllyActiveChanged().Broadcast(this, bEnabled);
+   }
 }
 
 void AAlly::SetUnitSelected(bool value)
 {
    Super::SetUnitSelected(value);
-   if(value) {
+   if(value)
+   {
       controllerRef->GetBasePlayer()->selectedAllies.AddUnique(this);
-   } else {
+   }
+   else
+   {
       controllerRef->GetBasePlayer()->selectedAllies.RemoveSingle(this);
    }
 }
@@ -84,11 +91,13 @@ bool AAlly::GetOverlappingObjects(TArray<FHitResult>& hits)
 
 void AAlly::QueueAction(TFunction<void()> actionToQueue)
 {
-   if(queueCount < 20) {
+   if(queueCount < 20)
+   {
       GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Emerald, TEXT("SUCESSFUL QUEUE"));
       commandQueue.Enqueue(actionToQueue);
       ++queueCount;
-   } else
+   }
+   else
       URTSIngameWidget::NativeDisplayHelpText(GetWorld(), FILLED_QUEUE_TEXT);
 }
 

@@ -109,6 +109,16 @@ public:
    virtual void SpawnEnemies(FName id, int level, int numberToSpawn, FVector spawnLocation);
 
    /**
+    * @brief Used to debug the damage indicator
+    * @param unitName 
+    * @param damageAmount 
+    * @param bCrit 
+    */
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void DamageUnit(FString unitName, int damageAmount = 1, bool bCrit = false);
+
+
+   /**
     * Allows us to toggle on categories for CSV
     * Probably best to use Superluminal or FramePro
    */

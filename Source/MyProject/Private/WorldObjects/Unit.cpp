@@ -14,6 +14,7 @@
 
 #include "UI/Healthbar/HealthbarComp.h"
 #include "UI/HUDManager.h"
+#include "UI/UserWidgets/RTSDamageNumberContainer.h"
 
 #include "SpellSystem/RTSAbilitySystemComponent.h"
 #include "SpellSystem/MySpell.h"
@@ -22,7 +23,6 @@
 
 #include "MyCharacterMovementComponent.h"
 
-#include "BrainComponent.h"
 #include "RTSStateComponent.h"
 #include "RTSVisionComponent.h"
 
@@ -30,7 +30,7 @@
 #include "TargetComponent.h"
 
 AUnit::AUnit(const FObjectInitializer& objectInitializer) :
-   Super(objectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(CharacterMovementComponentName))
+    Super(objectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(CharacterMovementComponentName))
 {
    PrimaryActorTick.bCanEverTick = true;
    AutoPossessAI                 = EAutoPossessAI::PlacedInWorldOrSpawned;
@@ -44,6 +44,7 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
 
    visionComponent = CreateDefaultSubobject<URTSVisionComponent>(TEXT("VisionRadius"));
    visionComponent->SetupAttachment(RootComponent);
+   visionComponent->SetRelativeLocation(FVector::ZeroVector);
 
    selectionCircleDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));
    selectionCircleDecal->SetupAttachment(RootComponent);
@@ -53,6 +54,8 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
    SetupCharacterCollision();
 
    SetupMovementComponent();
+
+   SetupDamageInidicatorContainerWidget();
 
    combatInfo              = MakeUnique<UpCombatInfo>();
    combatInfo->combatStyle = ECombatType::Melee;
@@ -72,7 +75,10 @@ void AUnit::SetupHealthbarComponent()
    healthBar->SetDrawAtDesiredSize(true);
 
    ConstructorHelpers::FClassFinder<UUserWidget> healthBarWig(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/Hitpoints/HealthbarWidget"));
-   if(healthBarWig.Succeeded()) { healthBar->SetWidgetClass(healthBarWig.Class); }
+   if(healthBarWig.Succeeded())
+   {
+      healthBar->SetWidgetClass(healthBarWig.Class);
+   }
 }
 
 void AUnit::SetupCharacterCollision() const
@@ -91,6 +97,18 @@ void AUnit::SetupMovementComponent() const
    GetCharacterMovement()->bOrientRotationToMovement = true;
 }
 
+void AUnit::SetupDamageInidicatorContainerWidget()
+{
+   damageIndicatorWidget = CreateDefaultSubobject<UWidgetComponent>("DamageNumbers");
+   damageIndicatorWidget->SetWidgetSpace(EWidgetSpace::Screen);
+   damageIndicatorWidget->SetDrawSize(FVector2D(200, 200));
+   damageIndicatorWidget->SetPivot(FVector2D(0.5f, 0.5f));
+   damageIndicatorWidget->SetManuallyRedraw(false);
+   damageIndicatorWidget->SetRedrawTime(0.f);
+   damageIndicatorWidget->SetInitialSharedLayerName("DamageIndicatorLayer");
+   damageIndicatorWidget->SetInitialLayerZOrder(1);
+}
+
 void AUnit::RemoveArrowComponent() const
 {
    // Destroy arrow component so there isn't some random arrow sticking out of our units
@@ -106,12 +124,12 @@ void AUnit::SetupAbilitiesAndStats()
    {
       // ! Make sure owner is player controller else the whole ability system fails to function (maybe it should be set to RTSPawn I'll have to double check)
       // This sets up the owner and avatar actors for our ability component.
-      GetAbilitySystemComponent()->InitAbilityActorInfo(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(), this); 
+      GetAbilitySystemComponent()->InitAbilityActorInfo(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(), this);
       GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed);
 
       for(TSubclassOf<UMySpell> ability : GetAbilitySystemComponent()->GetAbilities())
       {
-         if(ability.GetDefaultObject()) 
+         if(ability.GetDefaultObject())
          {
             // If a client tries to give himself ability assert fails
             GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(ability.GetDefaultObject(), 1));
@@ -146,8 +164,13 @@ void AUnit::BeginPlay()
       controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
    }
 
-   StoreUnitHeight();
+   GetWorld()->GetTimerManager().SetTimerForNextTick(
+       [this]() {
+          damageIndicatorWidget->SetWidgetClass(controllerRef->GetHUDManager()->damageIndicatorContainerClass);
+          Cast<URTSDamageNumberContainer>(damageIndicatorWidget->GetUserWidgetObject())->SetOwningUnit(this);
+       });
 
+   StoreUnitHeight();
    AlignSelectionCircleWithGround();
 
    if(const ARTSGameState* gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState()))
@@ -192,8 +215,10 @@ void AUnit::SetEnabled(bool bEnabled)
       GetCharacterMovement()->GravityScale = 1;
       GetCapsuleComponent()->SetSimulatePhysics(false); // can't move w/o physics
       bCanAffectNavigationGeneration = true;
-      unitProperties.bIsEnabled = true;
-   } else
+      unitProperties.bIsEnabled      = true;
+      damageIndicatorWidget->UnregisterComponent();
+   }
+   else
    {
       GetUnitController()->Stop();
       GetCapsuleComponent()->SetVisibility(false, true);
@@ -204,7 +229,8 @@ void AUnit::SetEnabled(bool bEnabled)
       GetCapsuleComponent()->SetSimulatePhysics(true); // but will drop if physics isn't set to true
       GetCapsuleComponent()->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
       bCanAffectNavigationGeneration = false;
-      unitProperties.bIsEnabled = false;
+      unitProperties.bIsEnabled      = false;
+      damageIndicatorWidget->RegisterComponent();
    }
 }
 

@@ -50,7 +50,7 @@ public:
    FOnUnitSelected OnUnitSelectedDelegate;
 
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnGroundSelected OnGroundSelectedDelegate;
+   FOnGroundSelected OnAllAlliesClearedDelegate;
 
 protected:
    void Initialize(FSubsystemCollectionBase& Collection) override;

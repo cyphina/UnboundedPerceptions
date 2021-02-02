@@ -5,6 +5,7 @@
 #include "SlotContainer.generated.h"
 
 class UActionSlot;
+class UActionSlotStyle;
 
 DECLARE_EVENT_OneParam(USlotContainer, FOnSlotSelected, int);
 
@@ -34,12 +35,11 @@ public:
    }
 
 protected:
-   /** Handles bubbling slot logic */
+   void NativePreConstruct() override;
+
+   /** Handles tunneling slot logic */
    FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
-   UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category="Slot Presets")
-   UTexture2D* defaultSlotTexture;
-   
    TSubclassOf<UActionSlot> actionSlotClass;
 
 private:

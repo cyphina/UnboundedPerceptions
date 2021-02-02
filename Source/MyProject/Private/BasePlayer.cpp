@@ -39,6 +39,10 @@ void ABasePlayer::ClearSelectedAllies()
       focusedUnit->SetUnitSelected(false);
       focusedUnit = nullptr;
    }
+
+   if(ULocalPlayer* localPlayer = GetWorld()->GetFirstLocalPlayerFromController()) {
+      localPlayer->GetSubsystem<UPartyDelegateContext>()->OnAllAlliesClearedDelegate.Broadcast();
+   }
 }
 
 void ABasePlayer::UpdateParty(TArray<ABaseHero*> newHeroes)
