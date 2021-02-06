@@ -33,7 +33,17 @@ void URTSVisionComponent::BeginPlay()
    unitOwnerRef = Cast<AUnit>(GetOwner());
    OnComponentBeginOverlap.AddDynamic(this, &URTSVisionComponent::OnVisionSphereOverlap);
    OnComponentEndOverlap.AddDynamic(this, &URTSVisionComponent::OnVisionSphereEndOverlap);
-   SetCollisionProfileName("FriendlyVision");
+   if(unitOwnerRef)
+   {
+      if(!unitOwnerRef->GetIsEnemy())
+      {
+         SetCollisionProfileName("FriendlyVision");
+      }
+      else
+      {
+         SetCollisionProfileName("EnemyVision");
+      }
+   }
 }
 
 void URTSVisionComponent::OnVisionSphereOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex,

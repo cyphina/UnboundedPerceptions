@@ -193,7 +193,7 @@ void USaveLoadClass::SetupAlliedUnits()
       if(AAlly* spawnedNPCAlly = UpResourceManager::FindTriggerObjectInWorld<AAlly>(*finishedTalkNPC.name.ToString(), controllerRef->GetWorld())) {
          spawnedNPCAlly->SetActorTransform(finishedTalkNPC.actorTransform);
          SetupBaseCharacter(spawnedNPCAlly, finishedTalkNPC.baseCSaveInfo);
-         spawnedNPCAlly->GetUnitController()->Stop();
+         spawnedNPCAlly->GetUnitController()->StopCurrentAction();
       } else {
          FAssetRegistryModule& assetReg = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
          // TArray<FAssetData> allyAssets;
@@ -218,7 +218,7 @@ void USaveLoadClass::SetupAlliedUnits()
          spawnedHero->attPoints = heroSaveData.attPoints;
          spawnedHero->SetCurrentExp(heroSaveData.currentExp);
          spawnedHero->expForLevel = heroSaveData.expToNextLevel;
-         spawnedHero->GetUnitController()->Stop();
+         spawnedHero->GetUnitController()->StopCurrentAction();
 
          // Load items into backpack
          spawnedHero->backpack->LoadBackpack(heroSaveData.backpackInfo);
@@ -248,7 +248,7 @@ void USaveLoadClass::SetupAlliedUnits()
          spawnedSummon->SetActorTransform(summon.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedSummon, summon.allyInfo.baseCSaveInfo);
          spawnedSummon->timeLeft = summon.duration;
-         spawnedSummon->GetUnitController()->Stop();
+         spawnedSummon->GetUnitController()->StopCurrentAction();
       } else {
          FAssetRegistryModule& assetReg = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
          FAssetData summonAsset = assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/") + summon.allyInfo.name.ToString()));

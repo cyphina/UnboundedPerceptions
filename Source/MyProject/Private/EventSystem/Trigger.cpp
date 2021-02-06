@@ -119,7 +119,7 @@ void UTriggerManager::ChangeParty(const FTriggerData& tdata)
       if(hero) { newHeroes.Add(hero); }
    }
    // GetBasePlayer will return null if we don't go through persistent level setup first
-   cpcRef->GetBasePlayer()->UpdateParty(newHeroes);
+   cpcRef->GetBasePlayer()->UpdateActiveParty(newHeroes);
    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString("This is the number of new members in your party!: ") + FString::FromInt(newHeroes.Num()));
 }
 

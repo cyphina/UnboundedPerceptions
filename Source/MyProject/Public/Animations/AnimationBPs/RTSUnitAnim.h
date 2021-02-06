@@ -10,22 +10,16 @@ class AUnit;
 
 /**
  * PS: In case you want to handle animation montages using C++, inside the AnimInstance C++ class you have the ability to call functions like
- * Montage_Play / Montage_IsPlaying / Montage_Stop and provide a UAnimMontage* parameter.
+ * Montage_Play / Montage_IsPlaying / Montage_Stop and provide a UAnimMontage* parameter. The character class exposes this API too.
+ * We can expose notify functions (as UFUNCTIONs()) to call here as well when the notifies actually get hit in UE4.
  */
 UCLASS()
-class MYPROJECT_API URTSUnitAnim : public UAnimInstance, public IAttackAnim
+class MYPROJECT_API URTSUnitAnim : public UAnimInstance
 {
    GENERATED_BODY()
 
- public:
-   void          PlayAttackAnimation(float playRate) override;
-   void          StopAttackAnimation() override;
-   FOnHitNotify& OnAttackNotify() override { return OnAttackNotifyEvent; };
-
  protected:
-   /** The attack animation has a notify which triggers this function. */
-   UFUNCTION(BlueprintCallable)
-   void AttackNotify() override;
+   void AnimNotify_OnAttack(UAnimNotify* notify);
 
    /**True means we're currently in the air or falling*/
    UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -37,15 +31,6 @@ class MYPROJECT_API URTSUnitAnim : public UAnimInstance, public IAttackAnim
 
    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
    AUnit* unitRef;
-
-   UPROPERTY(EditAnywhere, Category = "Animations")
-   UAnimMontage* moveAnimation = nullptr;
-
-   UPROPERTY(EditAnywhere, Category = "Animations")
-   UAnimMontage* attackAnimation = nullptr;
-
-   UPROPERTY(EditAnywhere, Category = "Animations")
-   UAnimMontage* castAnimation = nullptr;
 
    void UpdateAnimationProperties();
    void NativeBeginPlay() override final;

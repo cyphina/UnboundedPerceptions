@@ -17,10 +17,14 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnFocusedUnitChanged, AUnit*);
 
 DECLARE_EVENT_OneParam(ABaseHero, FOnHeroLevelUp, ABaseHero*);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllySelected, bool, ToggleSelect);       // (ToggleSelect is if we shift click) ToggleAllySelect, SelectAllyUnit, SelectionRect
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllyDeselected, AAlly*, DeselectedAlly); // ToggleAllyDeselect,
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGroundSelected);                                  // SelectGround,
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);                                    // SelectEnemy
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllySelected, AAlly*, selectedAlly); // (ToggleSelect is if we shift click) ToggleAllySelect, SelectAllyUnit, SelectionRect
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllyDeselected, AAlly*, deselectedAlly); // ToggleAllyDeselect,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGroundSelected); // SelectGround,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitDeselected);
+
+DECLARE_DELEGATE_OneParam(FOnEnemySelectedWithoutDebugging, AUnit*);
 
 UCLASS()
 class UPartyDelegateContext : public ULocalPlayerSubsystem
@@ -40,27 +44,33 @@ public:
 
    FOnHeroLevelUp& OnHeroLevelUp() const { return OnHeroLevelUpEvent; }
 
+   FOnEnemySelectedWithoutDebugging& OnEnemySelectedWithouDebugging() const { return OnEnemySelectedWithoutDebuggingEvent; }
+
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnAllySelected OnAllySelectedDelegate;
 
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnAllyDeselected OnAllyDeselectedDelegate;
+   FOnAllyDeselected OnAllyToggleDeselectedDelegate;
 
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnUnitSelected OnUnitSelectedDelegate;
 
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnGroundSelected OnAllAlliesClearedDelegate;
+   FOnUnitDeselected OnUnitDeselectedDelegate;
+
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+   FOnGroundSelected OnSelectionClearedDelegate;
 
 protected:
    void Initialize(FSubsystemCollectionBase& Collection) override;
    void Deinitialize() override;
 
 private:
-   mutable FOnAllyActiveChanged   OnAllyActiveChangedEvent;
-   mutable FOnHeroActiveChanged   OnHeroActiveChangedEvent;
-   mutable FOnEnemyActiveChanged  OnEnemyActiveChangedEvent;
-   mutable FOnSummonActiveChanged OnSummonActiveChangedEvent;
-   mutable FOnFocusedUnitChanged  OnFocusedUnitChangedEvent;
-   mutable FOnHeroLevelUp         OnHeroLevelUpEvent;
+   mutable FOnAllyActiveChanged             OnAllyActiveChangedEvent;
+   mutable FOnHeroActiveChanged             OnHeroActiveChangedEvent;
+   mutable FOnEnemyActiveChanged            OnEnemyActiveChangedEvent;
+   mutable FOnSummonActiveChanged           OnSummonActiveChangedEvent;
+   mutable FOnFocusedUnitChanged            OnFocusedUnitChangedEvent;
+   mutable FOnHeroLevelUp                   OnHeroLevelUpEvent;
+   mutable FOnEnemySelectedWithoutDebugging OnEnemySelectedWithoutDebuggingEvent;
 };

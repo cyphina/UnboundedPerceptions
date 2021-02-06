@@ -34,12 +34,10 @@ void UUpStatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 FOnStatsUpdated& UUpStatComponent::OnBaseStatsUpdated() const
 {
-   AUnit* unitOwnerRef = Cast<AUnit>(GetOwner());
-   return unitOwnerRef->GetAbilitySystemComponent()->GetSet<UMyAttributeSet>()->baseStatUpdatedEvent;
+   return baseC->GetAttSet()->baseStatUpdatedEvent;
 }
 
 FOnStatsUpdated& UUpStatComponent::OnStatsUpdated() const
 {
-   AUnit* unitOwnerRef = Cast<AUnit>(GetOwner());
-   return unitOwnerRef->GetAbilitySystemComponent()->GetSet<UMyAttributeSet>()->statUpdatedEvent;
+   return baseC->GetAttSet()->statUpdatedEvent;
 }

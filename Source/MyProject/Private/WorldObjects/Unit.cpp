@@ -20,8 +20,10 @@
 #include "SpellSystem/MySpell.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "BasePlayer.h"
 
 #include "MyCharacterMovementComponent.h"
+#include "PartyDelegateContext.h"
 
 #include "RTSStateComponent.h"
 #include "RTSVisionComponent.h"
@@ -107,6 +109,7 @@ void AUnit::SetupDamageInidicatorContainerWidget()
    damageIndicatorWidget->SetRedrawTime(0.f);
    damageIndicatorWidget->SetInitialSharedLayerName("DamageIndicatorLayer");
    damageIndicatorWidget->SetInitialLayerZOrder(1);
+   damageIndicatorWidget->bUseAttachParentBound = true;
 }
 
 void AUnit::RemoveArrowComponent() const
@@ -164,11 +167,10 @@ void AUnit::BeginPlay()
       controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
    }
 
-   GetWorld()->GetTimerManager().SetTimerForNextTick(
-       [this]() {
-          damageIndicatorWidget->SetWidgetClass(controllerRef->GetHUDManager()->damageIndicatorContainerClass);
-          Cast<URTSDamageNumberContainer>(damageIndicatorWidget->GetUserWidgetObject())->SetOwningUnit(this);
-       });
+   GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+      damageIndicatorWidget->SetWidgetClass(controllerRef->GetHUDManager()->damageIndicatorContainerClass);
+      Cast<URTSDamageNumberContainer>(damageIndicatorWidget->GetUserWidgetObject())->SetOwningUnit(this);
+   });
 
    StoreUnitHeight();
    AlignSelectionCircleWithGround();
@@ -181,6 +183,7 @@ void AUnit::BeginPlay()
    SetupAbilitiesAndStats();
 
    visionComponent->SetRelativeLocation(FVector::ZeroVector);
+   damageIndicatorWidget->SetRelativeLocation(FVector::ZeroVector);
 }
 
 void AUnit::PossessedBy(AController* newController)
@@ -192,6 +195,16 @@ void AUnit::PossessedBy(AController* newController)
 void AUnit::Tick(float deltaSeconds)
 {
    Super::Tick(deltaSeconds);
+   if(GetIsUnitHidden())
+   {
+      SetActorHiddenInGame(true);
+      GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECR_Ignore);
+   }
+   else
+   {
+      SetActorHiddenInGame(false);
+      GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECR_Block);
+   }
 }
 
 EUnitState AUnit::GetState() const
@@ -216,11 +229,11 @@ void AUnit::SetEnabled(bool bEnabled)
       GetCapsuleComponent()->SetSimulatePhysics(false); // can't move w/o physics
       bCanAffectNavigationGeneration = true;
       unitProperties.bIsEnabled      = true;
-      damageIndicatorWidget->UnregisterComponent();
+      damageIndicatorWidget->RegisterComponent();
    }
    else
    {
-      GetUnitController()->Stop();
+      GetUnitController()->StopCurrentAction();
       GetCapsuleComponent()->SetVisibility(false, true);
       SetActorEnableCollision(false);
       SetActorTickEnabled(false);
@@ -230,13 +243,31 @@ void AUnit::SetEnabled(bool bEnabled)
       GetCapsuleComponent()->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
       bCanAffectNavigationGeneration = false;
       unitProperties.bIsEnabled      = false;
-      damageIndicatorWidget->RegisterComponent();
+      damageIndicatorWidget->UnregisterComponent();
    }
 }
 
 void AUnit::OnUpdateGameSpeed(float speedMultiplier)
 {
    GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed) * speedMultiplier;
+}
+
+void AUnit::SetUnitSelected(bool value)
+{
+   unitProperties.isSelected = value;
+   if(value)
+   {
+      if(controllerRef->GetBasePlayer()->GetSelectedUnits().Num() < 16)
+      {
+         controllerRef->GetBasePlayer()->selectedUnits.Add(this);
+         controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnUnitSelectedDelegate.Broadcast();
+      }
+   }
+   else
+   {
+      controllerRef->GetBasePlayer()->selectedUnits.Remove(this);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnUnitDeselectedDelegate.Broadcast();
+   }
 }
 
 bool AUnit::GetIsDead() const

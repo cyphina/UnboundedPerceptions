@@ -20,6 +20,7 @@
 #include "MoveVisitorDefs.inl"
 #include "RTSAttackExecution.h"
 #include "RTSDeathExecution.h"
+#include "RTSIngameWidget.h"
 #include "RTSMoveExecution.h"
 
 #include "RTSStateComponent.h"
@@ -81,6 +82,15 @@ void AUnitController::Tick(float deltaSeconds)
    Super::Tick(deltaSeconds);
    turnTimeline.TickTimeline(deltaSeconds);
    turnActorTimeline.TickTimeline(deltaSeconds);
+
+   // TODO: Probably move this to its own component
+   if(!commandQueue.IsEmpty() && !GetWorld()->GetFirstPlayerController()->IsInputKeyDown(EKeys::LeftShift) && GetUnitOwner()->GetState() == EUnitState::STATE_IDLE)
+   {
+      TFunction<void()> command;
+      commandQueue.Dequeue(command);
+      --queueCount;
+      command();
+   }
 }
 
 void AUnitController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
@@ -122,6 +132,7 @@ void AUnitController::Die()
 {
    GetUnitOwner()->GetAbilitySystemComponent()->TryActivateAbilityByClass(GetUnitOwner()->GetCustomDeathLogic());
    GetUnitOwner()->SetUnitSelected(false);
+   GetUnitOwner()->SetEnabled(false);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnUnitDieGlobal().Broadcast(GetUnitOwner());
    GetUnitOwner()->OnUnitDie().Broadcast();
    // Eventually this object will get GC'd. If we have something like resurrection, store unit data in the OnUnitDieEvent as opposed to keeping around a deactivated copy.
@@ -134,12 +145,12 @@ EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation)
 
    if(!USpellDataLibrary::IsStunned(GetUnitOwner()->GetAbilitySystemComponent()))
    {
-      Stop();
+      StopCurrentAction();
 
       if(ABasePlayer* basePlayer = GetWorld()->GetFirstPlayerController()->GetPlayerState<ABasePlayer>())
       {
          FVector shiftedLocation = newLocation; // Shift location a little bit if we're moving multiple units so they can group together ok
-         if(basePlayer->selectedAllies.Num() > 1)
+         if(basePlayer->GetSelectedUnits().Num() > 1)
          {
             shiftedLocation = newLocation - ownerRef->GetActorLocation().GetSafeNormal() * ownerRef->GetCapsuleComponent()->GetScaledCapsuleRadius() / 2;
          }
@@ -161,7 +172,7 @@ EPathFollowingRequestResult::Type AUnitController::MoveActor(AActor* targetActor
 {
    if(!USpellDataLibrary::IsStunned(GetUnitOwner()->GetAbilitySystemComponent()))
    {
-      Stop();
+      StopCurrentAction();
       ownerRef->GetTargetComponent()->SetTarget(targetActor);
       const EPathFollowingRequestResult::Type result = MoveToActor(targetActor);
 
@@ -174,7 +185,7 @@ EPathFollowingRequestResult::Type AUnitController::MoveActor(AActor* targetActor
    return EPathFollowingRequestResult::Failed;
 }
 
-void AUnitController::Stop()
+void AUnitController::StopCurrentAction()
 {
    OnUnitStoppedEvent.Broadcast();
    onPosAdjDoneAct  = nullptr;
@@ -368,4 +379,18 @@ bool AUnitController::AdjustPosition(const float range, AActor* targetActor, TFu
       return true;
    }
    return false;
+}
+
+void AUnitController::QueueAction(const TFunction<void()>& actionToQueue)
+{
+   if(queueCount < 20)
+   {
+      GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Emerald, TEXT("SUCESSFUL QUEUE"));
+      commandQueue.Enqueue(actionToQueue);
+      ++queueCount;
+   }
+   else
+   {
+      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), FILLED_QUEUE_TEXT);
+   }
 }

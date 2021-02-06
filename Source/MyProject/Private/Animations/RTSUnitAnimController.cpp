@@ -34,8 +34,3 @@ void URTSUnitAnimController::NativeUpdateAnimation(float deltaSeconds)
    Super::NativeUpdateAnimation(deltaSeconds);
    UpdateAnimationProperties();
 }
-
-void URTSUnitAnimController::AnimNotify_Hit() const
-{
-   unitRef->OnUnitAttackSwingHit().Broadcast();
-}

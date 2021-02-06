@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "AIController.h"
@@ -29,7 +27,7 @@ class MYPROJECT_API AUnitController : public AAIController
 {
    GENERATED_BODY()
 
- public:
+public:
    AUnitController();
 
    UFUNCTION(BlueprintCallable, BlueprintPure)
@@ -60,7 +58,7 @@ class MYPROJECT_API AUnitController : public AAIController
     * Stop should be overrode based on the subclass because stopping some classes has to cancel more things
     */
    UFUNCTION(BlueprintCallable, Category = "Action")
-   virtual void Stop();
+   virtual void StopCurrentAction();
 
    /** Stop behavior tree from running. Used in the case we want to stop tasks that are performed via the behavior tree (like attack move) and override them with our predefined actions
     * like when we issue a command via a click
@@ -88,9 +86,15 @@ class MYPROJECT_API AUnitController : public AAIController
 
    FOnUnitStopped& OnUnitStopped() { return OnUnitStoppedEvent; }
 
+   /** Queues an action to our action queue */
+   void QueueAction(const TFunction<void()>& actionToQueue);
+
+   /** Accessor to clear command queue. */
+   void ClearCommandQueue() { commandQueue.Empty(); }
+
    static const int CHASE_RANGE = 100;
 
- protected:
+protected:
    void BeginPlay() override;
    void Tick(float deltaSeconds) override final;
 
@@ -105,7 +109,7 @@ class MYPROJECT_API AUnitController : public AAIController
    UPROPERTY(EditDefaultsOnly)
    UBehaviorTree* idleMoveLogic;
 
- private:
+private:
    UFUNCTION()
    void OnActorTurnFinished();
 
@@ -192,16 +196,24 @@ class MYPROJECT_API AUnitController : public AAIController
     */
    FAIMessageObserverHandle protectListener;
 
+   static inline const FText FILLED_QUEUE_TEXT = NSLOCTEXT("HelpMessages", "Queue", "Command Queue Filled!");
+   TQueue<TFunction<void()>, EQueueMode::Spsc> commandQueue;
+   int queueCount = 0;
+
    class MoveCompletedVisitor
    {
-    public:
-      MoveCompletedVisitor(AUnitController* controllerRef) : finishedMovingUnitController(controllerRef) {}
+   public:
+      MoveCompletedVisitor(AUnitController* controllerRef) :
+         finishedMovingUnitController(controllerRef)
+      {
+      }
+
       void operator()(FEmptyVariantState);
       void operator()(FVector targetVector);
       void operator()(AActor* targetActor);
       void operator()(AUnit* targetUnit);
 
-    private:
+   private:
       inline AUnit&    FinishedMovingUnit() const;
       AUnitController* finishedMovingUnitController;
    };

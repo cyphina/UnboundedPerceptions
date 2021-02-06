@@ -34,11 +34,11 @@ void UActionbar_MultiUnitPortrait::RefreshDisplayedUnitImages()
 {
    if(AUserInput* PC = GetOwningPlayer<AUserInput>())
    {
-      const TArray<AAlly*>& selectedAllies = PC->GetBasePlayer()->selectedAllies;
-      const int             numSlotsToShow = FMath::Min(selectedAllies.Num(), unitSlots.Num());
+      const TArray<AUnit*>& selectedUnits = PC->GetBasePlayer()->selectedUnits;
+      const int             numSlotsToShow = FMath::Min(selectedUnits.Num(), unitSlots.Num());
       for(int i = 0; i < numSlotsToShow; ++i)
       {
-         unitSlots[i]->SetUnitInformation(selectedAllies[i]);
+         unitSlots[i]->SetUnitInformation(selectedUnits[i]);
          unitSlots[i]->SetVisibility(ESlateVisibility::Visible);
       }
       for(int i = numSlotsToShow; i < unitSlots.Num(); ++i)

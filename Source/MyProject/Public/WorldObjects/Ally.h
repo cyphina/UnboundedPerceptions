@@ -33,11 +33,6 @@ class MYPROJECT_API AAlly : public AUnit
    /** Polymorphic selection override for caching units in basePlayer */
    void SetUnitSelected(bool value) override;
 
-   void QueueAction(TFunction<void()> actionToQueue); // Queues an action to our action queue
-
-   /** Accessor to clear command queue. */
-   void ClearCommandQueue() { commandQueue.Empty(); }
-
    const TSet<AUnit*>& GetSeenEnemies() const;
 
    bool GetIsEnemy() const override final { return false; }
@@ -50,10 +45,7 @@ class MYPROJECT_API AAlly : public AUnit
    UPROPERTY()
    AAllyAIController* allyController;
 
-   TQueue<TFunction<void()>, EQueueMode::Spsc> commandQueue;
-
    static inline const FText STUNNED_TEXT      = NSLOCTEXT("HelpMessages", "Stun", "Currently Stunned!");
-   static inline const FText FILLED_QUEUE_TEXT = NSLOCTEXT("HelpMessages", "Queue", "Command Queue Filled!");
 
  protected:
    void BeginPlay() override;
@@ -65,6 +57,4 @@ class MYPROJECT_API AAlly : public AUnit
    /** What enemies are in our radius determined via sphere overlap events */
    UPROPERTY()
    TSet<AUnit*> possibleEnemiesInRadius;
-
-   int queueCount = 0;
 };

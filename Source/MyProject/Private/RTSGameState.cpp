@@ -48,6 +48,11 @@ void ARTSGameState::CleanupUnitLists()
    Cast<ARTSGameState>(GetWorld()->GetGameState())->allyList.Compact();
 }
 
+void ARTSGameState::ShowEnemyPerspective()
+{
+   visionManager->ToggleEnemyPerspective();
+}
+
 const TSet<AUnit*>& ARTSGameState::GetVisibleEnemies() const
 {
    return visionManager->GetVisibleEnemies();

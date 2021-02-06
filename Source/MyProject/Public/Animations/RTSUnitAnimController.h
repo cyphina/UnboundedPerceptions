@@ -32,9 +32,4 @@ class MYPROJECT_API URTSUnitAnimController : public UAnimInstance
 
    void NativeBeginPlay() override final;
    void NativeUpdateAnimation(float deltaSeconds) override final;
-
- private:
-
-   UFUNCTION()
-   void AnimNotify_Hit() const;
 };

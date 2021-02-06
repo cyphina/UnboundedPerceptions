@@ -87,15 +87,16 @@ void UMyAttributeSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute
 
 void UMyAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
-   AUnit* unit = Cast<AUnit>(GetOwningActor());
-   if(Attribute == GetHealthAttribute())
-   { // Health clamping
-      Health.SetCurrentValue(FMath::Clamp(Health.GetCurrentValue(), 0.0f, Health.GetBaseValue()));
+   if(AUnit* unit = Cast<AUnit>(GetOwningActor()))
+   {
+      if(Attribute == GetHealthAttribute())
+      { // Health clamping
+         Health.SetCurrentValue(FMath::Clamp(Health.GetCurrentValue(), 0.0f, Health.GetBaseValue()));
+      }
+      else if(attSet.Contains(Attribute))
+      { // Needs to be run before the broadcast to get proper values to the stat widget in the character menu
+         unit->GetStatComponent()->UpdateStats(Attribute);
+      }
+      statUpdatedEvent.Broadcast(Attribute, NewValue, unit);
    }
-   else if(attSet.Contains(Attribute))
-   { // Needs to be run before the broadcast to get proper values to the stat widget in the character menu
-      unit->GetStatComponent()->UpdateStats(Attribute);
-   }
-
-   statUpdatedEvent.Broadcast(Attribute, NewValue, unit);
 }

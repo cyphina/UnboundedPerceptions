@@ -70,7 +70,7 @@ void AUserInput::ToggleBreakMenu()
 
 void AUserInput::ToggleInventory()
 {
-   if(GetBasePlayer()->selectedHeroes.Num() > 0 && NotInMinigame()) { hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Inventory)); }
+   if(GetBasePlayer()->GetSelectedHeroes().Num() > 0 && NotInMinigame()) { hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Inventory)); }
 }
 
 void AUserInput::ToggleQuestJournal()
@@ -85,20 +85,20 @@ void AUserInput::ToggleQuestList()
 
 void AUserInput::ToggleCharacterMenu()
 {
-   if(GetBasePlayer()->selectedHeroes.Num() > 0 || GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Character)) {
+   if(GetBasePlayer()->GetSelectedHeroes().Num() > 0 || GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Character)) {
       if(NotInMinigame()) hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Character));
    }
 }
 
 void AUserInput::ToggleEquipmentMenu()
 {
-   int numSelectedHeroes = GetBasePlayer()->selectedHeroes.Num();
+   const int numSelectedHeroes = GetBasePlayer()->GetSelectedHeroes().Num();
    if(numSelectedHeroes > 0 && NotInMinigame()) { hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Equipment)); }
 }
 
 void AUserInput::ToggleSpellbookMenu()
 {
-   int numSelectedHeroes = GetBasePlayer()->selectedHeroes.Num();
+   const int numSelectedHeroes = GetBasePlayer()->GetSelectedHeroes().Num();
    if(numSelectedHeroes > 0 && NotInMinigame()) { hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Spellbook)); }
 }
 

@@ -44,10 +44,17 @@
 namespace MouseCVars
 {
    bool                           bPrintMouseHover = false;
-   static FAutoConsoleVariableRef CVarPrintMouseHover(
-   TEXT("printMouseHover"),
-   bPrintMouseHover,
-   TEXT("Turn on the capability to print out whatever our mouse is hovering over.")
+   static FAutoConsoleVariableRef CVarPrintMouseHover(TEXT("printMouseHover"), bPrintMouseHover,
+                                                      TEXT("Turn on the capability to print out whatever our mouse is hovering over."));
+}
+
+namespace GameplayModifierCVars
+{
+   bool                           bEnableEnemyControl;
+   static FAutoConsoleVariableRef CVarEnableEnemyControl(
+   TEXT("enableEnemyControl"),
+   bEnableEnemyControl,
+   TEXT("When this flag is set to 1, we change the control scheme to allow enemy controls")
    );
 }
 
@@ -95,7 +102,7 @@ ARTSPawn::ARTSPawn()
 
 bool ARTSPawn::IsAnyAllySelected() const
 {
-   return controllerRef->GetBasePlayer()->selectedAllies.Num() > 0;
+   return controllerRef->GetBasePlayer()->GetSelectedAllies().Num() > 0;
 }
 
 void ARTSPawn::BeginPlay()
@@ -104,7 +111,7 @@ void ARTSPawn::BeginPlay()
    {
       FViewport::ViewportResizedEvent.AddUObject(this, &ARTSPawn::RecalculateViewportSize);
       controllerRef->GetViewportSize(viewX, viewY);
-      clickFunctionalityClass = MakeUnique<UDefaultCursorClickFunctionality>(this, controllerRef);
+      clickFunctionalityClass = MakeUnique<DefaultCursorClickFunctionality>(this, controllerRef);
    }
    Super::BeginPlay();
 }
@@ -125,7 +132,7 @@ void ARTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
    Super::SetupPlayerInputComponent(PlayerInputComponent);
    check(InputComponent);
 
-   InputComponent->BindAction("Stop", IE_Pressed, this, &ARTSPawn::StopSelectedAllyCommands);
+   InputComponent->BindAction("Stop", IE_Pressed, this, &ARTSPawn::CompleteHaltSelected);
    InputComponent->BindAction("LockCamera", IE_Pressed, this, &ARTSPawn::LockCamera);
    InputComponent->BindAction("RightClick", IE_Pressed, this, &ARTSPawn::RightClick);
    InputComponent->BindAction("RightClickShift", IE_Pressed, this, &ARTSPawn::RightClickShift);
@@ -133,7 +140,7 @@ void ARTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
    InputComponent->BindAction("LeftClickReleased", IE_Released, this, &ARTSPawn::LeftClickReleased);
    InputComponent->BindAction("LeftClickShift", IE_Pressed, this, &ARTSPawn::LeftClickShift);
 
-   InputComponent->BindAction("SelectNext", IE_Pressed, this, &ARTSPawn::TabThroughSelection);
+   InputComponent->BindAction("SelectNext", IE_Pressed, this, &ARTSPawn::TabChangeSelection);
    InputComponent->BindAction("AttackMove", IE_Pressed, this, &ARTSPawn::AttackMoveInitiate);
 
    InputComponent->BindAction<FAbilityUseDelegate>("UseAbility1", IE_Pressed, this, &ARTSPawn::UseAbility, 0);
@@ -185,13 +192,13 @@ void ARTSPawn::PossessedBy(AController* newController)
    PrimaryActorTick.bCanEverTick = true;
    if(controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()); controllerRef)
    {
-      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnUnitSlotSelected().AddUObject(this, &ARTSPawn::OnUnitSlotSelected);
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnItemSlotDroppedInventoryEvent.AddDynamic(this, &ARTSPawn::OnItemSlotDroppedFromInventory);
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnItemSlotDroppedStorageEvent.AddDynamic(this, &ARTSPawn::OnItemSlotDroppedFromStorage);
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedEvent.AddDynamic(this, &ARTSPawn::OnSkillSlotDropped);
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedSBEvent.AddDynamic(this, &ARTSPawn::OnSkillSlotDroppedSB);
-      
-      GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+
+      GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+      {
          controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnSkillSlotSelected);
          controllerRef->GetHUDManager()->GetIngameHUD()->GetEquipHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnEquipmentSlotSelected);
          controllerRef->GetHUDManager()->GetIngameHUD()->GetShopHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnShopSlotSelected);
@@ -218,7 +225,7 @@ void ARTSPawn::DisableInput(APlayerController* PlayerController)
    hitActor = nullptr;
 }
 
-bool ARTSPawn::isSelectionRectActive() const
+bool ARTSPawn::IsSelectionRectActive() const
 {
    const FVector2D difference = startMousePos - endMousePos;
    return FMath::Sqrt(FVector2D::DotProduct(difference, difference)) > 10;
@@ -230,11 +237,11 @@ void ARTSPawn::SetSecondaryCursor(const ECursorStateEnum cursorType)
    {
       case ECursorStateEnum::Magic:
       case ECursorStateEnum::Item:
-      case ECursorStateEnum::AttackMove: hasSecondaryCursor = true;
+      case ECursorStateEnum::AttackMove: bHasSecondaryCursor = true;
          hitActor = nullptr;
          ChangeCursor(cursorType);
          break;
-      default: hasSecondaryCursor = false;
+      default: bHasSecondaryCursor = false;
          hitActor = nullptr;
          break;
    }
@@ -286,30 +293,25 @@ void ARTSPawn::CreateSelectionRect()
       float locX, locY;
       controllerRef->GetMousePosition(locX, locY);
       endMousePos = FVector2D(locX, locY);
-      if(isSelectionRectActive())
+      if(IsSelectionRectActive())
       {
          controllerRef->GetHUD()->DrawRect(GetSelectionRectColor(), startMousePos.X, startMousePos.Y, endMousePos.X - startMousePos.X, endMousePos.Y - startMousePos.Y);
-         TArray<AAlly*> actorsInSelectRect;
-         controllerRef->GetHUD()->GetActorsInSelectionRectangle<AAlly>(startMousePos, endMousePos, actorsInSelectRect, false, false);
+         TArray<AUnit*> actorsInSelectRect;
+         controllerRef->GetHUD()->GetActorsInSelectionRectangle<AUnit>(startMousePos, endMousePos, actorsInSelectRect, false, false);
+
          // Only update if we just overlapped a new actor (not one we already have selected)
-         if(controllerRef->GetBasePlayer()->selectedAllies.Num() != actorsInSelectRect.Num())
+         if(controllerRef->GetBasePlayer()->GetSelectedUnits().Num() != actorsInSelectRect.Num())
          {
-            for(AAlly* allyInSelectRect : actorsInSelectRect)
+            for(AUnit* unitInSelectionRect : actorsInSelectRect)
             {
-               if(IsValid(allyInSelectRect))
+               if(IsValid(unitInSelectionRect))
                {
-                  if(allyInSelectRect->IsEnabled() && !allyInSelectRect->GetUnitSelected())
+                  if(unitInSelectionRect->IsEnabled() && !unitInSelectionRect->GetUnitSelected())
                   {
+                     if(IsUnitOnScreen(unitInSelectionRect))
                      {
-                        if(IsUnitOnScreen(allyInSelectRect))
-                        {
-                           allyInSelectRect->SetUnitSelected(true);
-                           if(!controllerRef->GetBasePlayer()->GetFocusedUnit()) {
-                              controllerRef->GetBasePlayer()->SetFocusedUnit(allyInSelectRect);
-                           }
-                           controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.Broadcast(true);
-                           break;
-                        }
+                        unitInSelectionRect->SetUnitSelected(true);
+                        break;
                      }
                   }
                }
@@ -326,7 +328,7 @@ FLinearColor ARTSPawn::GetSelectionRectColor() const
 
 void ARTSPawn::CursorHover()
 {
-   if(!hasSecondaryCursor)
+   if(!bHasSecondaryCursor)
    {
       if(cursorDirections.Num() > 0 && !isCamNavDisabled)
       {
@@ -356,22 +358,61 @@ void ARTSPawn::CursorHover()
 
             // Add highlight to new actor
             if(hitActor && hitActor->GetClass()->IsChildOf(ACharacter::StaticClass()))
-               Cast<ACharacter>(hitActor)->GetMesh()->SetRenderCustomDepth(true);
-
-            if(controllerRef->GetBasePlayer() && controllerRef->GetBasePlayer()->selectedAllies.Num() > 0)
             {
-               switch(hitResult.GetComponent()->GetCollisionObjectType())
+               Cast<ACharacter>(hitActor)->GetMesh()->SetRenderCustomDepth(true);
+            }
+
+            if(ABasePlayer* basePlayer = controllerRef->GetBasePlayer())
+            {
+               if(basePlayer->GetSelectedHeroes().Num() > 0)
                {
-                  case ECC_WorldStatic: ChangeCursor(ECursorStateEnum::Moving);
-                     return;
-                  case INTERACTABLE_CHANNEL: ChangeCursor(ECursorStateEnum::Interact);
-                     return;
-                  case NPC_CHANNEL: ChangeCursor(ECursorStateEnum::Talking);
-                     return;
-                  case ENEMY_CHANNEL: ChangeCursor(ECursorStateEnum::Attack);
-                     return;
-                  default: ChangeCursor(ECursorStateEnum::Select);
-                     return;
+                  switch(hitResult.GetComponent()->GetCollisionObjectType())
+                  {
+                     case ECC_WorldStatic: ChangeCursor(ECursorStateEnum::Moving);
+                        return;
+                     case INTERACTABLE_CHANNEL: ChangeCursor(ECursorStateEnum::Interact);
+                        return;
+                     case NPC_CHANNEL: ChangeCursor(ECursorStateEnum::Talking);
+                        return;
+                     default: break;
+                  }
+               }
+
+               if(GameplayModifierCVars::bEnableEnemyControl)
+               {
+                  if(basePlayer->GetSelectedUnits().Num() > 0)
+                  {
+                     const auto selectedEnemy = controllerRef->GetBasePlayer()->GetSelectedUnits().FindByPredicate([](const AUnit* unit)
+                     {
+                        return unit->GetClass()->IsChildOf(AEnemy::StaticClass());
+                     });
+
+                     if(selectedEnemy)
+                     {
+                        if(hitResult.GetComponent()->GetCollisionObjectType() == FRIENDLY_CHANNEL)
+                        {
+                           ChangeCursor(ECursorStateEnum::Attack);
+                           return;
+                        }
+                     } else
+                     {
+                        if(hitResult.GetComponent()->GetCollisionObjectType() == ENEMY_CHANNEL)
+                        {
+                           ChangeCursor(ECursorStateEnum::Attack);
+                           return;
+                        }
+                     }
+                  }
+               } else
+               {
+                  if(basePlayer->GetSelectedAllies().Num() > 0)
+                  {
+                     if(hitResult.GetComponent()->GetCollisionObjectType() == ENEMY_CHANNEL)
+                     {
+                        ChangeCursor(ECursorStateEnum::Attack);
+                        return;
+                     }
+                  }
                }
             }
             ChangeCursor(ECursorStateEnum::Select);
@@ -386,9 +427,13 @@ void ARTSPawn::CursorHover()
          if(hitResult.GetActor() != hitActor)
          {
             if(hitActor && hitActor->GetClass()->IsChildOf(ACharacter::StaticClass()))
+            {
                Cast<ACharacter>(hitActor)->GetMesh()->SetRenderCustomDepth(false);
+            }
             if(hitResult.GetActor()->GetClass()->IsChildOf(ACharacter::StaticClass()))
+            {
                Cast<ACharacter>(hitResult.GetActor())->GetMesh()->SetRenderCustomDepth(true);
+            }
             hitActor = hitResult.GetActor();
          }
       }
@@ -447,13 +492,17 @@ void ARTSPawn::CameraSpeedOff()
 FORCEINLINE void ARTSPawn::MoveX(float axisValue)
 {
    if(!isCamNavDisabled)
+   {
       SetActorLocation(GetActorTransform().TransformPosition(FVector(axisValue * baseCameraMoveSpeed * camMoveSpeedMultiplier, 0, 0)));
+   }
 }
 
 FORCEINLINE void ARTSPawn::MoveY(float axisValue)
 {
    if(!isCamNavDisabled)
+   {
       SetActorLocation(GetActorTransform().TransformPosition(FVector(0, axisValue * baseCameraMoveSpeed * camMoveSpeedMultiplier, 0)));
+   }
 }
 
 void ARTSPawn::MMBDragX(float axisValue)
@@ -549,21 +598,18 @@ void ARTSPawn::EdgeMovementY(float axisValue)
    }
 }
 
-void ARTSPawn::StopSelectedAllyCommands()
+void ARTSPawn::CompleteHaltSelected()
 {
-   for(int i = 0; i < controllerRef->GetBasePlayer()->selectedAllies.Num(); i++)
+   for(int i = 0; i < controllerRef->GetBasePlayer()->selectedUnits.Num(); i++)
    {
-      controllerRef->GetBasePlayer()->selectedAllies[i]->GetUnitController()->Stop();
-      controllerRef->GetBasePlayer()->selectedAllies[i]->ClearCommandQueue();
+      controllerRef->GetBasePlayer()->selectedUnits[i]->GetUnitController()->StopCurrentAction();
+      controllerRef->GetBasePlayer()->selectedUnits[i]->GetUnitController()->ClearCommandQueue();
+      controllerRef->GetBasePlayer()->selectedUnits[i]->GetUnitController()->StopAutomation();
    }
 
-   hasSecondaryCursor = false;
-   hitActor           = nullptr; // Set hitActor to null to make cursor hover proc
-
-   for(auto ally : controllerRef->GetBasePlayer()->selectedAllies)
-      ally->GetAllyAIController()->StopAutomation();
-
+   bHasSecondaryCursor = false;
    HideSpellCircle();
+   hitActor = nullptr; // Set hitActor to null to make cursor hover proc
 }
 
 void ARTSPawn::RightClick()
@@ -591,10 +637,10 @@ void ARTSPawn::LeftClickShift()
    clickFunctionalityClass->HandleShiftLeftClick();
 }
 
-void ARTSPawn::TabThroughSelection()
+void ARTSPawn::TabChangeSelection()
 {
    // If more than one ally is selected, tab through the selection (changing the focused unit and interface but not any selections)
-   if(controllerRef->GetBasePlayer()->selectedAllies.Num() > 1)
+   if(controllerRef->GetBasePlayer()->GetSelectedUnits().Num() > 1)
    {
       TabThroughGroup();
    } else
@@ -603,16 +649,16 @@ void ARTSPawn::TabThroughSelection()
    }
 }
 
-void ARTSPawn::TabThroughGroup() const
+void ARTSPawn::TabThroughGroup()
 {
    if(AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit())
    {
       if(AAlly* focusedAlly = Cast<AAlly>(focusedUnit))
       {
-         const int selectedUnitIndex    = controllerRef->GetBasePlayer()->selectedAllies.Find(focusedAlly);
-         const int newSelectedUnitIndex = (selectedUnitIndex + 1) % controllerRef->GetBasePlayer()->selectedAllies.Num();
-         AAlly*    newSelectedAlly      = controllerRef->GetBasePlayer()->selectedAllies[newSelectedUnitIndex];
-         controllerRef->GetBasePlayer()->SetFocusedUnit(newSelectedAlly);
+         const int selectedUnitIndex    = controllerRef->GetBasePlayer()->GetSelectedUnits().Find(focusedAlly);
+         const int newSelectedUnitIndex = (selectedUnitIndex + 1) % controllerRef->GetBasePlayer()->GetSelectedUnits().Num();
+         AUnit*    newSelectedAlly      = controllerRef->GetBasePlayer()->GetSelectedUnits()[newSelectedUnitIndex];
+         OnGroupTabbed().Broadcast(newSelectedAlly);
       }
    }
 }
@@ -628,20 +674,22 @@ void ARTSPawn::TabSingleSelection() const
             const int  selectedUnitIndex    = controllerRef->GetBasePlayer()->GetHeroes().Find(focusedHero);
             const int  newSelectedUnitIndex = (selectedUnitIndex + 1) % controllerRef->GetBasePlayer()->GetHeroes().Num();
             ABaseHero* newSelectedHero      = controllerRef->GetBasePlayer()->GetHeroes()[newSelectedUnitIndex];
-            controllerRef->GetBasePlayer()->SetFocusedUnit(newSelectedHero);
+            newSelectedHero->SetUnitSelected(true);
             return;
          }
       }
       // Don't have any hero selected? Select the first one available
       controllerRef->GetBasePlayer()->GetHeroes()[0]->SetUnitSelected(true);
-      controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.Broadcast(false);
    }
 }
 
 void ARTSPawn::AttackMoveInitiate()
 {
    SetSecondaryCursor(ECursorStateEnum::AttackMove);
-   if(!bQuickCast) { LeftClick(); }
+   if(!bQuickCast)
+   {
+      LeftClick();
+   }
 }
 
 void ARTSPawn::UseAbility(int abilityIndex)
@@ -653,10 +701,15 @@ void ARTSPawn::UseAbility(int abilityIndex)
    {
       FHitResult hitRes;
       if(controllerRef->GetHitResultUnderCursor(SELECTABLE_BY_CLICK_CHANNEL, false, hitRes))
-         for(AAlly* ally : controllerRef->GetBasePlayer()->selectedAllies)
+      {
+         for(AUnit* unit : controllerRef->GetBasePlayer()->GetSelectedUnits())
          {
-            ally->GetAllyAIController()->GetManualSpellComponent()->OnSpellConfirmInput(hitRes);
+            if(UManualSpellComponent* manSpellComp = unit->GetUnitController()->FindComponentByClass<UManualSpellComponent>())
+            {
+               manSpellComp->OnSpellConfirmInput(hitRes);
+            }
          }
+      }
    }
 }
 
@@ -677,7 +730,7 @@ void ARTSPawn::SelectControlGroup(int controlIndex)
       }
 
       // Clear whatever units we have selected and select the ones in the control group
-      controllerRef->GetBasePlayer()->ClearSelectedAllies();
+      controllerRef->GetBasePlayer()->ClearSelectedUnits();
 
       for(auto ally : controlGroups[controlIndex])
       {
@@ -722,7 +775,7 @@ void ARTSPawn::StopContolGroupFollow(int releaseIndex)
 
 void ARTSPawn::MakeControlGroup(int controlGroupIndex)
 {
-   auto& allies = controllerRef->GetBasePlayer()->selectedAllies;
+   auto& allies = controllerRef->GetBasePlayer()->GetSelectedAllies();
    auto& cgroup = controlGroups[controlGroupIndex];
 
    Algo::Transform(allies, cgroup, [](AAlly* ally) { return MakeWeakObjectPtr(ally); });
@@ -730,21 +783,12 @@ void ARTSPawn::MakeControlGroup(int controlGroupIndex)
 
 void ARTSPawn::OnSkillSlotSelected(int skillIndex)
 {
-   if(const AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit()) {
-      if(UManualSpellComponent* manualSpellComp = focusedUnit->GetUnitController()->FindComponentByClass<UManualSpellComponent>()) {
+   if(const AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit())
+   {
+      if(UManualSpellComponent* manualSpellComp = focusedUnit->GetUnitController()->FindComponentByClass<UManualSpellComponent>())
+      {
          manualSpellComp->PressedCastSpell(skillIndex);
       }
-   }
-}
-
-void ARTSPawn::OnUnitSlotSelected(AUnit* unitSelected)
-{
-   if(IsValid(unitSelected))
-   {
-      controllerRef->GetBasePlayer()->ClearSelectedAllies();
-      unitSelected->SetUnitSelected(true);
-      controllerRef->GetBasePlayer()->SetFocusedUnit(unitSelected);
-      controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.Broadcast(true);
    }
 }
 
@@ -794,8 +838,8 @@ void ARTSPawn::HandleTransferStorageItems(ABaseHero* heroWithInvShown, int itemU
       auto  itemTransferResults = transferToBackpack->TransferItems(originalBackpack, itemUsedSlotIndex);
       auto& removeResult        = itemTransferResults.Key;
       auto& addResult           = itemTransferResults.Value;
-      GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemsTransferred().Broadcast(
-      *originalBackpack, *transferToBackpack, removeResult, addResult);
+      GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemsTransferred().Broadcast(*originalBackpack, *transferToBackpack,
+         removeResult, addResult);
    }
 }
 
@@ -811,14 +855,14 @@ void ARTSPawn::OnStorageSlotSelected(int slotIndex)
    {
       if(AStorageContainer* storageContainer = Cast<AStorageContainer>(heroUsingStorage->GetCurrentInteractable()))
       {
-         UBackpack* originalBackpack = Cast<AStorageContainer>(heroUsingStorage->GetCurrentInteractable())->GetBackpack();
-         UBackpack* transferToBackpack   = &heroUsingStorage->GetBackpack();
-  
+         UBackpack* originalBackpack   = Cast<AStorageContainer>(heroUsingStorage->GetCurrentInteractable())->GetBackpack();
+         UBackpack* transferToBackpack = &heroUsingStorage->GetBackpack();
+
          auto  itemTransferResults = transferToBackpack->TransferItems(originalBackpack, slotIndex);
          auto& removeResult        = itemTransferResults.Key;
          auto& addResult           = itemTransferResults.Value;
-         GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemsTransferred().Broadcast(
-         *originalBackpack, *transferToBackpack, removeResult, addResult);
+         GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemsTransferred().Broadcast(*originalBackpack, *transferToBackpack,
+            removeResult, addResult);
       }
    }
 }
@@ -841,13 +885,15 @@ void ARTSPawn::OnStorageInventoryClosed()
 void ARTSPawn::OnItemSlotDroppedFromInventory(int dragSlotIndex, int dropSlotIndex, UBackpack* dragPack, UBackpack* dropPack)
 {
    UBackpack::SwapItems(dragPack, dropPack, dragSlotIndex, dropSlotIndex);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemsSwapped().Broadcast(*dragPack, *dropPack, dragSlotIndex, dropSlotIndex);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemsSwapped().Broadcast(
+   *dragPack, *dropPack, dragSlotIndex, dropSlotIndex);
 }
 
 void ARTSPawn::OnItemSlotDroppedFromStorage(int dragSlotIndex, int dropSlotIndex, UBackpack* dragPack, UBackpack* dropPack)
 {
    UBackpack::SwapItems(dragPack, dropPack, dragSlotIndex, dropSlotIndex);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemsSwapped().Broadcast(*dragPack, *dropPack, dragSlotIndex, dropSlotIndex);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemsSwapped().Broadcast(
+   *dragPack, *dropPack, dragSlotIndex, dropSlotIndex);
 }
 
 void ARTSPawn::OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex)
@@ -876,7 +922,7 @@ void ARTSPawn::OnSkillSlotDroppedSB(int dragSlotIndex, int dropSlotIndex)
       {
          if(ABaseHero* focusedHero = Cast<ABaseHero>(basePlayer->GetFocusedUnit()))
          {
-            const TSubclassOf<UMySpell> spellClass = focusedHero->GetSpellBook()->GetSpellFromIndex(dragSlotIndex);
+            const TSubclassOf<UMySpell> spellClass    = focusedHero->GetSpellBook()->GetSpellFromIndex(dragSlotIndex);
             URTSAbilitySystemComponent* focusedABComp = focusedHero->GetAbilitySystemComponent();
 
             focusedABComp->SetSpellAtSlot(spellClass, dropSlotIndex);

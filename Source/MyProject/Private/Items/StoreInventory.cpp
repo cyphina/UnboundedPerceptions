@@ -20,11 +20,17 @@ void UStoreInventory::NativeOnInitialized()
 
 bool UStoreInventory::OnWidgetAddToViewport_Implementation()
 {
-   shopkeeper = Cast<AShopNPC>(CPC->GetBasePlayer()->heroInBlockingInteraction->GetCurrentInteractable());
-   if(shopkeeper)
+   if(ABaseHero* blockerHero = CPC->GetBasePlayer()->heroInBlockingInteraction)
    {
-      SetBackPack(shopkeeper->GetItemsToSell());
-      return Super::OnWidgetAddToViewport_Implementation();
+      if(blockerHero->GetCurrentInteractable())
+      {
+         shopkeeper = Cast<AShopNPC>(CPC->GetBasePlayer()->heroInBlockingInteraction->GetCurrentInteractable());
+         if(shopkeeper)
+         {
+            SetBackPack(shopkeeper->GetItemsToSell());
+            return Super::OnWidgetAddToViewport_Implementation();
+         }
+      }
    }
    return false;
 }

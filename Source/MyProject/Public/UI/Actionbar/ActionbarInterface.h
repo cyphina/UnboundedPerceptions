@@ -54,10 +54,10 @@ class MYPROJECT_API UActionbarInterface : public UMyUserWidget
 
  private:
    UFUNCTION()
-   void OnAllySelected(bool bToggled);
+   void OnUnitSelected();
    
    UFUNCTION()
-   void OnAllyDeselected(AAlly* deselectedAlly);
+   void OnUnitDeselected();
    
    UFUNCTION()
    void OnAllAlliesCleared();

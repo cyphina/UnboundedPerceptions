@@ -19,6 +19,7 @@
 
 #include "NavArea_EnemySpot.h"
 #include "PartyDelegateContext.h"
+#include "RTSGlobalCVars.h"
 #include "TargetComponent.h"
 #include "../BaseHero.h"
 
@@ -58,9 +59,9 @@ const TSet<AUnit*>* AEnemy::GetAllies_Impl() const
 void AEnemy::BeginPlay()
 {
    Super::BeginPlay();
-   // Setup status as customized in level editor
+   SetEnabled(true);
    InitializeStats();
-   SetActorHiddenInGame(true); //Set hidden by default so won't be revealed by vision
+   SetIsUnitHidden(true);
    OnUnitDie().AddUObject(this, &AEnemy::GiveRewardsOnDeath);
 }
 
@@ -82,19 +83,17 @@ void AEnemy::Destroyed()
 
 void AEnemy::SetUnitSelected(bool value)
 {
-   if(value) {
-      controllerRef->GetBasePlayer()->SetFocusedUnit(this);
-   } else {
-      if(controllerRef->GetBasePlayer()->GetFocusedUnit() == this) controllerRef->GetBasePlayer()->SetFocusedUnit(nullptr);
+   if(GameplayModifierCVars::bEnableEnemyControl)
+   {
+      Super::SetUnitSelected(value);
    }
-   // Call on unit selected delegate(s) afterwards
-   Super::SetUnitSelected(value);
 }
 
 void AEnemy::SetEnabled(bool bEnabled)
 {
    Super::SetEnabled(bEnabled);
-   if(UPartyDelegateContext* store = Cast<ULocalPlayer>(controllerRef->Player)->GetSubsystem<UPartyDelegateContext>()) {
+   if(UPartyDelegateContext* store = Cast<ULocalPlayer>(controllerRef->Player)->GetSubsystem<UPartyDelegateContext>())
+   {
       store->OnEnemyActiveChanged().Broadcast(this, bEnabled);
    }
 }
@@ -104,9 +103,11 @@ void AEnemy::SpawnItemDrops()
    controllerRef->GetBasePlayer()->UpdateEXP(expGiven);
    controllerRef->GetBasePlayer()->UpdateGold(moneyGiven);
 
-   for(FItemDrop& itemDrop : itemDrops) {
+   for(FItemDrop& itemDrop : itemDrops)
+   {
       const int dropRoll = FMath::FRandRange(0, 100);
-      if(itemDrop.dropPerc > dropRoll) {
+      if(itemDrop.dropPerc > dropRoll)
+      {
          APickup* itemPickup = GetWorld()->SpawnActorDeferred<APickup>(APickup::StaticClass(), GetActorTransform());
          itemPickup->item    = itemDrop.itemInfo;
          UGameplayStatics::FinishSpawningActor(itemPickup, GetActorTransform());
@@ -121,7 +122,8 @@ void AEnemy::GiveRewardsOnDeath()
    // Enemy is hidden in Unit's implementation but reveal damage numbers still
    TArray<UDIRender*> damageComponents;
    GetComponents<UDIRender>(damageComponents);
-   for(auto x : damageComponents) {
+   for(auto x : damageComponents)
+   {
       x->SetVisibility(true);
    }
 
@@ -131,24 +133,23 @@ void AEnemy::GiveRewardsOnDeath()
 
 void AEnemy::InitializeStats()
 {
-   int index = -1;
-   for(auto& x : initialStats.defaultAttributes) {
+   for(auto& x : initialStats.defaultAttributes)
+   {
       statComponent->ModifyStats<true>(x.defaultValue, x.att);
-      statComponent->ModifyStats<true>(x.defaultValue, x.att);
    }
 
-   for(auto& x : initialStats.defaultUnitScalingStats) {
+   for(auto& x : initialStats.defaultUnitScalingStats)
+   {
       statComponent->ModifyStats<true>(x.defaultValue, x.stat);
-      statComponent->ModifyStats<true>(x.defaultValue, x.stat);
    }
 
-   for(auto& x : initialStats.defaultVitals) {
-      statComponent->ModifyStats<true>(x.defaultValue, x.vit);
+   for(auto& x : initialStats.defaultVitals)
+   {
       statComponent->ModifyStats<true>(x.defaultValue, x.vit);
    }
 
-   for(auto& x : initialStats.defaultMechanics) {
-      statComponent->ModifyStats<true>(x.defaultValue, x.mech);
+   for(auto& x : initialStats.defaultMechanics)
+   {
       statComponent->ModifyStats<true>(x.defaultValue, x.mech);
    }
 }

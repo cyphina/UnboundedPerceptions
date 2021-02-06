@@ -7,6 +7,7 @@
 #include "Unit.h"
 #include "UnitController.h"
 #include "SpellSystem/MySpell.h"
+#include "SpellCastComponent.h"
 
 void UChannelingBar::NativeOnInitialized()
 {

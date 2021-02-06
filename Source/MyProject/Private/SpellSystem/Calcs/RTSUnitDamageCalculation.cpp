@@ -9,16 +9,22 @@
 #include "UnitController.h"
 #include "UpStatComponent.h"
 
-void URTSUnitDamageCalculation::Execute_Implementation
-(const FGameplayEffectCustomExecutionParameters& executionParams,
- FGameplayEffectCustomExecutionOutput&           outExecutionOutput) const
+namespace AttackCVars
+{
+   bool                           bUseOldDamageNumbers = false;
+   static FAutoConsoleVariableRef CVarUseOldDamageNumbers(TEXT("useOldDamageNumbers"), bUseOldDamageNumbers,
+                                                         TEXT("Uses text render component instead of widgets to show damage numbers."));
+}
+
+void URTSUnitDamageCalculation::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& executionParams,
+                                                       FGameplayEffectCustomExecutionOutput&           outExecutionOutput) const
 {
    FUpDamage damage;
 
    // Owner component gotten from instigator ability component which gotten from owner we set as our player controller but that isn't an ability system holder
    UAbilitySystemComponent* ownerComponent  = executionParams.GetSourceAbilitySystemComponent();
    UAbilitySystemComponent* targetComponent = executionParams.GetTargetAbilitySystemComponent();
-   AUnit*                   sourceUnit      = nullptr,* targetUnit = nullptr;
+   AUnit *                  sourceUnit = nullptr, *targetUnit = nullptr;
 
    // TODO: Handle non unit damage (from traps or something)
    // If our components exist
@@ -71,23 +77,28 @@ void URTSUnitDamageCalculation::DamageTarget(FUpDamage& d, FGameplayTagContainer
    }
 
    // Clamp damage to always deal 1 damage even on highly resisted hits
-   if(d.damage <= 0)
-      d.damage = 1;
+   if(d.damage <= 0) d.damage = 1;
 
    // Add lifesteal effects as healing here (since we have to calculate damage reduction first)
    // TODO: Maybe add a stat for lifesteal %
    if(effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Lifesteal")))
+   {
       d.sourceUnit->GetStatComponent()->ModifyStats<false>(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) + d.damage, EVitals::Health);
+   }
 
    // Record some statistics about our units which AI can use
-   float worldTime = d.sourceUnit->GetStatComponent()->GetWorld()->GetTimeSeconds();
+   const float worldTime = d.sourceUnit->GetStatComponent()->GetWorld()->GetTimeSeconds();
 
    // Drain or add health depending on healing or damage
-   if(UNLIKELY(!d.effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Healing"))))
+   if(UNLIKELY(d.effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Healing"))))
    {
       d.damage *= -1;
-
-      // URTSDamageCalculation::ShowDamageDealt(d);
-      BroadcastDamageEvents(d);
    }
+
+   if(AttackCVars::bUseOldDamageNumbers) 
+   {
+      URTSDamageCalculation::ShowDamageDealt(d);
+   }
+
+   BroadcastDamageEvents(d);
 }

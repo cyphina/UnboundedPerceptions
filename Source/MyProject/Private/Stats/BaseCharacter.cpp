@@ -238,23 +238,17 @@ void FBaseCharacter::SetAttributeBase(int skillIndex, float newValue)
 void FBaseCharacter::SetSkillBase(int skillIndex, float newValue)
 {
    RTSUnitStat& skill     = skills[skillIndex];
-   const int    valueDiff = newValue - skill.GetBaseValue(attSet);
    skill.SetBaseValue(newValue, attSet);
-   skill.SetAdjustedValue(skill.GetAdjustedValue(attSet) + valueDiff, attSet);
 }
 
 void FBaseCharacter::SetVitalBase(int skillIndex, float newValue)
 {
    Vital&    vital     = vitals[skillIndex];
-   const int valueDiff = newValue - vital.GetBaseValue(attSet);
    vital.SetBaseValue(newValue, attSet);
-   vital.SetAdjustedValue(vital.GetAdjustedValue(attSet) + valueDiff, attSet);
 }
 
 void FBaseCharacter::SetMechanicBase(int skillIndex, float newValue)
 {
    FGameplayAttributeData* mechanic  = mechanics[skillIndex].GetGameplayAttributeData(attSet);
-   const int               valueDiff = newValue - mechanic->GetBaseValue();
    mechanic->SetBaseValue(newValue);
-   mechanic->SetCurrentValue(mechanic->GetCurrentValue() + valueDiff);
 }

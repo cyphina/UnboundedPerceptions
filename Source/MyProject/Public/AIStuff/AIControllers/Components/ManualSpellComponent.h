@@ -45,10 +45,12 @@ class MYPROJECT_API UManualSpellComponent : public UActorComponent, public IManu
 
    /**
     * Used when we activate items. Items are a variant of spell casting.
-    * @param spellToCast - Ability we are trying to cast
+    * @param spellToCast - Ability we are trying to cast. If nullptr, will reset the currently selected spell.
     */
    bool PressedCastSpell(TSubclassOf<UMySpell> spellToCast);
 
+   USpellCastComponent* GetSpellCastComp() const { return spellCastComp; }
+   
    static const FText NOT_ENOUGH_MANA_TEXT;
    static const FText INVALID_TARGET_TEXT;
    static const FText ON_COOLDOWN_TEXT;

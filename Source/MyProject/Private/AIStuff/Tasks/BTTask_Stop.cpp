@@ -16,6 +16,6 @@ EBTNodeResult::Type UBTTask_Stop::ExecuteTask(UBehaviorTreeComponent& ownerComp,
 {
    AUnitController* unitC = Cast<AUnitController>(ownerComp.GetAIOwner());
    checkf(unitC, TEXT("Called Stop on a non unit or UnitController is missing"));
-   unitC->Stop();
+   unitC->StopCurrentAction();
    return EBTNodeResult::Succeeded;
 }

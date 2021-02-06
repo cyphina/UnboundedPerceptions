@@ -118,7 +118,9 @@ void ABaseHero::CheckGameOverOnDeath() const
       }
    }
    if(isAllDead)
+   {
       controllerRef->GetGameMode()->GameOver();
+   }
 }
 
 int ABaseHero::GetCurrentExp() const
@@ -214,7 +216,8 @@ void ABaseHero::Unequip(const int unequipSlot) const
          const FMyItem               changedEquip        = FMyItem(equipId);
          const FBackpackUpdateResult addItemToPackResult = backpack->AddItem(changedEquip);
          equipment->Unequip(unequipSlot);
-         GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().Broadcast(this, addItemToPackResult.updatedBackpackIndices);
+         GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().Broadcast(
+         this, addItemToPackResult.updatedBackpackIndices);
       } else
          URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Equipment", "NotEnoughSpaceUnequip", "Not enough space to unequip!"));
    }
@@ -300,16 +303,24 @@ void ABaseHero::OnEquipped(int equipID, bool isEquip) const
 {
    FEquipLookupRow* e = UItemManager::Get().GetEquipInfo(equipID);
    for(auto& x : e->stats.defaultAttributes)
+   {
       statComponent->ModifyStats<true>(statComponent->GetAttributeBaseValue(x.att) + x.defaultValue * (2 * isEquip - 1), x.att);
+   }
 
    for(auto& x : e->stats.defaultUnitScalingStats)
+   {
       statComponent->ModifyStats<true>(statComponent->GetSkillBaseValue(x.stat) + x.defaultValue * (2 * isEquip - 1), x.stat);
+   }
 
    for(auto& x : e->stats.defaultVitals)
+   {
       statComponent->ModifyStats<true>(statComponent->GetVitalBaseValue(x.vit) + x.defaultValue * (2 * isEquip - 1), x.vit);
+   }
 
    for(auto& x : e->stats.defaultMechanics)
+   {
       statComponent->ModifyStats<true>(statComponent->GetMechanicBaseValue(x.mech) + x.defaultValue * (2 * isEquip - 1), x.mech);
+   }
 }
 
 void ABaseHero::SetUnitSelected(bool value)
@@ -317,9 +328,9 @@ void ABaseHero::SetUnitSelected(bool value)
    Super::SetUnitSelected(value);
    if(value)
    {
-      controllerRef->GetBasePlayer()->selectedHeroes.AddUnique(this);
+      controllerRef->GetBasePlayer()->AddSelectedHero(this);
    } else
    {
-      controllerRef->GetBasePlayer()->selectedHeroes.RemoveSingle(this);
+      controllerRef->GetBasePlayer()->RemoveSelectedHero(this);
    }
 }

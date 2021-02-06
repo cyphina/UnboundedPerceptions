@@ -32,7 +32,7 @@ void AHeroAIController::OnPossess(APawn* InPawn)
 void AHeroAIController::BeginInteract(AActor* interactable)
 {
    if(IsValid(interactable) && interactable->GetClass()->ImplementsInterface(UInteractable::StaticClass())) {
-      Stop();
+      StopCurrentAction();
 
       // Make sure this is set before we call GetInteractableLocation when handling a door
       heroRef->SetCurrentInteractable(interactable);
@@ -82,9 +82,9 @@ void AHeroAIController::BeginUseItem(int itemToUseID, int slotIndex)
    }
 }
 
-void AHeroAIController::Stop()
+void AHeroAIController::StopCurrentAction()
 {
-   Super::Stop();
+   Super::StopCurrentAction();
    const AUserInput* PC = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
    if(ABasePlayer* basePlayer = PC ? PC->GetBasePlayer() : nullptr) {
       if(basePlayer->heroInBlockingInteraction != heroRef) {

@@ -16,20 +16,15 @@ void UActionbarInterface::NativeOnInitialized()
    {
       partyContext->OnFocusedUnitChanged().AddUObject(this,
          &UActionbarInterface::OnFocusedUnitChanged);
-      partyContext->OnAllySelectedDelegate.AddDynamic(this, &UActionbarInterface::OnAllySelected);
-      partyContext->OnAllyDeselectedDelegate.AddDynamic(this, &UActionbarInterface::OnAllyDeselected);
-      partyContext->OnAllAlliesClearedDelegate.AddDynamic(this, &UActionbarInterface::OnAllAlliesCleared);
+      partyContext->OnUnitSelectedDelegate.AddDynamic(this, &UActionbarInterface::OnUnitSelected);
+      partyContext->OnUnitDeselectedDelegate.AddDynamic(this, &UActionbarInterface::OnUnitDeselected);
+      partyContext->OnSelectionClearedDelegate.AddDynamic(this, &UActionbarInterface::OnAllAlliesCleared);
    }
 }
 
-FOnSlotSelected& UActionbarInterface::OnSlotSelected()
+void UActionbarInterface::OnUnitSelected()
 {
-   return singleUnitView->OnSlotSelected();
-}
-
-void UActionbarInterface::OnAllySelected(bool bToggled)
-{
-   if(CPC->GetBasePlayer()->selectedAllies.Num() > 1)
+   if(CPC->GetBasePlayer()->selectedUnits.Num() > 1)
    {
       WS_UnitTypeView->SetActiveWidget(multiUnitView);
       multiUnitView->OnWidgetShown();
@@ -37,9 +32,24 @@ void UActionbarInterface::OnAllySelected(bool bToggled)
    else
    {
       WS_UnitTypeView->SetActiveWidget(singleUnitView);
-      singleUnitView->OnWidgetShown(CPC->GetBasePlayer()->selectedAllies[0]);
+      singleUnitView->OnWidgetShown(CPC->GetBasePlayer()->selectedUnits[0]);
    }
    SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+}
+
+
+void UActionbarInterface::OnUnitDeselected()
+{
+   if(CPC->GetBasePlayer()->selectedUnits.Num() == 1)
+   {
+      WS_UnitTypeView->SetActiveWidget(singleUnitView);
+      singleUnitView->OnWidgetShown(CPC->GetBasePlayer()->selectedUnits[0]);
+      SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+   }
+   else if(CPC->GetBasePlayer()->selectedUnits.Num() == 0)
+   {
+      SetVisibility(ESlateVisibility::Collapsed);
+   }
 }
 
 void UActionbarInterface::OnFocusedUnitChanged(AUnit* newFocusedUnit)
@@ -52,21 +62,12 @@ void UActionbarInterface::OnFocusedUnitChanged(AUnit* newFocusedUnit)
    }
 }
 
-void UActionbarInterface::OnAllyDeselected(AAlly* deselectedAlly)
-{
-   if(CPC->GetBasePlayer()->selectedAllies.Num() == 1)
-   {
-      WS_UnitTypeView->SetActiveWidget(singleUnitView);
-      singleUnitView->OnWidgetShown(CPC->GetBasePlayer()->selectedAllies[0]);
-      SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-   }
-   else if(CPC->GetBasePlayer()->selectedAllies.Num() == 0)
-   {
-      SetVisibility(ESlateVisibility::Collapsed);
-   }
-}
-
 void UActionbarInterface::OnAllAlliesCleared()
 {
    SetVisibility(ESlateVisibility::Collapsed);
+}
+
+FOnSlotSelected& UActionbarInterface::OnSlotSelected()
+{
+   return singleUnitView->OnSlotSelected();
 }

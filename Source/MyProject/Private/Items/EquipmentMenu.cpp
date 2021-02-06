@@ -25,9 +25,9 @@ void UEquipmentMenu::NativeOnInitialized()
 
 bool UEquipmentMenu::OnWidgetAddToViewport_Implementation()
 {
-   if(CPC->GetBasePlayer()->selectedHeroes.Num() > 0)
+   if(CPC->GetBasePlayer()->GetSelectedHeroes().Num() > 0)
    {
-      heroRef = CPC->GetBasePlayer()->selectedHeroes[0];
+      heroRef = CPC->GetBasePlayer()->GetSelectedHeroes()[0];
       if(heroRef)
       {
          SetupEquipImages();

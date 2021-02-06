@@ -12,9 +12,11 @@ class ABaseHero;
 class AUnit;
 class AUserInput;
 class AAlly;
-class ICursorClickFunctionality;
+class CursorClickFunctionalityBase;
 class USkillSlot;
 class UCameraComponent;
+
+DECLARE_EVENT_OneParam(ARTSPawn, FOnGroupTabbed, AUnit*);
 
 /**
  * @brief This is the object that represents the player controlling all the units so the camera is attached to this pawn.
@@ -65,6 +67,9 @@ public:
    /** Scales length of the line we check when we line trace during a click event to query what is under the cursor */
    static const int CLICK_TRACE_LENGTH_MULTIPLIER = 5;
 
+   UFUNCTION(BlueprintCallable)
+   bool HasSecondaryCursor() const { return bHasSecondaryCursor; }
+   
    UPROPERTY(BlueprintReadWrite)
    FVector2D startMousePos;
 
@@ -73,11 +78,7 @@ public:
 
    /** Check if we're drag clicking and thus making a feasible selection rect*/
    UFUNCTION(BlueprintCallable, BlueprintPure)
-   bool isSelectionRectActive() const;
-
-   /** If there is a cursor on screen not created by hovering */
-   UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true), Category = "Control Settings")
-   bool hasSecondaryCursor;
+   bool IsSelectionRectActive() const;
 
    /** Used to correctly pick an arrow cursor when we are edge panning (and possibly panning with MMB in the future)*/
    UPROPERTY(BlueprintReadWrite, Category = "Control Settings")
@@ -161,7 +162,11 @@ private:
    // Used to continually track the control group leader as the key is held down
    FTimerHandle controlDoubleTapHoldHandle;
 
-   TUniquePtr<ICursorClickFunctionality> clickFunctionalityClass;
+   TUniquePtr<CursorClickFunctionalityBase> clickFunctionalityClass;
+
+   /** If there is a cursor on screen not created by hovering */
+   UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true), Category = "Control Settings")
+   bool bHasSecondaryCursor;
 
 #pragma endregion
 
@@ -233,8 +238,10 @@ private:
 public:
    /** Stop all selected unit actions, stops AI behavior, and hides the spell circle! */
    UFUNCTION(BlueprintCallable, Category = "Action")
-   void StopSelectedAllyCommands();
+   void CompleteHaltSelected();
 
+   FOnGroupTabbed& OnGroupTabbed() { return OnGroupTabbedEvent; }
+   
 private:
    void RightClick();
    void RightClickShift();
@@ -242,15 +249,20 @@ private:
    void LeftClickReleased();
    void LeftClickShift();
 
-   void TabThroughSelection();
-   void TabThroughGroup() const;
+   /** When we press tab to cycle through our selected or unselected units. */
+   void TabChangeSelection();
+
+   /** When we tab through a series of preselected units */
+   void TabThroughGroup();
+
+   /** When we have only a single unit selected and we try to tab */
    void TabSingleSelection() const;
+
+   void AttackMoveInitiate();
 
    void UseAbility(int abilityIndex);
    /** Delegate to pass to BindAction so we can have a parameter for useability*/
    DECLARE_DELEGATE_OneParam(FAbilityUseDelegate, int);
-
-   void AttackMoveInitiate();
 
    /** Select any control group that is bound to a key*/
    void SelectControlGroup(int controlIndex);
@@ -267,7 +279,7 @@ private:
 
    /** Pans the camera to the first unit in the control group if we double tap the control select button*/
    FTimerHandle ControlGroupDoupleTapHandle;
-   
+
    UFUNCTION()
    void ControlGroupDoubleTapTimer();
 
@@ -282,7 +294,6 @@ private:
    DECLARE_DELEGATE_OneParam(FMakeControlGroupDelegate, int);
 
    void OnSkillSlotSelected(int skillIndex);
-   void OnUnitSlotSelected(AUnit* unitSelected);
    void OnInventorySlotSelected(int slotIndex);
    void OnStorageSlotSelected(int slotIndex);
    void OnEquipmentSlotSelected(int slotIndex);
@@ -305,10 +316,6 @@ private:
    void HandleTransferStorageItems(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemToDeposit) const;
    void HandleSellItemToStore(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemToDeposit) const;
 
-#pragma endregion
-
-#pragma region selection
-public:
-
+   FOnGroupTabbed OnGroupTabbedEvent;
 #pragma endregion
 };

@@ -5,6 +5,7 @@
 #include "Overlay.h"
 #include "OverlaySlot.h"
 #include "RTSDamageNumberWidget.h"
+#include "RTSGlobalCVars.h"
 #include "Unit.h"
 
 URTSDamageNumberContainer::URTSDamageNumberContainer(const FObjectInitializer& Initializer) : Super(Initializer), widgetPool(*this)
@@ -38,9 +39,12 @@ void URTSDamageNumberContainer::ReleaseSlateResources(bool bReleaseChildren)
 
 void URTSDamageNumberContainer::OnDamageDealt(const FUpDamage& damageReceived)
 {
-   URTSDamageNumberWidget* damageNumber = widgetPool.GetOrCreateInstance(damageNumberWidgetClass);
-   damageNumber->SetDamageTextProps(damageReceived);
-   UOverlaySlot* damageNumberSlot = damageNumberContainerWidget->AddChildToOverlay(damageNumber);
-   damageNumberSlot->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Center);
-   damageNumberSlot->SetVerticalAlignment(EVerticalAlignment::VAlign_Center);
+   if(!AttackCVars::bUseOldDamageNumbers)
+   {
+      URTSDamageNumberWidget* damageNumber = widgetPool.GetOrCreateInstance(damageNumberWidgetClass);
+      damageNumber->SetDamageTextProps(damageReceived);
+      UOverlaySlot* damageNumberSlot = damageNumberContainerWidget->AddChildToOverlay(damageNumber);
+      damageNumberSlot->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Center);
+      damageNumberSlot->SetVerticalAlignment(EVerticalAlignment::VAlign_Center);
+   }
 }

@@ -12,7 +12,7 @@ inline AUnit& AUnitController::MoveCompletedVisitor::FinishedMovingUnit() const
 
 void AUnitController::MoveCompletedVisitor::operator()(FEmptyVariantState)
 {
-   finishedMovingUnitController->Stop();
+   finishedMovingUnitController->StopCurrentAction();
 }
 
 void AUnitController::MoveCompletedVisitor::operator()(FVector targetVector)

@@ -22,18 +22,20 @@ class MYPROJECT_API UMontageAttackAnim : public UObject, public IAttackAnim
 
    UFUNCTION()
    void AttackNotify() override;
-   
-   void          PlayAttackAnimation(float playRate) override;
-   void          StopAttackAnimation() override;
-   FOnHitNotify& OnAttackNotify() override;
-   
- protected:
-   AUnit* unitRef;
 
+   void PlayAttackAnimation(float playRate) override;
+   void StopAttackAnimation() override;
+
+   FOnHitNotify&          OnAttackNotify() override { return OnAttackNotifyEvent; }
+   FOnAttackAnimFinished& OnAttackAnimFinished() override { return OnAttackAnimFinishedEvent; }
+
+ protected:
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
    UAnimMontage* attackMontage;
 
  private:
-   AUnit*       animatedUnit;
-   FOnHitNotify OnAttackNotifyEvent;
+   void OnMontageEnded(UAnimMontage* montage, bool bInterrupted);
+
+   FOnHitNotify          OnAttackNotifyEvent;
+   FOnAttackAnimFinished OnAttackAnimFinishedEvent;
 };

@@ -28,14 +28,6 @@ void AAlly::BeginPlay()
 void AAlly::Tick(float deltaSeconds)
 {
    Super::Tick(deltaSeconds);
-
-   if(!controllerRef->IsInputKeyDown(EKeys::LeftShift) && GetState() == EUnitState::STATE_IDLE && !commandQueue.IsEmpty())
-   {
-      TFunction<void()> command;
-      commandQueue.Dequeue(command);
-      --queueCount;
-      command();
-   }
 }
 
 void AAlly::EndPlay(const EEndPlayReason::Type eReason)
@@ -63,11 +55,17 @@ void AAlly::SetUnitSelected(bool value)
    Super::SetUnitSelected(value);
    if(value)
    {
-      controllerRef->GetBasePlayer()->selectedAllies.AddUnique(this);
+      if(controllerRef->GetBasePlayer()->GetSelectedAllies().Num() < 16)
+      {
+         controllerRef->GetBasePlayer()->AddSelectedAlly(this);
+         controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.Broadcast(this);
+      }
    }
    else
    {
-      controllerRef->GetBasePlayer()->selectedAllies.RemoveSingle(this);
+      controllerRef->GetBasePlayer()->RemoveSelectedAlly(this);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.Broadcast(this);
+
    }
 }
 
@@ -87,18 +85,6 @@ bool AAlly::GetOverlappingObjects(TArray<FHitResult>& hits)
    GetWorld()->SweepMultiByChannel(hits, start, end, cameraRotation, FADE_CHANNEL, FCollisionShape::MakeBox(FVector(200, 200, 100)));
    if(!hits.Num()) return false;
    return true;
-}
-
-void AAlly::QueueAction(TFunction<void()> actionToQueue)
-{
-   if(queueCount < 20)
-   {
-      GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Emerald, TEXT("SUCESSFUL QUEUE"));
-      commandQueue.Enqueue(actionToQueue);
-      ++queueCount;
-   }
-   else
-      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), FILLED_QUEUE_TEXT);
 }
 
 const TSet<AUnit*>& AAlly::GetSeenEnemies() const

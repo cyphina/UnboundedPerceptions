@@ -49,7 +49,7 @@ class MYPROJECT_API URTSSidebarWidget : public URTSBrowserWidgetBase
     * @param bToggled - Did we select a single unit (then deselect others) or did we shift click
     */
    UFUNCTION()
-   void UpdateSingleHeroSelect(bool bToggled);
+   void UpdateSingleHeroSelect(AAlly* selectedALly);
 
    /** Updates the hero's health current value when it senses a change*/
    UFUNCTION()

@@ -3,59 +3,69 @@
 #include "MyProject.h"
 #include "NullAttackAnim.h"
 
+#include "RTSGlobalCVars.h"
+
 UNullAttackAnim::UNullAttackAnim()
 {
-   mockAnimationTimeline.SetTimelineLength(2.f);
-   SetupNotifyEvent(1.f);
+   SetMockAnimationLength(2.f);
+   SetAttackEventTime(1.f);
 }
 
 void UNullAttackAnim::PlayAttackAnimation(float playRate)
 {
-   mockAnimationTimeline.SetPlayRate(playRate);
-   mockAnimationTimeline.PlayFromStart();
+   if(AttackCVars::bPrintAttackTimings)
+   {
+      GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, "Attack Animation Started!");
+   }
+
+   SetupHitTimer();
+   GetWorld()->GetTimerManager().SetTimer(
+       mockAnimationTimer,
+       [this]() {
+          SetupHitTimer();
+          OnAttackAnimFinished().Broadcast();
+       },
+       timelineLength, true);
 }
 
 void UNullAttackAnim::StopAttackAnimation()
 {
-   mockAnimationTimeline.Stop();
+   GetWorld()->GetTimerManager().ClearTimer(mockAnimationTimer);
+   GetWorld()->GetTimerManager().ClearTimer(hitNotifyTimer);
 }
 
 float UNullAttackAnim::GetMockAnimationLength() const
 {
-   return mockAnimationTimeline.GetTimelineLength();
+   return timelineLength;
 }
 
 void UNullAttackAnim::SetMockAnimationLength(float newLength)
 {
-   mockAnimationTimeline.SetTimelineLength(newLength);
+   timelineLength = newLength;
 }
 
-void UNullAttackAnim::SetupNotifyEvent(float notifyTime)
+void UNullAttackAnim::SetAttackEventTime(float newTime)
 {
-   if(notifyTime < 0 || notifyTime > GetMockAnimationLength())
+   if(newTime < 0 || newTime > GetMockAnimationLength())
    {
       UE_LOG(LogTemp, Warning, TEXT("Invalid time. Either negative time or attempting to set keyframe time to be past end of timeline"));
       return;
    }
 
-   FOnTimelineEvent onAttackNotify;
-   onAttackNotify.BindUFunction(this, "AttackNotify");
-   mockAnimationTimeline.AddEvent(notifyTime, onAttackNotify);
-}
-
-void UNullAttackAnim::SetAttackEventTime(float newTime)
-{
-   mockAnimationTimeline = FTimeline();
-   SetupNotifyEvent(newTime);
+   hitNotifyTime = newTime;
 }
 
 void UNullAttackAnim::AttackNotify()
 {
+   if(AttackCVars::bPrintAttackTimings)
+   {
+      GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, "Attack Hit Notification!");
+   }
+
    OnAttackNotifyEvent.Broadcast();
 }
 
-void UNullAttackAnim::NativeUpdateAnimation(float DeltaSeconds)
+void UNullAttackAnim::SetupHitTimer()
 {
-   Super::NativeUpdateAnimation(DeltaSeconds);
-   mockAnimationTimeline.TickTimeline(DeltaSeconds);
+   GetWorld()->GetTimerManager().SetTimer(hitNotifyTimer, this, &UNullAttackAnim::AttackNotify, hitNotifyTime, false);
 }

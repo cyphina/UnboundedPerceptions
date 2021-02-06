@@ -11,7 +11,7 @@
  * If the animation represents a swing of the sword, the hit notify represents when the sword touches the enemy.
  */
 UCLASS()
-class MYPROJECT_API UNullAttackAnim : public UAnimInstance, public IAttackAnim
+class MYPROJECT_API UNullAttackAnim : public UObject, public IAttackAnim
 {
    GENERATED_BODY()
 
@@ -19,16 +19,16 @@ class MYPROJECT_API UNullAttackAnim : public UAnimInstance, public IAttackAnim
    /** By default the parent class looks for a mesh if we don't have one so we should be fine to set this */
    UNullAttackAnim();
 
-   void          PlayAttackAnimation(float playRate) override;
-   void          StopAttackAnimation() override;
-   FOnHitNotify& OnAttackNotify() override { return OnAttackNotifyEvent; }
+   void PlayAttackAnimation(float playRate) override;
+   void StopAttackAnimation() override;
+
+   FOnHitNotify&          OnAttackNotify() override { return OnAttackNotifyEvent; }
+   FOnAttackAnimFinished& OnAttackAnimFinished() override { return OnAttackAnimFinishedEvent; }
 
    float GetMockAnimationLength() const;
-	
-   void  SetMockAnimationLength(float newLength);
-	
-   void  SetupNotifyEvent(float notifyTime);
-	
+
+   void SetMockAnimationLength(float newLength);
+
    /** Requires us to create a new timeline since there's nothing in FTimeline's API to delete an event*/
    void SetAttackEventTime(float newTime);
 
@@ -39,9 +39,15 @@ class MYPROJECT_API UNullAttackAnim : public UAnimInstance, public IAttackAnim
    UFUNCTION()
    void AttackNotify() override;
 
-   void NativeUpdateAnimation(float DeltaSeconds) override;
+   void SetupHitTimer();
 
  private:
-   FOnHitNotify OnAttackNotifyEvent;
-   FTimeline    mockAnimationTimeline;
+   FOnHitNotify          OnAttackNotifyEvent;
+   FOnAttackAnimFinished OnAttackAnimFinishedEvent;
+
+   FTimerHandle mockAnimationTimer;
+   FTimerHandle hitNotifyTimer;
+
+   float hitNotifyTime;
+   float timelineLength;
 };

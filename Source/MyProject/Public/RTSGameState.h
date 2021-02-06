@@ -75,6 +75,12 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsConte
    UFUNCTION()
    void CleanupUnitLists();
 
+   /**
+    * Allows us to toggle if we hide allies or enemies via the vision subsystem
+   */
+   UFUNCTION(exec, Category = "Debugging")
+   void ShowEnemyPerspective();
+
    UPROPERTY(EditDefaultsOnly, Category = "Vision", Meta = (AllowPrivateAccess = true))
    TSubclassOf<AFogOfWarPlane> FOWplaneClass;
 

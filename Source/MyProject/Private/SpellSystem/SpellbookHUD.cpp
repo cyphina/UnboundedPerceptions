@@ -29,7 +29,7 @@ void USpellbookHUD::NativeOnInitialized()
 
 bool USpellbookHUD::OnWidgetAddToViewport_Implementation()
 {
-   heroWithOpenSpellbookRef = CPC->GetBasePlayer()->selectedHeroes[0];
+   heroWithOpenSpellbookRef = CPC->GetBasePlayer()->GetSelectedHeroes()[0];
    if(heroWithOpenSpellbookRef && heroWithOpenSpellbookRef->GetSpellBook())
    {
       ResetHUDForNewHero();

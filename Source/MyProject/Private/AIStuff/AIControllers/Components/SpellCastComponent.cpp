@@ -82,7 +82,7 @@ bool USpellCastComponent::BeginCastSpell(TSubclassOf<UMySpell> spellToCast)
    {
       if(abilityComponentRef->CanCast(spellToCast))
       {
-         unitOwnerRef->GetUnitController()->Stop();
+         unitOwnerRef->GetUnitController()->StopCurrentAction();
          currentSpell = spellToCast;
 
          if(!spell->GetTargeting().GetDefaultObject()->ShouldTryAdjustPosition(unitOwnerRef))
@@ -97,7 +97,7 @@ bool USpellCastComponent::BeginCastSpell(TSubclassOf<UMySpell> spellToCast)
    }
    else
    {
-      unitOwnerRef->GetUnitController()->Stop();
+      unitOwnerRef->GetUnitController()->StopCurrentAction();
    }
    return false;
 }
@@ -115,7 +115,7 @@ void USpellCastComponent::CastSpell(TSubclassOf<UMySpell> spellToCast)
          const float channelTime = spellToCast.GetDefaultObject()->GetSecondaryTime(unitOwnerRef->GetAbilitySystemComponent());
 
          if(!spellToCast.Get()->GetDefaultObject<UMySpell>()->AbilityTags.HasTag(FGameplayTag::RequestGameplayTag("Skill.Channeled")))
-            unitOwnerRef->GetUnitController()->Stop();
+            unitOwnerRef->GetUnitController()->StopCurrentAction();
          else
          {
             if(channelTime > 0)
@@ -137,7 +137,7 @@ void USpellCastComponent::OnChannelingFinished()
    FGameplayEventData eD         = FGameplayEventData();
    eD.EventTag                   = confirmTag;
    unitOwnerRef->GetAbilitySystemComponent()->HandleGameplayEvent(confirmTag, &eD);
-   unitOwnerRef->GetUnitController()->Stop();
+   unitOwnerRef->GetUnitController()->StopCurrentAction();
 }
 
 void USpellCastComponent::IncantationCheck(TSubclassOf<UMySpell> spellToCast)

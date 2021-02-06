@@ -22,8 +22,8 @@ void URTSSidebarWidget::NativeConstruct()
    cpcRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
    cpcRef->GetBasePlayer()->partyUpdatedEvent.AddUObject(this, &URTSSidebarWidget::UpdatePartyInformation);
    cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateSingleHeroSelect);
-   cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllyDeselectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateHeroToggleDeselected);
-   cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllAlliesClearedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateDeselectAllHeroes);
+   cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllyToggleDeselectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateHeroToggleDeselected);
+   cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnSelectionClearedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateDeselectAllHeroes);
    StartDisplay(width, height);
    browser->ScriptEventEmitter.AddDynamic(this, &URTSSidebarWidget::HandleBluEvent);
 }
@@ -86,24 +86,21 @@ void URTSSidebarWidget::UpdateDeselectAllHeroes()
 
 void URTSSidebarWidget::UpdateHeroToggleDeselected(AAlly* deselectedHeroRef)
 {
-   // Could use virtual functions but right now we only need this one small check and it could be faster to use branching
    if(deselectedHeroRef->GetClass()->IsChildOf(ABaseHero::StaticClass()))
    {
-      // RVO should optimize this
       const FString heroInfoString = MakeSingleHeroSelectedJson(deselectedHeroRef);
       UpdateInformation("updateHeroToggleDeselect", heroInfoString);
    }
 }
 
-void URTSSidebarWidget::UpdateSingleHeroSelect(bool bToggled)
+void URTSSidebarWidget::UpdateSingleHeroSelect(AAlly* selectedAlly)
 {
-   // Could use virtual functions but right now we only need this one small check and it could be faster to use branching
-   if(AAlly* heroAlly = cpcRef->GetBasePlayer()->selectedAllies.Last(); heroAlly->GetClass()->IsChildOf(ABaseHero::StaticClass()))
+   if(selectedAlly->GetClass()->IsChildOf(ABaseHero::StaticClass()))
    {
-      FString heroInfoString = MakeSingleHeroSelectedJson(heroAlly);
+      const FString heroInfoString = MakeSingleHeroSelectedJson(selectedAlly);
 
       // Send JSON data to the browser, which will automatically set deselected to its saved objects and then select the hero we passed in
-      !bToggled ? UpdateInformation("updateSingleHeroSelect", heroInfoString) : UpdateInformation("updateSingleHeroToggleSelect", heroInfoString);
+      UpdateInformation("updateSingleHeroSelect", heroInfoString);
    }
 }
 
@@ -217,8 +214,7 @@ void URTSSidebarWidget::HandleBluEvent(const FString& eventName, const FString& 
 
       if(!cpcRef->IsInputKeyDown(EKeys::LeftShift))
       {
-         cpcRef->GetBasePlayer()->ClearSelectedAllies();
-         cpcRef->GetBasePlayer()->SetFocusedUnit(selectedHeroRef);
+         cpcRef->GetBasePlayer()->ClearSelectedUnits();
          selectedHeroRef->SetUnitSelected(true);
       } else
       {

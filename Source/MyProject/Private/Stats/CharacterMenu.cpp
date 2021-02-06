@@ -36,7 +36,7 @@ void UCharacterMenu::NativeOnInitialized()
 bool UCharacterMenu::OnWidgetAddToViewport_Implementation()
 {
    Super::OnWidgetAddToViewport_Implementation();
-   baseHeroRef = CPC->GetBasePlayer()->selectedHeroes[0];
+   baseHeroRef = CPC->GetBasePlayer()->GetSelectedHeroes()[0];
    if(baseHeroRef)
    {
       InitialHeroValueSetup(baseHeroRef);

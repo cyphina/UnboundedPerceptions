@@ -4,6 +4,7 @@
 #include "AttackAnim.generated.h"
 
 DECLARE_EVENT(UAttackAnim, FOnHitNotify);
+DECLARE_EVENT(UAttackAnim, FOnAttackAnimFinished);
 
 UINTERFACE(MinimalAPI)
 class UAttackAnim : public UInterface
@@ -25,4 +26,7 @@ class IAttackAnim
 
    /** Bind to this to set a function in C++ to execute when the animation time corresponding to the damage proc occurs */
    virtual FOnHitNotify& OnAttackNotify() = 0;
+
+   /** When the animation finishes playin (as opposed to when the hit event occurs)  */
+   virtual FOnAttackAnimFinished& OnAttackAnimFinished() = 0;
 };

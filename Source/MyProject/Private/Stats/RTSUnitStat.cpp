@@ -57,6 +57,8 @@ void CombatInfo::RTSUnitStat::SetBaseValue(float value, UMyAttributeSet* attSet)
    attData->SetBaseValue(value);
    attSet->PreAttributeBaseChange(attribute, value);
    float newCurrentValue = attribute.GetNumericValue(attSet) + value - oldBaseVal;
+
+   // Add to adjusted value with by the difference in how much our base was changed 
    attribute.SetNumericValueChecked(newCurrentValue, attSet);
 }
 

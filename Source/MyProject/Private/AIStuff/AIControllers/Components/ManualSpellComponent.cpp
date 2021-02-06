@@ -13,7 +13,7 @@
 #include "GameplayDelegateContext.h"
 #include "RTSIngameWidget.h"
 #include "RTSPawn.h"
-#include "SpellFunctionLibrary.h"
+#include "SpellCastComponent.h"
 #include "SpellTargetingTypes.h"
 #include "TargetComponent.h"
 #include "UIDelegateContext.h"
@@ -56,7 +56,7 @@ bool UManualSpellComponent::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
 
                if(spell->GetTargeting()->IsChildOf(UUpSpellTargeting_None::StaticClass()))
                {
-                  unitWithPlayerControl->GetUnitController()->Stop();
+                  unitWithPlayerControl->GetUnitController()->StopCurrentAction();
                   unitWithPlayerControl->GetUnitController()->FindComponentByClass<USpellCastComponent>()->IncantationCheck(spellToCast);
                } else
                {
@@ -83,6 +83,7 @@ bool UManualSpellComponent::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
          return false;
       }
    }
+   currentlySelectedSpell = nullptr;
    return false;
 }
 

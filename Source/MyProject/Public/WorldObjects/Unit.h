@@ -2,21 +2,12 @@
 
 #include "AIController.h"
 #include "UnitProperties.h"
-
 #include "GameFramework/Character.h"
-
 #include "AbilitySystemInterface.h"
-#include "UnittargetData.h"
-
-#include "GameplayTags.h"
 #include "RTSAbilitySystemComponent.h"
-
 #include "SaveLoadClass.h"
-#include "SpellCastComponent.h"
 #include "State/IUnitState.h"
-
 #include "CombatParameters.h"
-
 #include "WorldObject.h"
 #include "Unit.generated.h"
 
@@ -60,7 +51,7 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    friend class AttackMoveState;
    friend class ChasingState;
 
-public:
+ public:
    AUnit(const FObjectInitializer& oI);
    ~AUnit();
 
@@ -87,7 +78,9 @@ public:
    UTexture2D* GetImage() const { return unitProperties.image; }
 
    UFUNCTION(BlueprintCallable, Category = "Accessors")
-   virtual void SetUnitSelected(bool value) { unitProperties.isSelected = value; }
+   virtual void SetUnitSelected(bool value);
+
+   void ClearSelectedFlag() { unitProperties.isSelected = false; };
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    virtual bool GetUnitSelected() const { return unitProperties.isSelected; }
@@ -97,6 +90,9 @@ public:
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
    bool GetIsDead() const;
+
+   bool GetIsUnitHidden() const { return unitProperties.isUnitHidden; }
+   void SetIsUnitHidden(bool isHidden) { unitProperties.isUnitHidden.AtomicSet(isHidden); }
 
    /**
     * Function to find the bounds of a unit (screen space points)
@@ -113,7 +109,7 @@ public:
    virtual void SetEnabled(bool bEnabled);
 
    bool IsEnabled() const { return unitProperties.bIsEnabled; }
-   
+
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
    const TSet<AUnit*>& GetVisibleEnemies() const { return *GetVisibleEnemies_Impl(); }
 
@@ -144,7 +140,7 @@ public:
 
    TSubclassOf<URTSMoveExecution> GetCustomMoveLogic() const { return customMoveLogic; }
 
-protected:
+ protected:
    UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
    class UHealthbarComp* healthBar;
 
@@ -164,7 +160,7 @@ protected:
 
    UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
    UWidgetComponent* damageIndicatorWidget;
-   
+
    UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
    URTSAbilitySystemComponent* abilitySystemComponent;
 
@@ -201,7 +197,7 @@ protected:
 
    class AUserInput* controllerRef;
 
-private:
+ private:
    /** Change speed-based parameters when time multiplier changes */
    UFUNCTION(Category = "Callback")
    void OnUpdateGameSpeed(float speedMultiplier);

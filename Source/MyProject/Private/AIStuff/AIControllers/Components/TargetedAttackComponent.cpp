@@ -25,6 +25,13 @@
 #include "UpAIHelperLibrary.h"
 #include "UpStatComponent.h"
 
+namespace AttackCVars
+{
+   bool                           bPrintAttackTimings = false;
+   static FAutoConsoleVariableRef CVarPrintAttackTimings(TEXT("printAttackTimings"), bPrintAttackTimings,
+                                                         TEXT("Prints out messagse when we start attacking and when we actually hit the unit."));
+}
+
 UTargetedAttackComponent::UTargetedAttackComponent()
 {
    attackAnimClass = UNullAttackAnim::StaticClass();
@@ -34,20 +41,20 @@ void UTargetedAttackComponent::BeginAttack(AUnit* target)
 {
    if(USpellDataLibrary::IsAttackable(target->GetAbilitySystemComponent()) && !USpellDataLibrary::IsStunned(agent->GetAbilitySystemComponent()))
    {
-      agent->GetUnitController()->Stop();
+      agent->GetUnitController()->StopCurrentAction();
       agent->GetTargetComponent()->SetTarget(target);
       if(URTSStateComponent* stateComp = agent->FindComponentByClass<URTSStateComponent>())
       {
          stateComp->ChangeState(EUnitState::STATE_ATTACKING);
       }
-      InitializeAttackParams();
+      GetWorld()->GetTimerManager().SetTimer(attackChecksHandle, this, &UTargetedAttackComponent::FollowAndTryAttackTarget, 0.05f, true, 0.f);
    }
 }
 
 void UTargetedAttackComponent::BeginAttackMove(FVector targetLocation)
 {
    agent->GetUnitController()->MoveToLocation(targetLocation);
-   GetWorld()->GetTimerManager().SetTimer(targetSearchHandle, this, &UTargetedAttackComponent::SearchForTargetInRange, .1f, true, 0);
+   GetWorld()->GetTimerManager().SetTimer(targetSearchHandle, this, &UTargetedAttackComponent::SearchForTargetInRange, .1f, true, 0.f);
 }
 
 void UTargetedAttackComponent::OverrideAttackWithSpell(TSubclassOf<UMySpell> overridingSpell)
@@ -57,60 +64,25 @@ void UTargetedAttackComponent::OverrideAttackWithSpell(TSubclassOf<UMySpell> ove
 void UTargetedAttackComponent::BeginPlay()
 {
    Super::BeginPlay();
+   UObject* animInstance = NewObject<UObject>(this, attackAnimClass.Get());
+
+   if(IAttackAnim* attackAnimInterface = Cast<IAttackAnim>(animInstance))
+   {
+      attackAnim.SetObject(animInstance);
+      attackAnim.SetInterface(attackAnimInterface);
+      attackAnimInterface->OnAttackNotify().AddUObject(this, &UTargetedAttackComponent::OnUnitAttackSwingDone);
+      attackAnimInterface->OnAttackAnimFinished().AddWeakLambda(this, [this]() { bAttackAnimationPlaying = false; });
+   }
+
    agent = Cast<AUnitController>(GetOwner())->GetUnitOwner();
    agent->GetUnitController()->OnUnitStopped().AddUObject(this, &UTargetedAttackComponent::OnUnitStopped);
-   agent->OnUnitAttackSwingHit().AddUObject(this, &UTargetedAttackComponent::OnUnitAttackSwingDone);
 }
 
-void UTargetedAttackComponent::OnUnitAttackSwingDone()
+void UTargetedAttackComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-   readyToAttack = false;
-   OnAttackSwingDoneEffect();
-   const FAIMessage msg(UnitMessages::AIMessage_Hit, agent);
-   FAIMessage::Send(agent->GetUnitController(), msg);
-   if(USpellDataLibrary::IsInvisible(agent->GetAbilitySystemComponent()))
+   if(GetWorld())
    {
-      agent->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
-   }
-   GetWorld()->GetTimerManager().SetTimer(attackUpdateHandle, this, &UTargetedAttackComponent::FollowAndTryAttackTarget, AttackTimerThreshold(), true, 0.f);
-}
-
-void UTargetedAttackComponent::InitializeAttackParams()
-{
-   attackAnimationPlaying = false;
-   if(AttemptReposition())
-   {
-      bMvingTwdTarg = true;
-   }
-   else
-   {
-      bMvingTwdTarg = false;
-   }
-}
-
-void UTargetedAttackComponent::FollowAndTryAttackTarget()
-{
-   if(bMvingTwdTarg)
-   {
-      if(CheckAndHandleCancelConditions()) return;
-   }
-   else
-   {
-      if(CheckAndHandleCancelConditions())
-      {
-         if(!attackAnimationPlaying)
-         {
-            if(HandlePositionalAdjustments())
-            {
-               if(readyToAttack) PlayAttackAnimation();
-            }
-         }
-         else
-         {
-            LockOnTarget();
-            CheckAndHandleTargetOutsideAnimationRange();
-         }
-      }
+      GetWorld()->GetTimerManager().ClearTimer(attackUpdateHandle);
    }
 }
 
@@ -128,26 +100,73 @@ bool UTargetedAttackComponent::AttemptReposition()
    return agent->GetUnitController()->AdjustPosition(AgentAttackRange(), AgentTargetUnit(), [this]() { OnFinishReposition(); });
 }
 
+void UTargetedAttackComponent::OnUnitAttackSwingDone()
+{
+   if(AttackCVars::bPrintAttackTimings)
+   {
+      GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, "Hit Unit!");
+   }
+
+   readyToAttack = false;
+   OnAttackSwingDoneEffect();
+
+   const FAIMessage msg(UnitMessages::AIMessage_Hit, agent);
+   FAIMessage::Send(agent->GetUnitController(), msg);
+
+   GetWorld()->GetTimerManager().SetTimer(
+   attackUpdateHandle, [this]() { readyToAttack = true; }, AttackTimerThreshold(), false);
+
+   if(USpellDataLibrary::IsInvisible(agent->GetAbilitySystemComponent()))
+   {
+      agent->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
+   }
+}
+
+void UTargetedAttackComponent::FollowAndTryAttackTarget()
+{
+   if(CheckAndHandleCancelConditions())
+   {
+      if(!bAttackAnimationPlaying)
+      {
+         if(HandlePositionalAdjustments())
+         {
+            if(readyToAttack)
+               PlayAttackAnimation();
+         }
+      } else
+      {
+         LockOnTarget();
+         CheckAndHandleTargetOutsideAnimationRange();
+      }
+   }
+}
+
 void UTargetedAttackComponent::OnFinishReposition()
 {
-   bMvingTwdTarg          = false;
-   attackAnimationPlaying = true;
+   bMvingTwdTarg           = false;
+   bAttackAnimationPlaying = true;
    PlayAttackAnimation();
 }
 
-bool UTargetedAttackComponent::CheckAndHandleCancelConditions() const
+bool UTargetedAttackComponent::CheckAndHandleCancelConditions()
 {
-   if(UNLIKELY(CheckTargetVisionLost()))
+   if(LIKELY(AgentTargetUnit()))
    {
-      TransitionToChaseState();
-      return false;
+      if(UNLIKELY(CheckTargetVisionLost()))
+      {
+         TransitionToChaseState();
+         return false;
+      }
+
+      if(UNLIKELY(!CheckTargetAttackable()))
+      {
+         StopAgent();
+         return false;
+      }
+      return true;
    }
-   if(UNLIKELY(!CheckTargetAttackable()))
-   {
-      StopAgent();
-      return false;
-   }
-   return true;
+   StopAgent();
+   return false;
 }
 
 bool UTargetedAttackComponent::CheckTargetVisionLost() const
@@ -160,14 +179,28 @@ bool UTargetedAttackComponent::CheckTargetAttackable() const
    return USpellDataLibrary::IsAttackable(agent->GetAbilitySystemComponent());
 }
 
-void UTargetedAttackComponent::TransitionToChaseState() const
+void UTargetedAttackComponent::TransitionToChaseState()
 {
-   agent->FindComponentByClass<URTSStateComponent>()->ChangeState(EUnitState::STATE_CHASING);
+   if(URTSStateComponent* stateComp = agent->FindComponentByClass<URTSStateComponent>())
+   {
+      stateComp->ChangeState(EUnitState::STATE_CHASING);
+   }
+
+   StopAttackAnim();
 }
 
 void UTargetedAttackComponent::StopAgent() const
 {
-   agent->GetUnitController()->Stop();
+   agent->GetUnitController()->StopCurrentAction();
+}
+
+void UTargetedAttackComponent::StopAttackAnim()
+{
+   if(attackAnim)
+   {
+      attackAnim->StopAttackAnimation();
+      bAttackAnimationPlaying = false;
+   }
 }
 
 bool UTargetedAttackComponent::HandlePositionalAdjustments()
@@ -181,7 +214,12 @@ bool UTargetedAttackComponent::HandlePositionalAdjustments()
 
 void UTargetedAttackComponent::PlayAttackAnimation()
 {
-   attackAnimationPlaying = true;
+   if(AttackCVars::bPrintAttackTimings)
+   {
+      GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, "Starting Swing Animation!");
+   }
+
+   bAttackAnimationPlaying = true;
    if(attackAnim)
    {
       attackAnim->PlayAttackAnimation();
@@ -196,9 +234,10 @@ float UTargetedAttackComponent::AttackTimerThreshold() const
 
 void UTargetedAttackComponent::OnUnitStopped()
 {
-   bMvingTwdTarg          = false;
-   attackAnimationPlaying = false;
-   GetWorld()->GetTimerManager().ClearTimer(attackUpdateHandle);
+   bMvingTwdTarg           = false;
+   bAttackAnimationPlaying = false;
+   attackAnim->StopAttackAnimation();
+   GetWorld()->GetTimerManager().ClearTimer(attackChecksHandle);
    GetWorld()->GetTimerManager().ClearTimer(targetSearchHandle);
 }
 
@@ -244,9 +283,9 @@ FGameplayTag UTargetedAttackComponent::GetAttackElement() const
    {
       return Cast<AEnemy>(agent)->GetInitialStats().element;
    }
-   else
+   if(ABaseHero* hero = Cast<ABaseHero>(agent))
    {
-      if(ABaseHero* hero = Cast<ABaseHero>(agent))
+      if(hero->GetEquipment()->GetWeaponId() > 0)
       {
          UItemFunctionLibrary::GetEquipInfo(hero->GetEquipment()->GetWeaponId()).stats.element;
       }
@@ -257,7 +296,7 @@ FGameplayTag UTargetedAttackComponent::GetAttackElement() const
 void UTargetedAttackComponent::CreateRangedProjectile(FDamageScalarStruct projectileDamageScalars)
 {
    const FVector    agentLocation = agent->GetActorLocation();
-   const FTransform transform     = FTransform{FVector(agentLocation.X, agentLocation.Y, agentLocation.Z + agent->GetCapsuleComponent()->GetScaledCapsuleHalfHeight())};
+   const FTransform transform = FTransform{FVector(agentLocation.X, agentLocation.Y, agentLocation.Z + agent->GetCapsuleComponent()->GetScaledCapsuleHalfHeight())};
    ARTSProjectile*  projectile = ARTSProjectile::MakeRTSProjectile(GetWorld(), agent->GetTargetComponent(), transform, ARTSProjectile::StaticClass(), projectileStrategy);
 
    projectile->hitEffects.Add(agent->GetAbilitySystemComponent()->MakeDamageEffect(projectileDamageScalars, GetAttackElement()));
@@ -267,12 +306,8 @@ bool UTargetedAttackComponent::CheckAndHandleTargetOutsideAnimationRange()
 {
    if(!UUpAIHelperLibrary::IsTargetInRange(agent, AgentTargetLocation(), AgentBufferAttackRange()))
    {
-      if(attackAnim)
-      {
-         attackAnim->StopAttackAnimation();
-         attackAnimationPlaying = false;
-         return false;
-      }
+      StopAttackAnim();
+      return false;
    }
    return true;
 }
@@ -294,10 +329,14 @@ float UTargetedAttackComponent::AgentBufferAttackRange() const
 
 FVector UTargetedAttackComponent::AgentTargetLocation() const
 {
-   return agent->FindComponentByClass<UTargetComponent>()->GetTargetLocation();
+   return agent->GetTargetComponent()->GetTargetUnit()->GetActorLocation();
 }
 
 AUnit* UTargetedAttackComponent::AgentTargetUnit() const
 {
-   return agent->FindComponentByClass<UTargetComponent>()->GetTargetUnit();
+   if(agent->GetTargetComponent()->IsTargetingUnit())
+   {
+      return agent->GetTargetComponent()->GetTargetUnit();
+   }
+   return nullptr;
 }

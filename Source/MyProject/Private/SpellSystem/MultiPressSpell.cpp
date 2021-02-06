@@ -25,5 +25,5 @@ void UMultiPressSpell::EndAbility(const FGameplayAbilitySpecHandle Handle, const
    USpellFunctionLibrary::SpellConfirmSwap(nextPressSpell, GetClass(), ownerRef, false);
 
    //After finished confirmation stop to reset all spell variables and let AI transition from idle state
-   ownerRef->GetUnitController()->Stop();
+   ownerRef->GetUnitController()->StopCurrentAction();
 }

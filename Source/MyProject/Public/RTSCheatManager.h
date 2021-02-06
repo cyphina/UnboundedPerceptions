@@ -21,7 +21,7 @@ class MYPROJECT_API URTSCheatManager : public UCheatManager
 {
    GENERATED_BODY()
 
-public:
+ public:
    /** Level up hero once
     * @param heroName - Name of the hero in the party
     */
@@ -117,7 +117,6 @@ public:
    UFUNCTION(exec, Category = "Cheats")
    virtual void DamageUnit(FString unitName, int damageAmount = 1, bool bCrit = false);
 
-
    /**
     * Allows us to toggle on categories for CSV
     * Probably best to use Superluminal or FramePro
@@ -125,10 +124,10 @@ public:
    UFUNCTION(exec, Category = "Debugging")
    void EnableCSVCategories(FString csvCategories);
 
-protected:
+ protected:
    void InitCheatManager() override;
 
-private:
+ private:
    AUserInput*    userInputRef;
    ARTSGameMode*  gameModeRef;
    ARTSGameState* gameStateRef;

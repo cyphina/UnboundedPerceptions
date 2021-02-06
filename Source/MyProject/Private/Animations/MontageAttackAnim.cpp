@@ -10,12 +10,23 @@ UMontageAttackAnim::UMontageAttackAnim()
 
 void UMontageAttackAnim::AttackNotify()
 {
+
    OnAttackNotify().Broadcast();
 }
 
 void UMontageAttackAnim::PlayAttackAnimation(float playRate)
 {
-   Cast<ACharacter>(GetOuter())->PlayAnimMontage(attackMontage, playRate);
+   ACharacter* character = Cast<ACharacter>(GetOuter());
+   if(character)
+   {
+      character->PlayAnimMontage(attackMontage, playRate);
+      if(UAnimInstance* animBP = character->GetMesh()->GetAnimInstance())
+      {
+         FOnMontageEnded montageEndedDelegate;
+         montageEndedDelegate.BindUObject(this, &UMontageAttackAnim::OnMontageEnded);
+         animBP->Montage_SetEndDelegate(montageEndedDelegate);
+      }
+   }
 }
 
 void UMontageAttackAnim::StopAttackAnimation()
@@ -23,7 +34,7 @@ void UMontageAttackAnim::StopAttackAnimation()
    Cast<ACharacter>(GetOuter())->StopAnimMontage(attackMontage);
 }
 
-FOnHitNotify& UMontageAttackAnim::OnAttackNotify()
+void UMontageAttackAnim::OnMontageEnded(UAnimMontage* montage, bool bInterrupted)
 {
-   return OnAttackNotifyEvent;
+   OnAttackAnimFinished().Broadcast();
 }

@@ -8,7 +8,7 @@ class AUnit;
 class URTSVisionComponent;
 
 UCLASS(Within = RTSGameState)
-class MYPROJECT_API UVisionSubsystem : public UObject
+class MYPROJECT_API UVisionSubsystem : public UObject, public FRunnable
 {
    GENERATED_BODY()
 
@@ -22,16 +22,26 @@ class MYPROJECT_API UVisionSubsystem : public UObject
    UFUNCTION(BlueprintCallable, BlueprintPure)
    const TSet<AUnit*>& GetVisiblePlayerUnits() const { return visiblePlayerUnits; }
 
+   void ToggleEnemyPerspective();
+
+ protected:
+   void BeginDestroy() override;
+
  private:
    UVisionSubsystem();
 
-   void StartUpdating();
+   uint32 Run() override;
+
+   void Stop() override;
+
+   void OnPreLoadMap(const FString& MapName);
+   void OnPostLoadMap(UWorld* World);
 
    UFUNCTION()
-   void ResumeUpdating();
+   void OnLevelLoaded();
 
    UFUNCTION()
-   void StopUpdating();
+   void OnLevelAboutToUnload();
 
    FHitResult                  visionHitResult;
    FCollisionObjectQueryParams queryParamVision;
@@ -42,17 +52,11 @@ class MYPROJECT_API UVisionSubsystem : public UObject
    /**Lists what allies are visible so we don't have to keep doing line traces which is an expensive op*/
    TSet<AUnit*> visiblePlayerUnits;
 
-   mutable FWindowsRWLock visibleMutex;        // Guards visibleEnemies as its gets updated by multiple threads in the parallelFor
-   mutable FWindowsRWLock visiblePlayersMutex; // Guard visiblePlayerUnits as its gets updated by multiple threads in the parallelFor
-
    void AddVisibleAlly(AUnit* newAlly);
    void AddVisibleEnemy(AUnit* newEnemy);
 
    TSet<const URTSVisionComponent*> GetFriendlyVisionComps() const;
    TSet<const URTSVisionComponent*> GetEnemyVisionComps() const;
-
-   FTimerHandle allyVisionUpdateTimerHandle;
-   FTimerHandle enemyVisionUpdateTimerHandle;
 
    ARTSGameState* gameStateRef;
 
@@ -75,18 +79,25 @@ class MYPROJECT_API UVisionSubsystem : public UObject
    UFUNCTION()
    void UpdateVisiblePlayerUnits();
 
-   void StoreEnemiesVisibleLastCall(TSet<AUnit*>& lastCallCache);
+   /** Caches what units were visible last check (caches only units that we're going to hide) */
+   void StoreUnitsToHideThatWereVisibleLastCall(TSet<AUnit*>& lastCallCache, TSet<AUnit*>& unitsToPossiblyHide);
 
-   bool CheckUnitInVision(AUnit* unit, const URTSVisionComponent* visionComp, FWindowsRWLock& unitListMutex, TSet<AUnit*>& visibleUnits);
+   bool CheckUnitInVision(AUnit* unit, const URTSVisionComponent* visionComp, TSet<AUnit*>& visibleUnits);
    /** Trace to a target gets blocked by walls and fails if target is not visible */
    bool LineOfSightToNonInvisUnit(AUnit* unit, const URTSVisionComponent* allyVision);
 
-   /** Unhides enemies that pass the visibility check. */
-   void MakeEnemiesInVisionVisible();
+   /** Unhides units that pass the visibility check. */
+   void MakeUnitsInVisionVisible(TSet<AUnit*>& unitsEligibleForHidingVisibleLastCheck);
 
    /**
     * Enemies from the last visibility check that were visible that are no longer visible get hidden here.
     * Even if due to timing issues visibleEnemies doesn't have the right units inside it, it doesn't matter because the timing is so narrow and this will be rerun
     */
-   void MakeEnemiesOutOfVisionInvisible(TSet<AUnit*>&) const;
+   void MakeUnitsOutOfVisionInvisible(TSet<AUnit*>& unitsEligibleForHidingVisibleLastCheck, TSet<AUnit*>& unitsDeemedVisibleAfterCheck) const;
+
+   FRunnableThread* visionUpdateThread;
+
+   FThreadSafeCounter stopTaskCounter;
+
+   bool bShowEnemyPerspective = false;
 };
