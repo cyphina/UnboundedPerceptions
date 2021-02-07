@@ -22,6 +22,7 @@
 #include "GameBaseHelpers/ECursorStates.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "SpellCastComponent.h"
+#include "UpAIHelperLibrary.h"
 
 DefaultCursorClickFunctionality::DefaultCursorClickFunctionality(ARTSPawn* pawnRef, AUserInput* controllerRef)
 {
@@ -35,18 +36,25 @@ void DefaultCursorClickFunctionality::HandleLeftClick()
 
    switch(pawnRef->GetCursorState())
    {
-      case ECursorStateEnum::Attack: SelectEnemy(); break;
+      case ECursorStateEnum::Attack: SelectEnemy();
+         break;
       case ECursorStateEnum::Select:
       case ECursorStateEnum::Moving:
       case ECursorStateEnum::PanUp:
       case ECursorStateEnum::PanDown:
       case ECursorStateEnum::PanLeft:
-      case ECursorStateEnum::PanRight: SelectSingleUnitUnderClick(); break;
-      case ECursorStateEnum::Interact: ClickInteract(); break;
-      case ECursorStateEnum::Item: ClickUseItem(); break;
-      case ECursorStateEnum::Magic: ClickCastSpell(); break;
-      case ECursorStateEnum::Talking: ClickTalk(); break;
-      case ECursorStateEnum::AttackMove: ClickAttackMove(); break;
+      case ECursorStateEnum::PanRight: SelectSingleUnitUnderClick();
+         break;
+      case ECursorStateEnum::Interact: ClickInteract();
+         break;
+      case ECursorStateEnum::Item: ClickUseItem();
+         break;
+      case ECursorStateEnum::Magic: ClickCastSpell();
+         break;
+      case ECursorStateEnum::Talking: ClickTalk();
+         break;
+      case ECursorStateEnum::AttackMove: ClickAttackMove();
+         break;
       default: break;
    }
 
@@ -90,20 +98,27 @@ void DefaultCursorClickFunctionality::HandleRightClick()
             {
                const FVector location = clickHitResult.Location;
                pawnRef->CreateClickVisual(location);
-               pawnRef->CompleteHaltSelected();
-               IssueMoveToSelectedUnits(location);
+               pawnRef->HaltSelectedExceptMovement();
+
+               if(!pawnRef->GetStaticFormationEnabled())
+               {
+                  IssueMoveToSelectedUnits(location);
+               }
+               else
+               {
+                  MoveInFormation(location);
+               }
             }
             break;
             case ENEMY_CHANNEL:
             {
                if(AEnemy* enemy = Cast<AEnemy>(clickHitResult.GetActor()))
                {
-                  pawnRef->CompleteHaltSelected();
+                  pawnRef->HaltSelectedExceptMovement();
                   if(!enemy->GetIsUnitHidden())
                   {
                      IssueAttackToSelectedUnits(enemy);
-                  }
-                  else
+                  } else
                   {
                      const FVector location = enemy->GetActorLocation();
                      pawnRef->CreateClickVisual(location);
@@ -130,8 +145,10 @@ void DefaultCursorClickFunctionality::HandleShiftLeftClick()
       case ECursorStateEnum::PanUp:
       case ECursorStateEnum::PanDown:
       case ECursorStateEnum::PanLeft:
-      case ECursorStateEnum::PanRight: ToggleSingleAllySelection(); break;
-      case ECursorStateEnum::AttackMove: AttackMoveQueue(); break;
+      case ECursorStateEnum::PanRight: ToggleSingleAllySelection();
+         break;
+      case ECursorStateEnum::AttackMove: AttackMoveQueue();
+         break;
       default: break;
    }
    pawnRef->clickedOnBrowserHud = false;
@@ -163,7 +180,8 @@ void DefaultCursorClickFunctionality::HandleShiftRightClick()
          {
             AEnemy* enemy = Cast<AEnemy>(clickHitResult.GetActor());
 
-            QueueActionToSelectedUnits([enemy](AUnit* unit) {
+            QueueActionToSelectedUnits([enemy](AUnit* unit)
+            {
                if(UTargetedAttackComponent* targetedAttackComp = unit->GetUnitController()->FindComponentByClass<UTargetedAttackComponent>())
                {
                   targetedAttackComp->BeginAttack(enemy);
@@ -183,18 +201,20 @@ ECursorStateEnum DefaultCursorClickFunctionality::GetCursorState() const
 
 void DefaultCursorClickFunctionality::ToggleSingleAllySelection()
 {
-   AActor* hitActor = pawnRef->GetHitActorClick(clickHitResult);
-   if(IsValid(hitActor))
+   if(!pawnRef->GetIsSelectionLockActive())
    {
-      if(AAlly* allyRef = Cast<AAlly>(hitActor))
+      AActor* hitActor = pawnRef->GetHitActorClick(clickHitResult);
+      if(IsValid(hitActor))
       {
-         if(allyRef->GetUnitSelected())
+         if(AAlly* allyRef = Cast<AAlly>(hitActor))
          {
-            allyRef->SetUnitSelected(false);
-         }
-         else
-         {
-            allyRef->SetUnitSelected(true);
+            if(allyRef->GetUnitSelected())
+            {
+               allyRef->SetUnitSelected(false);
+            } else
+            {
+               allyRef->SetUnitSelected(true);
+            }
          }
       }
    }
@@ -205,8 +225,9 @@ void DefaultCursorClickFunctionality::AttackMoveQueue()
    pawnRef->GetHitResultClick(clickHitResult);
    if(clickHitResult.IsValidBlockingHit())
    {
-      const FVector moveLocation = clickHitResult.Location;
-      QueueActionToSelectedUnits([moveLocation](AUnit* unit) {
+      const FVector                                    moveLocation = clickHitResult.Location;
+      QueueActionToSelectedUnits([moveLocation](AUnit* unit)
+      {
          if(UTargetedAttackComponent* targetedAttackComp = unit->GetUnitController()->FindComponentByClass<UTargetedAttackComponent>())
          {
             targetedAttackComp->BeginAttackMove(moveLocation);
@@ -223,8 +244,9 @@ void DefaultCursorClickFunctionality::SpellCastQueue()
    pawnRef->GetHitResultClick(clickHitResult);
    if(clickHitResult.IsValidBlockingHit())
    {
-      const FVector moveLocation = clickHitResult.Location;
-      QueueActionToSelectedUnits([this](AUnit* unit) {
+      const FVector                            moveLocation = clickHitResult.Location;
+      QueueActionToSelectedUnits([this](AUnit* unit)
+      {
          if(UManualSpellComponent* manSpellComp = unit->GetUnitController()->FindComponentByClass<UManualSpellComponent>())
          {
             manSpellComp->OnSpellConfirmInput(clickHitResult);
@@ -248,7 +270,8 @@ void DefaultCursorClickFunctionality::ItemUsageQueue()
       const auto itemAbility    = UItemFunctionLibrary::GetConsumableInfo(heroUsingInventory->GetCurrentItem().GetValue()).abilityClass;
       const auto heroController = heroUsingInventory->GetHeroController();
 
-      heroController->QueueAction([heroController, this]() {
+      heroController->QueueAction([heroController, this]()
+      {
          if(heroController->GetManualSpellComponent()->OnSpellConfirmInput(clickHitResult))
          {
             heroController->StopAutomation();
@@ -260,7 +283,7 @@ void DefaultCursorClickFunctionality::ItemUsageQueue()
 
 void DefaultCursorClickFunctionality::SelectSingleUnitUnderClick()
 {
-   if(!pawnRef->clickedOnBrowserHud)
+   if(!pawnRef->clickedOnBrowserHud && !pawnRef->GetIsSelectionLockActive())
    {
       controllerRef->GetBasePlayer()->ClearSelectedUnits();
       if(AUnit* selectedUnit = Cast<AUnit>(pawnRef->GetHitActorClick(clickHitResult)))
@@ -273,11 +296,13 @@ void DefaultCursorClickFunctionality::SelectSingleUnitUnderClick()
             }
          }
          selectedUnit->SetUnitSelected(true);
-      }
-      else
+      } else
       {
          pawnRef->ChangeCursor(ECursorStateEnum::Select);
-         controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnSelectionClearedDelegate.Broadcast();
+         if(!pawnRef->GetIsSelectionLockActive())
+         {
+            controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnSelectionClearedDelegate.Broadcast();
+         }
       }
       // TODO: Handle Enemy Case
    }
@@ -285,25 +310,26 @@ void DefaultCursorClickFunctionality::SelectSingleUnitUnderClick()
 
 void DefaultCursorClickFunctionality::SelectEnemy()
 {
-   AActor* hitActor = pawnRef->GetHitActorClick(clickHitResult);
-   if(AUnit* selectedUnit = Cast<AUnit>(hitActor))
+   if(!pawnRef->GetIsSelectionLockActive())
    {
-      controllerRef->GetBasePlayer()->ClearSelectedUnits();
-
-      if(selectedUnit->GetIsEnemy())
+      AActor* hitActor = pawnRef->GetHitActorClick(clickHitResult);
+      if(AUnit* selectedUnit = Cast<AUnit>(hitActor))
       {
-         if(!GameplayModifierCVars::bEnableEnemyControl)
+         controllerRef->GetBasePlayer()->ClearSelectedUnits();
+
+         if(selectedUnit->GetIsEnemy())
          {
-            controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnEnemySelectedWithouDebugging().Execute(selectedUnit);
-         }
-         else
+            if(!GameplayModifierCVars::bEnableEnemyControl)
+            {
+               controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnEnemySelectedWithouDebugging().Execute(selectedUnit);
+            } else
+            {
+               selectedUnit->SetUnitSelected(true);
+            }
+         } else
          {
             selectedUnit->SetUnitSelected(true);
          }
-      }
-      else
-      {
-         selectedUnit->SetUnitSelected(true);
       }
    }
 }
@@ -328,7 +354,8 @@ void DefaultCursorClickFunctionality::ClickCastSpell()
    pawnRef->GetHitResultClick(clickHitResult);
    if(clickHitResult.IsValidBlockingHit())
    {
-      TArray<AUnit*> validSpellCastingAllies = controllerRef->GetBasePlayer()->GetSelectedUnits().FilterByPredicate([this](const AUnit* const unit) {
+      TArray<AUnit*> validSpellCastingAllies = controllerRef->GetBasePlayer()->GetSelectedUnits().FilterByPredicate([this](const AUnit* const unit)
+      {
          if(UManualSpellComponent* manSpellCastComp = unit->GetUnitController()->FindComponentByClass<UManualSpellComponent>())
          {
             return CheckAllyWantToCast(manSpellCastComp->GetSpellCastComp()) && AttemptAllyCastOnTarget(manSpellCastComp);
@@ -360,5 +387,18 @@ void DefaultCursorClickFunctionality::ClickAttackMove()
 
       pawnRef->CreateClickVisual(moveLocation);
       pawnRef->SetSecondaryCursor(ECursorStateEnum::Select);
+   }
+}
+
+void DefaultCursorClickFunctionality::MoveInFormation(FVector newLocation)
+{
+   const TArray<AUnit*>& selectedUnits = controllerRef->GetBasePlayer()->GetSelectedUnits();
+   if(AUnit* closestUnitToNewLocation = UUpAIHelperLibrary::FindClosestUnit(newLocation, TSet<AUnit*>(selectedUnits)))
+   {
+      for(const AUnit* selectedUnit : selectedUnits)
+      {
+         const FVector offset = closestUnitToNewLocation->GetActorLocation() - selectedUnit->GetActorLocation();
+         selectedUnit->GetUnitController()->Move(newLocation - offset);
+      }
    }
 }

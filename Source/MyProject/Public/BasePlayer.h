@@ -41,15 +41,19 @@ public:
 
    const TArray<AUnit*>& GetSelectedUnits() const { return selectedUnits; }
 
+   void AddSelectedUnit(AUnit* unitToAdd) { selectedUnits.AddUnique(unitToAdd); }
+
+   void RemoveSelectedUnit(AUnit* unitToRemove) { selectedUnits.RemoveSingle(unitToRemove); }
+
    const TArray<AAlly*>& GetSelectedAllies() const { return selectedAllies; }
-   
-   void AddSelectedAlly(AAlly* allyToAdd) { selectedAllies.Add(allyToAdd); }
+
+   void AddSelectedAlly(AAlly* allyToAdd) { selectedAllies.AddUnique(allyToAdd); }
 
    void RemoveSelectedAlly(AAlly* allyToRemove) { selectedAllies.RemoveSingle(allyToRemove); }
 
    const TArray<ABaseHero*>& GetSelectedHeroes() const { return selectedHeroes; }
 
-   void AddSelectedHero(ABaseHero* heroToAdd) { selectedHeroes.Add(heroToAdd); }
+   void AddSelectedHero(ABaseHero* heroToAdd) { selectedHeroes.AddUnique(heroToAdd); }
 
    void RemoveSelectedHero(ABaseHero* heroToRemove) { selectedHeroes.RemoveSingle(heroToRemove); }
 
@@ -78,10 +82,6 @@ public:
    /*List of NPCs that joined the party (usually on escort missions) */
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    TArray<AAlly*> npcs;
-
-   /** Used when debugging enemy control */
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-   TArray<AUnit*> selectedUnits;
 
    /** Callback when we learn a new dialog topic*/
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
@@ -156,10 +156,14 @@ protected:
    UPROPERTY(BlueprintReadOnly, Category = "Party")
    TArray<AAlly*> allies;
 
+   /** Used when debugging enemy control */
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
+   TArray<AUnit*> selectedUnits;
+   
    /** List of all alive selected allies */
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    TArray<AAlly*> selectedAllies;
-   
+
    TArray<ABaseHero*> selectedHeroes;
 
    /**

@@ -131,13 +131,25 @@ public:
    UFUNCTION(BlueprintCallable)
    void CreateSelectionRect();
 
+   bool GetIsSelectionLockActive() const { return bSelectionLockActive;}
+   
    /** Hopefully this gets copy elided to its destination and LTCG inlines it*/
    FLinearColor GetSelectionRectColor() const;
+
+   void ToggleQuickCast() { bQuickCast = !bQuickCast; }
 
    /** Should we enable quick casting (casting without having to click after pressing our spell key. Also makes attack move quick*/
    bool bQuickCast;
 
+   void ToggleAutoClick() { bAutoClick = !bAutoClick; }
+   
+   bool bAutoClick;
+
+   FTimerHandle autoClickTimerHandle;
 private:
+   UFUNCTION()
+   void ToggleSelectionLock() { bSelectionLockActive = !bSelectionLockActive; }
+   
    /**Stores last actor hit by the cursor hover trace.  Used so we don't retrace if we hit the same actor, but sometimes canceling actions like clicking the ground should
     *reset this*/
    UPROPERTY()
@@ -168,6 +180,7 @@ private:
    UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true), Category = "Control Settings")
    bool bHasSecondaryCursor;
 
+   bool bSelectionLockActive = false;
 #pragma endregion
 
 #pragma region camera
@@ -236,14 +249,21 @@ private:
 
 #pragma region commands
 public:
-   /** Stop all selected unit actions, stops AI behavior, and hides the spell circle! */
+   /**
+    * Stop all selected unit actions, stops AI behavior, and hides the spell circle!
+    * Doesn't stop movement since we don't want to lose velocity.
+    */
    UFUNCTION(BlueprintCallable, Category = "Action")
-   void CompleteHaltSelected();
+   void HaltSelectedExceptMovement();
 
-   FOnGroupTabbed& OnGroupTabbed() { return OnGroupTabbedEvent; }
+   FOnGroupTabbed& OnGroupTabbed() const { return OnGroupTabbedEvent; }
+
+   bool GetStaticFormationEnabled() const { return bStayInFormation; }
    
 private:
+   void Stop();
    void RightClick();
+   void RightClickReleased();
    void RightClickShift();
    void LeftClick();
    void LeftClickReleased();
@@ -280,6 +300,10 @@ private:
    /** Pans the camera to the first unit in the control group if we double tap the control select button*/
    FTimerHandle ControlGroupDoupleTapHandle;
 
+   void ToggleStayInFormation() { bStayInFormation = !bStayInFormation; }
+
+   bool bStayInFormation = false;
+   
    UFUNCTION()
    void ControlGroupDoubleTapTimer();
 
@@ -316,6 +340,7 @@ private:
    void HandleTransferStorageItems(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemToDeposit) const;
    void HandleSellItemToStore(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemToDeposit) const;
 
-   FOnGroupTabbed OnGroupTabbedEvent;
+   mutable FOnGroupTabbed OnGroupTabbedEvent;
+   
 #pragma endregion
 };

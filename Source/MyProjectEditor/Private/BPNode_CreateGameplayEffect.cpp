@@ -39,7 +39,7 @@ FString FBPNode_CreateGameplayEffectHelper::outputPinName   = TEXT("ReturnValue"
 FString FBPNode_CreateGameplayEffectHelper::classPinName    = TEXT("Class");
 FString FBPNode_CreateGameplayEffectHelper::elemPinName     = TEXT("Element");
 FString FBPNode_CreateGameplayEffectHelper::namePinName     = TEXT("EffectName");
-FString FBPNode_CreateGameplayEffectHelper::assetPinName    = TEXT("AssetPins");
+FString FBPNode_CreateGameplayEffectHelper::assetPinName    = TEXT("AssetTags");
 
 UBPNode_CreateGameplayEffect::UBPNode_CreateGameplayEffect(const FObjectInitializer& oI) : Super(oI)
 {
@@ -290,7 +290,7 @@ UEdGraphPin* UBPNode_CreateGameplayEffect::GetNamePin() const
 
 UEdGraphPin* UBPNode_CreateGameplayEffect::GetAssetTagsPin() const
 {
-   UEdGraphPin* pin = FindPinChecked(FBPNode_CreateGameplayEffectHelper::classPinName);
+   UEdGraphPin* pin = FindPinChecked(FBPNode_CreateGameplayEffectHelper::assetPinName);
    check(pin->Direction == EGPD_Input);
    return pin;
 }

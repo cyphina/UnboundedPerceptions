@@ -5,6 +5,7 @@
 #include "RTSPawn.h"
 #include "UserInput.h"
 #include "MyGameInstance.h"
+#include "UIDelegateContext.h"
 
 USettingsMenu::USettingsMenu() : Super()
 {
@@ -94,5 +95,15 @@ void USettingsMenu::ChangeEffectVolume(float val)
 
 void USettingsMenu::ToggleQuickCast()
 {
-   CPC->GetCameraPawn()->bQuickCast = !CPC->GetCameraPawn()->bQuickCast;
+  GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnQuickCastSettingToggled().Broadcast();
+}
+
+void USettingsMenu::ToggleStaticFormation()
+{
+   GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnStaticFormationToggled().Broadcast();
+}
+
+void USettingsMenu::ToggleAutoClick()
+{
+   GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnAutoclickToggled().Broadcast();
 }

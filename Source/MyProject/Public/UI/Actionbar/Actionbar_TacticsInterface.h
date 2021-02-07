@@ -10,7 +10,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnTacticsPicked, int);
 
 /**
  * Eventually there will be a tactics component which will have data for different strategies
- * we can tell groups of units to behave in a certain way. If there is every multiplayer, there should
+ * we can tell groups of units to behave in a certain way. If there is ever multiplayer, there should
  * also be functionality for "tactic requests" in which a player can request that part of their units
  * be joined with another players squad. The other play would have to "accept" the tactics request.
  * TODO: COME BACK TO THIS

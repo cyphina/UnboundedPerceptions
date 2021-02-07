@@ -5,6 +5,7 @@
 #include "EnvironmentQuery/EnvQueryManager.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
 #include "MySpell.h"
+#include "SpellCastComponent.h"
 
 bool UUpAIHelperLibrary::IsTargetInRange(const AActor* referenceActor, const FVector& targetLocation, const float range)
 {
@@ -33,14 +34,14 @@ FQuat UUpAIHelperLibrary::FindLookRotation(const AActor* referenceActor, const F
    return FRotationMatrix::MakeFromX(FVector(projectedDirection)).ToQuat();
 }
 
-AUnit* UUpAIHelperLibrary::FindClosestUnit(const AUnit* referenceUnit, const TSet<AUnit*>& otherUnits)
+AUnit* UUpAIHelperLibrary::FindClosestUnit(const FVector referenceLocation, const TSet<AUnit*>& otherUnits)
 {
    AUnit* closestUnit = nullptr;
    if(otherUnits.Num() > 0) {
       float closestDistance = TNumericLimits<int>::Max();
 
       for(AUnit* otherUnit : otherUnits) {
-         const float distToOtherUnit = FVector::Dist2D(referenceUnit->GetActorLocation(), otherUnit->GetActorLocation());
+         const float distToOtherUnit = FVector::Dist2D(referenceLocation, otherUnit->GetActorLocation());
          if(distToOtherUnit < closestDistance) {
             closestDistance = distToOtherUnit;
             closestUnit     = otherUnit;

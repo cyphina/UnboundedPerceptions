@@ -43,7 +43,6 @@ void UPatrolComponent::StopPatrolling()
 {
    if(AAIController* ownerControllerRef = Cast<AAIController>(GetOwner())) {
       ownerControllerRef->ReceiveMoveCompleted.RemoveAll(this);
-      ownerControllerRef->StopMovement();
    }
 }
 

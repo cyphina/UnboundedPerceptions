@@ -38,7 +38,7 @@ public:
    static FQuat FindLookRotation(const AActor* referenceActor, const FVector& targetPoint);
 
    UFUNCTION(BlueprintCallable, Category = "Positioning")
-   static AUnit* FindClosestUnit(const AUnit* referenceUnit, const TSet<AUnit*>& otherUnits);
+   static AUnit* FindClosestUnit(const FVector referenceLocation, const TSet<AUnit*>& otherUnits);
 
    UFUNCTION(BlueprintCallable, Category = "Spell Casting")
    static void AIBeginCastSpell(UEnvQuery* targetFindingQuery, TSubclassOf<UMySpell> spellToCast, USpellCastComponent* spellCastComponent);

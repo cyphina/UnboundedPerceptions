@@ -8,7 +8,9 @@
 #include "Actionbar_MultiUnitView.h"
 #include "Actionbar_SingleUnitView.h"
 #include "Ally.h"
+#include "CheckBox.h"
 #include "RTSPawn.h"
+#include "UIDelegateContext.h"
 
 void UActionbarInterface::NativeOnInitialized()
 {
@@ -20,11 +22,13 @@ void UActionbarInterface::NativeOnInitialized()
       partyContext->OnUnitDeselectedDelegate.AddDynamic(this, &UActionbarInterface::OnUnitDeselected);
       partyContext->OnSelectionClearedDelegate.AddDynamic(this, &UActionbarInterface::OnAllAlliesCleared);
    }
+
+   Chk_Lock->OnCheckStateChanged.AddDynamic(this, &UActionbarInterface::OnSelectLockToggled);
 }
 
 void UActionbarInterface::OnUnitSelected()
 {
-   if(CPC->GetBasePlayer()->selectedUnits.Num() > 1)
+   if(CPC->GetBasePlayer()->GetSelectedUnits().Num() > 1)
    {
       WS_UnitTypeView->SetActiveWidget(multiUnitView);
       multiUnitView->OnWidgetShown();
@@ -32,7 +36,7 @@ void UActionbarInterface::OnUnitSelected()
    else
    {
       WS_UnitTypeView->SetActiveWidget(singleUnitView);
-      singleUnitView->OnWidgetShown(CPC->GetBasePlayer()->selectedUnits[0]);
+      singleUnitView->OnWidgetShown(CPC->GetBasePlayer()->GetSelectedUnits()[0]);
    }
    SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 }
@@ -40,13 +44,13 @@ void UActionbarInterface::OnUnitSelected()
 
 void UActionbarInterface::OnUnitDeselected()
 {
-   if(CPC->GetBasePlayer()->selectedUnits.Num() == 1)
+   if(CPC->GetBasePlayer()->GetSelectedUnits().Num() == 1)
    {
       WS_UnitTypeView->SetActiveWidget(singleUnitView);
-      singleUnitView->OnWidgetShown(CPC->GetBasePlayer()->selectedUnits[0]);
+      singleUnitView->OnWidgetShown(CPC->GetBasePlayer()->GetSelectedUnits()[0]);
       SetVisibility(ESlateVisibility::SelfHitTestInvisible);
    }
-   else if(CPC->GetBasePlayer()->selectedUnits.Num() == 0)
+   else if(CPC->GetBasePlayer()->GetSelectedUnits().Num() == 0)
    {
       SetVisibility(ESlateVisibility::Collapsed);
    }
@@ -65,6 +69,11 @@ void UActionbarInterface::OnFocusedUnitChanged(AUnit* newFocusedUnit)
 void UActionbarInterface::OnAllAlliesCleared()
 {
    SetVisibility(ESlateVisibility::Collapsed);
+}
+
+void UActionbarInterface::OnSelectLockToggled(bool bToggleOn)
+{
+   GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSelectionLockToggled().Broadcast();
 }
 
 FOnSlotSelected& UActionbarInterface::OnSlotSelected()

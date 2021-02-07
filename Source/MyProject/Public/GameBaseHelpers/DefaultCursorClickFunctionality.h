@@ -49,6 +49,8 @@ private:
    void ClickCastSpell();
    void ClickAttackMove();
 
+   void MoveInFormation(FVector newLocation);
+   
    ECursorStateEnum      GetCursorState() const;
    static bool           CheckAllyWantToCast(USpellCastComponent* spellCastComp);
    inline bool           AttemptAllyCastOnTarget(UManualSpellComponent* manSpellCastComp);

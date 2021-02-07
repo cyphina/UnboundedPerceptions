@@ -88,7 +88,7 @@ void UTargetedAttackComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void UTargetedAttackComponent::SearchForTargetInRange()
 {
-   if(AUnit* closestUnit = UUpAIHelperLibrary::FindClosestUnit(agent, agent->GetVisionComponent()->GetPossibleVisibleEnemies()))
+   if(AUnit* closestUnit = UUpAIHelperLibrary::FindClosestUnit(agent->GetActorLocation(), agent->GetVisionComponent()->GetPossibleVisibleEnemies()))
    {
       BeginAttack(closestUnit);
       GetWorld()->GetTimerManager().ClearTimer(targetSearchHandle);

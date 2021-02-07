@@ -1,17 +1,28 @@
 ﻿// Created 1/17/21 01:13 AM
 
 #pragma once
+
 #include "LocalPlayerSubsystem.h"
 #include "StatEnums.h"
 #include "UIDelegateContext.generated.h"
 
 class ABaseHero;
 class UBackpack;
+class UUnitSelectionSlot;
+class UActionbarInterface;
+class USettingsMenu;
 
 // Hero whose stat got upgraded, Attribute that got upgraded, and was T/F = upgraded/downgraded
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnAttributePointAllocated, ABaseHero*, EAttributes, bool);
 
-DECLARE_EVENT_OneParam(ARTSPawn, FOnUnitSlotSelected, AUnit*); // Pass in unit corresponding to unit lost
+DECLARE_EVENT_OneParam(UUnitSelectionSlot, FOnUnitSlotSelected, AUnit*); // Pass in unit corresponding to unit lost
+
+DECLARE_EVENT(UActionbarInterface, FOnSelectionLockToggled);
+
+DECLARE_EVENT(USettingsMenu, FOnQuickCastSettingToggled);
+DECLARE_EVENT(USettingsMenu, FOnStaticFormationSettingToggled);
+DECLARE_EVENT(USettingsMenu, FOnAutoClickSettingToggled);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillSlotDropped, int, dragSlotIndex, int, dropSlotIndex);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSkillSlotDroppedSB, int, dragSlotIndex, int, dropSlotIndex); // Used when we drop from the spell book
@@ -23,11 +34,20 @@ UCLASS()
 class MYPROJECT_API UUIDelegateContext : public ULocalPlayerSubsystem
 {
    GENERATED_BODY()
+   
 public:
-   FOnAttributePointAllocated& OnAttributePointAllocated() { return OnAttributePointAllocatedEvent; }
+   FOnAttributePointAllocated& OnAttributePointAllocated() const { return OnAttributePointAllocatedEvent; }
 
    FOnUnitSlotSelected& OnUnitSlotSelected() const { return OnUnitSlotSelectedEvent; }
 
+   FOnSelectionLockToggled& OnSelectionLockToggled() const { return OnSelectionLockToggledEvent; }
+
+   FOnQuickCastSettingToggled& OnQuickCastSettingToggled() const { return OnQuickCastSettingToggledEvent; }
+
+   FOnStaticFormationSettingToggled& OnStaticFormationToggled() const { return OnStaticFormationToggledEvent; }
+
+   FOnAutoClickSettingToggled& OnAutoclickToggled() const { return OnAutoclickToggledEvent; }
+   
    UPROPERTY(BlueprintAssignable, BlueprintCallable)
    FOnSkillSlotDropped OnSkillSlotDroppedEvent;
 
@@ -42,6 +62,9 @@ public:
 
 private:
    mutable FOnUnitSlotSelected OnUnitSlotSelectedEvent;
-
-   FOnAttributePointAllocated OnAttributePointAllocatedEvent;
+   mutable FOnSelectionLockToggled OnSelectionLockToggledEvent;
+   mutable FOnAttributePointAllocated OnAttributePointAllocatedEvent;
+   mutable FOnQuickCastSettingToggled OnQuickCastSettingToggledEvent;
+   mutable FOnStaticFormationSettingToggled OnStaticFormationToggledEvent;
+   mutable FOnAutoClickSettingToggled OnAutoclickToggledEvent;
 };

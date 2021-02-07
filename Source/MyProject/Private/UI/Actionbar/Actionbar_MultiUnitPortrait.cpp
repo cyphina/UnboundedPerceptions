@@ -34,7 +34,7 @@ void UActionbar_MultiUnitPortrait::RefreshDisplayedUnitImages()
 {
    if(AUserInput* PC = GetOwningPlayer<AUserInput>())
    {
-      const TArray<AUnit*>& selectedUnits = PC->GetBasePlayer()->selectedUnits;
+      const TArray<AUnit*>& selectedUnits = PC->GetBasePlayer()->GetSelectedUnits();
       const int             numSlotsToShow = FMath::Min(selectedUnits.Num(), unitSlots.Num());
       for(int i = 0; i < numSlotsToShow; ++i)
       {

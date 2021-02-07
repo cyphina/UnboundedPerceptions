@@ -20,7 +20,8 @@ void ABasePlayer::BeginPlay()
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnAllyActiveChanged().AddUObject(this, &ABasePlayer::OnAllyActiveChanged);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnSummonActiveChanged().AddUObject(this, &ABasePlayer::OnSummonActiveChanged);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroActiveChanged().AddUObject(this, &ABasePlayer::OnHeroActiveChanged);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnEnemySelectedWithouDebugging().BindUObject(this, &ABasePlayer::SetFocusedUnit);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnEnemySelectedWithouDebugging().BindUObject(
+   this, &ABasePlayer::SetFocusedUnit);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnUnitSlotSelected().AddUObject(this, &ABasePlayer::OnUnitSlotSelected);
    Cast<ARTSPawn>(GetWorld()->GetFirstPlayerController()->GetPawn())->OnGroupTabbed().AddUObject(this, &ABasePlayer::OnGroupTabbed);
 }
@@ -45,11 +46,11 @@ void ABasePlayer::ClearSelectedUnits()
    {
       selectedUnit->ClearSelectedFlag();
    }
-   
+
    selectedUnits.Empty();
    selectedAllies.Empty();
    selectedHeroes.Empty();
-   
+
    focusedUnit = nullptr;
 
    if(ULocalPlayer* localPlayer = GetWorld()->GetFirstLocalPlayerFromController())
@@ -146,15 +147,16 @@ void ABasePlayer::OnUnitSlotSelected(AUnit* unitSelected)
 {
    if(IsValid(unitSelected))
    {
-      ClearSelectedUnits();
-      unitSelected->SetUnitSelected(true);
       SetFocusedUnit(unitSelected);
    }
 }
 
 void ABasePlayer::OnGroupTabbed(AUnit* newFocusedUnit)
 {
-     SetFocusedUnit(newFocusedUnit);
+   if(newFocusedUnit)
+   {
+      SetFocusedUnit(newFocusedUnit);
+   }
 }
 
 void ABasePlayer::OnAllyActiveChanged(AAlly* allyRef, bool isActive)
@@ -190,4 +192,3 @@ void ABasePlayer::OnSummonActiveChanged(ASummon* summonRef, bool isActive)
    else
       summons.RemoveSingle(summonRef);
 }
-

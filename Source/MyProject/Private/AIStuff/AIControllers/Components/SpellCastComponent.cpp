@@ -14,7 +14,7 @@ void USpellCastComponent::BeginPlay()
    Super::BeginPlay();
    const auto unitControllerOwner = Cast<AUnitController>(GetOwner());
    check(unitControllerOwner);
-   unitOwnerRef = unitControllerOwner->GetUnitOwner();
+   unitOwnerRef = Cast<AUnit>(unitControllerOwner->GetPawn());
    unitControllerOwner->OnUnitStopped().AddUObject(this, &USpellCastComponent::OnUnitStopped);
    abilityComponentRef = unitOwnerRef->GetAbilitySystemComponent();
 }

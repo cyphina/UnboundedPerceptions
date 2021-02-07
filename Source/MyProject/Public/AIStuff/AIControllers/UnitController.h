@@ -39,11 +39,11 @@ public:
     * @return Returns a enum that denotes if the move was successful or why it failed.
     */
    UFUNCTION(BlueprintCallable, Category = "Action")
-   virtual EPathFollowingRequestResult::Type Move(FVector newLocation);
+   EPathFollowingRequestResult::Type Move(FVector newLocation);
 
    /** Similar to Move function but moves towards a target  actor */
    UFUNCTION(BlueprintCallable, Category = "Action")
-   virtual EPathFollowingRequestResult::Type MoveActor(AActor* targetActor);
+   EPathFollowingRequestResult::Type MoveActor(AActor* targetActor);
 
    /** Function to turn self towards a direction*/
    UFUNCTION(BlueprintCallable, Category = "Movement")
@@ -196,9 +196,9 @@ private:
     */
    FAIMessageObserverHandle protectListener;
 
-   static inline const FText FILLED_QUEUE_TEXT = NSLOCTEXT("HelpMessages", "Queue", "Command Queue Filled!");
+   static inline const FText                   FILLED_QUEUE_TEXT = NSLOCTEXT("HelpMessages", "Queue", "Command Queue Filled!");
    TQueue<TFunction<void()>, EQueueMode::Spsc> commandQueue;
-   int queueCount = 0;
+   int                                         queueCount = 0;
 
    class MoveCompletedVisitor
    {

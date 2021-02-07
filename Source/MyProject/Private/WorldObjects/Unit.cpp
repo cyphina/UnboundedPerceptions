@@ -259,13 +259,13 @@ void AUnit::SetUnitSelected(bool value)
    {
       if(controllerRef->GetBasePlayer()->GetSelectedUnits().Num() < 16)
       {
-         controllerRef->GetBasePlayer()->selectedUnits.Add(this);
+         controllerRef->GetBasePlayer()->AddSelectedUnit(this);
          controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnUnitSelectedDelegate.Broadcast();
       }
    }
    else
    {
-      controllerRef->GetBasePlayer()->selectedUnits.Remove(this);
+      controllerRef->GetBasePlayer()->RemoveSelectedUnit(this);
       controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnUnitDeselectedDelegate.Broadcast();
    }
 }

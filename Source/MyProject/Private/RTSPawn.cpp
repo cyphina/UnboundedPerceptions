@@ -132,9 +132,10 @@ void ARTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
    Super::SetupPlayerInputComponent(PlayerInputComponent);
    check(InputComponent);
 
-   InputComponent->BindAction("Stop", IE_Pressed, this, &ARTSPawn::CompleteHaltSelected);
+   InputComponent->BindAction("Stop", IE_Pressed, this, &ARTSPawn::Stop);
    InputComponent->BindAction("LockCamera", IE_Pressed, this, &ARTSPawn::LockCamera);
    InputComponent->BindAction("RightClick", IE_Pressed, this, &ARTSPawn::RightClick);
+   InputComponent->BindAction("RightClick", IE_Released, this, &ARTSPawn::RightClickReleased);
    InputComponent->BindAction("RightClickShift", IE_Pressed, this, &ARTSPawn::RightClickShift);
    InputComponent->BindAction("LeftClick", IE_Pressed, this, &ARTSPawn::LeftClick);
    InputComponent->BindAction("LeftClickReleased", IE_Released, this, &ARTSPawn::LeftClickReleased);
@@ -196,6 +197,10 @@ void ARTSPawn::PossessedBy(AController* newController)
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnItemSlotDroppedStorageEvent.AddDynamic(this, &ARTSPawn::OnItemSlotDroppedFromStorage);
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedEvent.AddDynamic(this, &ARTSPawn::OnSkillSlotDropped);
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedSBEvent.AddDynamic(this, &ARTSPawn::OnSkillSlotDroppedSB);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSelectionLockToggled().AddUObject(this, &ARTSPawn::ToggleSelectionLock);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnQuickCastSettingToggled().AddUObject(this, &ARTSPawn::ToggleQuickCast);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnStaticFormationToggled().AddUObject(this, &ARTSPawn::ToggleStayInFormation);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnAutoclickToggled().AddUObject(this, &ARTSPawn::ToggleAutoClick);
 
       GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
       {
@@ -215,7 +220,6 @@ void ARTSPawn::UnPossessed()
 {
    Super::UnPossessed();
    PrimaryActorTick.bCanEverTick = false;
-   controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnUnitSlotSelected().RemoveAll(this);
    DisableInput(controllerRef);
 }
 
@@ -598,13 +602,22 @@ void ARTSPawn::EdgeMovementY(float axisValue)
    }
 }
 
-void ARTSPawn::CompleteHaltSelected()
+void ARTSPawn::Stop()
 {
-   for(int i = 0; i < controllerRef->GetBasePlayer()->selectedUnits.Num(); i++)
+   for(AUnit* selectedUnit : controllerRef->GetBasePlayer()->GetSelectedUnits())
    {
-      controllerRef->GetBasePlayer()->selectedUnits[i]->GetUnitController()->StopCurrentAction();
-      controllerRef->GetBasePlayer()->selectedUnits[i]->GetUnitController()->ClearCommandQueue();
-      controllerRef->GetBasePlayer()->selectedUnits[i]->GetUnitController()->StopAutomation();
+      selectedUnit->GetUnitController()->StopMovement();
+   }
+   HaltSelectedExceptMovement();
+}
+
+void ARTSPawn::HaltSelectedExceptMovement()
+{
+   for(AUnit* selectedUnit : controllerRef->GetBasePlayer()->GetSelectedUnits())
+   {
+      selectedUnit->GetUnitController()->StopCurrentAction();
+      selectedUnit->GetUnitController()->ClearCommandQueue();
+      selectedUnit->GetUnitController()->StopAutomation();
    }
 
    bHasSecondaryCursor = false;
@@ -614,12 +627,29 @@ void ARTSPawn::CompleteHaltSelected()
 
 void ARTSPawn::RightClick()
 {
-   clickFunctionalityClass->HandleRightClick();
+   if(bAutoClick)
+   {
+      GetWorld()->GetTimerManager().SetTimer(autoClickTimerHandle, [this]() { clickFunctionalityClass->HandleRightClick(); }, 0.1f, true, 0.f);
+   } else
+   {
+      clickFunctionalityClass->HandleRightClick();
+   }
 }
 
 void ARTSPawn::RightClickShift()
 {
-   clickFunctionalityClass->HandleShiftRightClick();
+   if(bAutoClick)
+   {
+      GetWorld()->GetTimerManager().SetTimer(autoClickTimerHandle, [this]() { clickFunctionalityClass->HandleShiftRightClick(); }, 0.1f, true, 0.f);
+   } else
+   {
+      clickFunctionalityClass->HandleShiftRightClick();
+   }
+}
+
+void ARTSPawn::RightClickReleased()
+{
+   GetWorld()->GetTimerManager().ClearTimer(autoClickTimerHandle);
 }
 
 void ARTSPawn::LeftClick()
@@ -651,35 +681,46 @@ void ARTSPawn::TabChangeSelection()
 
 void ARTSPawn::TabThroughGroup()
 {
-   if(AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit())
+   if(ABasePlayer* basePlayer = controllerRef->GetBasePlayer())
    {
-      if(AAlly* focusedAlly = Cast<AAlly>(focusedUnit))
+      if(AUnit* focusedUnit = basePlayer->GetFocusedUnit())
       {
-         const int selectedUnitIndex    = controllerRef->GetBasePlayer()->GetSelectedUnits().Find(focusedAlly);
+         const int selectedUnitIndex    = basePlayer->GetSelectedUnits().Find(focusedUnit);
          const int newSelectedUnitIndex = (selectedUnitIndex + 1) % controllerRef->GetBasePlayer()->GetSelectedUnits().Num();
-         AUnit*    newSelectedAlly      = controllerRef->GetBasePlayer()->GetSelectedUnits()[newSelectedUnitIndex];
+         AUnit*    newSelectedAlly      = basePlayer->GetSelectedUnits()[newSelectedUnitIndex];
          OnGroupTabbed().Broadcast(newSelectedAlly);
+      } else
+      {
+         OnGroupTabbed().Broadcast(basePlayer->GetSelectedUnits()[0]);
       }
    }
 }
 
 void ARTSPawn::TabSingleSelection() const
 {
-   if(controllerRef->GetBasePlayer()->GetHeroes().Num() > 0)
+   if(ABasePlayer* basePlayer = controllerRef->GetBasePlayer())
    {
-      if(AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit())
+      if(basePlayer->GetHeroes().Num() > 0)
       {
-         if(ABaseHero* focusedHero = Cast<ABaseHero>(focusedUnit))
+         if(AUnit* focusedUnit = basePlayer->GetFocusedUnit())
          {
-            const int  selectedUnitIndex    = controllerRef->GetBasePlayer()->GetHeroes().Find(focusedHero);
-            const int  newSelectedUnitIndex = (selectedUnitIndex + 1) % controllerRef->GetBasePlayer()->GetHeroes().Num();
-            ABaseHero* newSelectedHero      = controllerRef->GetBasePlayer()->GetHeroes()[newSelectedUnitIndex];
+            if(ABaseHero* focusedHero = Cast<ABaseHero>(focusedUnit))
+            {
+               focusedHero->SetUnitSelected(false);
+               const int  selectedUnitIndex    = basePlayer->GetHeroes().Find(focusedHero);
+               const int  newSelectedUnitIndex = (selectedUnitIndex + 1) % basePlayer->GetHeroes().Num();
+               ABaseHero* newSelectedHero      = basePlayer->GetHeroes()[newSelectedUnitIndex];
+               newSelectedHero->SetUnitSelected(true);
+               OnGroupTabbed().Broadcast(newSelectedHero);
+            }
+         } else
+         {
+            // Don't have any hero selected? Select the first one available
+            ABaseHero* newSelectedHero = basePlayer->GetHeroes()[0];
             newSelectedHero->SetUnitSelected(true);
-            return;
+            OnGroupTabbed().Broadcast(newSelectedHero);
          }
       }
-      // Don't have any hero selected? Select the first one available
-      controllerRef->GetBasePlayer()->GetHeroes()[0]->SetUnitSelected(true);
    }
 }
 
@@ -735,7 +776,9 @@ void ARTSPawn::SelectControlGroup(int controlIndex)
       for(auto ally : controlGroups[controlIndex])
       {
          if(ally.IsValid())
+         {
             ally->SetUnitSelected(true);
+         }
       }
    }
 

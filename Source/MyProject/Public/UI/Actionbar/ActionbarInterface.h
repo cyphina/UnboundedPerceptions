@@ -62,6 +62,9 @@ class MYPROJECT_API UActionbarInterface : public UMyUserWidget
    UFUNCTION()
    void OnAllAlliesCleared();
 
+   UFUNCTION()
+   void OnSelectLockToggled(bool bToggleOn);
+
    /** Handles scenario when a new unit is left clicked on, or if we tab to focus on a different unit in the selection group */
    void OnFocusedUnitChanged(AUnit* newFocusedUnit);
 };

@@ -2,8 +2,6 @@
 
 #include "WorldObjects/Unit.h"
 
-#include "UserInput.h"
-
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
@@ -25,6 +23,7 @@
 
 #include "RTSStateComponent.h"
 #include "SpellDataLibrary.h"
+#include "UserInput.h"
 
 AUnitController::AUnitController()
 {
@@ -145,7 +144,7 @@ EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation)
 
    if(!USpellDataLibrary::IsStunned(GetUnitOwner()->GetAbilitySystemComponent()))
    {
-      StopCurrentAction();
+      //StopCurrentAction();
 
       if(ABasePlayer* basePlayer = GetWorld()->GetFirstPlayerController()->GetPlayerState<ABasePlayer>())
       {
@@ -192,8 +191,6 @@ void AUnitController::StopCurrentAction()
    queuedTurnAction = nullptr;
    turnActorTimeline.Stop();
    turnTimeline.Stop();
-   // ownerRef->GetTargetComponent()->ResetTarget();
-   StopMovement();
    ownerRef->StopAnimMontage();
 }
 
@@ -326,7 +323,7 @@ bool AUnitController::AdjustPosition(float range, FVector targetLoc, EPathFollow
 {
    if(!UUpAIHelperLibrary::IsTargetInRange(GetUnitOwner(), targetLoc, range))
    {
-      outPathReqRes = MoveToLocation(targetLoc, range, false, true, false, false);
+      outPathReqRes = MoveToLocation(targetLoc, range, false, true, false, false, nullptr, true);
       QueueTurnAfterMovement(targetLoc);
       return false;
    }
