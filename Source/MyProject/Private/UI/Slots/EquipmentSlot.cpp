@@ -21,17 +21,21 @@ void UEquipmentSlot::NativeConstruct()
 void UEquipmentSlot::ShowDesc(UToolTipWidget* tooltip)
 {
    // Show information about the equipment in the slot
-   const int itemId = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetEquipHUD()->GetEquippedHero()->GetEquipment()->GetEquipAtSlot(slotIndex);
-   if(itemId > 0) {
-      const auto itemInfo = UItemManager::Get().GetItemInfo(itemId);
-      if(!itemInfo->name.IsEmpty()) {
-         // Convert the rarity enum value to a string
-         const UEnum* eRarity = FindObject<UEnum>(ANY_PACKAGE, TEXT("ERarity"), true);
-         if(!eRarity)
-            return;
-         const FText rarityName = UItemFunctionLibrary::GetRarityText(itemInfo->rarity);
-         const FText bonusDesc  = UItemFunctionLibrary::GetBonusDescription(itemId);
-         tooltip->SetupTTBoxText(itemInfo->name, rarityName, itemInfo->description, bonusDesc, FText::GetEmpty());
+   if(AUserInput* CPCRef = Cast<AUserInput>(GetOwningPlayer<AUserInput>()))
+   {
+      const int itemId = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetEquipHUD()->GetEquippedHero()->GetEquipment()->GetEquipAtSlot(slotIndex);
+      if(itemId > 0)
+      {
+         const auto itemInfo = UItemManager::Get().GetItemInfo(itemId);
+         if(!itemInfo->name.IsEmpty())
+         {
+            // Convert the rarity enum value to a string
+            const UEnum* eRarity = FindObject<UEnum>(ANY_PACKAGE, TEXT("ERarity"), true);
+            if(!eRarity) return;
+            const FText rarityName = UItemFunctionLibrary::GetRarityText(itemInfo->rarity);
+            const FText bonusDesc  = UItemFunctionLibrary::GetBonusDescription(itemId);
+            tooltip->SetupTTBoxText(itemInfo->name, rarityName, itemInfo->description, bonusDesc, FText::GetEmpty());
+         }
       }
    }
 }

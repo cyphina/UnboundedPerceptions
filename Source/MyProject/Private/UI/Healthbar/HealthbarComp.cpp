@@ -20,7 +20,9 @@ void UHealthbarComp::BeginPlay()
 
 void UHealthbarComp::OnDamageReceived(const FUpDamage& damage)
 {
-   healthBar->UpdateHealthbar(unitRef->GetStatComponent()->GetVitalCurValue(EVitals::Health) / unitRef->GetStatComponent()->GetVitalBaseValue(EVitals::Health));
+   GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+      healthBar->UpdateHealthbar(unitRef->GetStatComponent()->GetVitalCurValue(EVitals::Health) / unitRef->GetStatComponent()->GetVitalBaseValue(EVitals::Health));
+   });
 }
 
 void UHealthbarComp::EndPlay(const EEndPlayReason::Type EPR)

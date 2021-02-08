@@ -26,7 +26,7 @@ class MYPROJECT_API USkillSlot : public UActionSlot
    void ShowCooldown();
 
  protected:
-   void NativeConstruct() override;
+   void NativeOnInitialized() override;
    void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
    bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 

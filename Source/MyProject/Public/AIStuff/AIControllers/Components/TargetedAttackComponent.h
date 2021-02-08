@@ -38,7 +38,7 @@ class AUnit;
  * -- -- during the animation back swing (known as animation cancelling, but AIs don't leverage this)
  * -- 5. The timer fills up in between attacks (as soon as the damage notify plays) 
  */
-UCLASS()
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
 {
    GENERATED_BODY()

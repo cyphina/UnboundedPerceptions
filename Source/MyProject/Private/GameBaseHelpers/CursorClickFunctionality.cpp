@@ -28,10 +28,13 @@ void CursorClickFunctionalityBase::IssueAttackToSelectedUnits(AUnit* attackTarge
 {
    for(AUnit* unit : controllerRef->GetBasePlayer()->GetSelectedUnits())
    {
-      if(UTargetedAttackComponent* attackComp = unit->GetUnitController()->FindComponentByClass<UTargetedAttackComponent>())
+      if(unit->GetIsEnemy() != attackTarget->GetIsEnemy())
       {
-         attackComp->BeginAttack(attackTarget);
-         unit->GetUnitController()->StopAutomation();
+         if(UTargetedAttackComponent* attackComp = unit->GetUnitController()->FindComponentByClass<UTargetedAttackComponent>())
+         {
+            attackComp->BeginAttack(attackTarget);
+            unit->GetUnitController()->StopAutomation();
+         }
       }
    }
 }
@@ -99,7 +102,7 @@ void CursorClickFunctionalityBase::IssueItemUseCommandToHeroWithInventory()
    {
       ABaseHero* heroUsingInventory = GetHeroUsingInventory();
 
-      const auto heroController = heroUsingInventory->GetHeroController();  
+      const auto heroController = heroUsingInventory->GetHeroController();
       if(heroController->GetManualSpellComponent()->OnSpellConfirmInput(clickHitResult))
       {
          heroController->StopAutomation();

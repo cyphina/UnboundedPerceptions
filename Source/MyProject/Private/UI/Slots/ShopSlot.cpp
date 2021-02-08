@@ -13,25 +13,29 @@
 
 void UShopSlot::ShowDesc(UToolTipWidget* tooltip)
 {
-   const UStoreInventory* shopWidgetRef = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetShopHUD();
-   const FMyItem          itemHovered   = shopWidgetRef->GetBackpackItemAtSlot(slotIndex);
-
-   if(itemHovered)
+   if(AUserInput* CPCRef = Cast<AUserInput>(GetOwningPlayer<AUserInput>()))
    {
-      const auto itemInfo = UItemManager::Get().GetItemInfo(itemHovered.id);
-      if(const FItemPrice* itemPrice = shopWidgetRef->GetShopkeeper()->GetItemPrice(itemHovered.id))
-      {
-         const FText priceText = MakeItemPriceText(*itemPrice);
+      const UStoreInventory* shopWidgetRef = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetShopHUD();
+      const FMyItem          itemHovered   = shopWidgetRef->GetBackpackItemAtSlot(slotIndex);
 
-         if(itemInfo->itemType.MatchesTag(FGameplayTag::RequestGameplayTag("Item.Equippable", false)))
+      if(itemHovered)
+      {
+         const auto itemInfo = UItemManager::Get().GetItemInfo(itemHovered.id);
+         if(const FItemPrice* itemPrice = shopWidgetRef->GetShopkeeper()->GetItemPrice(itemHovered.id))
          {
-            const FText rarityName = UItemFunctionLibrary::GetRarityText(itemInfo->rarity);
-            const FText bonusDesc  = UItemFunctionLibrary::GetBonusDescription(itemHovered.id);
-            tooltip->SetupTTBoxText(itemInfo->name, rarityName, itemInfo->description, bonusDesc, priceText);
-         } else
-         {
-            const FText rarityName = UItemFunctionLibrary::GetRarityText(itemInfo->rarity);
-            tooltip->SetupTTBoxText(itemInfo->name, rarityName, itemInfo->description, priceText, FText::GetEmpty());
+            const FText priceText = MakeItemPriceText(*itemPrice);
+
+            if(itemInfo->itemType.MatchesTag(FGameplayTag::RequestGameplayTag("Item.Equippable", false)))
+            {
+               const FText rarityName = UItemFunctionLibrary::GetRarityText(itemInfo->rarity);
+               const FText bonusDesc  = UItemFunctionLibrary::GetBonusDescription(itemHovered.id);
+               tooltip->SetupTTBoxText(itemInfo->name, rarityName, itemInfo->description, bonusDesc, priceText);
+            }
+            else
+            {
+               const FText rarityName = UItemFunctionLibrary::GetRarityText(itemInfo->rarity);
+               tooltip->SetupTTBoxText(itemInfo->name, rarityName, itemInfo->description, priceText, FText::GetEmpty());
+            }
          }
       }
    }

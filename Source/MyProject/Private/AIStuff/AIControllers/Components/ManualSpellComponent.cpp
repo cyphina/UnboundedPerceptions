@@ -58,7 +58,8 @@ bool UManualSpellComponent::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
                {
                   unitWithPlayerControl->GetUnitController()->StopCurrentAction();
                   unitWithPlayerControl->GetUnitController()->FindComponentByClass<USpellCastComponent>()->IncantationCheck(spellToCast);
-               } else
+               }
+               else
                {
                   CPCRef->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Magic);
                }
@@ -69,7 +70,8 @@ bool UManualSpellComponent::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
                {
                   // TODO: depending on the spell area targeting, use different indicators
                   CPCRef->GetCameraPawn()->ShowSpellCircle(spell->GetAOE(GetRTSAbilityComp()));
-               } else
+               }
+               else
                {
                   CPCRef->GetCameraPawn()->HideSpellCircle();
                }
@@ -102,7 +104,10 @@ void UManualSpellComponent::OnSkillActivated(int spellIndex)
 {
    if(unitWithPlayerControl->GetUnitSelected())
    {
-      if(spellIndex >= 0 && spellIndex < GetRTSAbilityComp()->GetAbilities().Num()) { PressedCastSpell(spellIndex); }
+      if(spellIndex >= 0 && spellIndex < GetRTSAbilityComp()->GetAbilities().Num())
+      {
+         PressedCastSpell(spellIndex);
+      }
    }
 }
 
@@ -123,19 +128,22 @@ bool UManualSpellComponent::OnSpellConfirmInput(UPARAM(ref) FHitResult& hitResul
 void UManualSpellComponent::BeginPlay()
 {
    Super::BeginPlay();
-   unitWithPlayerControl = Cast<AUnit>(Cast<AUnitController>(GetOwner())->GetUnitOwner());
-   unitWithPlayerControl->GetUnitController()->OnUnitStopped().AddUObject(this, &UManualSpellComponent::OnUnitStopped);
-   spellCastComp = GetOwner()->FindComponentByClass<USpellCastComponent>();
 
-   if(ensure(spellCastComp))
-   {
-      spellCastComp->OnSpellCasted().AddUObject(this, &UManualSpellComponent::OnSpellCasted);
-   }
+   GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+      unitWithPlayerControl = Cast<AUnit>(Cast<AUnitController>(GetOwner())->GetUnitOwner());
+      unitWithPlayerControl->GetUnitController()->OnUnitStopped().AddUObject(this, &UManualSpellComponent::OnUnitStopped);
+      spellCastComp = GetOwner()->FindComponentByClass<USpellCastComponent>();
 
-   if(const AUserInput* userInput = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
-   {
-      userInput->GetLocalPlayer()->GetSubsystem<UGameplayDelegateContext>()->OnSkillActivated().AddUObject(this, &UManualSpellComponent::OnSkillActivated);
-   }
+      if(ensure(spellCastComp))
+      {
+         spellCastComp->OnSpellCasted().AddUObject(this, &UManualSpellComponent::OnSpellCasted);
+      }
+
+      if(const AUserInput* userInput = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+      {
+         userInput->GetLocalPlayer()->GetSubsystem<UGameplayDelegateContext>()->OnSkillActivated().AddUObject(this, &UManualSpellComponent::OnSkillActivated);
+      }
+   });
 }
 
 void UManualSpellComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)

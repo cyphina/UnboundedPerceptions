@@ -11,6 +11,7 @@ class UBackpack;
 class UUnitSelectionSlot;
 class UActionbarInterface;
 class USettingsMenu;
+class UActionbar_EnemyInterface;
 
 // Hero whose stat got upgraded, Attribute that got upgraded, and was T/F = upgraded/downgraded
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnAttributePointAllocated, ABaseHero*, EAttributes, bool);
@@ -30,6 +31,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnItemSlotDroppedFromInventory, i
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnItemSlotDroppedFromStorage, int, dragSlotIndex, int, dropSlotIndex, UBackpack*, dragPack, UBackpack*, dropPack);
 
+DECLARE_EVENT_OneParam(UActionbar_EnemyInterface, FOnEnemySkillSlotClicked, int);
+
 UCLASS()
 class MYPROJECT_API UUIDelegateContext : public ULocalPlayerSubsystem
 {
@@ -47,7 +50,9 @@ public:
    FOnStaticFormationSettingToggled& OnStaticFormationToggled() const { return OnStaticFormationToggledEvent; }
 
    FOnAutoClickSettingToggled& OnAutoclickToggled() const { return OnAutoclickToggledEvent; }
-   
+
+   FOnEnemySkillSlotClicked& OnEnemySkillSlotClicked() const { return OnEnemySkillSlotClickedEvent; }
+
    UPROPERTY(BlueprintAssignable, BlueprintCallable)
    FOnSkillSlotDropped OnSkillSlotDroppedEvent;
 
@@ -67,4 +72,5 @@ private:
    mutable FOnQuickCastSettingToggled OnQuickCastSettingToggledEvent;
    mutable FOnStaticFormationSettingToggled OnStaticFormationToggledEvent;
    mutable FOnAutoClickSettingToggled OnAutoclickToggledEvent;
+   mutable FOnEnemySkillSlotClicked OnEnemySkillSlotClickedEvent;
 };

@@ -39,13 +39,13 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
    int GetMaxLevel() const { return spellDefaults.MaxLevel; }
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   float GetCDDuration(UAbilitySystemComponent* abilityComponent) const;
+   float GetCDDuration(const UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    int GetRange(UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   int GetReqLevel(UAbilitySystemComponent* abilityComponent) const;
+   int GetReqLevel(const UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    int GetCost(const UAbilitySystemComponent* abilityComponent) const;

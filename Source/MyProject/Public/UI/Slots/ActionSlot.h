@@ -10,6 +10,7 @@
  * Slot a use can press to trigger some kind of effect
  */
 
+class USlotContainer;
 class UBorder;
 class AUserInput;
 class UButton;
@@ -59,6 +60,8 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent);
    void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
 
+   USlotContainer* GetParentContainer() const;
+	
    UActionSlotStyle* GetStyleCDO() const;
 
    UPROPERTY(Meta = (BindWidget))
@@ -71,9 +74,6 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    // Text that shows up in corner of the slot
    UPROPERTY(Meta = (BindWidget))
    UTextBlock* infoText;
-
-   UPROPERTY(BlueprintReadOnly)
-   AUserInput* CPCRef;
 
    UPROPERTY(EditANywhere, BlueprintReadOnly)
    TSubclassOf<UActionSlotStyle> style;

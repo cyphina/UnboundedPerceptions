@@ -23,7 +23,7 @@
 
 class UUIDelegateContext;
 
-UMaterialInterface* USkillSlot::cdMatInstance = nullptr;
+UMaterialInterface* USkillSlot::cdMatInstance    = nullptr;
 UMaterialInterface* USkillSlot::skillMatInstance = nullptr;
 
 USkillSlot::USkillSlot(const FObjectInitializer& o) : UActionSlot(o)
@@ -40,7 +40,7 @@ USkillSlot::USkillSlot(const FObjectInitializer& o) : UActionSlot(o)
    skillMatInstance = loadedSkillMat.Object;
 }
 
-void USkillSlot::NativeConstruct()
+void USkillSlot::NativeOnInitialized()
 {
    Super::NativeConstruct();
    imageDMatInst = UMaterialInstanceDynamic::Create(skillMatInstance, this);

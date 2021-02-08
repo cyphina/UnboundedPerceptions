@@ -14,9 +14,12 @@ void USpellCastComponent::BeginPlay()
    Super::BeginPlay();
    const auto unitControllerOwner = Cast<AUnitController>(GetOwner());
    check(unitControllerOwner);
-   unitOwnerRef = Cast<AUnit>(unitControllerOwner->GetPawn());
    unitControllerOwner->OnUnitStopped().AddUObject(this, &USpellCastComponent::OnUnitStopped);
-   abilityComponentRef = unitOwnerRef->GetAbilitySystemComponent();
+
+   GetWorld()->GetTimerManager().SetTimerForNextTick([this, unitControllerOwner]() {
+      unitOwnerRef        = Cast<AUnit>(unitControllerOwner->GetPawn());
+      abilityComponentRef = unitOwnerRef->GetAbilitySystemComponent();
+   });
 }
 
 bool USpellCastComponent::CheckSpellCastBreakInvis(TSubclassOf<UMySpell> spellToCast) const

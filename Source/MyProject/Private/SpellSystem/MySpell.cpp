@@ -93,7 +93,7 @@ bool UMySpell::IsOnCD(const UAbilitySystemComponent* abilityComponent) const
    return false;
 }
 
-float UMySpell::GetCDDuration(UAbilitySystemComponent* abilityComponent) const
+float UMySpell::GetCDDuration(const UAbilitySystemComponent* abilityComponent) const
 {
    return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.Cooldown);
 }
@@ -103,7 +103,7 @@ int UMySpell::GetRange(UAbilitySystemComponent* abilityComponent) const
    return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.Range);
 }
 
-int UMySpell::GetReqLevel(UAbilitySystemComponent* abilityComponent) const
+int UMySpell::GetReqLevel(const UAbilitySystemComponent* abilityComponent) const
 {
    return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.LevelReq);
 }

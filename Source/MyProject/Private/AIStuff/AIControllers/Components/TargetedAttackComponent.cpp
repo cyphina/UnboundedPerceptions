@@ -74,8 +74,10 @@ void UTargetedAttackComponent::BeginPlay()
       attackAnimInterface->OnAttackAnimFinished().AddWeakLambda(this, [this]() { bAttackAnimationPlaying = false; });
    }
 
-   agent = Cast<AUnitController>(GetOwner())->GetUnitOwner();
-   agent->GetUnitController()->OnUnitStopped().AddUObject(this, &UTargetedAttackComponent::OnUnitStopped);
+   GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+      agent = Cast<AUnitController>(GetOwner())->GetUnitOwner();
+      agent->GetUnitController()->OnUnitStopped().AddUObject(this, &UTargetedAttackComponent::OnUnitStopped);
+   });
 }
 
 void UTargetedAttackComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -114,7 +116,7 @@ void UTargetedAttackComponent::OnUnitAttackSwingDone()
    FAIMessage::Send(agent->GetUnitController(), msg);
 
    GetWorld()->GetTimerManager().SetTimer(
-   attackUpdateHandle, [this]() { readyToAttack = true; }, AttackTimerThreshold(), false);
+       attackUpdateHandle, [this]() { readyToAttack = true; }, AttackTimerThreshold(), false);
 
    if(USpellDataLibrary::IsInvisible(agent->GetAbilitySystemComponent()))
    {
@@ -130,10 +132,10 @@ void UTargetedAttackComponent::FollowAndTryAttackTarget()
       {
          if(HandlePositionalAdjustments())
          {
-            if(readyToAttack)
-               PlayAttackAnimation();
+            if(readyToAttack) PlayAttackAnimation();
          }
-      } else
+      }
+      else
       {
          LockOnTarget();
          CheckAndHandleTargetOutsideAnimationRange();
@@ -296,7 +298,7 @@ FGameplayTag UTargetedAttackComponent::GetAttackElement() const
 void UTargetedAttackComponent::CreateRangedProjectile(FDamageScalarStruct projectileDamageScalars)
 {
    const FVector    agentLocation = agent->GetActorLocation();
-   const FTransform transform = FTransform{FVector(agentLocation.X, agentLocation.Y, agentLocation.Z + agent->GetCapsuleComponent()->GetScaledCapsuleHalfHeight())};
+   const FTransform transform     = FTransform{FVector(agentLocation.X, agentLocation.Y, agentLocation.Z + agent->GetCapsuleComponent()->GetScaledCapsuleHalfHeight())};
    ARTSProjectile*  projectile = ARTSProjectile::MakeRTSProjectile(GetWorld(), agent->GetTargetComponent(), transform, ARTSProjectile::StaticClass(), projectileStrategy);
 
    projectile->hitEffects.Add(agent->GetAbilitySystemComponent()->MakeDamageEffect(projectileDamageScalars, GetAttackElement()));

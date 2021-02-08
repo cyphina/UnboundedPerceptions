@@ -42,6 +42,12 @@ void UActionSlot::SetSlotStyle(TSubclassOf<UActionSlotStyle> newStyle)
    }
 }
 
+void UActionSlot::NativePreConstruct()
+{
+   Super::NativePreConstruct();
+   SetSlotStyle(style);
+}
+
 void UActionSlot::SetInfo(FText newInfo)
 {
    infoText->SetText(newInfo);
@@ -67,7 +73,6 @@ UTexture2D* UActionSlot::GetImage() const
 void UActionSlot::NativeOnInitialized()
 {
    Super::NativeOnInitialized();
-   CPCRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
 }
 
 void UActionSlot::SetIsEnabled(bool bInIsEnabled)
@@ -108,7 +113,7 @@ FReply UActionSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const F
 
 FReply UActionSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-   if(USlotContainer* slotContainer = UUWidgetHelperLibrary::GetUserWidgetParent<USlotContainer>(this))
+   if(USlotContainer* slotContainer = GetParentContainer())
    {
       slotContainer->SetSelectedSlotIndex(slotIndex);
    }
@@ -122,12 +127,15 @@ FReply UActionSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPo
 
 void UActionSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-   UToolTipWidget* ttWidget = CreateWidget<UToolTipWidget>(CPCRef, CPCRef->GetHUDManager()->toolTipWidgetClass);
-
-   if(ttWidget)
+   if(AUserInput* CPCRef = Cast<AUserInput>(GetOwningPlayer<AUserInput>()))
    {
-      ShowDesc(ttWidget);
-      SetToolTip(ttWidget);
+      UToolTipWidget* ttWidget = CreateWidget<UToolTipWidget>(CPCRef, CPCRef->GetHUDManager()->toolTipWidgetClass);
+
+      if(ttWidget)
+      {
+         ShowDesc(ttWidget);
+         SetToolTip(ttWidget);
+      }
    }
 }
 
@@ -139,8 +147,7 @@ void UActionSlot::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
    }
 }
 
-void UActionSlot::NativePreConstruct()
+USlotContainer* UActionSlot::GetParentContainer() const
 {
-   Super::NativePreConstruct();
-   SetSlotStyle(style);
+   return UUWidgetHelperLibrary::GetUserWidgetParent<USlotContainer>(this);
 }

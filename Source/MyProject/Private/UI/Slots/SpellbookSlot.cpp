@@ -1,6 +1,6 @@
 #include "MyProject.h"
 #include "SpellbookSlot.h"
-
+#include "RTSAbilitySystemComponent.h"
 #include "DraggedActionWidget.h"
 #include "UserInput.h"
 #include "HUDManager.h"
@@ -17,7 +17,7 @@
 
 void USpellbookSlot::UpdateSlotColor()
 {
-   const ABaseHero* heroRef   = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef();
+   const ABaseHero* heroRef   = GetHeroRef();
    USpellBook*      spellBook = heroRef->GetSpellBook();
 
    if(spellBook->GetLearnedSpellIndices().Contains(slotIndex))
@@ -36,7 +36,7 @@ void USpellbookSlot::UpdateSlotColor()
 
 void USpellbookSlot::UpdateSlotLevelText()
 {
-   if(const ABaseHero* heroRef = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef())
+   if(const ABaseHero* heroRef = GetHeroRef())
    {
       if(USpellBook* spellBook = heroRef->GetSpellBook())
       {
@@ -55,7 +55,7 @@ void USpellbookSlot::UpdateSlotLevelText()
 
 void USpellbookSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
 {
-   if(const ABaseHero* heroRef = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef())
+   if(const ABaseHero* heroRef = GetHeroRef())
    {
       if(USpellBook* spellBook = heroRef->GetSpellBook())
       {
@@ -67,21 +67,20 @@ void USpellbookSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPo
                dragVisual->SetDraggedImage(spellClass.GetDefaultObject()->GetSpellDefaults().image);
 
                URTSSpellbookDrag* dragOp = NewObject<URTSSpellbookDrag>(this);
-               dragOp->Pivot = EDragPivot::CenterCenter;
+               dragOp->Pivot             = EDragPivot::CenterCenter;
                dragOp->DefaultDragVisual = dragVisual;
-               dragOp->slotIndex = slotIndex;
-               OutOperation = MoveTemp(dragOp);
+               dragOp->slotIndex         = slotIndex;
+               OutOperation              = MoveTemp(dragOp);
             }
          }
       }
    }
-
 }
 
 void USpellbookSlot::ShowDesc(UToolTipWidget* tooltip)
 {
-   const auto heroRef              = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef();
-   const auto abilitySystemCompRef = heroRef->GetAbilitySystemComponent();
+   const ABaseHero*                  heroRef              = GetHeroRef();
+   const URTSAbilitySystemComponent* abilitySystemCompRef = heroRef->GetAbilitySystemComponent();
 
    if(static_cast<unsigned>(slotIndex) >= static_cast<unsigned>(heroRef->GetSpellBook()->GetAvailableSpells().Num()))
    {
@@ -97,8 +96,8 @@ void USpellbookSlot::ShowDesc(UToolTipWidget* tooltip)
    const auto  spellObj        = spellClassRef.GetDefaultObject();
    const FText costAndManaDesc = FText::Format(LOCTEXT("SpellSlotCostAndMana", "Costs {0} mana \r\n{1} second cooldown \r\n{2} Element"),
                                                spellObj->GetCost(abilitySystemCompRef), spellObj->GetCDDuration(abilitySystemCompRef), spellObj->GetElem());
-   FText preReqNamesDesc =
-   spellObj->GetPreReqNames().Num() > 0 ? LOCTEXT("LearnedSpellReqsStart", "Must have learned - ") : LOCTEXT("NoSpellReqs", "No spell requirements");
+   FText       preReqNamesDesc =
+       spellObj->GetPreReqNames().Num() > 0 ? LOCTEXT("LearnedSpellReqsStart", "Must have learned - ") : LOCTEXT("NoSpellReqs", "No spell requirements");
    const FText levelRequirementString = FText::Format(LOCTEXT("LevelReq", "Requires Level: {0}"), spellObj->GetReqLevel(abilitySystemCompRef));
 
    for(auto& preReqName : spellObj->GetPreReqNames())
@@ -111,4 +110,14 @@ void USpellbookSlot::ShowDesc(UToolTipWidget* tooltip)
       tooltip->SetupTTBoxText(spellObj->GetSpellName(), levelRequirementString, preReqNamesDesc, spellObj->GetDescription(), costAndManaDesc);
    }
 }
+
+ABaseHero* USpellbookSlot::GetHeroRef() const
+{
+   if(AUserInput* CPCRef = Cast<AUserInput>(GetOwningPlayer<AUserInput>()))
+   {
+      return CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef();
+   }
+   return nullptr;
+}
+
 #undef LOCTEXT_NAMESPACE

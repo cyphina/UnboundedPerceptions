@@ -11,6 +11,7 @@
 #include "GameplayEffectCustomApplicationRequirement.h"
 #include "MySpell.h"
 #include "GameplayCueManager.h"
+#include "RTSIngameWidget.h"
 #include "SpellDataLibrary.h"
 #include "SpellDelegateStore.h"
 #include "UpStatComponent.h"
@@ -277,8 +278,15 @@ void URTSAbilitySystemComponent::SetSpellAtSlot(TSubclassOf<UMySpell> spellClass
 {
    if(slotIndex >= 0 && slotIndex < abilities.Num())
    {
-      abilities[slotIndex] = spellClassToSet;
-      SpellGameContext::OnSpellSlotReplacedEvent.Broadcast(unitOwnerRef, spellClassToSet, slotIndex);
+      if(abilities.Find(spellClassToSet) == INDEX_NONE)
+      {
+         abilities[slotIndex] = spellClassToSet;
+         SpellGameContext::OnSpellSlotReplacedEvent.Broadcast(unitOwnerRef, spellClassToSet, slotIndex);
+      }
+      else
+      {
+         URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("SpellUI", "EquipDuplicateSpellError", "Cannot equip the same spell in two slots!"));
+      }
    }
    else
    {

@@ -4,6 +4,7 @@
 #include "UI/Slots/ActionSlot.h"
 #include "SpellbookSlot.generated.h"
 
+class ABaseHero;
 /**
  * Slot for skills we can learn inside the spellbook
  */
@@ -24,7 +25,8 @@ protected:
    
 private:
    void ShowDesc(UToolTipWidget* tooltip) override;
-   
+   ABaseHero* GetHeroRef() const;
+
    static const inline FLinearColor tooHighLevelSpellColor = FLinearColor(0.6, 0, 0.02, 1.0);
    static const inline FLinearColor canLearnSpellColor    = FLinearColor(0.62, 0.61, 0, 1.0);
    static const inline FLinearColor learnedSpellColor = FLinearColor::White;
