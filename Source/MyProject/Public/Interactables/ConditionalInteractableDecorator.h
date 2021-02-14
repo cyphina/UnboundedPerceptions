@@ -17,13 +17,7 @@ class MYPROJECT_API UConditionalInteractableDecorator : public UInteractableActo
 {
    GENERATED_BODY()
 
-   ARTSGameMode* gameModeRef;
-   AUserInput*   cpcRef;
-
-   UPROPERTY()
-   class AHUDManager* hudManagerRef;
-
- public:
+public:
    UPROPERTY(EditAnywhere, BlueprintReadOnly)
    TArray<FConditionData> conditions;
 
@@ -33,4 +27,11 @@ class MYPROJECT_API UConditionalInteractableDecorator : public UInteractableActo
 
    void Init() override;
    bool Interact() override;
+
+private:
+   ARTSGameMode* gameModeRef;
+   AUserInput*   cpcRef;
+
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
 };

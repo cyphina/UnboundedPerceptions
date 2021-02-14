@@ -133,11 +133,7 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    * @brief Uses UE4 reflection to inject this HUDManager into any property named hudManagerRef. Allows us to inject into private members
    * @param objectToInject - The UObject with a property called "hudManagerRef"
    */
-   FORCEINLINE void InjectDependency(UObject* objectToInject)
-   {
-      FObjectProperty* objectProperty = FindFProperty<FObjectProperty>(objectToInject->GetClass(), "hudManagerRef"); // Find the property on that object
-      objectProperty->SetPropertyValue_InContainer(objectToInject, this); // Get that property and set its value in the container (which is the actual object instance)
-   }
+   void InjectDependency(UObject* objectToInject);
 
    void InjectDependentClasses();
 

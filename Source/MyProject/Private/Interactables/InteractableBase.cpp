@@ -1,7 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "InteractableBase.h"
+
+#include "GameplayDelegateContext.h"
 #include "Interactables/InteractableActorDecoratorBase.h"
 #include "Interactables/NamedInteractableDecorator.h"
 #include "TriggerInteractableDecorator.h"
@@ -115,7 +115,9 @@ void AInteractableBase::SetGameName(FText value)
 void AInteractableBase::Interact_Implementation(ABaseHero* hero)
 {
    if (IInteractable::Execute_CanInteract(this)) // calls Interact on decorator in the process
-      return;
+   {
+      GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnInteracted().Broadcast(GetClass(), GetGameName());
+   }
 }
 
 FVector AInteractableBase::GetInteractableLocation_Implementation() const

@@ -6,11 +6,12 @@
 
 class AUnit;
 class ARTSPawn;
+class AInteractableBase;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDieGlobal, AUnit*);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMoneyGained, int);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnExpGained, int);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnNamedInteractableInteracted, const FText&);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnNamedInteractableInteracted, TSubclassOf<AInteractableBase>, const FText&);
 DECLARE_EVENT_OneParam(ARTSPawn, FOnSkillActivated, int);
 
 UCLASS()

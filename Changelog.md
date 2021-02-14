@@ -1,5 +1,5 @@
 # Cyphina's Message
-Sorry it's been a while since I did formal changelog notes. I massively changed up the way the game's code is structured; I think it will be good for the long run
+Critical Bugfixes and Quest System Checks/Fixes
 <br>
 # Notes
 * Delayed updating healthbar by one tick so other functions can fire off in "OnDamageReceived" delegates properly updating health befor we update the view.

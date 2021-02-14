@@ -80,7 +80,9 @@ void URTSUnitDamageCalculation::DamageTarget(FUpDamage& d, FGameplayTagContainer
 
    // Clamp damage to always deal 1 damage even on highly resisted hits
    if(d.damage <= 0)
+   {
       d.damage = 1;
+   }
 
    // Add lifesteal effects as healing here (since we have to calculate damage reduction first)
    // TODO: Maybe add a stat for lifesteal %

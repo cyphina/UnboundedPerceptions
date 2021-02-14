@@ -54,7 +54,7 @@ FText UShopSlot::MakeItemPriceText(const FItemPrice& price) const
    {
       for(auto& itemToTrade : price.tradeItems)
       {
-         auto itemToTradeInfo = UItemManager::Get().GetItemInfo(itemToTrade.id);
+         const FItemLookupRow* itemToTradeInfo = UItemManager::Get().GetItemInfo(itemToTrade.id);
          priceText            = FText::Format(NSLOCTEXT("Shop", "ItemPrice2", "{0}\r\n{1} - {2}"), priceText, itemToTrade.count, itemToTradeInfo->name);
       }
    }

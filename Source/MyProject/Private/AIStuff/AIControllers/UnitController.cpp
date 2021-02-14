@@ -29,7 +29,8 @@ AUnitController::AUnitController()
 {
    SetActorTickInterval(0.f);
    ConstructorHelpers::FObjectFinder<UCurveFloat> loadedCurve(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/StandardLinear"));
-   if(loadedCurve.Succeeded()) turnCurve = loadedCurve.Object;
+   if(loadedCurve.Succeeded())
+      turnCurve = loadedCurve.Object;
 }
 
 void AUnitController::OnPossess(APawn* InPawn)
@@ -117,11 +118,10 @@ void AUnitController::OnDamageReceived(const FUpDamage& d)
 {
    GetUnitOwner()->GetStatComponent()->ModifyStats<false>(GetUnitOwner()->GetStatComponent()->GetVitalCurValue(EVitals::Health) - d.damage, EVitals::Health);
 
-   if(GetUnitOwner()->GetStatComponent()->GetVitalAdjValue(EVitals::Health) < 0)
+   if(GetUnitOwner()->GetStatComponent()->GetVitalAdjValue(EVitals::Health) <= 0)
    {
       Die();
-   }
-   else if(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) >= d.targetUnit->GetStatComponent()->GetVitalBaseValue(EVitals::Health))
+   } else if(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) >= d.targetUnit->GetStatComponent()->GetVitalBaseValue(EVitals::Health))
    {
       d.sourceUnit->GetStatComponent()->ModifyStats<false>(d.sourceUnit->GetStatComponent()->GetVitalBaseValue(EVitals::Health), EVitals::Health);
    }
@@ -198,12 +198,14 @@ void AUnitController::StopAutomation() const
 {
    if(UBehaviorTreeComponent* behaviorTreeComp = FindComponentByClass<UBehaviorTreeComponent>())
    {
-      if(behaviorTreeComp->IsRunning()) behaviorTreeComp->StopTree();
+      if(behaviorTreeComp->IsRunning())
+         behaviorTreeComp->StopTree();
    }
 }
 
 void AUnitController::TurnTowardsPoint(FVector targetLocation)
 {
+   StopMovement();
    startRotation = ownerRef->GetActorRotation().Quaternion();
    turnRotator   = UUpAIHelperLibrary::FindLookRotation(GetUnitOwner(), targetLocation);
    turnTimeline.SetPlayRate(rotationRate * ownerRef->GetCharacterMovement()->RotationRate.Yaw / FMath::Abs(ownerRef->GetActorQuat().AngularDistance(turnRotator)));
@@ -212,6 +214,7 @@ void AUnitController::TurnTowardsPoint(FVector targetLocation)
 
 void AUnitController::TurnTowardsActor(AActor* targetActor)
 {
+   StopMovement();
    startRotation = ownerRef->GetActorRotation().Quaternion();
    turnRotator   = UUpAIHelperLibrary::FindLookRotation(GetUnitOwner(), targetActor->GetActorLocation());
    turnActorTimeline.SetPlayRate(rotationRate * ownerRef->GetCharacterMovement()->RotationRate.Yaw / FMath::Abs(ownerRef->GetActorQuat().AngularDistance(turnRotator)));
@@ -227,8 +230,7 @@ void AUnitController::OnActorTurnFinished()
       if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetActor->GetActorLocation()))
       {
          TurnTowardsActor(targetActor);
-      }
-      else
+      } else
       {
          if(onPosAdjDoneAct)
          {
@@ -254,8 +256,7 @@ void AUnitController::TurnActor(float turnValue)
       {
          const FQuat rotation = FQuat::Slerp(startRotation, turnRotator, turnValue);
          ownerRef->SetActorRelativeRotation(rotation);
-      }
-      else
+      } else
       {
          turnActorTimeline.Stop();
          // Call this explicitly because stop does not trigger the timeline finished event.
@@ -272,7 +273,8 @@ void AUnitController::Turn(float turnValue)
 
 void AUnitController::QueueTurnAfterMovement(FVector targetLoc)
 {
-   queuedTurnAction = [this, targetLoc]() {
+   queuedTurnAction = [this, targetLoc]()
+   {
       if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetLoc))
          TurnTowardsPoint(targetLoc);
       else
@@ -287,9 +289,12 @@ void AUnitController::QueueTurnAfterMovement(FVector targetLoc)
 
 void AUnitController::QueueTurnAfterMovement(AActor* targetActor)
 {
-   queuedTurnAction = [this, targetActor]() {
+   queuedTurnAction = [this, targetActor]()
+   {
       if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetActor->GetActorLocation()))
+      {
          TurnTowardsActor(targetActor);
+      }
       else
       {
          if(onPosAdjDoneAct)
@@ -308,13 +313,10 @@ bool AUnitController::AdjustPosition(float range, FVector targetLoc)
       QueueTurnAfterMovement(targetLoc);
       return false;
    }
-   else
+   if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetLoc, .02f))
    {
-      if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetLoc, .02f))
-      {
-         TurnTowardsPoint(targetLoc);
-         return false;
-      }
+      TurnTowardsPoint(targetLoc);
+      return false;
    }
    return true;
 }
@@ -327,22 +329,19 @@ bool AUnitController::AdjustPosition(float range, FVector targetLoc, EPathFollow
       QueueTurnAfterMovement(targetLoc);
       return false;
    }
-   else
+   if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetLoc, .02f))
    {
-      if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetLoc, .02f))
-      {
-         TurnTowardsPoint(targetLoc);
-         return false;
-      }
+      TurnTowardsPoint(targetLoc);
+      return false;
    }
    return true;
 }
 
 bool AUnitController::AdjustPosition(float range, AActor* targetActor)
 {
-   if(!UUpAIHelperLibrary::IsTargetInRange(GetUnitOwner(), targetActor->GetActorLocation(), range))
+   if(!UUpAIHelperLibrary::IsTargetInRange(GetUnitOwner(), targetActor->GetActorLocation(), range + targetActor->GetSimpleCollisionRadius() + GetUnitOwner()->GetSimpleCollisionRadius()))
    {
-      MoveToActor(targetActor, range, false, true, false);
+      MoveToActor(targetActor, range + targetActor->GetSimpleCollisionRadius(), false, true, false);
       QueueTurnAfterMovement(targetActor);
       return false;
    }
@@ -385,8 +384,7 @@ void AUnitController::QueueAction(const TFunction<void()>& actionToQueue)
       GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Emerald, TEXT("SUCESSFUL QUEUE"));
       commandQueue.Enqueue(actionToQueue);
       ++queueCount;
-   }
-   else
+   } else
    {
       URTSIngameWidget::NativeDisplayHelpText(GetWorld(), FILLED_QUEUE_TEXT);
    }

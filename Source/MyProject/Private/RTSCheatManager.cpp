@@ -91,10 +91,11 @@ void URTSCheatManager::AddQuest(FString questName)
 
 void URTSCheatManager::FinishQuest(FString questName, int isSucessful)
 {
-   AQuest* quest = *gameModeRef->GetQuestManager()->quests.FindByPredicate([questName](AQuest* quest) { return quest->questInfo.name.ToString() == questName; });
+   auto pred = [questName](AQuest* quest) { return quest->GetQuestInfo().name.ToString() == questName; };
+   AQuest* quest = *gameModeRef->GetQuestManager()->activeQuests.FindByPredicate(pred);
    if(quest)
    {
-      isSucessful == 0 ? quest->CompleteQuest(false) : quest->CompleteQuest(true);
+      quest->CompleteQuest();
    }
 }
 

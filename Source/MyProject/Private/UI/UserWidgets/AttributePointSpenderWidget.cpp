@@ -3,11 +3,10 @@
 #include "BaseHero.h"
 #include "Button.h"
 #include "CharacterMenu.h"
-#include "UWidgetHelperLibrary.h"
+#include "UpWidgetHelperLibrary.h"
 #include "TextBlock.h"
 #include "UIDelegateContext.h"
 #include "UpStatComponent.h"
-#include "UWidgetHelperLibrary.h"
 
 UAttributePointSpenderWidget* UAttributePointSpenderWidget::MakePointSpenderWidget(UUserWidget* widgetParent, TSubclassOf<UAttributePointSpenderWidget> widgetClass,
                                                                                    EAttributes attCategory)
@@ -21,7 +20,7 @@ UAttributePointSpenderWidget* UAttributePointSpenderWidget::MakePointSpenderWidg
 void UAttributePointSpenderWidget::NativeOnInitialized()
 {
    Super::NativeOnInitialized();
-   parentWidget = UUWidgetHelperLibrary::GetUserWidgetParent<UCharacterMenu>(this);
+   parentWidget = UUpWidgetHelperLibrary::GetUserWidgetParent<UCharacterMenu>(this);
    Text_Value->TextDelegate.BindUFunction(this, "GetAttributeValues");
    Btn_Increment->OnClicked.AddDynamic(this, &UAttributePointSpenderWidget::OnAttributeIncreased);
    Btn_Decrement->OnClicked.AddDynamic(this, &UAttributePointSpenderWidget::OnAttributeDecreased);

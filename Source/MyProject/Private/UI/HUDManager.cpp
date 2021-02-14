@@ -389,6 +389,15 @@ UStartMenu* AHUDManager::GetStartMenu() const
    return Cast<UStartMenu>(widgetReferences[static_cast<int>(EHUDs::HS_Start)]);
 }
 
+void AHUDManager::InjectDependency(UObject* objectToInject)
+{
+   FObjectProperty* objectProperty = FindFProperty<FObjectProperty>(objectToInject->GetClass(), "hudManagerRef"); // Find the property on that object
+   if(objectProperty)
+   {
+      objectProperty->SetPropertyValue_InContainer(objectToInject, this); // Get that property and set its value in the container (which is the actual object instance)
+   }
+}
+
 void AHUDManager::InjectDependentClasses()
 {
    InjectDependency(GetIngameHUD());

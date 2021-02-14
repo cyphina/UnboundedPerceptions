@@ -6,7 +6,7 @@
 #include "SlotContainer.h"
 #include "TextBlock.h"
 #include "UserInput.h"
-#include "UWidgetHelperLibrary.h"
+#include "UpWidgetHelperLibrary.h"
 #include "WidgetBlueprintLibrary.h"
 #include "UI/HUDManager.h"
 
@@ -149,5 +149,5 @@ void UActionSlot::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 
 USlotContainer* UActionSlot::GetParentContainer() const
 {
-   return UUWidgetHelperLibrary::GetUserWidgetParent<USlotContainer>(this);
+   return UUpWidgetHelperLibrary::GetUserWidgetParent<USlotContainer>(this);
 }

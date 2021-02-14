@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "ConditionalInteractableDecorator.h"
 #include "RTSGameMode.h"
@@ -43,7 +41,9 @@ bool UConditionalInteractableDecorator::Interact()
    }
 
    if(decoratedInteractable)
+   {
       decoratedInteractable->Interact();
+   }
 
    return true;
 }

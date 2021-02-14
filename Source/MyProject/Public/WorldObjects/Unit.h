@@ -141,6 +141,10 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    TSubclassOf<URTSMoveExecution> GetCustomMoveLogic() const { return customMoveLogic; }
 
  protected:
+   void BeginPlay() override;
+   void Tick(float deltaSeconds) override;
+   void PossessedBy(AController* newController) override;
+
    UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
    class UHealthbarComp* healthBar;
 
@@ -186,15 +190,11 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    TSubclassOf<URTSMoveExecution> customMoveLogic;
 
    /**
-    * @brief Material reference to unit's base material so that if it changes (due to effects) we can revert it back
-    */
+   * @brief Material reference to unit's base material so that if it changes (due to effects) we can revert it back
+   */
    UPROPERTY(EditAnywhere)
    UMaterialInterface* originalMaterial;
-
-   void BeginPlay() override;
-   void Tick(float deltaSeconds) override;
-   void PossessedBy(AController* newController) override;
-
+   
    class AUserInput* controllerRef;
 
  private:

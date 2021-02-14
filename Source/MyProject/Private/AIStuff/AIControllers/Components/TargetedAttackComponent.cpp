@@ -173,7 +173,11 @@ bool UTargetedAttackComponent::CheckAndHandleCancelConditions()
 
 bool UTargetedAttackComponent::CheckTargetVisionLost() const
 {
-   return !agent->GetTargetComponent()->GetTargetUnit()->GetVisionComponent()->IsUnitVisible();
+   if(AUnit* targetUnit = agent->GetTargetComponent()->GetTargetUnit(); IsValid(targetUnit))
+   {
+      return !targetUnit->GetVisionComponent()->IsUnitVisible();
+   }
+   return true;
 }
 
 bool UTargetedAttackComponent::CheckTargetAttackable() const

@@ -6,6 +6,7 @@
 #include "StatEnums.h"
 #include "UIDelegateContext.generated.h"
 
+class AUnit;
 class ABaseHero;
 class UBackpack;
 class UUnitSelectionSlot;
@@ -20,6 +21,8 @@ DECLARE_EVENT_OneParam(UUnitSelectionSlot, FOnUnitSlotSelected, AUnit*); // Pass
 
 DECLARE_EVENT(UActionbarInterface, FOnSelectionLockToggled);
 
+DECLARE_EVENT_OneParam(UActionbar_EnemyInterface, FOnEnemySkillSlotClicked, int);
+
 DECLARE_EVENT(USettingsMenu, FOnQuickCastSettingToggled);
 DECLARE_EVENT(USettingsMenu, FOnStaticFormationSettingToggled);
 DECLARE_EVENT(USettingsMenu, FOnAutoClickSettingToggled);
@@ -31,7 +34,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnItemSlotDroppedFromInventory, i
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnItemSlotDroppedFromStorage, int, dragSlotIndex, int, dropSlotIndex, UBackpack*, dragPack, UBackpack*, dropPack);
 
-DECLARE_EVENT_OneParam(UActionbar_EnemyInterface, FOnEnemySkillSlotClicked, int);
 
 UCLASS()
 class MYPROJECT_API UUIDelegateContext : public ULocalPlayerSubsystem
@@ -52,7 +54,7 @@ public:
    FOnAutoClickSettingToggled& OnAutoclickToggled() const { return OnAutoclickToggledEvent; }
 
    FOnEnemySkillSlotClicked& OnEnemySkillSlotClicked() const { return OnEnemySkillSlotClickedEvent; }
-
+   
    UPROPERTY(BlueprintAssignable, BlueprintCallable)
    FOnSkillSlotDropped OnSkillSlotDroppedEvent;
 

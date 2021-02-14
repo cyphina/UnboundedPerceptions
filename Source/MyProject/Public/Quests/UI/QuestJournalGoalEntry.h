@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -7,26 +5,42 @@
 #include "Quests/Quest.h"
 #include "QuestJournalGoalEntry.generated.h"
 
-/**
- * Icon inside quest journal the represents the goals (that are completed, failed, or in progress) for a selected quest entry
- * These are recreated as goals get completed/failed, and have to be updated when journal is open similar to SubGoalWidgets.
- */
+class UTextBlock;
+class UImage;
 
-UCLASS()
+/**
+* Icon inside quest journal the represents the goals (that are completed, failed, or in progress) for a selected quest entry
+* These are recreated as goals get completed/failed, and have to be updated when journal is open similar to SubGoalWidgets.
+*/
+UCLASS(meta=(DisableNativeTick))
 class MYPROJECT_API UQuestJournalGoalEntry : public UUserWidget
 {
    GENERATED_BODY()
 
-   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
-   int goalIndex;
+public:
+   UFUNCTION(BlueprintCallable, Category="Widget Creation")
+   void UpdateEntryWidget();
 
-   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
-   FGoalInfo goalInfo;
+protected:
+   void NativeOnInitialized() override;
+   
+   UPROPERTY(BlueprintReadOnly, Meta=(BindWidget))
+   UImage* Image_GoalState;
 
-   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
-   AQuest* questRef;
+   UPROPERTY(BlueprintReadOnly, Meta=(BindWidget))
+   UTextBlock* Text_GoalDesc;
 
- public:
-   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-   void Update();
+   UPROPERTY(EditDefaultsOnly)
+   UTexture2D* Texture2D_LockedGoal;
+
+   UPROPERTY(EditDefaultsOnly)
+   UTexture2D* Texture2D_CurrentGoal;
+
+   UPROPERTY(EditDefaultsOnly)
+   UTexture2D* Texture2D_CompletedGoal;
+   
+private:
+   
+   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
+   UUpGoal* goal;
 };

@@ -183,7 +183,9 @@ FBackpackUpdateResult UBackpack::RemoveItem(FMyItem itemToRemove)
          {
             if(items[index].count > removeCount)
             {
+               const int numItemsRemoved = items[index].count;
                items[index].count -= removeCount;
+               itemToRemove.count -= numItemsRemoved;
             }
             else
             {

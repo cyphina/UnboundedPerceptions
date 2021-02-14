@@ -6,7 +6,7 @@
 #include "TextBlock.h"
 #include "DamageStructs.h"
 #include "SpellDataLibrary.h"
-#include "UWidgetHelperLibrary.h"
+#include "UpWidgetHelperLibrary.h"
 
 void URTSDamageNumberWidget::NativeOnInitialized()
 {
@@ -28,7 +28,7 @@ void URTSDamageNumberWidget::SetDamageTextProps(const FUpDamage& damageInfo)
 
 void URTSDamageNumberWidget::OnFloatAnimationFinished()
 {
-   if(URTSDamageNumberContainer* damageContainer = UUWidgetHelperLibrary::GetUserWidgetParent<URTSDamageNumberContainer>(this))
+   if(URTSDamageNumberContainer* damageContainer = UUpWidgetHelperLibrary::GetUserWidgetParent<URTSDamageNumberContainer>(this))
    {
       damageContainer->ReleaseDamageNumberWidget(this);
    }

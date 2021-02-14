@@ -55,7 +55,7 @@ struct FBackpackUpdateResult
    UPROPERTY(BlueprintReadOnly)
    int numUpdatedItemsRequested;
 
-   /** How many items are left not updated? (anything > 0 means this operation failed) */
+   /** How many items (out of the amount we passed in) are left not updated? (anything > 0 means this operation failed) */
    UPROPERTY(BlueprintReadOnly)
    int numUpdatedItemsRemaining;
 

@@ -186,14 +186,6 @@ private:
 #pragma region camera
 
 public:
-   int cameraBoundsX;
-   int cameraBoundsY;
-
-   static const float maxArmLength;
-   static const float minArmLength;
-   static const float defaultArmLength;
-   static const int   baseCameraMoveSpeed = 30;
-
    /**Makes zooming in and out slower/faster.  Can be set in settings menu*/
    UPROPERTY(BlueprintReadWrite, Category = "Camera Settings")
    float zoomMultiplier = 3.f;
@@ -205,6 +197,12 @@ public:
    UPROPERTY(BlueprintReadWrite, Category = "Camera Settings")
    float camMoveSpeedMultiplier = 1;
 
+   UPROPERTY(EditDefaultsOnly, Category = "Camera Settings")
+   float camSmoothPanMultiplier = 2.f;
+
+   UPROPERTY(EditDefaultsOnly, Category = "Camera Settings")
+   float camSmoothPanTime = 1.f;
+   
    /**If a BLUI event was raised due to clicking on the browser in a way that sucessfully interacted with the browser widget, then the camera pawn
     *needs to know so it register the click as a UI event rather than gameplay event*/
    UPROPERTY(BlueprintReadWrite, Category = "Camera Settings")
@@ -226,6 +224,19 @@ public:
 private:
    int viewX, viewY;
 
+   // TODO: Prevent panning outside bounds. Maybe use leader to determine else have level boundaries.
+   int cameraBoundsX;
+   int cameraBoundsY;
+
+   static const float maxArmLength;
+   static const float minArmLength;
+   static const float defaultArmLength;
+   static const int   baseCameraMoveSpeed = 30;
+   
+   FTimerHandle smoothCameraTransitionTimerHandle;
+   float smoothCameraTransitionTime = 0.f;
+   FVector startCameraPos, endCameraPawnPos;
+   
    void RecalculateViewportSize(FViewport* viewport, uint32 newSize);
    void ZoomIn();
    void ZoomOut();
