@@ -21,7 +21,7 @@ class UUpSpellTargeting : public UObject
 public:
 
    /** Checks to see if the caster clicked on the right kind of target, and the target is in a valid state */
-   virtual bool ManualTargetingCheck(const AUnit* caster, const FHitResult& hitResult) const PURE_VIRTUAL(UUpSpellTargeting::ManualTargetingCHeck, return false; ); 
+   virtual bool ManualTargetingCheck(const AUnit* caster, const FHitResult& hitResult) const PURE_VIRTUAL(UUpSpellTargeting::ManualTargetingCheck, return false; ); 
 
    /** Handles different type of targeting systems involved (single click, two clicks, click on self, etc.) */
    virtual void ClickResponse(const FHitResult& hitResult, TSubclassOf<UMySpell> spellClass, IManualTargetingController& sourceUnitController) const PURE_VIRTUAL(UUpSpellTargeting::ClickResponse, );

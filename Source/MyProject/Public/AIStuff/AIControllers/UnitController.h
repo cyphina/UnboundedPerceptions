@@ -3,6 +3,7 @@
 #include "AIController.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
 #include "UnitTargetData.h"
+#include "State/IUnitState.h"
 #include "UnitController.generated.h"
 
 struct FAIMessage;
@@ -27,11 +28,18 @@ class MYPROJECT_API AUnitController : public AAIController
 {
    GENERATED_BODY()
 
-public:
+ public:
    AUnitController();
 
    UFUNCTION(BlueprintCallable, BlueprintPure)
    FORCEINLINE AUnit* GetUnitOwner() const { return ownerRef; }
+
+   /**
+    * @brief Gets current state in state machine
+    * @return Returns enum identifier corresponding to current state the state machine is in.
+    */
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
+   EUnitState GetState() const;
 
    /**
     * @brief Used when the player moves units to a certain location (only on right click move)
@@ -66,6 +74,10 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Action")
    void StopAutomation() const;
 
+   /** Stops a unit completely - Cancels any ongoing AI and clears the command queue. Probably only useful for manually controlled units (allies) and testing */
+   UFUNCTION(BlueprintCallable, Category = "Action")
+   void HaltUnit();
+   
    UFUNCTION(BlueprintCallable, Category = "Action")
    void Die();
 
@@ -84,17 +96,36 @@ public:
 
    bool AdjustPosition(float range, AActor* targetActor, TFunction<void()> finishedTurnAction);
 
+   /**
+    * Used so our actor components can react to us stopping
+    * It serves as a way of canceling our task and returning to the idle state (which may be overriden before the frame ends when we cancel the current action and
+    * transition to another).
+    */
    FOnUnitStopped& OnUnitStopped() { return OnUnitStoppedEvent; }
 
+   /**
+    * Flow Control - Call to notify the system that we're done performing whatever action (casting, using item, interacting, attacking, attack move, etc.)
+    * This may take some time to complete since the aforementioned tasks can take variable time (imagine your character is slowed to a boat) or maybe you're talking
+    * to an NPC or something.
+    */
+   void FinishCurrentAction();
+   
    /** Queues an action to our action queue */
-   void QueueAction(const TFunction<void()>& actionToQueue);
+   void QueueAction(TFunction<void()> actionToQueue);
 
    /** Accessor to clear command queue. */
-   void ClearCommandQueue() { commandQueue.Empty(); }
+   void ClearCommandQueue()
+   {
+      commandQueue.Empty();
+      queueCount = 0;
+   }
 
    static const int CHASE_RANGE = 100;
 
-protected:
+   UPROPERTY(EditDefaultsOnly)
+   float smallMoveIgnoreRange = 50.f;
+   
+ protected:
    void BeginPlay() override;
    void Tick(float deltaSeconds) override final;
 
@@ -102,14 +133,11 @@ protected:
     * on how they use their blackboards as well as starting the tree*/
    void OnPossess(APawn* InPawn) override;
 
-   UPROPERTY(EditDefaultsOnly)
-   float smallMoveIgnoreRange = 50.f;
-
    /** Either Idle, Follow, Patrol, Search, or Roam*/
    UPROPERTY(EditDefaultsOnly)
    UBehaviorTree* idleMoveLogic;
 
-private:
+ private:
    UFUNCTION()
    void OnActorTurnFinished();
 
@@ -202,18 +230,15 @@ private:
 
    class MoveCompletedVisitor
    {
-   public:
-      MoveCompletedVisitor(AUnitController* controllerRef) :
-         finishedMovingUnitController(controllerRef)
-      {
-      }
+    public:
+      MoveCompletedVisitor(AUnitController* controllerRef) : finishedMovingUnitController(controllerRef) {}
 
       void operator()(FEmptyVariantState);
       void operator()(FVector targetVector);
       void operator()(AActor* targetActor);
       void operator()(AUnit* targetUnit);
 
-   private:
+    private:
       inline AUnit&    FinishedMovingUnit() const;
       AUnitController* finishedMovingUnitController;
    };

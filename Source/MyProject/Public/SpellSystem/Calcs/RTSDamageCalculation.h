@@ -17,15 +17,15 @@ class MYPROJECT_API URTSDamageCalculation : public UGameplayEffectExecutionCalcu
 {
    GENERATED_UCLASS_BODY()
 
- public:
+public:
    /** Create some text to display the damage dealt to this unit */
    static void ShowDamageDealt(const FUpDamage& damageInfo);
 
- protected:
+protected:
    void BroadcastDamageEvents(FUpDamage& d) const;
 
    /** Damage a target from a unit source*/
-   virtual void DamageTarget(UPARAM(ref) FUpDamage& d, FGameplayTagContainer effects) const PURE_VIRTUAL(URTSDamageCalculation::DamageTarget, );
+   virtual void DamageTarget(UPARAM(ref) FUpDamage& d, FGameplayTagContainer effects) const PURE_VIRTUAL(URTSDamageCalculation::DamageTarget,);
 
    /** Plug in damage to damage formula and modify the damage amount based on crit or piercing */
    void CalculateDamage(FUpDamage& d, FGameplayTagContainer& effects) const;
@@ -44,8 +44,10 @@ class MYPROJECT_API URTSDamageCalculation : public UGameplayEffectExecutionCalcu
 
    /** Helper function to quickly calculate attack and defense bonuses due to affinity and resistance */
    static void CalculatePiercing(AUnit* unit, FUpDamage& d, bool isAtt);
-   static void PrintDamageCalcsBeforeProcessing(FUpDamage& d, int damageRange);
-   static void PrintPreDamageReductionValues(FUpDamage& d);
-   static void PrintCritOccurrence(FUpDamage& d);
-   static void PrintFinalCalculatedDamage(FUpDamage& d);
+
+   /** Prints out how much damage we're doing before any sort of affinity, piercing, and accuracy calculations are applied */
+   static void PrintDamageCalcsBeforeProcessing(const FUpDamage& d, int damageRange);
+   static void PrintPreDamageReductionValues(const FUpDamage& d);
+   static void PrintFinalCalculatedDamageValues(const FUpDamage& d);
+   static void PrintCritRollInfo(const FUpDamage& d, float percentageConversion, float critRoll);
 };

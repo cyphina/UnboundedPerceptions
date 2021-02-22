@@ -49,17 +49,6 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    float GetCurrentChannelingTime() const;
 
-   /**
-    * Activates the ability when we're in position AND after we've incanted. It represents us having to focus energy while the spell is activating.
-    * Some abilities are casted in phases, which means they get replaced by another spell.  
-    * Also used for item usage (which also triggers abilities).
-    * Some spells require another channeling after we've activated it. That means it's blocked until it gets an event raised from a "Confirmation Spell".
-    * This event is raised once channeling is finished.
-    * @param spellToCast - Spell we want to cast.  Left as a parameter because we can cast 
-    * @return  - Returns true if successful cast, or false on unsuccessful cast. In multiplayer, the cast may still fail due to some desync between server.
-    */
-   void CastSpell(TSubclassOf<UMySpell> spellToCast);
-
    void CancelIncantation();
 
    void CancelChanneling();
@@ -88,6 +77,17 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
    UAnimMontage* castAnimation = nullptr;
 
  private:
+	   /**
+    * Activates the ability when we're in position AND after we've incanted. It represents us having to focus energy while the spell is activating.
+    * Some abilities are casted in phases, which means they get replaced by another spell.  
+    * Also used for item usage (which also triggers abilities).
+    * Some spells require another channeling after we've activated it. That means it's blocked until it gets an event raised from a "Confirmation Spell".
+    * This event is raised once channeling is finished.
+    * @param spellToCast - Spell we want to cast.  Left as a parameter because we can cast 
+    * @return  - Returns true if successful cast, or false on unsuccessful cast. In multiplayer, the cast may still fail due to some desync between server.
+    */
+   void CastSpell(TSubclassOf<UMySpell> spellToCast);
+
    void OnUnitStopped();
 
    void OnChannelingFinished();

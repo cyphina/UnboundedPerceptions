@@ -11,11 +11,13 @@
 #include "AbilitySystemComponent.h"
 #include "BasePlayer.h"
 #include "ManualSpellComponent.h"
+#include "PanelWidget.h"
 #include "RTSAbilitySystemComponent.h"
 #include "RTSActionBarSkillDrag.h"
 #include "RTSSpellbookDrag.h"
 #include "ToolTipWidget.h"
 #include "UIDelegateContext.h"
+#include "UpWidgetHelperLibrary.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UMG/Public/Components/Image.h"
@@ -125,6 +127,10 @@ void USkillSlot::UpdateCD()
          OnCDFinished();
       }
    }
+   else
+   {
+      OnCDFinished();
+   }
 }
 
 void USkillSlot::OnCDFinished()
@@ -176,11 +182,8 @@ void USkillSlot::SetSlotImage(UTexture2D* image)
 
 void USkillSlot::ResetSkillSlot()
 {
-   if(auto ownerAbilityComp = GetOwningAbilityComponent())
-   {
-      SetSlotImage(defaultSlotTexture);
-      OnCDFinished();
-   }
+   SetSlotImage(defaultSlotTexture);
+   OnCDFinished();
 }
 
 void USkillSlot::ShowDesc(UToolTipWidget* tooltip)

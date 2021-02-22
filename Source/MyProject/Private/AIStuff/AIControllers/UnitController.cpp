@@ -23,6 +23,7 @@
 
 #include "RTSStateComponent.h"
 #include "SpellDataLibrary.h"
+#include "UnitMessages.h"
 #include "UserInput.h"
 
 AUnitController::AUnitController()
@@ -84,13 +85,23 @@ void AUnitController::Tick(float deltaSeconds)
    turnActorTimeline.TickTimeline(deltaSeconds);
 
    // TODO: Probably move this to its own component
-   if(!commandQueue.IsEmpty() && !GetWorld()->GetFirstPlayerController()->IsInputKeyDown(EKeys::LeftShift) && GetUnitOwner()->GetState() == EUnitState::STATE_IDLE)
+   // Process only at the end of the frame so if we get toggled to idle in between actions it won't activate the queue.
+   if(!commandQueue.IsEmpty() && !GetWorld()->GetFirstPlayerController()->IsInputKeyDown(EKeys::LeftShift) && GetState() == EUnitState::STATE_IDLE)
    {
       TFunction<void()> command;
       commandQueue.Dequeue(command);
       --queueCount;
       command();
    }
+}
+
+EUnitState AUnitController::GetState() const
+{
+   if(URTSStateComponent* stateComp = FindComponentByClass<URTSStateComponent>())
+   {
+      return stateComp->GetState();
+   }
+   return EUnitState::STATE_IDLE;
 }
 
 void AUnitController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
@@ -155,7 +166,7 @@ EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation)
          }
 
          ownerRef->GetTargetComponent()->SetTarget(shiftedLocation);
-         if(AdjustPosition(smallMoveIgnoreRange, shiftedLocation, moveRequestResult))
+         if(!AdjustPosition(smallMoveIgnoreRange, shiftedLocation, moveRequestResult))
          {
             if(URTSStateComponent* stateComponent = FindComponentByClass<URTSStateComponent>())
             {
@@ -194,12 +205,32 @@ void AUnitController::StopCurrentAction()
    ownerRef->StopAnimMontage();
 }
 
+void AUnitController::FinishCurrentAction()
+{
+   if(URTSStateComponent* stateComp = FindComponentByClass<URTSStateComponent>())
+   {
+      stateComp->ChangeState(EUnitState::STATE_IDLE);
+   }
+
+   const FAIMessage msg(UnitMessages::AIMessage_ActionFinished, this);
+   FAIMessage::Send(this, msg);
+}
+
+void AUnitController::HaltUnit()
+{
+   StopCurrentAction();
+   ClearCommandQueue();
+   StopAutomation();
+}
+
 void AUnitController::StopAutomation() const
 {
    if(UBehaviorTreeComponent* behaviorTreeComp = FindComponentByClass<UBehaviorTreeComponent>())
    {
       if(behaviorTreeComp->IsRunning())
+      {
          behaviorTreeComp->StopTree();
+      }
    }
 }
 
@@ -294,8 +325,7 @@ void AUnitController::QueueTurnAfterMovement(AActor* targetActor)
       if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetActor->GetActorLocation()))
       {
          TurnTowardsActor(targetActor);
-      }
-      else
+      } else
       {
          if(onPosAdjDoneAct)
          {
@@ -313,6 +343,9 @@ bool AUnitController::AdjustPosition(float range, FVector targetLoc)
       QueueTurnAfterMovement(targetLoc);
       return false;
    }
+
+   StopMovement();
+
    if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetLoc, .02f))
    {
       TurnTowardsPoint(targetLoc);
@@ -323,28 +356,41 @@ bool AUnitController::AdjustPosition(float range, FVector targetLoc)
 
 bool AUnitController::AdjustPosition(float range, FVector targetLoc, EPathFollowingRequestResult::Type& outPathReqRes)
 {
+   this->onPosAdjDoneAct = [this]()
+   {
+      FinishCurrentAction();
+   };
+
    if(!UUpAIHelperLibrary::IsTargetInRange(GetUnitOwner(), targetLoc, range))
    {
       outPathReqRes = MoveToLocation(targetLoc, range, false, true, false, false, nullptr, true);
       QueueTurnAfterMovement(targetLoc);
       return false;
    }
+
+   StopMovement();
+   
    if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetLoc, .02f))
    {
       TurnTowardsPoint(targetLoc);
       return false;
    }
+
+   onPosAdjDoneAct();
    return true;
 }
 
 bool AUnitController::AdjustPosition(float range, AActor* targetActor)
 {
-   if(!UUpAIHelperLibrary::IsTargetInRange(GetUnitOwner(), targetActor->GetActorLocation(), range + targetActor->GetSimpleCollisionRadius() + GetUnitOwner()->GetSimpleCollisionRadius()))
+   if(!UUpAIHelperLibrary::IsTargetInRange(GetUnitOwner(), targetActor->GetActorLocation(),
+                                           range + targetActor->GetSimpleCollisionRadius() + GetUnitOwner()->GetSimpleCollisionRadius()))
    {
       MoveToActor(targetActor, range + targetActor->GetSimpleCollisionRadius(), false, true, false);
       QueueTurnAfterMovement(targetActor);
       return false;
    }
+
+   StopMovement();
 
    if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetActor->GetActorLocation()))
    {
@@ -377,7 +423,7 @@ bool AUnitController::AdjustPosition(const float range, AActor* targetActor, TFu
    return false;
 }
 
-void AUnitController::QueueAction(const TFunction<void()>& actionToQueue)
+void AUnitController::QueueAction(TFunction<void()> actionToQueue)
 {
    if(queueCount < 20)
    {

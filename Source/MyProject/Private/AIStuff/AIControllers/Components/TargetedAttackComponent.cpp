@@ -29,7 +29,7 @@ namespace AttackCVars
 {
    bool                           bPrintAttackTimings = false;
    static FAutoConsoleVariableRef CVarPrintAttackTimings(TEXT("printAttackTimings"), bPrintAttackTimings,
-                                                         TEXT("Prints out messagse when we start attacking and when we actually hit the unit."));
+                                                         TEXT("Prints out messages when we start attacking and when we actually hit the unit."));
 }
 
 UTargetedAttackComponent::UTargetedAttackComponent()
@@ -41,20 +41,42 @@ void UTargetedAttackComponent::BeginAttack(AUnit* target)
 {
    if(USpellDataLibrary::IsAttackable(target->GetAbilitySystemComponent()) && !USpellDataLibrary::IsStunned(agent->GetAbilitySystemComponent()))
    {
-      agent->GetUnitController()->StopCurrentAction();
       agent->GetTargetComponent()->SetTarget(target);
-      if(URTSStateComponent* stateComp = agent->FindComponentByClass<URTSStateComponent>())
+      if(URTSStateComponent* stateComp = agent->GetUnitController()->FindComponentByClass<URTSStateComponent>())
       {
-         stateComp->ChangeState(EUnitState::STATE_ATTACKING);
-      }
+         if(stateComp->GetState() != EUnitState::STATE_ATTACK_MOVE)
+         {
+            stateComp->ChangeState(EUnitState::STATE_ATTACKING);
+         }
+      }   
       GetWorld()->GetTimerManager().SetTimer(attackChecksHandle, this, &UTargetedAttackComponent::FollowAndTryAttackTarget, 0.05f, true, 0.f);
    }
 }
 
 void UTargetedAttackComponent::BeginAttackMove(FVector targetLocation)
 {
-   agent->GetUnitController()->MoveToLocation(targetLocation);
-   GetWorld()->GetTimerManager().SetTimer(targetSearchHandle, this, &UTargetedAttackComponent::SearchForTargetInRange, .1f, true, 0.f);
+   if(!USpellDataLibrary::IsStunned(agent->GetAbilitySystemComponent()))
+   {
+      attackMoveLocation = targetLocation;
+
+      if(!bAttackAnimationPlaying)
+      {
+         agent->GetUnitController()->AdjustPosition(agent->GetUnitController()->smallMoveIgnoreRange, attackMoveLocation, [this]()
+         {
+            if(UUpAIHelperLibrary::IsTargetInRange(agent, attackMoveLocation, agent->GetUnitController()->smallMoveIgnoreRange))
+            {
+               agent->GetUnitController()->FinishCurrentAction();
+            }
+         });
+      }
+   
+      if(URTSStateComponent* stateComp = agent->GetUnitController()->FindComponentByClass<URTSStateComponent>())
+      {
+         stateComp->ChangeState(EUnitState::STATE_ATTACK_MOVE);
+      }
+   
+      GetWorld()->GetTimerManager().SetTimer(targetSearchHandle, this, &UTargetedAttackComponent::SearchForTargetInRange, .1f, true, 0.f);
+   }
 }
 
 void UTargetedAttackComponent::OverrideAttackWithSpell(TSubclassOf<UMySpell> overridingSpell)
@@ -70,8 +92,8 @@ void UTargetedAttackComponent::BeginPlay()
    {
       attackAnim.SetObject(animInstance);
       attackAnim.SetInterface(attackAnimInterface);
-      attackAnimInterface->OnAttackNotify().AddUObject(this, &UTargetedAttackComponent::OnUnitAttackSwingDone);
-      attackAnimInterface->OnAttackAnimFinished().AddWeakLambda(this, [this]() { bAttackAnimationPlaying = false; });
+      attackAnimInterface->OnAttackNotify()->AddUObject(this, &UTargetedAttackComponent::OnUnitAttackSwingDone);
+      attackAnimInterface->OnAttackAnimFinished()->AddWeakLambda(this, [this]() { bAttackAnimationPlaying = false; });
    }
 
    GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
@@ -93,7 +115,7 @@ void UTargetedAttackComponent::SearchForTargetInRange()
    if(AUnit* closestUnit = UUpAIHelperLibrary::FindClosestUnit(agent->GetActorLocation(), agent->GetVisionComponent()->GetPossibleVisibleEnemies()))
    {
       BeginAttack(closestUnit);
-      GetWorld()->GetTimerManager().ClearTimer(targetSearchHandle);
+      GetWorld()->GetTimerManager().ClearTimer(targetSearchHandle);    
    }
 }
 
@@ -195,9 +217,17 @@ void UTargetedAttackComponent::TransitionToChaseState()
    StopAttackAnim();
 }
 
-void UTargetedAttackComponent::StopAgent() const
+void UTargetedAttackComponent::StopAgent()
 {
-   agent->GetUnitController()->StopCurrentAction();
+   OnUnitStopped();
+   if(agent->GetUnitController()->GetState() != EUnitState::STATE_ATTACK_MOVE)
+   {
+      agent->GetUnitController()->FinishCurrentAction();
+   }
+   else
+   {
+      BeginAttackMove(attackMoveLocation);
+   }
 }
 
 void UTargetedAttackComponent::StopAttackAnim()
@@ -342,7 +372,11 @@ AUnit* UTargetedAttackComponent::AgentTargetUnit() const
 {
    if(agent->GetTargetComponent()->IsTargetingUnit())
    {
-      return agent->GetTargetComponent()->GetTargetUnit();
+      AUnit* unit = agent->GetTargetComponent()->GetTargetUnit();
+      if(IsValid(unit) && unit->IsEnabled())
+      {
+         return agent->GetTargetComponent()->GetTargetUnit();
+      }
    }
    return nullptr;
 }

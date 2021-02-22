@@ -38,6 +38,7 @@ void AHeroAIController::BeginInteract(AActor* interactable)
       heroRef->SetCurrentInteractable(interactable);
 
       GetStateComponent()->ChangeState(EUnitState::STATE_INTERACTING);
+
       UStaticMeshComponent* meshComp = interactable->FindComponentByClass<UStaticMeshComponent>();
 
       // If the interactable cannot be moved, then we have to move to the interact point since the point is fixed

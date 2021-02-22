@@ -68,11 +68,8 @@ void USpellCastComponent::AdjustCastingPosition(TSubclassOf<UMySpell> spellClass
       stateComp->ChangeState(EUnitState::STATE_CASTING);
    }
 
-   if(unitOwnerRef->GetUnitController()->AdjustPosition(spellClass.GetDefaultObject()->GetRange(abilityComponentRef), spellTargetActor,
-                                                        [this]() { IncantationCheck(GetCurrentSpell()); }))
-   {
-      // We could add some functionality here if we are already in position...
-   }
+   unitOwnerRef->GetUnitController()->AdjustPosition(spellClass.GetDefaultObject()->GetRange(abilityComponentRef), spellTargetActor,
+                                                        [this]() { IncantationCheck(GetCurrentSpell()); });
 }
 
 bool USpellCastComponent::BeginCastSpell(TSubclassOf<UMySpell> spellToCast)
@@ -118,7 +115,9 @@ void USpellCastComponent::CastSpell(TSubclassOf<UMySpell> spellToCast)
          const float channelTime = spellToCast.GetDefaultObject()->GetSecondaryTime(unitOwnerRef->GetAbilitySystemComponent());
 
          if(!spellToCast.Get()->GetDefaultObject<UMySpell>()->AbilityTags.HasTag(FGameplayTag::RequestGameplayTag("Skill.Channeled")))
-            unitOwnerRef->GetUnitController()->StopCurrentAction();
+         {
+            unitOwnerRef->GetUnitController()->FinishCurrentAction();
+         }
          else
          {
             if(channelTime > 0)
@@ -140,7 +139,7 @@ void USpellCastComponent::OnChannelingFinished()
    FGameplayEventData eD         = FGameplayEventData();
    eD.EventTag                   = confirmTag;
    unitOwnerRef->GetAbilitySystemComponent()->HandleGameplayEvent(confirmTag, &eD);
-   unitOwnerRef->GetUnitController()->StopCurrentAction();
+   unitOwnerRef->GetUnitController()->FinishCurrentAction();
 }
 
 void USpellCastComponent::IncantationCheck(TSubclassOf<UMySpell> spellToCast)
@@ -152,7 +151,7 @@ void USpellCastComponent::IncantationCheck(TSubclassOf<UMySpell> spellToCast)
    }
    else
    {
-      if(URTSStateComponent* stateComponent = unitOwnerRef->FindComponentByClass<URTSStateComponent>())
+      if(URTSStateComponent* stateComponent = GetOwner()->FindComponentByClass<URTSStateComponent>())
       {
          stateComponent->ChangeState(EUnitState::STATE_INCANTATION);
       }

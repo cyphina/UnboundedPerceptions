@@ -35,6 +35,9 @@ class MYPROJECT_API URTSCheatManager : public UCheatManager
    UFUNCTION(exec, Category = "Cheats")
    virtual void LevelUpToLevel(FString heroName, int level);
 
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void BuffAllHeroesStats();
+
    /** Prevents a unit from dying/taking damage
     * @param objectID - ID Name of the hero in the party
     * @param toggleGodMode - If 0, turns off god mode, else turns it on

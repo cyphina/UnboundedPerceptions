@@ -21,10 +21,13 @@ public:
    DefaultCursorClickFunctionality(ARTSPawn* pawnRef, AUserInput* controllerRef);
    ~DefaultCursorClickFunctionality() = default;
 
+   /** Used to talk, interact, confirm spell usage, confirm item usage, and create a selection rectangle */
    void HandleLeftClick() final;
-   
+
+   /** Handles changing some state variables pertaining to mouse controls but doesn't actually do anything on its own */
    void HandleLeftClickRelease() final;
-   
+
+   /** Used for attacking and moving */
    void HandleRightClick() final;
    
    /** Can queue item usage, attack moves, and spell casting*/
@@ -34,13 +37,17 @@ public:
    void HandleShiftRightClick() final;
 
 private:
-   /// Left click functionality
    void ToggleSingleAllySelection();
+   
    void AttackMoveQueue();
+   
    void SpellCastQueue();
+   
    void ItemUsageQueue();
+   
    /** Select an ally or enemy when we have the select cursor (no units are selected)*/
    void SelectSingleUnitUnderClick();
+   
    /** Select an enemy unit when we have attack cursor (one ally selected)*/
    void SelectEnemy();
    void ClickInteract();
@@ -52,6 +59,5 @@ private:
    void MoveInFormation(FVector newLocation);
    
    ECursorStateEnum      GetCursorState() const;
-   static bool           CheckAllyWantToCast(USpellCastComponent* spellCastComp);
-   inline bool           AttemptAllyCastOnTarget(UManualSpellComponent* manSpellCastComp);
+   static bool           CheckWantToCast(USpellCastComponent* spellCastComp);
 };

@@ -25,8 +25,8 @@ class IAttackAnim
    virtual void AttackNotify() = 0;
 
    /** Bind to this to set a function in C++ to execute when the animation time corresponding to the damage proc occurs */
-   virtual FOnHitNotify& OnAttackNotify() = 0;
+   virtual FOnHitNotify* OnAttackNotify() = 0;
 
    /** When the animation finishes playin (as opposed to when the hit event occurs)  */
-   virtual FOnAttackAnimFinished& OnAttackAnimFinished() = 0;
+   virtual FOnAttackAnimFinished* OnAttackAnimFinished() = 0;
 };

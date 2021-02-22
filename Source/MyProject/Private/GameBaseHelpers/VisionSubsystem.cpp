@@ -157,11 +157,12 @@ void UVisionSubsystem::UpdateVisibleEnemies()
 {
    const TSet<const URTSVisionComponent*> allyVisionToIterateOver = GetFriendlyVisionComps();
 
-   for(const URTSVisionComponent* allyVision : allyVisionToIterateOver)
+   for(const URTSVisionComponent* allyVisionComp : allyVisionToIterateOver)
    {
-      for(AUnit* enemy : allyVision->GetPossibleVisibleEnemies())
+      FRWScopeLock(allyVisionComp->visionMutex, FRWScopeLockType::SLT_ReadOnly);
+      for(AUnit* enemy : allyVisionComp->GetPossibleVisibleEnemies())
       {
-         if(CheckUnitInVision(enemy, allyVision, visibleEnemies))
+         if(CheckUnitInVision(enemy, allyVisionComp, visibleEnemies))
          {
             AddVisibleEnemy(enemy);
          }
@@ -175,6 +176,7 @@ void UVisionSubsystem::UpdateVisiblePlayerUnits()
 
    for(const URTSVisionComponent* enemyVisionComp : enemyVisionToIterateOver)
    {
+      FRWScopeLock(enemyVisionComp->visionMutex, FRWScopeLockType::SLT_ReadOnly);
       for(AUnit* ally : enemyVisionComp->GetPossibleVisibleEnemies())
       {
          if(CheckUnitInVision(ally, enemyVisionComp, visiblePlayerUnits))
@@ -192,8 +194,6 @@ void UVisionSubsystem::StoreUnitsToHideThatWereVisibleLastCall(TSet<AUnit*>& las
 
 bool UVisionSubsystem::CheckUnitInVision(AUnit* unit, const URTSVisionComponent* visionComp, TSet<AUnit*>& visibleUnits)
 {
-   unit->GetVisionComponent()->visionMutex.ReadLock();
-
    if(IsValid(unit) && !visibleUnits.Contains(unit))
    {
       if(LineOfSightToNonInvisUnit(unit, visionComp))
@@ -204,11 +204,11 @@ bool UVisionSubsystem::CheckUnitInVision(AUnit* unit, const URTSVisionComponent*
    return false;
 }
 
-bool UVisionSubsystem::LineOfSightToNonInvisUnit(AUnit* unit, const URTSVisionComponent* allyVision)
+bool UVisionSubsystem::LineOfSightToNonInvisUnit(AUnit* unit, const URTSVisionComponent* visionComp)
 {
    if(UNLIKELY(!USpellDataLibrary::IsInvisible(unit->GetAbilitySystemComponent())))
    {
-      if(!GetWorld()->LineTraceSingleByChannel(visionHitResult, allyVision->GetOwner()->GetActorLocation(), unit->GetActorLocation(), UNIT_VISION_CHANNEL))
+      if(!GetWorld()->LineTraceSingleByChannel(visionHitResult, visionComp->GetOwner()->GetActorLocation(), unit->GetActorLocation(), UNIT_VISION_CHANNEL))
       {
          return true;
       }

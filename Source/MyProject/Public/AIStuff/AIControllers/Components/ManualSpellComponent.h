@@ -30,9 +30,14 @@ class MYPROJECT_API UManualSpellComponent : public UActorComponent, public IManu
     * @param result - Result of the target we found with a click
     * @return -  Returns true if the target clicked was a valid spell target
     */
-   UFUNCTION(BlueprintCallable, Category = "Spells")
-   bool OnSpellConfirmInput(UPARAM(ref) FHitResult& result);
+   bool OnSpellConfirmInput(const FHitResult& hitResult, TSubclassOf<UMySpell> selectedSpell);
 
+   /**
+    * Can be called after we confirm that we made a valid hit. Called separately from the hit check because when using left click to confirm our cast, we only want to cancel
+    * our other actions if we clicked on a valid spell.
+    */
+   void StartSpellCastAction(const FHitResult& hitResult, TSubclassOf<UMySpell> selectedSpell);
+   
    /** Gets spell that has been selected, but may not be channeled */
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spells")
    FORCEINLINE TSubclassOf<UMySpell> GetCurrentlySelectedSpell() const { return currentlySelectedSpell; }

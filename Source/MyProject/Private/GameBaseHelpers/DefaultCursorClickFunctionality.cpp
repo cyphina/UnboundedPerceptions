@@ -60,7 +60,7 @@ void DefaultCursorClickFunctionality::HandleLeftClickRelease()
    {
       if(!controllerRef->GetCameraPawn()->HasSecondaryCursor())
       {
-         // Edge case where we select our unit using a selection rect but don't hover outside it meaning the cursor won't change
+         // Edge case where we select our unit using a selection rect but don't hover outside it (our rect is really small) meaning the cursor won't change
          pawnRef->ChangeCursor(ECursorStateEnum::Moving);
       }
       if(pawnRef->IsSelectionRectActive())
@@ -76,7 +76,7 @@ void DefaultCursorClickFunctionality::HandleRightClick()
    if(GetCursorState() == ECursorStateEnum::Magic)
    {
       CancelSelectedUnitsSelectedSpell();
-      pawnRef->SetSecondaryCursor();
+      ResetSecondaryCursorState();
       return;
    }
 
@@ -91,7 +91,7 @@ void DefaultCursorClickFunctionality::HandleRightClick()
             {
                const FVector location = clickHitResult.Location;
                pawnRef->CreateClickVisual(location);
-               pawnRef->HaltSelectedExceptMovement();
+               pawnRef->CancelSelectedUnitsActionBeforePlayerCommand();
 
                if(!pawnRef->GetStaticFormationEnabled())
                {
@@ -108,7 +108,7 @@ void DefaultCursorClickFunctionality::HandleRightClick()
             {
                if(AUnit* unit = Cast<AUnit>(clickHitResult.GetActor()))
                {
-                  pawnRef->HaltSelectedExceptMovement();
+                  pawnRef->CancelSelectedUnitsActionBeforePlayerCommand();
                   if(!unit->GetIsUnitHidden())
                   {
                      IssueAttackToSelectedUnits(unit);
@@ -142,6 +142,8 @@ void DefaultCursorClickFunctionality::HandleShiftLeftClick()
       case ECursorStateEnum::PanLeft:
       case ECursorStateEnum::PanRight: ToggleSingleAllySelection(); break;
       case ECursorStateEnum::AttackMove: AttackMoveQueue(); break;
+      case ECursorStateEnum::Magic: SpellCastQueue(); break;
+      case ECursorStateEnum::Item: ItemUsageQueue(); break;
       default: break;
    }
    pawnRef->clickedOnBrowserHud = false;
@@ -152,6 +154,7 @@ void DefaultCursorClickFunctionality::HandleShiftRightClick()
    if(GetCursorState() == ECursorStateEnum::Magic)
    {
       CancelSelectedUnitsSelectedSpell();
+      ResetSecondaryCursorState();
       return;
    }
 
@@ -227,7 +230,7 @@ void DefaultCursorClickFunctionality::AttackMoveQueue()
       });
 
       pawnRef->CreateClickVisual(moveLocation);
-      pawnRef->SetSecondaryCursor();
+      ResetSecondaryCursorState();
    }
 }
 
@@ -236,13 +239,20 @@ void DefaultCursorClickFunctionality::SpellCastQueue()
    pawnRef->GetHitResultClick(clickHitResult);
    if(clickHitResult.IsValidBlockingHit())
    {
-      const FVector moveLocation = clickHitResult.Location;
-      QueueActionToSelectedUnits([this](AUnit* unit) {
-         if(UManualSpellComponent* manSpellComp = unit->GetUnitController()->FindComponentByClass<UManualSpellComponent>())
+      for(AUnit* selectedUnit : controllerRef->GetBasePlayer()->GetSelectedUnits())
+      {
+         if(UManualSpellComponent* manSpellComp = selectedUnit->GetUnitController()->FindComponentByClass<UManualSpellComponent>())
          {
-            manSpellComp->OnSpellConfirmInput(clickHitResult);
+            const TSubclassOf<UMySpell> selectedSpell = manSpellComp->GetCurrentlySelectedSpell();
+            if(manSpellComp->OnSpellConfirmInput(clickHitResult, selectedSpell))
+            {
+               selectedUnit->GetUnitController()->QueueAction([this, currentHitResult = this->clickHitResult, manSpellComp, selectedSpell]() {
+                  manSpellComp->StartSpellCastAction(currentHitResult, selectedSpell);
+               });
+               ResetSecondaryCursorState();
+            }
          }
-      });
+      }
    }
 }
 
@@ -258,16 +268,17 @@ void DefaultCursorClickFunctionality::ItemUsageQueue()
 
       ABaseHero* heroUsingInventory = controllerRef->GetBasePlayer()->GetHeroes()[hIndex];
 
-      const auto itemAbility    = UItemFunctionLibrary::GetConsumableInfo(heroUsingInventory->GetCurrentItem().GetValue()).abilityClass;
-      const auto heroController = heroUsingInventory->GetHeroController();
+      const TSubclassOf<UMySpell> itemAbility    = UItemFunctionLibrary::GetConsumableInfo(heroUsingInventory->GetCurrentItem().GetValue()).abilityClass;
+      const auto                  heroController = heroUsingInventory->GetHeroController();
 
-      heroController->QueueAction([heroController, this]() {
-         if(heroController->GetManualSpellComponent()->OnSpellConfirmInput(clickHitResult))
+      heroController->QueueAction([heroController, currentHitResult = this->clickHitResult, itemAbility]() {
+         if(heroController->GetManualSpellComponent()->OnSpellConfirmInput(currentHitResult, itemAbility))
          {
-            heroController->StopAutomation();
-            pawnRef->SetSecondaryCursor(ECursorStateEnum::Select);
+            heroController->GetManualSpellComponent()->StartSpellCastAction(currentHitResult, itemAbility);
          }
       });
+
+      ResetSecondaryCursorState();
    }
 }
 
@@ -347,25 +358,27 @@ void DefaultCursorClickFunctionality::ClickCastSpell()
    pawnRef->GetHitResultClick(clickHitResult);
    if(clickHitResult.IsValidBlockingHit())
    {
-      TArray<AUnit*> validSpellCastingAllies = controllerRef->GetBasePlayer()->GetSelectedUnits().FilterByPredicate([this](const AUnit* const unit) {
+      for(AUnit* unit : controllerRef->GetBasePlayer()->GetSelectedUnits())
+      {
          if(UManualSpellComponent* manSpellCastComp = unit->GetUnitController()->FindComponentByClass<UManualSpellComponent>())
          {
-            return CheckAllyWantToCast(manSpellCastComp->GetSpellCastComp()) && AttemptAllyCastOnTarget(manSpellCastComp);
+            if(CheckWantToCast(manSpellCastComp->GetSpellCastComp()))
+            {
+               const TSubclassOf<UMySpell> currentSpell = manSpellCastComp->GetCurrentlySelectedSpell();
+               if(manSpellCastComp->OnSpellConfirmInput(clickHitResult, currentSpell))
+               {
+                  unit->GetUnitController()->HaltUnit();
+                  manSpellCastComp->StartSpellCastAction(clickHitResult, currentSpell);
+               }
+            }
          }
-         return false;
-      });
-      Algo::ForEach(validSpellCastingAllies, [](const AUnit* spellCastingAlly) { spellCastingAlly->GetUnitController()->StopAutomation(); });
+      }
    }
 }
 
-bool DefaultCursorClickFunctionality::CheckAllyWantToCast(USpellCastComponent* spellCastComp)
+bool DefaultCursorClickFunctionality::CheckWantToCast(USpellCastComponent* spellCastComp)
 {
    return !(spellCastComp->GetCurrentChannelingTime() > 0 || spellCastComp->GetCurrentIncantationTime() > 0);
-}
-
-bool DefaultCursorClickFunctionality::AttemptAllyCastOnTarget(UManualSpellComponent* manSpellCastComp)
-{
-   return manSpellCastComp->OnSpellConfirmInput(clickHitResult);
 }
 
 void DefaultCursorClickFunctionality::ClickAttackMove()
@@ -378,7 +391,7 @@ void DefaultCursorClickFunctionality::ClickAttackMove()
       IssueAttackMoveToSelectedUnits(moveLocation);
 
       pawnRef->CreateClickVisual(moveLocation);
-      pawnRef->SetSecondaryCursor(ECursorStateEnum::Select);
+      ResetSecondaryCursorState();
    }
 }
 

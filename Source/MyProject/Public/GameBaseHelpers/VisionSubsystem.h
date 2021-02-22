@@ -84,7 +84,7 @@ class MYPROJECT_API UVisionSubsystem : public UObject, public FRunnable
 
    bool CheckUnitInVision(AUnit* unit, const URTSVisionComponent* visionComp, TSet<AUnit*>& visibleUnits);
    /** Trace to a target gets blocked by walls and fails if target is not visible */
-   bool LineOfSightToNonInvisUnit(AUnit* unit, const URTSVisionComponent* allyVision);
+   bool LineOfSightToNonInvisUnit(AUnit* unit, const URTSVisionComponent* visionComp);
 
    /** Unhides units that pass the visibility check. */
    void MakeUnitsInVisionVisible(TSet<AUnit*>& unitsEligibleForHidingVisibleLastCheck);

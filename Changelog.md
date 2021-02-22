@@ -1,9 +1,8 @@
-# Cyphina's Message
-Critical Bugfixes and Quest System Checks/Fixes
-<br>
-# Notes
-* Delayed updating healthbar by one tick so other functions can fire off in "OnDamageReceived" delegates properly updating health befor we update the view.
-* Added a whole little system allowing us to see what skills an enemy can perform and when we have enemy debug controls we can cast those skills on ourselves.
-    * Not the cleanest solution but it'll serve its purpose for now.
-* Fixed bug where we moved after level transition.
-* Added debug controls to allow enemies to attack friendly targets when under player control
+# Working on a boss. Here's the work done in preparatiion
+* Created two new spells:
+    * One has a delay and an indicator to show while it's being readied up. The other 
+    * The other one has an animation associated with it that triggers the hitbox.
+# Here are the bugfixes and general improvements.
+* Reintroduced state variables back to the actions to fix the command queue system:
+    * Now has a queue for spell casting and item usage as well. Spell cast queue also supports quick casting.
+* Fixed some glitches with UI look and some crashes from the skill slots.

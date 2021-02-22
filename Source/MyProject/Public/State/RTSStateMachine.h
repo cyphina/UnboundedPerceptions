@@ -1,5 +1,6 @@
 #pragma once
-// Leave these headers here so that classes that include StateMachine can see the relationships as well
+
+#include "AttackMoveState.h"
 #include "IUnitState.h"
 #include "AttackState.h"
 #include "IdleState.h"
@@ -15,30 +16,34 @@ DECLARE_STATS_GROUP(TEXT("UnitStateMachine"), STATGROUP_UnitStateMachine, STATCA
 
 class RTSStateMachine
 {
- public:
+public:
    explicit RTSStateMachine(AUnit* unitOwner);
-   virtual ~RTSStateMachine();
+   virtual  ~RTSStateMachine();
 
    EUnitState GetCurrentState() const { return currentState->GetName(); }
 
    virtual void ChangeState(EUnitState newState);
-   IUnitState*  GetStateObject() const { return currentState; }
-   const ChannelingState&  GetChannelState() const { return Channeling; }
-   void         Update(float deltaSeconds);
+
+   IUnitState* GetStateObject() const { return currentState; }
+
+   const ChannelingState& GetChannelState() const { return Channeling; }
+
+   void Update(float deltaSeconds);
 
    // As long as our states don't actually hold any state, we can keep em static
    static IdleState        Idle;
    static MovingState      Moving;
    AttackState             Attacking;
+   AttackMoveState         AttackMove;
    CastingState            Casting;
    static IncantationState Incanting;
    ChannelingState         Channeling;
    static ChasingState     Chasing;
 
- protected:
+protected:
    AUnit*      unitOwner = nullptr;
    IUnitState* currentState;
 
- private:
+private:
    virtual IUnitState* getStateFromEnum(EUnitState enumVal);
 };

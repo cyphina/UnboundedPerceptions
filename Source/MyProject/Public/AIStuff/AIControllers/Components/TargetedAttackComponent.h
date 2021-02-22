@@ -132,7 +132,7 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
 
    void TransitionToChaseState();
 
-   void StopAgent() const;
+   void StopAgent();
 
    void StopAttackAnim();
    
@@ -162,6 +162,8 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
 
    bool readyToAttack = true;
 
+   FVector attackMoveLocation;
+   
    AUnit*           agent;                   // Unit whose behavior is specified through the behavioral logic within this state
    static const int shortAttRngBuff = 25.f;  // Distance that an attack in progress will cancel since it is out of range
    static const int attRngCnclBuff  = 350.f; // Distance that an attack in progress will cancel since it is out of range

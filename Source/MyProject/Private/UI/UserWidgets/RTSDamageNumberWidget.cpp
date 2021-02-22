@@ -20,8 +20,19 @@ void URTSDamageNumberWidget::SetDamageTextProps(const FUpDamage& damageInfo)
 {
    if(damageText)
    {
-      damageText->SetText(FText::AsNumber(damageInfo.damage));
-      damageText->SetColorAndOpacity(FSlateColor(USpellDataLibrary::elementalMap[damageInfo.element]));
+      if(damageInfo.accuracy > 100)
+      {
+         damageText->SetText(NSLOCTEXT("DamageNumbers", "Dodge", "Dodged!"));
+      }
+      else
+      {
+         if(damageInfo.crit) {
+            damageText->SetRenderScale(FVector2D(1.5f));
+         }
+
+         damageText->SetText(FText::AsNumber(damageInfo.damage));
+         damageText->SetColorAndOpacity(FSlateColor(USpellDataLibrary::elementalMap[damageInfo.element]));
+      }
       PlayAnimation(floatAndDissapearAnimation);
    }
 }

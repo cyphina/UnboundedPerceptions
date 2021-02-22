@@ -21,13 +21,13 @@ class MYPROJECT_API UMontageAttackAnim : public UObject, public IAttackAnim
    UMontageAttackAnim();
 
    UFUNCTION()
-   void AttackNotify() override;
+   void AttackNotify() override {}
 
    void PlayAttackAnimation(float playRate) override;
    void StopAttackAnimation() override;
 
-   FOnHitNotify&          OnAttackNotify() override { return OnAttackNotifyEvent; }
-   FOnAttackAnimFinished& OnAttackAnimFinished() override { return OnAttackAnimFinishedEvent; }
+   FOnHitNotify*          OnAttackNotify() override;
+   FOnAttackAnimFinished* OnAttackAnimFinished() override { return &OnAttackAnimFinishedEvent; }
 
  protected:
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Meta = (AllowPrivateAccess = true))

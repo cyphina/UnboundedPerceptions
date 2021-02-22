@@ -52,6 +52,9 @@ protected:
    UPROPERTY(Transient, Meta = (BindWidgetAnim))
    UWidgetAnimation* flowInAnim;
 
+protected:
+   void OnMyWidgetVisibilityChanged_Implementation(ESlateVisibility newVisibility) override;
+
 private:
    UFUNCTION()
    void OnKeybindsChanged(FInputActionKeyMapping newKeyMap);

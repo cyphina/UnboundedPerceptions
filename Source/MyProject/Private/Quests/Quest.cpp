@@ -128,31 +128,34 @@ void AQuest::CompleteSubGoal(int goalIndex)
 
 void AQuest::SetupStartingGoals()
 {
-   currentGoalIndices.Empty();
-   for(int i = 0; i < questInfo.GetSubgoals().Num(); ++i)
+   if(questInfo.GetSubgoals().Num() > 0)
    {
-      UUpGoal* goal = questInfo.GetSubgoals()[i];
-      if(goal->GetRequiredSubgoalIndices().Num() == 0)
-      {
-         currentGoalIndices.Add(i);
-         goal->SetGoalState(EGoalState::currentGoal);
+      currentGoalIndices.Empty();
 
-         if(Cast<UUpGatherGoal>(goal))
-         {
-            FindInitialItemAmount(i);
-         }
-
-         for(FTriggerData& finishedTriggerActivation : goal->prevGoalTriggers)
-         {
-            UUpFunctionLibrary::ActivateTrigger(finishedTriggerActivation, this);
-         }
-      } else
+      for(int i = 0; i < questInfo.GetSubgoals().Num(); ++i)
       {
-         goal->SetGoalState(EGoalState::lockedGoal);
+         UUpGoal* goal = questInfo.GetSubgoals()[i];
+         if(goal->GetRequiredSubgoalIndices().Num() == 0)
+         {
+            currentGoalIndices.Add(i);
+            goal->SetGoalState(EGoalState::currentGoal);
+
+            if(Cast<UUpGatherGoal>(goal))
+            {
+               FindInitialItemAmount(i);
+            }
+
+            for(FTriggerData& finishedTriggerActivation : goal->prevGoalTriggers)
+            {
+               UUpFunctionLibrary::ActivateTrigger(finishedTriggerActivation, this);
+            }
+         } else
+         {
+            goal->SetGoalState(EGoalState::lockedGoal);
+         }
       }
+      currentDescription = questInfo.desc;
    }
-
-   currentDescription = questInfo.desc;
 }
 
 UUpGoal* AQuest::GetGoalAtIndex(int goalIndex)

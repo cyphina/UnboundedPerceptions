@@ -161,14 +161,22 @@ void FBaseCharacter::ChangeModifier(vits vitalName, atts att, AttributeModifierF
 void FBaseCharacter::StatUpdate(const FGameplayAttribute& updatedStat)
 {
    TArray<Vital> updatedVits;
-   Algo::CopyIf(vitals, updatedVits, [&updatedStat](const Vital& vit) { return vit.attMod.attribute->GetName() == updatedStat.GetName(); });
+   auto vitPred = [&updatedStat](const Vital& vit) { return vit.attMod.attribute->GetName() == updatedStat.GetName(); };
+   Algo::CopyIf(vitals, updatedVits, vitPred);
+
    for(auto& foundVit : updatedVits)
+   {
       foundVit.Update(attSet);
+   }
 
    TArray<RTSUnitStat> updatedStats;
-   Algo::CopyIf(skills, updatedStats, [&updatedStat](const RTSUnitStat& skill) { return skill.attMod.attribute->GetName() == updatedStat.GetName(); });
+   auto skillPred = [&updatedStat](const RTSUnitStat& skill) { return skill.attMod.attribute->GetName() == updatedStat.GetName(); };
+   Algo::CopyIf(skills, updatedStats, skillPred);
+
    for(auto& foundSkill : updatedStats)
+   {
       foundSkill.Update(attSet);
+   }
 }
 
 FGameplayAttributeData* FBaseCharacter::GetAttribute(int index) const
@@ -249,6 +257,14 @@ void FBaseCharacter::SetVitalBase(int skillIndex, float newValue)
 
 void FBaseCharacter::SetMechanicBase(int skillIndex, float newValue)
 {
-   FGameplayAttributeData* mechanic  = mechanics[skillIndex].GetGameplayAttributeData(attSet);
-   mechanic->SetBaseValue(newValue);
+   FGameplayAttributeData* mechanicData  = mechanics[skillIndex].GetGameplayAttributeData(attSet);
+   FGameplayAttribute mechanic = attSet->GetMechanics()[skillIndex];
+
+   const int               valueDiff = newValue - mechanicData->GetBaseValue();
+   attSet->PreAttributeBaseChange(mechanic, newValue);
+   mechanicData->SetBaseValue(newValue);
+
+   float newCurValue = mechanicData->GetCurrentValue() + valueDiff;
+   attSet->PreAttributeChange(mechanic, newCurValue);
+   mechanicData->SetCurrentValue(newCurValue);
 }

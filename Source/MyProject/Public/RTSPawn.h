@@ -265,8 +265,8 @@ public:
     * Doesn't stop movement since we don't want to lose velocity.
     */
    UFUNCTION(BlueprintCallable, Category = "Action")
-   void HaltSelectedExceptMovement();
-
+   void CancelSelectedUnitsActionBeforePlayerCommand();
+   
    FOnGroupTabbed& OnGroupTabbed() const { return OnGroupTabbedEvent; }
 
    bool GetStaticFormationEnabled() const { return bStayInFormation; }

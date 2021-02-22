@@ -23,7 +23,7 @@ void UNullAttackAnim::PlayAttackAnimation(float playRate)
        mockAnimationTimer,
        [this]() {
           SetupHitTimer();
-          OnAttackAnimFinished().Broadcast();
+          OnAttackAnimFinished()->Broadcast();
        },
        timelineLength, true);
 }

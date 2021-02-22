@@ -22,8 +22,8 @@ class MYPROJECT_API UNullAttackAnim : public UObject, public IAttackAnim
    void PlayAttackAnimation(float playRate) override;
    void StopAttackAnimation() override;
 
-   FOnHitNotify&          OnAttackNotify() override { return OnAttackNotifyEvent; }
-   FOnAttackAnimFinished& OnAttackAnimFinished() override { return OnAttackAnimFinishedEvent; }
+   FOnHitNotify*          OnAttackNotify() override { return &OnAttackNotifyEvent; }
+   FOnAttackAnimFinished* OnAttackAnimFinished() override { return &OnAttackAnimFinishedEvent; }
 
    float GetMockAnimationLength() const;
 

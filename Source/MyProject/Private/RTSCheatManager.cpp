@@ -58,6 +58,18 @@ void URTSCheatManager::LevelUpToLevel(FString heroName, int level)
    }
 }
 
+void URTSCheatManager::BuffAllHeroesStats()
+{
+   for(ABaseHero* hero : userInputRef->GetBasePlayer()->GetHeroes())
+   {
+      for(int i = 0; i < static_cast<int>(EAttributes::Count); ++i)
+      {
+         hero->GetStatComponent()->ModifyStats<true, EAttributes>(999, static_cast<EAttributes>(i));
+      }
+         hero->GetStatComponent()->ModifyStats<true>(999, EMechanics::MovementSpeed);
+   }
+}
+
 void URTSCheatManager::GodMode(FString objectID, int toggleGodMode)
 {
 #if UE_EDITOR
@@ -91,7 +103,9 @@ void URTSCheatManager::AddQuest(FString questName)
 
 void URTSCheatManager::FinishQuest(FString questName, int isSucessful)
 {
-   auto pred = [questName](AQuest* quest) { return quest->GetQuestInfo().name.ToString() == questName; };
+   auto pred = [questName](AQuest* quest) {
+      return quest->GetQuestInfo().name.ToString() == questName;
+   };
    AQuest* quest = *gameModeRef->GetQuestManager()->activeQuests.FindByPredicate(pred);
    if(quest)
    {
@@ -213,7 +227,7 @@ void URTSCheatManager::DamageUnit(FString unitName, int damageAmount, bool bCrit
    if(AUnit* unit = UpResourceManager::FindTriggerObjectInWorld<AUnit>(unitName, GetWorld()))
    {
       UUpStatComponent* statComp = unit->GetStatComponent();
-      const FUpDamage mockDamage(nullptr, unit, 0, damageAmount, 0, FGameplayTag::RequestGameplayTag("Combat.Element.Fire"), FGameplayTag::EmptyTag, false);
+      const FUpDamage   mockDamage(nullptr, unit, 0, damageAmount, 0, FGameplayTag::RequestGameplayTag("Combat.Element.Fire"), FGameplayTag::EmptyTag, false);
       unit->OnUnitDamageReceived().Broadcast(mockDamage);
       // URTSDamageCalculation::ShowDamageDealt(mockDamage);
    }

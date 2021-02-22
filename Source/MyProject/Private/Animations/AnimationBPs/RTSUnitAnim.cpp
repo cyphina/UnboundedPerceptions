@@ -6,7 +6,7 @@
 
 void URTSUnitAnim::AnimNotify_OnAttack(UAnimNotify* notify)
 {
-   
+   OnHitNotifyEvent.Broadcast();
 }
 
 void URTSUnitAnim::UpdateAnimationProperties()

@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * Interface for a class that controls click functionality depending on the cursor state
+ * Abstract base class for a class that controls click functionality depending on the cursor state
  */
 
 class ARTSPawn;
@@ -30,6 +30,8 @@ protected:
    void IssueInteractCommandToSelectedHeroes();
    void IssueTalkComandToSelectedHeroes();
    void IssueItemUseCommandToHeroWithInventory();
+   void ResetSecondaryCursorState();
+   
    ABaseHero* GetHeroUsingInventory() const;
    
    ARTSPawn*   pawnRef = nullptr;

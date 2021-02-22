@@ -97,6 +97,10 @@ void UMyAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, fl
       { // Needs to be run before the broadcast to get proper values to the stat widget in the character menu
          unit->GetStatComponent()->UpdateStats(Attribute);
       }
+
+      if(Attribute == GetMovementSpeedAttribute()) {
+         unit->GetCharacterMovement()->MaxWalkSpeed = NewValue;
+      }
       statUpdatedEvent.Broadcast(Attribute, NewValue, unit);
    }
 }

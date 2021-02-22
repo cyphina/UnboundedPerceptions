@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "MySpell.h"
 #include "GameplayEffects/CoolDownEffect.h"
@@ -34,7 +32,7 @@ bool UMySpell::CheckCooldown(const FGameplayAbilitySpecHandle Handle, const FGam
       check(ActorInfo->AbilitySystemComponent.IsValid());
 
       // CooldownTags->Num() > 0 && ActorInfo->AbilitySystemComponent->HasAnyMatchingGameplayTags(*CooldownTags) ||
-      if(ActorInfo->AbilitySystemComponent->HasMatchingGameplayTag(AbilityTags.GetByIndex(0)))
+      if(ActorInfo->AbilitySystemComponent->HasMatchingGameplayTag(spellDefaults.nameTag))
       {
          const FGameplayTag& CooldownTag = UAbilitySystemGlobals::Get().ActivateFailCooldownTag;
 
@@ -63,7 +61,7 @@ void UMySpell::CommitExecute(const FGameplayAbilitySpecHandle Handle, const FGam
    // Our cooldown effects are all the same but we manually add the name tag of this spell to know it is on cooldown.
    FGameplayEffectSpecHandle sH = MakeOutgoingGameplayEffectSpec(CooldownGameplayEffectClass, 1);
    UAbilitySystemBlueprintLibrary::SetDuration(sH, GetCDDuration(ActorInfo->AbilitySystemComponent.Get()));
-   UAbilitySystemBlueprintLibrary::AddGrantedTag(sH, AbilityTags.GetByIndex(0));
+   UAbilitySystemBlueprintLibrary::AddGrantedTag(sH, spellDefaults.nameTag);
 
    K2_ApplyGameplayEffectSpecToOwner(sH);
 
@@ -89,7 +87,7 @@ float UMySpell::GetCooldownTimeRemaining(const FGameplayAbilityActorInfo* ActorI
 
 bool UMySpell::IsOnCD(const UAbilitySystemComponent* abilityComponent) const
 {
-   if(abilityComponent->HasMatchingGameplayTag(AbilityTags.GetByIndex(0))) return true;
+   if(abilityComponent->HasMatchingGameplayTag(spellDefaults.nameTag)) return true;
    return false;
 }
 
@@ -202,11 +200,14 @@ FGameplayEffectSpecHandle UMySpell::CreateGameplayEffectFromTableValues(TSubclas
    if(effect.Data->Def->DurationPolicy != EGameplayEffectDurationType::Instant)
    {
       effect.Data->Period = GetPeriod(abilityComp);
-      // If we don't lock the duration, the duration will be recalcuated somewhere in active effect creation ...
+      // If we don't lock the duration, the duration will be recalculated somewhere in active effect creation ...
       effect.Data->SetDuration(GetSpellDuration(abilityComp), true);
    }
 
-   if(effectClass->IsChildOf(URTSDamageEffect::StaticClass())) SetScaling(effect);
+   if(effectClass->IsChildOf(URTSDamageEffect::StaticClass()))
+   {
+      SetScaling(effect);
+   }
    return effect;
 }
 

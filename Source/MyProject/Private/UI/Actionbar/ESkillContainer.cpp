@@ -36,17 +36,21 @@ void UESkillContainer::NativeOnInitialized()
 
 void UESkillContainer::OnWidgetShown(URTSAbilitySystemComponent* focusedUnitAbilityComponent)
 {
-   if(focusedUnitAbilityComp != focusedUnitAbilityComponent)
+   if(focusedUnitAbilityComponent)
    {
+      if(focusedUnitAbilityComp != focusedUnitAbilityComponent)
+      {
+         PlayAnimation(flowOutAnim);
+      }
+
       focusedUnitAbilityComp = focusedUnitAbilityComponent;
-      
+
       int index = 0;
       for(USkillSlot* skillSlot : skillSlots)
       {
          skillSlot->UpdateSkillSlot(focusedUnitAbilityComp->GetSpellAtSlot(index));
          ++index;
       }
-      PlayAnimation(flowOutAnim);
    }
 }
 
@@ -72,6 +76,17 @@ void UESkillContainer::OnSpellSlotReplaced(AUnit* affectedUnit, TSubclassOf<UMyS
    if(focusedUnit == affectedUnit)
    {
       skillSlots[slotIndex]->UpdateSkillSlot(replacingSpellClass);
+   }
+}
+
+void UESkillContainer::OnMyWidgetVisibilityChanged_Implementation(ESlateVisibility newVisibility)
+{
+   if(newVisibility == ESlateVisibility::Collapsed)
+   {
+      for(USkillSlot* skillSlot : skillSlots)
+      {
+         skillSlot->UpdateSkillSlot(nullptr);
+      }
    }
 }
 

@@ -55,7 +55,10 @@ void URTSVisionComponent::OnVisionSphereOverlap(UPrimitiveComponent* overlappedC
       {
          if(collidedUnit->GetIsEnemy() != Cast<AUnit>(GetOwner())->GetIsEnemy())
          {
-            possibleVisibleEnemies.Add(collidedUnit);
+            {
+               FRWScopeLock(visionMutex, FRWScopeLockType::SLT_Write);
+               possibleVisibleEnemies.Add(collidedUnit);
+            }
             if(URTSVisionComponent* visionComp = collidedUnit->FindComponentByClass<URTSVisionComponent>())
             {
                visionComp->IncVisionCount();

@@ -60,7 +60,7 @@ void UQuestJournal::UpdateDetailWindow()
          Scroll_QuestDetailsPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
       } else
       {
-         Scroll_QuestDetailsPanel->SetVisibility(ESlateVisibility::Visible);
+         Scroll_QuestDetailsPanel->SetVisibility(ESlateVisibility::Hidden);
       }
    }
 }

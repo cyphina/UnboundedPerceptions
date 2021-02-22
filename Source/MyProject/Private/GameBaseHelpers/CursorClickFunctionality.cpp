@@ -20,7 +20,6 @@ void CursorClickFunctionalityBase::IssueMoveToSelectedUnits(FVector moveLocation
    for(AUnit* unit : controllerRef->GetBasePlayer()->GetSelectedUnits())
    {
       unit->GetUnitController()->Move(moveLocation);
-      unit->GetUnitController()->StopAutomation();
    }
 }
 
@@ -103,12 +102,21 @@ void CursorClickFunctionalityBase::IssueItemUseCommandToHeroWithInventory()
       ABaseHero* heroUsingInventory = GetHeroUsingInventory();
 
       const auto heroController = heroUsingInventory->GetHeroController();
-      if(heroController->GetManualSpellComponent()->OnSpellConfirmInput(clickHitResult))
+
+      const TSubclassOf<UMySpell> spellToCast = heroController->GetManualSpellComponent()->GetCurrentlySelectedSpell(); 
+      if(heroController->GetManualSpellComponent()->OnSpellConfirmInput(clickHitResult, spellToCast))
       {
-         heroController->StopAutomation();
-         pawnRef->SetSecondaryCursor(ECursorStateEnum::Select);
+         heroController->HaltUnit();
+         heroController->GetManualSpellComponent()->StartSpellCastAction(clickHitResult, spellToCast);
+         pawnRef->SetSecondaryCursor();
       }
    }
+}
+
+void CursorClickFunctionalityBase::ResetSecondaryCursorState()
+{
+   pawnRef->SetSecondaryCursor();
+   pawnRef->HideSpellCircle();
 }
 
 ABaseHero* CursorClickFunctionalityBase::GetHeroUsingInventory() const

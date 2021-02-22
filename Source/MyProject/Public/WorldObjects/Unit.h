@@ -6,7 +6,6 @@
 #include "AbilitySystemInterface.h"
 #include "RTSAbilitySystemComponent.h"
 #include "SaveLoadClass.h"
-#include "State/IUnitState.h"
 #include "CombatParameters.h"
 #include "WorldObject.h"
 #include "Unit.generated.h"
@@ -54,13 +53,6 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
  public:
    AUnit(const FObjectInitializer& oI);
    ~AUnit();
-
-   /**
-    * @brief Gets current state in state machine
-    * @return Returns enum identifier corresponding to current state the state machine is in.
-    */
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-   EUnitState GetState() const;
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    FORCEINLINE AUnitController* GetUnitController() const { return unitController; }

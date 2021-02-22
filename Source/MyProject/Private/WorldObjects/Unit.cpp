@@ -207,15 +207,6 @@ void AUnit::Tick(float deltaSeconds)
    }
 }
 
-EUnitState AUnit::GetState() const
-{
-   if(URTSStateComponent* stateComp = FindComponentByClass<URTSStateComponent>())
-   {
-      return stateComp->GetState();
-   }
-   return EUnitState::STATE_IDLE;
-}
-
 void AUnit::SetEnabled(bool bEnabled)
 {
    if(bEnabled)

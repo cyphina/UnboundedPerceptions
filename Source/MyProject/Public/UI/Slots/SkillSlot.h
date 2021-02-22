@@ -81,5 +81,4 @@ class MYPROJECT_API USkillSlot : public UActionSlot
 
    static UMaterialInterface* cdMatInstance;
    static UMaterialInterface* skillMatInstance;
-	
 };

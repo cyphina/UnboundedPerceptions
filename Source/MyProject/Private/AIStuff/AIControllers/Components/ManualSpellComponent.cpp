@@ -14,6 +14,7 @@
 #include "RTSIngameWidget.h"
 #include "RTSPawn.h"
 #include "SpellCastComponent.h"
+#include "SpellDataLibrary.h"
 #include "SpellTargetingTypes.h"
 #include "TargetComponent.h"
 #include "UIDelegateContext.h"
@@ -48,7 +49,7 @@ bool UManualSpellComponent::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
          {
             if(spell->GetCost(GetRTSAbilityComp()) <= unitWithPlayerControl->GetStatComponent()->GetVitalCurValue(EVitals::Mana))
             {
-               if(currentlySelectedSpell == spellToCast)
+               if(GetCurrentlySelectedSpell() == spellToCast)
                {
                   DeselectSpell();
                   return false;
@@ -62,9 +63,8 @@ bool UManualSpellComponent::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
                else
                {
                   CPCRef->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Magic);
+                  currentlySelectedSpell = spellToCast;
                }
-
-               currentlySelectedSpell = spellToCast;
 
                if(spell->GetTargeting()->IsChildOf(UUpSpellTargeting_Area::StaticClass()))
                {
@@ -111,18 +111,27 @@ void UManualSpellComponent::OnSkillActivated(int spellIndex)
    }
 }
 
-bool UManualSpellComponent::OnSpellConfirmInput(UPARAM(ref) FHitResult& hitResult)
+bool UManualSpellComponent::OnSpellConfirmInput(const FHitResult& hitResult, TSubclassOf<UMySpell> selectedSpell)
 {
-   if(IsValid(currentlySelectedSpell) && hitResult.IsValidBlockingHit())
+   if(IsValid(selectedSpell) && hitResult.IsValidBlockingHit())
    {
-      const auto spellTargeting = currentlySelectedSpell.GetDefaultObject()->GetTargeting().GetDefaultObject();
+      const UUpSpellTargeting* spellTargeting = selectedSpell.GetDefaultObject()->GetTargeting().GetDefaultObject();
       if(spellTargeting->ManualTargetingCheck(unitWithPlayerControl, hitResult))
       {
-         spellTargeting->ClickResponse(hitResult, currentlySelectedSpell, *this);
          return true;
       }
    }
    return false;
+}
+
+void UManualSpellComponent::StartSpellCastAction(const FHitResult& hitResult, TSubclassOf<UMySpell> selectedSpell)
+{
+   if(IsValid(selectedSpell))
+   {
+      currentlySelectedSpell                  = selectedSpell;
+      const UUpSpellTargeting* spellTargeting = GetCurrentlySelectedSpell().GetDefaultObject()->GetTargeting().GetDefaultObject();
+      spellTargeting->ClickResponse(hitResult, GetCurrentlySelectedSpell(), *this);
+   }
 }
 
 void UManualSpellComponent::BeginPlay()
@@ -161,7 +170,7 @@ void UManualSpellComponent::DeselectSpell()
    {
       currentlySelectedSpell = nullptr;
       cpcRef->GetCameraPawn()->HideSpellCircle();
-      cpcRef->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Select);
+      cpcRef->GetCameraPawn()->SetSecondaryCursor();
    }
 }
 
@@ -195,11 +204,15 @@ bool UManualSpellComponent::IsTargetingSelf()
 
 void UManualSpellComponent::FinalizeSpellTargeting(const UUpSpellTargeting* spellTargeting, TSubclassOf<UMySpell> spellClass, const FHitResult& hitResult)
 {
-   if(AUserInput* userInput = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+   if(!USpellDataLibrary::IsStunned(unitWithPlayerControl->GetAbilitySystemComponent()))
    {
-      userInput->GetCameraPawn()->HideSpellCircle();
-      userInput->GetCameraPawn()->SetSecondaryCursor(); // Just set cursor to to select so the cursor check loop will quickly change the cursor back to normal
-      spellTargeting->ManualSetSpellTarget(unitWithPlayerControl->GetTargetComponent(), hitResult);
-      spellCastComp->BeginCastSpell(spellClass);
+      if(AUserInput* userInput = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+      {
+         userInput->GetCameraPawn()->HideSpellCircle();
+         userInput->GetCameraPawn()->SetSecondaryCursor(); // Just set cursor to to select so the cursor check loop will quickly change the cursor back to normal
+         spellTargeting->ManualSetSpellTarget(unitWithPlayerControl->GetTargetComponent(), hitResult);
+         spellCastComp->BeginCastSpell(spellClass);
+         currentlySelectedSpell = nullptr;
+      }
    }
 }
