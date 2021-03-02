@@ -238,5 +238,5 @@ bool USpellBook::CheckPrereqs(UMySpell* spellObject)
 
 bool USpellBook::CheckIfSpellMaxLevel(FGameplayAbilitySpec* abilityInfo, UMySpell* spellObject) const
 {
-   return abilityInfo->Level > spellObject->GetSpellDefaults().MaxLevel;
+   return abilityInfo->Level >= spellObject->GetSpellDefaults().MaxLevel;
 }

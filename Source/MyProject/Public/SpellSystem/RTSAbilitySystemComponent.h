@@ -49,6 +49,14 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
    FGameplayAbilitySpec* FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass);
    const FGameplayAbilitySpec* FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass) const;
 
+   /** Dedicated attribute for passing in parameters to our effect exec calculations */
+   UPROPERTY(meta = (SystemGameplayAttribute = "true"))
+   float EffectParameter;
+
+   static FProperty* GetEffectParameterProperty();
+
+   static const FGameplayEffectAttributeCaptureDefinition& GetEffectParameterCapture();
+   
  protected:
    /**
     * List of abilities that are in unit's skill slots.

@@ -121,37 +121,37 @@ TArray<FText> UMySpell::GetPreReqNames() const
    return preReqNames;
 }
 
-float UMySpell::GetSpellDuration(UAbilitySystemComponent* abilityComponent) const
+float UMySpell::GetSpellDuration(const UAbilitySystemComponent* abilityComponent) const
 {
    return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.Duration);
 }
 
-FDamageScalarStruct UMySpell::GetDamage(UAbilitySystemComponent* abilityComponent) const
+FDamageScalarStruct UMySpell::GetDamage(const UAbilitySystemComponent* abilityComponent) const
 {
    return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.Damage);
 }
 
-float UMySpell::GetPeriod(UAbilitySystemComponent* abilityComponent) const
+float UMySpell::GetPeriod(const UAbilitySystemComponent* abilityComponent) const
 {
    return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.Period);
 }
 
-float UMySpell::GetCastTime(UAbilitySystemComponent* abilityComponent) const
+float UMySpell::GetCastTime(const UAbilitySystemComponent* abilityComponent) const
 {
    return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.CastTime);
 }
 
-float UMySpell::GetSecondaryTime(UAbilitySystemComponent* abilityComponent) const
+float UMySpell::GetSecondaryTime(const UAbilitySystemComponent* abilityComponent) const
 {
    return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.SecondaryTime);
 }
 
-float UMySpell::GetAOE(UAbilitySystemComponent* abilityComponent) const
+float UMySpell::GetAOE(const UAbilitySystemComponent* abilityComponent) const
 {
    return GetSpellDefaultValueChecked(abilityComponent, spellDefaults.AOE);
 }
 
-int UMySpell::GetLevel(UAbilitySystemComponent* abilityComponent) const
+int UMySpell::GetLevel(const UAbilitySystemComponent* abilityComponent) const
 {
   FGameplayAbilitySpec* spec = GetAbilitySpec(abilityComponent);
   if(spec)
@@ -305,14 +305,14 @@ FGameplayAbilitySpec* UMySpell::GetAbilitySpec(const UAbilitySystemComponent* ab
 
 int UMySpell::GetIndex(int currentLevel, int numCategories, int maxLevel)
 {
-   const int denom = maxLevel * currentLevel;
    if(numCategories <= 0)
    {
       UE_LOG(LogTemp, Error, TEXT("%s read some out of bounds spell property!"), ANSI_TO_TCHAR(__FUNCTION__));
    }
-   if(denom != 0)
+   if(maxLevel != 0)
    {
-      return FMath::CeilToInt(static_cast<float>(numCategories) / denom) - 1;
+      const int index = FMath::CeilToInt(static_cast<float>(numCategories) * currentLevel /  maxLevel) - 1;
+      return index;
    }
    return -1;
 }

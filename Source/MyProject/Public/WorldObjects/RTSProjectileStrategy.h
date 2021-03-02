@@ -19,37 +19,40 @@ enum class EBulletTargetingScheme : uint8 {
  * to simplify the process since most projectiles only differ in strategy and the
  * interface for modifying a data asset is cleaner.
  */
-UCLASS()
+UCLASS(Blueprintable)
 class MYPROJECT_API URTSProjectileStrategy : public UDataAsset
 {
    GENERATED_BODY()
 
  public:
-   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile", Meta = (ExposeOnSpawn = "true"))
+   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Visuals")
    UStaticMeshComponent* defaultBulletMesh;
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
+   UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Visuals")
+   UParticleSystemComponent* defaultParticleEffect;
+   
+   UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
    TArray<FGameplayEffectSpecHandle> defaultHitEffects;
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
+   UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
    EBulletTargetingScheme targeting = EBulletTargetingScheme::Bullet_Enemy;
 
    /** Set this to make bullets go through walls */
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
+   UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
    bool canGoThroughWalls = false;
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
+   UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
    bool isHoming = false;
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
+   UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
    float bulletSphereRadius = 10.f;
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
+   UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
    float bulletInitSpeed = 3000.f;
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
+   UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
    float bulletMaxSpeed = 3000.f;
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ExposeOnSpawn = "true"))
+   UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
    float bulletLifeSpan = 3.f;
 };

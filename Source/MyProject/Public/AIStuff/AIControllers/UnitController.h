@@ -126,6 +126,12 @@ class MYPROJECT_API AUnitController : public AAIController
    float smallMoveIgnoreRange = 50.f;
    
  protected:
+   UFUNCTION(BlueprintCallable)
+   void PauseCurrentMovement();
+
+   UFUNCTION(BlueprintCallable)
+   void ResumeCurrentMovement();
+   
    void BeginPlay() override;
    void Tick(float deltaSeconds) override final;
 
@@ -197,7 +203,7 @@ class MYPROJECT_API AUnitController : public AAIController
    UPROPERTY()
    TSet<AUnit*> groupRef; // Denotes is unit is part of a group (group AI)
 
-   /** Turn action that is set after movement because we either turn towards a point or an actor (which is set by the corresponding AdjustPosition functino).
+   /** Turn action that is set after movement because we either turn towards a point or an actor (which is set by the corresponding AdjustPosition function).
     *  If the unit is already already facing its target, executes onPosAdjDoneAct
     *  We use TFunctions over corresponding delegates because this functionality is only supposed
     *  to be set through very specific interfaces.

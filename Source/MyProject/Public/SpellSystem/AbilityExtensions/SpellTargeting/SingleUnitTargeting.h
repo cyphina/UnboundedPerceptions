@@ -8,8 +8,7 @@ class UUpSpellTargeting_SingleUnit : public UUpSpellTargeting
 {
    GENERATED_BODY()
 
-public:
-
+ public:
    bool ManualTargetingCheck(const AUnit* caster, const FHitResult& hitResult) const override;
 
    void ClickResponse(const FHitResult& hitResult, TSubclassOf<UMySpell> spellClass, IManualTargetingController& sourceUnitController) const override;
@@ -22,11 +21,10 @@ public:
 
    UEnvQuery* GetDefaultQueryForTargetingScheme(UDA_DefaultTargetingScheme* targetingSchemes) const override;
 
-   void HandleQueryResult
-   (TSharedPtr<FEnvQueryResult> result, AUnit* casterRef, USpellCastComponent* spellCastComponent,
-    TSubclassOf<UMySpell>       spellToCast) const override;
+   void HandleQueryResult(TSharedPtr<FEnvQueryResult> result, AUnit* casterRef, USpellCastComponent* spellCastComponent,
+                          const TSubclassOf<UMySpell> spellToCast) const override;
 
-private:
+ protected:
    virtual bool CheckEligibleSpellTarget(const AUnit* caster, const AUnit* hitUnit) const;
 };
 
@@ -35,7 +33,7 @@ class UUpSpellTargeting_SingleUnitFriendly : public UUpSpellTargeting_SingleUnit
 {
    GENERATED_BODY()
 
-private:
+ private:
    virtual bool CheckEligibleSpellTarget(const AUnit* caster, const AUnit* hitUnit) const override;
 };
 
@@ -44,7 +42,7 @@ class UUpSpellTargeting_SingleUnitEnemy : public UUpSpellTargeting_SingleUnit
 {
    GENERATED_BODY()
 
-private:
+ private:
    virtual bool CheckEligibleSpellTarget(const AUnit* caster, const AUnit* hitUnit) const override;
 };
 
@@ -53,8 +51,7 @@ class UUpSpellTargeting_InteractableOrUnit : public UUpSpellTargeting
 {
    GENERATED_BODY()
 
-public:
-
+ public:
    bool ManualTargetingCheck(const AUnit* caster, const FHitResult& hitResult) const override;
 
    void ClickResponse(const FHitResult& hitResult, TSubclassOf<UMySpell> spellClass, IManualTargetingController& sourceUnitController) const override;
@@ -67,11 +64,10 @@ public:
 
    UEnvQuery* GetDefaultQueryForTargetingScheme(UDA_DefaultTargetingScheme* targetingSchemes) const override { return nullptr; }
 
-   void HandleQueryResult
-   (TSharedPtr<FEnvQueryResult> result, AUnit* casterRef, USpellCastComponent* spellCastComponent,
-    TSubclassOf<UMySpell>       spellToCast) const override;
+   void HandleQueryResult(TSharedPtr<FEnvQueryResult> result, AUnit* casterRef, USpellCastComponent* spellCastComponent,
+                          TSubclassOf<UMySpell> spellToCast) const override;
 
-private:
+ private:
    bool                      CheckEligibleSpellTarget(const FHitResult& hitResult) const;
    static AInteractableBase* GetHitInteractable(const FHitResult& hitResult);
 };

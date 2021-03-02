@@ -141,11 +141,13 @@ void AUnit::SetupAbilitiesAndStats()
    }
 }
 
-void AUnit::AlignSelectionCircleWithGround() const
+void AUnit::SetupSelectionCircle() const
 {
    if(selectionCircleDecal)
    {
       selectionCircleDecal->DecalSize = FVector(GetCapsuleComponent()->GetScaledCapsuleRadius());
+      selectionCircleDecal->SetUsingAbsoluteScale(true);
+      selectionCircleDecal->SetWorldScale3D(FVector::OneVector);
       selectionCircleDecal->SetRelativeRotation(FRotator(90, 0, 0));
       selectionCircleDecal->SetRelativeLocation(FVector(0, 0, -90));
    }
@@ -173,7 +175,7 @@ void AUnit::BeginPlay()
    });
 
    StoreUnitHeight();
-   AlignSelectionCircleWithGround();
+   SetupSelectionCircle();
 
    if(const ARTSGameState* gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState()))
    {

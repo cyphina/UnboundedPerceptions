@@ -10,32 +10,36 @@ UMontageAttackAnim::UMontageAttackAnim()
 {
 }
 
-void UMontageAttackAnim::PlayAttackAnimation(float playRate)
+void UMontageAttackAnim::PlayAttackAnimation(ACharacter* characterToPlayMontageOn, float playRate)
 {
-   ACharacter* character = Cast<ACharacter>(GetOuter());
-   if(character)
+   if(characterToPlayMontageOn)
    {
-      if(UAnimInstance* animBP = character->GetMesh()->GetAnimInstance())
+      if(const auto attackMontage = GetAttackMontage(characterToPlayMontageOn))
       {
-         FOnMontageEnded montageEndedDelegate;
-         montageEndedDelegate.BindUObject(this, &UMontageAttackAnim::OnMontageEnded);
-         animBP->Montage_SetEndDelegate(montageEndedDelegate, attackMontage);
+         if(UAnimInstance* animBP = characterToPlayMontageOn->GetMesh()->GetAnimInstance())
+         {
+            characterToPlayMontageOn->PlayAnimMontage(attackMontage, playRate);
+            FOnMontageEnded montageEndedDelegate;
+            montageEndedDelegate.BindUObject(this, &UMontageAttackAnim::OnMontageEnded);
+            animBP->Montage_SetEndDelegate(montageEndedDelegate, attackMontage);
+         }
       }
-      character->PlayAnimMontage(attackMontage, playRate);
    }
 }
 
-void UMontageAttackAnim::StopAttackAnimation()
+void UMontageAttackAnim::StopAttackAnimation(ACharacter* characterToStopMontageOn)
 {
-   Cast<ACharacter>(GetOuter())->StopAnimMontage(attackMontage);
+   if(const auto attackMontage = GetAttackMontage(characterToStopMontageOn))
+   {
+      characterToStopMontageOn->StopAnimMontage(attackMontage);
+   }
 }
 
-FOnHitNotify* UMontageAttackAnim::OnAttackNotify()
+FOnHitNotify* UMontageAttackAnim::OnAttackNotify(ACharacter* characterToNotify)
 {
-   ACharacter* character = Cast<ACharacter>(GetOuter());
-   if(character)
+   if(characterToNotify)
    {
-      if(URTSUnitAnim* unitAnim = Cast<URTSUnitAnim>(character->GetMesh()->GetAnimInstance()))
+      if(URTSUnitAnim* unitAnim = Cast<URTSUnitAnim>(characterToNotify->GetMesh()->GetAnimInstance()))
       {
          return &unitAnim->OnHitNotify();
       }
@@ -46,4 +50,17 @@ FOnHitNotify* UMontageAttackAnim::OnAttackNotify()
 void UMontageAttackAnim::OnMontageEnded(UAnimMontage* montage, bool bInterrupted)
 {
    OnAttackAnimFinished()->Broadcast();
+}
+
+UAnimMontage* UMontageAttackAnim::GetAttackMontage(ACharacter* characterWithMontage) const
+{
+   if(UAnimInstance* animBP = characterWithMontage->GetMesh()->GetAnimInstance())
+   {
+      if(URTSUnitAnim* unitAnim = Cast<URTSUnitAnim>(animBP))
+      {
+         const TSoftObjectPtr<UAnimMontage> animMontageToLoad = unitAnim->GetAnimMontage(FGameplayTag::RequestGameplayTag("Skill.Name.AutoAttack"));
+         return animMontageToLoad.LoadSynchronous();
+      }
+   }
+   return nullptr;
 }

@@ -10,14 +10,16 @@ class ARTSGameMode;
 class ARTSGameState;
 
 USTRUCT(BlueprintType, NoExport)
-struct FSpellCombination {
+struct FSpellCombination
+{
    TArray<TSubclassOf<UMySpell*>> combination;            // spells to be used in tandem
    TArray<int>                    delay;                  // delay between two actions
    TArray<int>                    vulnerabilityThreshold; // continue with action if target passes this threshold
 };
 
 USTRUCT(BlueprintType, NoExport)
-struct FItemDrop {
+struct FItemDrop
+{
    FMyItem itemInfo;
    int     dropPerc; // clamped from (0-100)
 };
@@ -43,9 +45,6 @@ class MYPROJECT_API AEnemy : public AUnit
    bool GetIsEnemy() const override final { return true; }
 
    FDefaultStats& GetInitialStats() { return initialStats; }
-
-   const TSet<AUnit*>* GetVisibleEnemies_Impl() const override;
-   const TSet<AUnit*>* GetAllies_Impl() const override;
 
    void SetUnitSelected(bool value) override final;
 
@@ -86,4 +85,7 @@ class MYPROJECT_API AEnemy : public AUnit
    void InitializeStats();
 
    void SpawnItemDrops();
+
+   const TSet<AUnit*>* GetVisibleEnemies_Impl() const override;
+   const TSet<AUnit*>* GetAllies_Impl() const override;
 };

@@ -22,20 +22,19 @@ void URTSUnitDamageCalculation::Execute_Implementation
 {
    FUpDamage damage;
 
-   // Owner component gotten from instigator ability component which gotten from owner we set as our player controller but that isn't an ability system holder
    UAbilitySystemComponent* ownerComponent  = executionParams.GetSourceAbilitySystemComponent();
    UAbilitySystemComponent* targetComponent = executionParams.GetTargetAbilitySystemComponent();
-   AUnit*                   sourceUnit      = nullptr,* targetUnit = nullptr;
 
-   // TODO: Handle non unit damage (from traps or something)
-   // If our components exist
+   AUnit* sourceUnit = nullptr;
+   AUnit* targetUnit = nullptr;
+
    if(ownerComponent)
    {
       sourceUnit = Cast<AUnit>(ownerComponent->AvatarActor);
    }
    if(targetComponent)
    {
-      targetUnit = Cast<AUnit>(targetComponent->AvatarActor); // a null pointer.
+      targetUnit = Cast<AUnit>(targetComponent->AvatarActor); 
    }
 
    if(sourceUnit && targetUnit)
@@ -46,7 +45,7 @@ void URTSUnitDamageCalculation::Execute_Implementation
       FGameplayTagContainer tags = executionParams.GetOwningSpec().DynamicAssetTags;
       damage.element             = tags.Filter(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Element"))).GetByIndex(0);
       damage.effects             = tags;
-      
+
       // Start calculating damage based off our attributes and the attributes the ability scales off of
       FAggregatorEvaluateParameters evalParams;
       evalParams.SourceTags = executionParams.GetOwningSpec().CapturedSourceTags.GetAggregatedTags();

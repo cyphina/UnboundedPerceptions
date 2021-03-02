@@ -19,11 +19,12 @@ EBTNodeResult::Type UBTTask_AttackWhileMove::ExecuteTask(UBehaviorTreeComponent&
    myMemory->AICon               = Cast<AUnitController>(ownerComp.GetAIOwner());
 
    EPathFollowingRequestResult::Type res = myMemory->AICon->Move(ownerComp.GetBlackboardComponent()->GetValueAsVector("moveToLocation"));
-   if(res == EPathFollowingRequestResult::RequestSuccessful) { //if we sent a successful move request
+   if(res == EPathFollowingRequestResult::RequestSuccessful)
+   { //if we sent a successful move request
 
       WaitForMessage(ownerComp, UBrainComponent::AIMessage_MoveFinished);
       WaitForMessage(ownerComp, UBrainComponent::AIMessage_RepathFailed);
-      WaitForMessage(ownerComp, UnitMessages::AIMessage_Hit);
+      WaitForMessage(ownerComp, UnitMessages::AIMessage_AttackExecuted);
 
       // We set a function to be called periodically
       TFunction<void(void)> attackFunc = [myMemory]() {
@@ -37,7 +38,9 @@ EBTNodeResult::Type UBTTask_AttackWhileMove::ExecuteTask(UBehaviorTreeComponent&
       return EBTNodeResult::InProgress;
 
       // If we requested to move somewhere but we are already at there
-   } else if(res == EPathFollowingRequestResult::AlreadyAtGoal) {
+   }
+   else if(res == EPathFollowingRequestResult::AlreadyAtGoal)
+   {
       myMemory->AICon->Attack();
       return EBTNodeResult::Succeeded;
    }
@@ -53,12 +56,14 @@ uint16 UBTTask_AttackWhileMove::GetInstanceMemorySize() const
 void UBTTask_AttackWhileMove::OnMessage(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory, FName message, int32 requestID, bool bSuccess)
 {
    // This attack message means that we should move again because we just initiated an attack
-   if(message == UnitMessages::AIMessage_Hit) {
+   if(message == UnitMessages::AIMessage_AttackExecuted)
+   {
       FBTAttackMoveMemory* myMemory = (FBTAttackMoveMemory*)nodeMemory;
       myMemory->AICon->ResumeMove(myMemory->AICon->GetCurrentMoveRequestID());
    }
    //Finish the task when we get a message that our move finished
-   else { 
+   else
+   {
       bSuccess &= (message != UBrainComponent::AIMessage_RepathFailed);
       FBTAttackMoveMemory* myMemory = (FBTAttackMoveMemory*)nodeMemory;
       myMemory->attackTime.Invalidate();

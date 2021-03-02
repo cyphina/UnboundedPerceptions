@@ -201,7 +201,7 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    void RemoveArrowComponent() const;
 
    void SetupAbilitiesAndStats();
-   void AlignSelectionCircleWithGround() const;
+   void SetupSelectionCircle() const;
    void StoreUnitHeight();
 
    virtual const TSet<AUnit*>* GetVisibleEnemies_Impl() const PURE_VIRTUAL(AUnit::GetVisibleEnemies, return nullptr;);

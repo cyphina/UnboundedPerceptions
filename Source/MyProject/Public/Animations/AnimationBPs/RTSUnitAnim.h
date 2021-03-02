@@ -21,10 +21,11 @@ public:
    FOnHitNotify& OnHitNotify() { return OnHitNotifyEvent; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure)
-   TSoftObjectPtr<UAnimMontage> GetAnimMontage(FGameplayTag tagToQuery) const { return montageMap.GetDefaultObject()->GetAnimMontage(tagToQuery); }
+   TSoftObjectPtr<UAnimMontage> GetAnimMontage(FGameplayTag tagToQuery) const;
 
 protected:
-   void AnimNotify_OnAttack(UAnimNotify* notify);
+   // UFUNCTION()
+   // void AnimNotify_OnAttack(UAnimNotify* notify);
 
    /** True means we're currently in the air or falling */
    UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -43,6 +44,9 @@ protected:
    void NativeUpdateAnimation(float deltaSeconds) override final;
 
 private:
+   UFUNCTION()
+   void OnAnimationNotify(FName notifyName, const FBranchingPointNotifyPayload& branchingPointPayload);
+      
    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
    AUnit* unitRef;
 

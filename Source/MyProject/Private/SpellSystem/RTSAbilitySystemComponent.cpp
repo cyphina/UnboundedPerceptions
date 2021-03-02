@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "RTSAbilitySystemComponent.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
@@ -294,6 +292,18 @@ void URTSAbilitySystemComponent::SetSpellAtSlot(TSubclassOf<UMySpell> spellClass
    }
 }
 
+FProperty* URTSAbilitySystemComponent::GetEffectParameterProperty()
+{
+   static FProperty* EffectParamProperty = FindFieldChecked<FProperty>(URTSAbilitySystemComponent::StaticClass(), GET_MEMBER_NAME_CHECKED(URTSAbilitySystemComponent, EffectParameter));
+   return EffectParamProperty;
+}
+
+const FGameplayEffectAttributeCaptureDefinition& URTSAbilitySystemComponent::GetEffectParameterCapture()
+{
+   static FGameplayEffectAttributeCaptureDefinition EffectParamCapture(GetEffectParameterProperty(), EGameplayEffectAttributeCaptureSource::Source, true);
+   return EffectParamCapture;
+}
+
 void URTSAbilitySystemComponent::TryRemoveInvisibility()
 {
    const bool invis = HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility"));
@@ -343,3 +353,4 @@ FGameplayEffectSpecHandle URTSAbilitySystemComponent::MakeDamageEffect(FDamageSc
 
    return damageEffectHandle;
 }
+

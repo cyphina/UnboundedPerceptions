@@ -7,13 +7,53 @@
 #include "MySpell.h"
 #include "SpellCastComponent.h"
 
+namespace AIHelperCVars
+{
+   static const int32 SOME_RANDOM_ID = 13456141;
+
+   bool                           bPrintRange = false;
+   static FAutoConsoleVariableRef CVarPrintRange(TEXT("RTSDebug.PrintRange"), bPrintRange, TEXT("When checking to see if target is in range, logs the range."));
+}
+
 bool UUpAIHelperLibrary::IsTargetInRange(const AActor* referenceActor, const FVector& targetLocation, const float range)
 {
    const FVector currentLocation = referenceActor->GetActorLocation();
    FVector       difference      = currentLocation - targetLocation;
    difference.Z                  = 0;
 
-   if(FVector::DotProduct(difference, difference) <= range * range + SMALL_NUMBER) return true;
+   const float squaredDist = FVector::DotProduct(difference, difference);
+
+#if UE_EDITOR
+   if(AIHelperCVars::bPrintRange)
+   {
+      GEngine->AddOnScreenDebugMessage(AIHelperCVars::SOME_RANDOM_ID, 2.f, FColor::White,
+                                       "Dist: " + FString::SanitizeFloat(squaredDist) + " Range: " + FString::SanitizeFloat(range * range));
+   }
+#endif
+
+   if(squaredDist <= range * range + SMALL_NUMBER) return true;
+   return false;
+}
+
+bool UUpAIHelperLibrary::IsTargetInRangeOfActor(const AActor* referenceActor, const AActor* targetActor, const float range)
+{
+   const FVector currentLocation = referenceActor->GetActorLocation();
+   const FVector endLocation     = targetActor->GetActorLocation();
+   FVector       difference      = currentLocation - endLocation;
+   difference.Z                  = 0;
+
+   const float squaredDist   = FVector::DotProduct(difference, difference);
+   const float adjustedRange = range + referenceActor->GetSimpleCollisionRadius() + targetActor->GetSimpleCollisionRadius();
+
+#if UE_EDITOR
+   if(AIHelperCVars::bPrintRange)
+   {
+      GEngine->AddOnScreenDebugMessage(AIHelperCVars::SOME_RANDOM_ID, 2.f, FColor::White,
+                                       "Dist: " + FString::SanitizeFloat(squaredDist) + " Adjusted Range: " + FString::SanitizeFloat(adjustedRange * adjustedRange));
+   }
+#endif
+
+   if(squaredDist <= adjustedRange * adjustedRange + SMALL_NUMBER) return true;
    return false;
 }
 
@@ -37,12 +77,15 @@ FQuat UUpAIHelperLibrary::FindLookRotation(const AActor* referenceActor, const F
 AUnit* UUpAIHelperLibrary::FindClosestUnit(const FVector referenceLocation, const TSet<AUnit*>& otherUnits)
 {
    AUnit* closestUnit = nullptr;
-   if(otherUnits.Num() > 0) {
+   if(otherUnits.Num() > 0)
+   {
       float closestDistance = TNumericLimits<int>::Max();
 
-      for(AUnit* otherUnit : otherUnits) {
+      for(AUnit* otherUnit : otherUnits)
+      {
          const float distToOtherUnit = FVector::Dist2D(referenceLocation, otherUnit->GetActorLocation());
-         if(distToOtherUnit < closestDistance) {
+         if(distToOtherUnit < closestDistance)
+         {
             closestDistance = distToOtherUnit;
             closestUnit     = otherUnit;
          }
@@ -51,13 +94,12 @@ AUnit* UUpAIHelperLibrary::FindClosestUnit(const FVector referenceLocation, cons
    return closestUnit;
 }
 
-void UUpAIHelperLibrary::AIBeginCastSpell(UEnvQuery* targetFindingQuery, TSubclassOf<UMySpell> spellToCast, USpellCastComponent* spellCastComponent)
+void UUpAIHelperLibrary::AIBeginCastSpell(UEnvQuery* targetFindingQuery, const TSubclassOf<UMySpell> spellToCast, USpellCastComponent* spellCastComponent)
 {
-   FEnvQueryRequest                                                     queryRequest{targetFindingQuery, spellCastComponent->GetOwner()};
-   const auto                                                           castSpellAfterQuery = FQueryFinishedSignature::CreateLambda(
-   [&spellToCast, spellCastComponent](const TSharedPtr<FEnvQueryResult> res) {
-      spellToCast.GetDefaultObject()->GetTargeting().GetDefaultObject()->HandleQueryResult(res,
-                                                                        Cast<AUnit>(spellCastComponent->GetOwner()), spellCastComponent, spellToCast);
+   FEnvQueryRequest queryRequest{targetFindingQuery, spellCastComponent->GetOwner()};
+   const auto       castSpellAfterQuery = FQueryFinishedSignature::CreateLambda([&spellToCast, spellCastComponent](const TSharedPtr<FEnvQueryResult> res) {
+      const UUpSpellTargeting* targetingStrategy = spellToCast.GetDefaultObject()->GetTargeting().GetDefaultObject();
+      targetingStrategy->HandleQueryResult(res, Cast<AUnit>(spellCastComponent->GetOwner()), spellCastComponent, spellToCast);
    });
    queryRequest.Execute(EEnvQueryRunMode::SingleResult, castSpellAfterQuery);
 }

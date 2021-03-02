@@ -69,10 +69,8 @@ class MYPROJECT_API UManualSpellComponent : public UActorComponent, public IManu
 
    void OnSkillActivated(int spellIndex);
 
+   /** Final step in manual spell casting involves transfering the data over to the spell cast component */
    void FinalizeSpellTargeting(const UUpSpellTargeting* spellTargeting, TSubclassOf<UMySpell> spellClass, const FHitResult&) override;
-
-   /** Called when we target something we're not suppsoed to. Returns false and prints a message. */
-   bool InvalidTarget() const;
 
    /** If we tap a selected spell again, we can deselect it*/
    void DeselectSpell();

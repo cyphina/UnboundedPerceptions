@@ -72,13 +72,15 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
    void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
    UPROPERTY(EditDefaultsOnly, meta = (MustImplement = "AttackAnim"))
-   TSubclassOf<UObject> attackAnimClass = nullptr;
+   TSubclassOf<UObject> attackAnimStrategy = nullptr;
 
-   UPROPERTY(EditDefaultsOnly)
-   URTSProjectileStrategy* projectileStrategy = nullptr;
+   UPROPERTY()
+   UObject* animAttackStrategyInst;
 
-   UPROPERTY(EditDefaultsOnly)
    TScriptInterface<IAttackAnim> attackAnim;
+
+   UPROPERTY(EditDefaultsOnly)
+   TSubclassOf<URTSProjectileStrategy> projectileStrategyClass = nullptr;
 
  private:
    void OnUnitStopped();
@@ -135,7 +137,7 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
    void StopAgent();
 
    void StopAttackAnim();
-   
+
    /**
     * @brief Checks to see if we need to reposition to attack and if so, repositions us.
     * @return Returns true if we need to adjust the owner's positoin, or false otherwise
@@ -163,7 +165,7 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
    bool readyToAttack = true;
 
    FVector attackMoveLocation;
-   
+
    AUnit*           agent;                   // Unit whose behavior is specified through the behavioral logic within this state
    static const int shortAttRngBuff = 25.f;  // Distance that an attack in progress will cancel since it is out of range
    static const int attRngCnclBuff  = 350.f; // Distance that an attack in progress will cancel since it is out of range

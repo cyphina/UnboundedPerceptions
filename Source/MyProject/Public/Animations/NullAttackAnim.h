@@ -19,10 +19,10 @@ class MYPROJECT_API UNullAttackAnim : public UObject, public IAttackAnim
    /** By default the parent class looks for a mesh if we don't have one so we should be fine to set this */
    UNullAttackAnim();
 
-   void PlayAttackAnimation(float playRate) override;
-   void StopAttackAnimation() override;
+   void PlayAttackAnimation(ACharacter* characterToPlayMontageOn, float playRate) override;
+   void StopAttackAnimation(ACharacter* characterToStopMontageOn) override;
 
-   FOnHitNotify*          OnAttackNotify() override { return &OnAttackNotifyEvent; }
+   FOnHitNotify*          OnAttackNotify(ACharacter* characterToNotify) override { return &OnAttackNotifyEvent; }
    FOnAttackAnimFinished* OnAttackAnimFinished() override { return &OnAttackAnimFinishedEvent; }
 
    float GetMockAnimationLength() const;
@@ -45,7 +45,9 @@ class MYPROJECT_API UNullAttackAnim : public UObject, public IAttackAnim
    FOnHitNotify          OnAttackNotifyEvent;
    FOnAttackAnimFinished OnAttackAnimFinishedEvent;
 
+   /** Little longer than hit timer to emulate backswing */
    FTimerHandle mockAnimationTimer;
+
    FTimerHandle hitNotifyTimer;
 
    float hitNotifyTime;

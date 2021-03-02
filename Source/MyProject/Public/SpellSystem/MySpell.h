@@ -71,25 +71,25 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
    TArray<FText> GetPreReqNames() const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   float GetSpellDuration(UAbilitySystemComponent* abilityComponent) const;
+   float GetSpellDuration(const UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   FDamageScalarStruct GetDamage(UAbilitySystemComponent* abilityComponent) const;
+   FDamageScalarStruct GetDamage(const UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   float GetPeriod(UAbilitySystemComponent* abilityComponent) const;
+   float GetPeriod(const UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   float GetCastTime(UAbilitySystemComponent* abilityComponent) const;
+   float GetCastTime(const UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   float GetSecondaryTime(UAbilitySystemComponent* abilityComponent) const;
+   float GetSecondaryTime(const UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   float GetAOE(UAbilitySystemComponent* abilityComponent) const;
+   float GetAOE(const UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-   int GetLevel(UAbilitySystemComponent* abilityComponent) const;
+   int GetLevel(const UAbilitySystemComponent* abilityComponent) const;
 
    /**
     * Creates a gameplay effect setting the duration and period according to the table values

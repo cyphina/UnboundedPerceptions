@@ -30,7 +30,7 @@ class MYPROJECT_API UStatChangeEffect : public UGameplayEffect
    GENERATED_UCLASS_BODY()
 
  public:
-   /**List of stat changes this effect will provide*/
+   /** List of stat changes this effect will provide. Only useful on SetByCaller type magnitudes. */
    UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"), Category = "Stats")
    TArray<FStatChange> StatChanges = TArray<FStatChange>{FStatChange()};
 };

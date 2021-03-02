@@ -1,3 +1,4 @@
+
 #include "MyProject.h"
 
 #include "WorldObjects/Unit.h"
@@ -30,8 +31,7 @@ AUnitController::AUnitController()
 {
    SetActorTickInterval(0.f);
    ConstructorHelpers::FObjectFinder<UCurveFloat> loadedCurve(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/StandardLinear"));
-   if(loadedCurve.Succeeded())
-      turnCurve = loadedCurve.Object;
+   if(loadedCurve.Succeeded()) turnCurve = loadedCurve.Object;
 }
 
 void AUnitController::OnPossess(APawn* InPawn)
@@ -132,7 +132,8 @@ void AUnitController::OnDamageReceived(const FUpDamage& d)
    if(GetUnitOwner()->GetStatComponent()->GetVitalAdjValue(EVitals::Health) <= 0)
    {
       Die();
-   } else if(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) >= d.targetUnit->GetStatComponent()->GetVitalBaseValue(EVitals::Health))
+   }
+   else if(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) >= d.targetUnit->GetStatComponent()->GetVitalBaseValue(EVitals::Health))
    {
       d.sourceUnit->GetStatComponent()->ModifyStats<false>(d.sourceUnit->GetStatComponent()->GetVitalBaseValue(EVitals::Health), EVitals::Health);
    }
@@ -147,6 +148,16 @@ void AUnitController::Die()
    GetUnitOwner()->OnUnitDie().Broadcast();
    // Eventually this object will get GC'd. If we have something like resurrection, store unit data in the OnUnitDieEvent as opposed to keeping around a deactivated copy.
    SetLifeSpan(5.f);
+}
+
+void AUnitController::PauseCurrentMovement()
+{
+   PauseMove(GetCurrentMoveRequestID());
+}
+
+void AUnitController::ResumeCurrentMovement()
+{
+   ResumeMove(GetCurrentMoveRequestID());
 }
 
 EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation)
@@ -261,7 +272,8 @@ void AUnitController::OnActorTurnFinished()
       if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetActor->GetActorLocation()))
       {
          TurnTowardsActor(targetActor);
-      } else
+      }
+      else
       {
          if(onPosAdjDoneAct)
          {
@@ -287,7 +299,8 @@ void AUnitController::TurnActor(float turnValue)
       {
          const FQuat rotation = FQuat::Slerp(startRotation, turnRotator, turnValue);
          ownerRef->SetActorRelativeRotation(rotation);
-      } else
+      }
+      else
       {
          turnActorTimeline.Stop();
          // Call this explicitly because stop does not trigger the timeline finished event.
@@ -304,8 +317,7 @@ void AUnitController::Turn(float turnValue)
 
 void AUnitController::QueueTurnAfterMovement(FVector targetLoc)
 {
-   queuedTurnAction = [this, targetLoc]()
-   {
+   queuedTurnAction = [this, targetLoc]() {
       if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetLoc))
          TurnTowardsPoint(targetLoc);
       else
@@ -320,12 +332,12 @@ void AUnitController::QueueTurnAfterMovement(FVector targetLoc)
 
 void AUnitController::QueueTurnAfterMovement(AActor* targetActor)
 {
-   queuedTurnAction = [this, targetActor]()
-   {
+   queuedTurnAction = [this, targetActor]() {
       if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetActor->GetActorLocation()))
       {
          TurnTowardsActor(targetActor);
-      } else
+      }
+      else
       {
          if(onPosAdjDoneAct)
          {
@@ -356,8 +368,7 @@ bool AUnitController::AdjustPosition(float range, FVector targetLoc)
 
 bool AUnitController::AdjustPosition(float range, FVector targetLoc, EPathFollowingRequestResult::Type& outPathReqRes)
 {
-   this->onPosAdjDoneAct = [this]()
-   {
+   this->onPosAdjDoneAct = [this]() {
       FinishCurrentAction();
    };
 
@@ -369,7 +380,7 @@ bool AUnitController::AdjustPosition(float range, FVector targetLoc, EPathFollow
    }
 
    StopMovement();
-   
+
    if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetLoc, .02f))
    {
       TurnTowardsPoint(targetLoc);
@@ -382,11 +393,15 @@ bool AUnitController::AdjustPosition(float range, FVector targetLoc, EPathFollow
 
 bool AUnitController::AdjustPosition(float range, AActor* targetActor)
 {
-   if(!UUpAIHelperLibrary::IsTargetInRange(GetUnitOwner(), targetActor->GetActorLocation(),
-                                           range + targetActor->GetSimpleCollisionRadius() + GetUnitOwner()->GetSimpleCollisionRadius()))
+   // The move functionality automatically accounts for the target actor radius and the moving actor's radius (See UPathFollowingComponent::HasReachedInternal), but we have to add that into our own manual range check
+   if(!UUpAIHelperLibrary::IsTargetInRangeOfActor(GetUnitOwner(), targetActor, range))
    {
-      MoveToActor(targetActor, range + targetActor->GetSimpleCollisionRadius(), false, true, false);
-      QueueTurnAfterMovement(targetActor);
+      const AActor* previousMoveGoal = GetPathFollowingComponent()->GetMoveGoal();
+      if(!previousMoveGoal || previousMoveGoal != targetActor)
+      {
+         MoveToActor(targetActor, range, false, true, false);
+         QueueTurnAfterMovement(targetActor);
+      }
       return false;
    }
 
@@ -430,7 +445,8 @@ void AUnitController::QueueAction(TFunction<void()> actionToQueue)
       GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Emerald, TEXT("SUCESSFUL QUEUE"));
       commandQueue.Enqueue(actionToQueue);
       ++queueCount;
-   } else
+   }
+   else
    {
       URTSIngameWidget::NativeDisplayHelpText(GetWorld(), FILLED_QUEUE_TEXT);
    }

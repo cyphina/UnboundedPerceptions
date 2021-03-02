@@ -139,7 +139,7 @@ void URTSDamageCalculation::PrintCritRollInfo(const FUpDamage& d, const float pe
 void URTSDamageCalculation::CalculateDamageReduction(FUpDamage& d, FGameplayTagContainer& effects) const
 {
    CalculatePiercing(d.targetUnit, d, false); // Calculate defensive piercing
-
+   
    PrintPreDamageReductionValues(d);
 
    ///--After we successfully calculate piercing, apply piercing effects
@@ -179,7 +179,7 @@ void URTSDamageCalculation::CalculateDamageReduction(FUpDamage& d, FGameplayTagC
 
 void URTSDamageCalculation::CalculatePiercing(AUnit* unit, FUpDamage& d, bool isAtt)
 {
-   // Apply effects from buffs and weapons
+   // TODO: Piecewise soulslike function calculation
    if(d.element.GetTagName() == "Combat.Element.Arcane")
    {
       d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Arcane_Aff) * isAtt -

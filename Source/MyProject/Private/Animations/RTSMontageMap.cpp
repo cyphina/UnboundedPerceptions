@@ -9,6 +9,6 @@ TSoftObjectPtr<UAnimMontage> URTSMontageMap::GetAnimMontage(FGameplayTag tagToQu
    {
       return unitMontages[tagToQuery];
    }
+
    return nullptr;
 }
-   

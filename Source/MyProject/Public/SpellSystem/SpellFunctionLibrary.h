@@ -45,8 +45,12 @@ public:
     FDamageScalarStruct damageVals);
 
    /**
-    * TODO: Fix this, it's NOT CURRENTLY WORKING
-    * Creates gameplay stat change effect
+    * Stat change effects all have their individual gameplay effect classes with name and element already setup (ideally).
+    * This is used to to pass in parameters like duration, period, or the stat change values granted
+    * if those values were not already properly set on the gameplay effect class.
+    * Any stat changes passed will only affect those that are setup in the modifiers of the gameplay effect. If we wanted a generic
+    * stat change effect then we'd have to give it every modifier but then it would take a while in the logic loop somewhere downstream
+    * since some logic in the GA system loops through all the modifiers.
     */
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Stat Change Effect", BlueprintInternalUseOnly = "true"), Category = "EffectFactory")
    static struct FGameplayEffectSpecHandle MakeStatChangeEffect
@@ -57,12 +61,12 @@ public:
    /** Exposes factory bullet function to BPs */
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Setup Bullet Targetting"), Category = "EffectFactory")
    static ARTSProjectile* SetupBulletTargetting
-   (AUnit* casterRef, TSubclassOf<ARTSProjectile> bulletClass, URTSProjectileStrategy* projectileStrategy, UPARAM(ref) FGameplayEffectSpecHandle& specHandle,
+   (AUnit* casterRef, TSubclassOf<ARTSProjectile> bulletClass, TSubclassOf<URTSProjectileStrategy> projectileStrategyClass, TArray<FGameplayEffectSpecHandle> specHandles,
     bool   canGoThroughWalls);
 
    /** Parses spell descriptions to place keywords with the actual statistic*/
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Parse Descrption"), Category = "Spell Description Helper")
-   static FText ParseDesc(FText inputText, UAbilitySystemComponent* compRef, UMySpell* spell, TMap<FString, FString> args);
+   static FText ParseDesc(const FText& inputText, const UAbilitySystemComponent* compRef, UMySpell* spell);
 
    /** If a spell requires another press for confirmation like telekinesis and ice pillar, we can use this function to swap out a unit's spell temporarily */
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Spell Swap"), Category = "Spell Functionality Extender")

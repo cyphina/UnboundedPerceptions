@@ -57,8 +57,8 @@ bool UManualSpellComponent::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
 
                if(spell->GetTargeting()->IsChildOf(UUpSpellTargeting_None::StaticClass()))
                {
-                  unitWithPlayerControl->GetUnitController()->StopCurrentAction();
-                  unitWithPlayerControl->GetUnitController()->FindComponentByClass<USpellCastComponent>()->IncantationCheck(spellToCast);
+                  unitWithPlayerControl->GetUnitController()->StopCurrentAction();            
+                  GetSpellCastComp()->BeginCastSpell(spellToCast);
                }
                else
                {
@@ -89,12 +89,6 @@ bool UManualSpellComponent::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
    return false;
 }
 
-bool UManualSpellComponent::InvalidTarget() const
-{
-   URTSIngameWidget::NativeDisplayHelpText(GetWorld(), INVALID_TARGET_TEXT);
-   return false;
-}
-
 void UManualSpellComponent::OnUnitStopped()
 {
    currentlySelectedSpell = nullptr;
@@ -121,6 +115,7 @@ bool UManualSpellComponent::OnSpellConfirmInput(const FHitResult& hitResult, TSu
          return true;
       }
    }
+   URTSIngameWidget::NativeDisplayHelpText(GetWorld(), INVALID_TARGET_TEXT);
    return false;
 }
 

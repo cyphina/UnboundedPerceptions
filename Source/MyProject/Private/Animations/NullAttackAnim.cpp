@@ -11,7 +11,7 @@ UNullAttackAnim::UNullAttackAnim()
    SetAttackEventTime(1.f);
 }
 
-void UNullAttackAnim::PlayAttackAnimation(float playRate)
+void UNullAttackAnim::PlayAttackAnimation(ACharacter* characterToPlayMontageOn, float playRate)
 {
    if(AttackCVars::bPrintAttackTimings)
    {
@@ -28,7 +28,7 @@ void UNullAttackAnim::PlayAttackAnimation(float playRate)
        timelineLength, true);
 }
 
-void UNullAttackAnim::StopAttackAnimation()
+void UNullAttackAnim::StopAttackAnimation(ACharacter* characterToStopMontageOn)
 {
    GetWorld()->GetTimerManager().ClearTimer(mockAnimationTimer);
    GetWorld()->GetTimerManager().ClearTimer(hitNotifyTimer);

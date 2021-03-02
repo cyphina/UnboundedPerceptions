@@ -55,7 +55,8 @@ void USpellCastComponent::AdjustCastingPosition(TSubclassOf<UMySpell> spellClass
       stateComp->ChangeState(EUnitState::STATE_CASTING);
    }
 
-   if(unitOwnerRef->GetUnitController()->AdjustPosition(GetRange(spellClass), spellTargetLocation, [this]() { IncantationCheck(GetCurrentSpell()); }))
+   const float range = static_cast<int>(spellClass.GetDefaultObject()->GetRange(abilityComponentRef));
+   if(unitOwnerRef->GetUnitController()->AdjustPosition(range, spellTargetLocation, [this]() { IncantationCheck(GetCurrentSpell()); }))
    {
       // We could add some functionality here if we are already in position...
    }
@@ -68,7 +69,8 @@ void USpellCastComponent::AdjustCastingPosition(TSubclassOf<UMySpell> spellClass
       stateComp->ChangeState(EUnitState::STATE_CASTING);
    }
 
-   unitOwnerRef->GetUnitController()->AdjustPosition(spellClass.GetDefaultObject()->GetRange(abilityComponentRef), spellTargetActor,
+   const float range = static_cast<int>(spellClass.GetDefaultObject()->GetRange(abilityComponentRef));
+   unitOwnerRef->GetUnitController()->AdjustPosition(range, spellTargetActor,
                                                         [this]() { IncantationCheck(GetCurrentSpell()); });
 }
 
@@ -144,6 +146,8 @@ void USpellCastComponent::OnChannelingFinished()
 
 void USpellCastComponent::IncantationCheck(TSubclassOf<UMySpell> spellToCast)
 {
+   unitOwnerRef->GetUnitController()->StopMovement();
+
    const float castTime = spellToCast.GetDefaultObject()->GetCastTime(unitOwnerRef->GetAbilitySystemComponent());
    if(UNLIKELY(castTime <= 0))
    {

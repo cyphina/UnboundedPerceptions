@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "ComponentVisualizer.h"
@@ -7,11 +5,15 @@
 
 class UPatrolComponent;
 
+
+/**
+ * @brief Works if you add this to the blueprint (doesn't seem to work properly if you just add it through the list of actors in the world (at least not until I click on and off the actor)
+ */
 class FPatrolVisualizer : public FComponentVisualizer
 {
  public:
-   FPatrolVisualizer()          = default;
-   virtual ~FPatrolVisualizer() = default;
+   FPatrolVisualizer();
+   virtual ~FPatrolVisualizer();
 
    virtual void OnRegister() override;
    virtual void DrawVisualization(const UActorComponent* Component, const FSceneView* View, FPrimitiveDrawInterface* PDI) override;
@@ -33,9 +35,9 @@ class FPatrolVisualizer : public FComponentVisualizer
    UPatrolComponent* GetEditedPatrolComponent() const;
 
  private:
-   int32                   currentlySelectedPointIndex;
-   FComponentPropertyPath  propertyPath;
-   AActor*                 patrolComponentOwner;
+   int32                  currentlySelectedPointIndex;
+   FComponentPropertyPath propertyPath;
+   AActor*                patrolComponentOwner;
 
    /**Output log commands*/
    TSharedPtr<FUICommandList> PatrolComponentVisualizerActions;

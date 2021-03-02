@@ -10,3 +10,5 @@ namespace GameplayModifierCVars
 {
    extern bool bEnableEnemyControl;
 }
+
+

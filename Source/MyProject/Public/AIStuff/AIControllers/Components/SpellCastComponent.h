@@ -28,7 +28,6 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
    GENERATED_BODY()
 
    friend AUnitController;
-   friend UManualSpellComponent;
 
  public:
    /** Currently spell being casted/channeled */

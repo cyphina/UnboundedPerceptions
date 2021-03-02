@@ -23,18 +23,24 @@ bool UUpSpellTargeting_SingleUnit::CheckEligibleSpellTarget(const AUnit* caster,
 
 bool UUpSpellTargeting_SingleUnitFriendly::CheckEligibleSpellTarget(const AUnit* caster, const AUnit* hitUnit) const
 {
-   if(caster->GetIsEnemy() == hitUnit->GetIsEnemy())
+   if(Super::CheckEligibleSpellTarget(caster, hitUnit))
    {
-      return true;
+      if(caster->GetIsEnemy() == hitUnit->GetIsEnemy())
+      {
+         return true;
+      }
    }
    return false;
 }
 
 bool UUpSpellTargeting_SingleUnitEnemy::CheckEligibleSpellTarget(const AUnit* caster, const AUnit* hitUnit) const
 {
-   if(caster->GetIsEnemy() != hitUnit->GetIsEnemy())
+   if(Super::CheckEligibleSpellTarget(caster, hitUnit))
    {
-      return true;
+      if(caster->GetIsEnemy() != hitUnit->GetIsEnemy())
+      {
+         return true;
+      }
    }
    return false;
 }
@@ -71,11 +77,19 @@ UEnvQuery* UUpSpellTargeting_SingleUnit::GetDefaultQueryForTargetingScheme(UDA_D
 }
 
 void UUpSpellTargeting_SingleUnit::HandleQueryResult(TSharedPtr<FEnvQueryResult> result, AUnit* casterRef, USpellCastComponent* spellCastComponent,
-                                                     TSubclassOf<UMySpell> spellToCast) const
+                                                     const TSubclassOf<UMySpell> spellToCast) const
 {
-   if(result.IsValid()) {
-      casterRef->GetTargetComponent()->SetTarget(Cast<AUnit>(result->GetItemAsActor(0)));
-      if(spellCastComponent->BeginCastSpell(spellToCast)) { return; }
+   if(result.IsValid())
+   {
+      AUnit* targetResult = Cast<AUnit>(result->GetItemAsActor(0));
+      if(targetResult)
+      {
+         casterRef->GetTargetComponent()->SetTarget(targetResult);
+         if(spellCastComponent->BeginCastSpell(spellToCast))
+         {
+            return;
+         }
+      }
    }
 
    const FAIMessage msg(UnitMessages::AIMessage_SpellCastFail, casterRef);
@@ -85,9 +99,17 @@ void UUpSpellTargeting_SingleUnit::HandleQueryResult(TSharedPtr<FEnvQueryResult>
 void UUpSpellTargeting_InteractableOrUnit::HandleQueryResult(TSharedPtr<FEnvQueryResult> result, AUnit* casterRef, USpellCastComponent* spellCastComponent,
                                                              TSubclassOf<UMySpell> spellToCast) const
 {
-   if(result.IsValid()) {
-      casterRef->GetTargetComponent()->SetTarget(result->GetItemAsActor(0));
-      if(spellCastComponent->BeginCastSpell(spellToCast)) { return; }
+   if(result.IsValid())
+   {
+      AActor* targetResult = result->GetItemAsActor(0);
+      if(targetResult)
+      {
+         casterRef->GetTargetComponent()->SetTarget(targetResult);
+         if(spellCastComponent->BeginCastSpell(spellToCast))
+         {
+            return;
+         }
+      }
    }
 
    const FAIMessage msg(UnitMessages::AIMessage_SpellCastFail, casterRef);

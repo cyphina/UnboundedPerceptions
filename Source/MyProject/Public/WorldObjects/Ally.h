@@ -29,7 +29,7 @@ class MYPROJECT_API AAlly : public AUnit
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
    AAllyAIController* GetAllyAIController() const { return allyController; }
-   
+
    /** Polymorphic selection override for caching units in basePlayer */
    void SetUnitSelected(bool value) override;
 
@@ -37,15 +37,12 @@ class MYPROJECT_API AAlly : public AUnit
 
    bool GetIsEnemy() const override final { return false; }
 
-   const TSet<AUnit*>* GetVisibleEnemies_Impl() const override;
-   const TSet<AUnit*>* GetAllies_Impl() const override;
-
    void SetEnabled(bool bEnabled) override;
 
    UPROPERTY()
    AAllyAIController* allyController;
 
-   static inline const FText STUNNED_TEXT      = NSLOCTEXT("HelpMessages", "Stun", "Currently Stunned!");
+   static inline const FText STUNNED_TEXT = NSLOCTEXT("HelpMessages", "Stun", "Currently Stunned!");
 
  protected:
    void BeginPlay() override;
@@ -57,4 +54,7 @@ class MYPROJECT_API AAlly : public AUnit
    /** What enemies are in our radius determined via sphere overlap events */
    UPROPERTY()
    TSet<AUnit*> possibleEnemiesInRadius;
+
+   const TSet<AUnit*>* GetVisibleEnemies_Impl() const override;
+   const TSet<AUnit*>* GetAllies_Impl() const override;
 };

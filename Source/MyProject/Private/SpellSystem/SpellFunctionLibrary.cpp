@@ -15,7 +15,6 @@
 #include "HUDManager.h"
 #include "RTSProjectileStrategy.h"
 
-
 const FGameplayTag USpellFunctionLibrary::CONFIRM_SPELL_TAG        = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Spell");
 const FGameplayTag USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Target");
 
@@ -75,44 +74,48 @@ FGameplayEffectSpecHandle USpellFunctionLibrary::MakeStatChangeEffect
 }
 
 ARTSProjectile* USpellFunctionLibrary::SetupBulletTargetting
-(AUnit*                                 casterRef, TSubclassOf<ARTSProjectile> bulletClass, URTSProjectileStrategy* projectileStrategy,
- UPARAM(ref) FGameplayEffectSpecHandle& specHandle, bool                       canGoThroughWalls)
+(AUnit*                                        casterRef, TSubclassOf<ARTSProjectile> bulletClass, TSubclassOf<URTSProjectileStrategy> projectileStrategyClass,
+ UPARAM(ref) TArray<FGameplayEffectSpecHandle> specHandles, bool                      canGoThroughWalls)
 {
    FTransform spawnTransform = casterRef->GetActorTransform();
    spawnTransform.SetLocation(spawnTransform.GetLocation() + casterRef->GetActorForwardVector() * 10.f);
 
-   projectileStrategy->canGoThroughWalls = canGoThroughWalls;
-   projectileStrategy->defaultHitEffects.Append(TArray<FGameplayEffectSpecHandle>{specHandle});
+   URTSProjectileStrategy* projectileStrategy = nullptr;
+   if(projectileStrategyClass)
+   {
+      projectileStrategy                    = NewObject<URTSProjectileStrategy>(casterRef, projectileStrategyClass);
+      projectileStrategy->canGoThroughWalls = canGoThroughWalls;
+      projectileStrategy->defaultHitEffects = specHandles;
+   }
+
    ARTSProjectile* projectile =
    ARTSProjectile::MakeRTSProjectile(casterRef->GetWorld(), casterRef->GetTargetComponent(), casterRef->GetActorTransform(), bulletClass, projectileStrategy);
 
    return projectile;
 }
 
-FText USpellFunctionLibrary::ParseDesc(FText inputText, UAbilitySystemComponent* compRef, UMySpell* spell, TMap<FString, FString> args = TMap<FString, FString>())
+FText USpellFunctionLibrary::ParseDesc(const FText& inputText, const UAbilitySystemComponent* compRef, UMySpell* spell)
 {
-   static const TCHAR* strKey      = TEXT("{str}");
-   static const TCHAR* intKey      = TEXT("{int}");
-   static const TCHAR* agiKey      = TEXT("{agi}");
-   static const TCHAR* undKey      = TEXT("{und}");
-   static const TCHAR* hpKey       = TEXT("{hp}");
-   static const TCHAR* aoekey      = TEXT("{aoe}");
-   static const TCHAR* durationkey = TEXT("{duration}");
-   static const TCHAR* rangekey    = TEXT("{range}");
+   static const TCHAR* strKey      = TEXT("str");
+   static const TCHAR* intKey      = TEXT("int");
+   static const TCHAR* agiKey      = TEXT("agi");
+   static const TCHAR* undKey      = TEXT("und");
+   static const TCHAR* hpKey       = TEXT("hp");
+   static const TCHAR* aoeKey      = TEXT("aoe");
+   static const TCHAR* durationKey = TEXT("dur");
+   static const TCHAR* periodKey   = TEXT("per");
 
-   FString parsedString = inputText.ToString();
+   FFormatNamedArguments args;
+   args.Add(strKey, spell->GetDamage(compRef).strength);
+   args.Add(intKey, spell->GetDamage(compRef).intelligence);
+   args.Add(agiKey, spell->GetDamage(compRef).agility);
+   args.Add(undKey, spell->GetDamage(compRef).understanding);
+   args.Add(hpKey, spell->GetDamage(compRef).hitpoints);
+   args.Add(aoeKey, spell->GetAOE(compRef));
+   args.Add(durationKey, spell->GetSpellDuration(compRef));
+   args.Add(periodKey, spell->GetPeriod(compRef));
 
-   parsedString.Replace(strKey, *FString::FromInt(spell->GetDamage(compRef).strength));
-   parsedString.Replace(intKey, *FString::FromInt(spell->GetDamage(compRef).intelligence));
-   parsedString.Replace(agiKey, *FString::FromInt(spell->GetDamage(compRef).agility));
-   parsedString.Replace(undKey, *FString::FromInt(spell->GetDamage(compRef).understanding));
-   parsedString.Replace(hpKey, *FString::FromInt(spell->GetDamage(compRef).hitpoints));
-
-   parsedString.Replace(aoekey, *FString::FromInt(spell->GetAOE(compRef)));
-   parsedString.Replace(durationkey, *FString::SanitizeFloat(spell->GetSpellDuration(compRef)));
-   parsedString.Replace(rangekey, *FString::FromInt(spell->GetRange(compRef)));
-
-   return FText::FromString(parsedString);
+   return FText::Format(inputText, args);
 }
 
 void USpellFunctionLibrary::SpellConfirmSwap(TSubclassOf<UMySpell> confirmSpell, TSubclassOf<UMySpell> originalSpell, AUnit* ownerRef, bool bSwapInConfirm)

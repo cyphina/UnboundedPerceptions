@@ -21,8 +21,9 @@ class MYPROJECT_API ARTSProjectile : public AActor
 
  public:
    static ARTSProjectile* MakeRTSProjectile(UWorld* worldToSpawnIn, UTargetComponent* targetComp, FTransform initialTransform = FTransform::Identity,
-                                            TSubclassOf<ARTSProjectile>   projectileClass    = ARTSProjectile::StaticClass(),
-                                            const URTSProjectileStrategy* projectileStrategy = nullptr);
+                                            TSubclassOf<ARTSProjectile>         projectileClass         = ARTSProjectile::StaticClass(),
+                                            URTSProjectileStrategy* projectileStrategy = nullptr);
+                                            
 
    UFUNCTION(BlueprintCallable, Category = "Projectile")
    FORCEINLINE bool IsHoming() { return projectileMovementComponent->bIsHomingProjectile; }

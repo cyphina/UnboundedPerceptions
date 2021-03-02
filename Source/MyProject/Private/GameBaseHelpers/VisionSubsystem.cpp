@@ -10,7 +10,6 @@
 #include "SpellDataLibrary.h"
 #include "Transform.h"
 #include "Unit.h"
-#include "WindowsCriticalSection.h"
 
 DECLARE_CYCLE_STAT(TEXT("Unit Vision Update"), STAT_UnitVision, STATGROUP_RTSUnits)
 
@@ -26,7 +25,10 @@ void UVisionSubsystem::BeginDestroy()
    Super::BeginDestroy();
    if(visionUpdateThread)
    {
+      UE_LOG(LogTemp, Log, TEXT("Destroying vision subsystem..."));
       visionUpdateThread->Kill(true);
+      UE_LOG(LogTemp, Log, TEXT("Vision subsystem destroyed..."));
+
    }
 }
 
