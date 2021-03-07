@@ -76,6 +76,21 @@ void AUnitController::BeginPlay()
       SetupTurnPointTimeline();
       SetupTurnActorTimeline();
    }
+
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnUnitDieGlobal().AddWeakLambda(this, [this](AUnit* deadUnit) {
+      UTargetComponent* targetComp = GetUnitOwner()->GetTargetComponent();
+      if(targetComp->IsTargetingUnit())
+      {
+         if(deadUnit == targetComp->GetTargetUnit())
+         {
+            targetComp->ResetTarget();
+            if(GetState() != EUnitState::STATE_IDLE)
+            {
+               StopCurrentAction();
+            }
+         }
+      }
+   });
 }
 
 void AUnitController::Tick(float deltaSeconds)
@@ -147,6 +162,7 @@ void AUnitController::Die()
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnUnitDieGlobal().Broadcast(GetUnitOwner());
    GetUnitOwner()->OnUnitDie().Broadcast();
    // Eventually this object will get GC'd. If we have something like resurrection, store unit data in the OnUnitDieEvent as opposed to keeping around a deactivated copy.
+   // Also we need to destroy this unit in a delay else our vision system in the other thread will have some data races.
    SetLifeSpan(5.f);
 }
 
@@ -199,7 +215,10 @@ EPathFollowingRequestResult::Type AUnitController::MoveActor(AActor* targetActor
 
       if(result == EPathFollowingRequestResult::RequestSuccessful)
       {
-         ownerRef->FindComponentByClass<URTSStateComponent>()->ChangeState(EUnitState::STATE_MOVING);
+         if(URTSStateComponent* stateComponent = FindComponentByClass<URTSStateComponent>())
+         {
+            stateComponent->ChangeState(EUnitState::STATE_MOVING);
+         }
       }
       return result;
    }
@@ -279,6 +298,9 @@ void AUnitController::OnActorTurnFinished()
          {
             onPosAdjDoneAct();
          }
+
+         const FAIMessage msg(UnitMessages::AIMessage_TurnFinished, this);
+         FAIMessage::Send(this, msg);
       }
    }
 }
@@ -289,6 +311,9 @@ void AUnitController::OnPointTurnFinished()
    {
       onPosAdjDoneAct();
    }
+
+   const FAIMessage msg(UnitMessages::AIMessage_TurnFinished, this);
+   FAIMessage::Send(this, msg);
 }
 
 void AUnitController::TurnActor(float turnValue)

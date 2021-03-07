@@ -73,11 +73,11 @@ class MYPROJECT_API AEnemy : public AUnit
    FDefaultStats initialStats;
 
    /** Range enemy will attack you */
-   UPROPERTY(EditAnywhere)
+   UPROPERTY(EditAnywhere, Category = "Enemy Parameters")
    int aggroRange;
 
    /** If this enemy is in a combat ready state */
-   UPROPERTY(EditAnywhere)
+   UPROPERTY(EditAnywhere, Category = "Enemy Parameters")
    bool isActive;
 
  private:
@@ -86,6 +86,7 @@ class MYPROJECT_API AEnemy : public AUnit
 
    void SpawnItemDrops();
 
-   const TSet<AUnit*>* GetVisibleEnemies_Impl() const override;
-   const TSet<AUnit*>* GetAllies_Impl() const override;
+   const TArray<AUnit*>* GetVisibleEnemies_Impl() const override;
+   const TArray<AUnit*>* GetAllies_Impl() const override;
+   const TArray<AUnit*>* GetEnemies_Impl() const override;
 };

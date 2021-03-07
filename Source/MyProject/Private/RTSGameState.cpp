@@ -10,11 +10,11 @@
 #include "RTSGameMode.h"
 #include "RTSIngameWidget.h"
 #include "UserInput.h"
-#include "VisionSubsystem.h"
 #include "WorldObjects/Ally.h"
 #include "WorldObjects/Enemies/Enemy.h"
 #include "FogOfWar/FogOfWarPlane.h"
 #include "GameplayAbilities/Public/AbilitySystemComponent.h"
+#include "VisionSubsystem.h"
 #include "Kismet/KismetMathLibrary.h"
 
 ARTSGameState::ARTSGameState()
@@ -26,7 +26,20 @@ void ARTSGameState::BeginPlay()
 {
    Super::BeginPlay();
    visionManager = UVisionSubsystem::Create(this);
-   clock         = MakeUnique<FUpGameClock>(*this, FUpTime(), FUpDate());
+   GetWorld()->GetTimerManager().SetTimer(updateCachedVisibleUnitsTimerHandle, [this]()
+   {
+      visibleEnemies = enemyList.FilterByPredicate([](const AUnit* enemy)
+      {
+         return !enemy->GetIsUnitHidden();
+      });
+
+      visiblePlayerUnits = allyList.FilterByPredicate([](const AUnit* ally)
+      {
+         return !ally->GetIsUnitHidden();
+      });
+   }, 0.1f, true, 0.f);
+
+   clock = MakeUnique<FUpGameClock>(*this, FUpTime(), FUpDate());
    OnGameSpeedUpdated().AddDynamic(this, &ARTSGameState::UpdateGameSpeed);
 
    // Don't really use this ATM but it's there if we want to play around with it and actually make it a thing we can increase the precision of the model by adding more polygons to the plane
@@ -43,9 +56,7 @@ void ARTSGameState::BeginPlay()
 void ARTSGameState::CleanupUnitLists()
 {
    Cast<ARTSGameState>(GetWorld()->GetGameState())->enemyList.Shrink();
-   Cast<ARTSGameState>(GetWorld()->GetGameState())->enemyList.Compact();
    Cast<ARTSGameState>(GetWorld()->GetGameState())->allyList.Shrink();
-   Cast<ARTSGameState>(GetWorld()->GetGameState())->allyList.Compact();
 }
 
 void ARTSGameState::ShowEnemyPerspective()
@@ -53,14 +64,14 @@ void ARTSGameState::ShowEnemyPerspective()
    visionManager->ToggleEnemyPerspective();
 }
 
-const TSet<AUnit*>& ARTSGameState::GetVisibleEnemies() const
+const TArray<AUnit*>& ARTSGameState::GetVisibleEnemies() const
 {
-   return visionManager->GetVisibleEnemies();
+   return visibleEnemies;
 }
 
-const TSet<AUnit*>& ARTSGameState::GetVisiblePlayerUnits() const
+const TArray<AUnit*>& ARTSGameState::GetVisiblePlayerUnits() const
 {
-   return visionManager->GetVisiblePlayerUnits();
+   return visiblePlayerUnits;
 }
 
 void ARTSGameState::AddGameTime(FUpTime timeToAdd, FUpDate daysToAdd)
@@ -91,8 +102,7 @@ void ARTSGameState::OnAllyActiveChanged(AAlly* allyRef, bool isActive)
    if(isActive)
    {
       RegisterFriendlyUnit(allyRef);
-   }
-   else
+   } else
    {
       UnRegisterFriendlyUnit(allyRef);
    }
@@ -103,8 +113,7 @@ void ARTSGameState::OnEnemyActiveChanged(AEnemy* enemyRef, bool isActive)
    if(isActive)
    {
       RegisterEnemyUnit(enemyRef);
-   }
-   else
+   } else
    {
       UnRegisterEnemyUnit(enemyRef);
    }
@@ -123,13 +132,9 @@ void ARTSGameState::RegisterEnemyUnit(AEnemy* enemyUnit)
 void ARTSGameState::UnRegisterFriendlyUnit(AAlly* friendlyUnit)
 {
    allyList.Remove(friendlyUnit);
-   // Even if we remove the item there will be some kind of empty space in the set that can be hit when iterating, so compact it.
-   allyList.CompactStable();
 }
 
 void ARTSGameState::UnRegisterEnemyUnit(AEnemy* enemyUnit)
 {
    enemyList.Remove(enemyUnit);
-   // Even if we remove the item there will be some kind of empty space in the set that can be hit when iterating, so compact it.
-   enemyList.CompactStable();
 }

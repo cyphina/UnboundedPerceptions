@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
+#include "BehaviorTree/BTTaskNode.h"
 #include "BTTask_CastSpell.generated.h"
 
 class UMySpell;
@@ -13,7 +13,7 @@ class USpellCastComponent;
  * Spell casting task where the spell and target is chosen by the designer.  The spell is a property where the target is the blackboard key
  */
 UCLASS()
-class MYPROJECT_API UBTTask_CastSpell : public UBTTask_BlackboardBase
+class MYPROJECT_API UBTTask_CastSpell : public UBTTaskNode
 {
    GENERATED_UCLASS_BODY()
 
@@ -34,5 +34,4 @@ class MYPROJECT_API UBTTask_CastSpell : public UBTTask_BlackboardBase
 
  private:
    bool CheckPreconditions(AUnitController* unitController, USpellCastComponent* spellCastComponent);
-   void HandleTargetSetFromPrevQuery(UBehaviorTreeComponent& ownerComp, AUnitController* unitController, USpellCastComponent* spellCastComponent) const;
 };

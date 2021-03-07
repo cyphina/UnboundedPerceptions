@@ -65,7 +65,6 @@ void AAlly::SetUnitSelected(bool value)
    {
       controllerRef->GetBasePlayer()->RemoveSelectedAlly(this);
       controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.Broadcast(this);
-
    }
 }
 
@@ -92,14 +91,20 @@ const TSet<AUnit*>& AAlly::GetSeenEnemies() const
    return possibleEnemiesInRadius;
 }
 
-const TSet<AUnit*>* AAlly::GetVisibleEnemies_Impl() const
+const TArray<AUnit*>* AAlly::GetVisibleEnemies_Impl() const
 {
    const auto& gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
    return &gameStateRef->GetVisibleEnemies();
 }
 
-const TSet<AUnit*>* AAlly::GetAllies_Impl() const
+const TArray<AUnit*>* AAlly::GetAllies_Impl() const
 {
    const auto& gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
    return &gameStateRef->GetAllFriendlyUnits();
+}
+
+const TArray<AUnit*>* AAlly::GetEnemies_Impl() const
+{
+   const auto& gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
+   return &gameStateRef->GetAllEnemyUnits();
 }

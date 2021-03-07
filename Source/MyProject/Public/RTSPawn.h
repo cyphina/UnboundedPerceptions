@@ -28,7 +28,7 @@ class MYPROJECT_API ARTSPawn : public APawn
 {
    GENERATED_BODY()
 
-public:
+ public:
    ARTSPawn();
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Helper")
@@ -38,7 +38,7 @@ public:
 
    void DisableInput(APlayerController* PlayerController) override;
 
-protected:
+ protected:
    void BeginPlay() override;
    void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
    void Tick(float DeltaTime) override;
@@ -58,18 +58,18 @@ protected:
    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    class USpringArmComponent* mapArm;
 
-private:
+ private:
    UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true"))
    AUserInput* controllerRef;
 
 #pragma region mouse
-public:
+ public:
    /** Scales length of the line we check when we line trace during a click event to query what is under the cursor */
    static const int CLICK_TRACE_LENGTH_MULTIPLIER = 5;
 
    UFUNCTION(BlueprintCallable)
    bool HasSecondaryCursor() const { return bHasSecondaryCursor; }
-   
+
    UPROPERTY(BlueprintReadWrite)
    FVector2D startMousePos;
 
@@ -131,8 +131,11 @@ public:
    UFUNCTION(BlueprintCallable)
    void CreateSelectionRect();
 
-   bool GetIsSelectionLockActive() const { return bSelectionLockActive;}
-   
+   template <typename T>
+   void CreateSelectionRect_Impl();
+
+   bool GetIsSelectionLockActive() const { return bSelectionLockActive; }
+
    /** Hopefully this gets copy elided to its destination and LTCG inlines it*/
    FLinearColor GetSelectionRectColor() const;
 
@@ -142,14 +145,15 @@ public:
    bool bQuickCast;
 
    void ToggleAutoClick() { bAutoClick = !bAutoClick; }
-   
+
    bool bAutoClick;
 
    FTimerHandle autoClickTimerHandle;
-private:
+
+ private:
    UFUNCTION()
    void ToggleSelectionLock() { bSelectionLockActive = !bSelectionLockActive; }
-   
+
    /**Stores last actor hit by the cursor hover trace.  Used so we don't retrace if we hit the same actor, but sometimes canceling actions like clicking the ground should
     *reset this*/
    UPROPERTY()
@@ -185,7 +189,7 @@ private:
 
 #pragma region camera
 
-public:
+ public:
    /**Makes zooming in and out slower/faster.  Can be set in settings menu*/
    UPROPERTY(BlueprintReadWrite, Category = "Camera Settings")
    float zoomMultiplier = 3.f;
@@ -202,7 +206,7 @@ public:
 
    UPROPERTY(EditDefaultsOnly, Category = "Camera Settings")
    float camSmoothPanTime = 1.f;
-   
+
    /**If a BLUI event was raised due to clicking on the browser in a way that sucessfully interacted with the browser widget, then the camera pawn
     *needs to know so it register the click as a UI event rather than gameplay event*/
    UPROPERTY(BlueprintReadWrite, Category = "Camera Settings")
@@ -221,7 +225,7 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Camera Settings")
    void SetCameraArmLength(float newLength) const;
 
-private:
+ private:
    int viewX, viewY;
 
    // TODO: Prevent panning outside bounds. Maybe use leader to determine else have level boundaries.
@@ -232,11 +236,11 @@ private:
    static const float minArmLength;
    static const float defaultArmLength;
    static const int   baseCameraMoveSpeed = 30;
-   
+
    FTimerHandle smoothCameraTransitionTimerHandle;
-   float smoothCameraTransitionTime = 0.f;
-   FVector startCameraPos, endCameraPawnPos;
-   
+   float        smoothCameraTransitionTime = 0.f;
+   FVector      startCameraPos, endCameraPawnPos;
+
    void RecalculateViewportSize(FViewport* viewport, uint32 newSize);
    void ZoomIn();
    void ZoomOut();
@@ -259,19 +263,19 @@ private:
 #pragma endregion
 
 #pragma region commands
-public:
+ public:
    /**
     * Stop all selected unit actions, stops AI behavior, and hides the spell circle!
     * Doesn't stop movement since we don't want to lose velocity.
     */
    UFUNCTION(BlueprintCallable, Category = "Action")
    void CancelSelectedUnitsActionBeforePlayerCommand();
-   
+
    FOnGroupTabbed& OnGroupTabbed() const { return OnGroupTabbedEvent; }
 
    bool GetStaticFormationEnabled() const { return bStayInFormation; }
-   
-private:
+
+ private:
    void Stop();
    void RightClick();
    void RightClickReleased();
@@ -314,7 +318,7 @@ private:
    void ToggleStayInFormation() { bStayInFormation = !bStayInFormation; }
 
    bool bStayInFormation = false;
-   
+
    UFUNCTION()
    void ControlGroupDoubleTapTimer();
 
@@ -352,6 +356,6 @@ private:
    void HandleSellItemToStore(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemToDeposit) const;
 
    mutable FOnGroupTabbed OnGroupTabbedEvent;
-   
+
 #pragma endregion
 };

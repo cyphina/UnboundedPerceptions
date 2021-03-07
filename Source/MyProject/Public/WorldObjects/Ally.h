@@ -55,6 +55,7 @@ class MYPROJECT_API AAlly : public AUnit
    UPROPERTY()
    TSet<AUnit*> possibleEnemiesInRadius;
 
-   const TSet<AUnit*>* GetVisibleEnemies_Impl() const override;
-   const TSet<AUnit*>* GetAllies_Impl() const override;
+   const TArray<AUnit*>* GetVisibleEnemies_Impl() const override;
+   const TArray<AUnit*>* GetAllies_Impl() const override;
+   const TArray<AUnit*>* GetEnemies_Impl() const override;
 };

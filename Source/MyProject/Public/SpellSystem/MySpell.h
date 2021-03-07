@@ -117,8 +117,20 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
 
    float GetCooldownTimeRemaining(const FGameplayAbilityActorInfo* ActorInfo) const override;
 
-   // TODO: Maybe have a better way to set this because we have 5 now...
-   static const int NUM_SCALING_DAMAGE_ATT = 4;
+   /**
+    * This function is used to tell us when the caster doesn't have to worry about the spell anymore (some spells may keep doing things but the caster doesn't affect the spell
+    * anymore like dropping a totem). Sometimes we have spells that take a while to perform so this may be called a few seconds after we activate the spell.
+    * If you forget to call EndAbility, you risk possibly screwing up the AI system (cast spell tasks won't finish).
+    */
+   void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+                   bool bReplicateEndAbility, bool bWasCancelled) override;
+
+   /**
+    * Some abilities have logic that blocks the caster till the spell is active. This means the AI shouldn't do anything till EndAbility is called.
+    * Other abilities do something but don't require the spell caster to stay blocked, so we need to tell the AI they are free to move onto their next action (see ability called Up_Ability_Grenade)
+    */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   void FinishBlockingCaster();
 
  protected:
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
@@ -231,4 +243,9 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
     * @param maxLevel : Number of times this spell can be leveld up (ex. there may 5 total level upgrades for a spell, only 3 upgrades increase range)
     */
    static int GetIndex(int currentLevel, int numCategories, int maxLevel);
+
+   /**
+    * @brief Checks to see if we already sent the AI a message about finishing the whole spell (the spell may have some logic left but the caster is free to do other actions)
+    */
+   bool bCasterDone = false;
 };

@@ -6,6 +6,7 @@
 #include "EnvironmentQuery/EnvQueryTypes.h"
 #include "MySpell.h"
 #include "SpellCastComponent.h"
+#include "UnitController.h"
 
 namespace AIHelperCVars
 {
@@ -96,10 +97,32 @@ AUnit* UUpAIHelperLibrary::FindClosestUnit(const FVector referenceLocation, cons
 
 void UUpAIHelperLibrary::AIBeginCastSpell(UEnvQuery* targetFindingQuery, const TSubclassOf<UMySpell> spellToCast, USpellCastComponent* spellCastComponent)
 {
-   FEnvQueryRequest queryRequest{targetFindingQuery, spellCastComponent->GetOwner()};
-   const auto       castSpellAfterQuery = FQueryFinishedSignature::CreateLambda([&spellToCast, spellCastComponent](const TSharedPtr<FEnvQueryResult> res) {
-      const UUpSpellTargeting* targetingStrategy = spellToCast.GetDefaultObject()->GetTargeting().GetDefaultObject();
-      targetingStrategy->HandleQueryResult(res, Cast<AUnit>(spellCastComponent->GetOwner()), spellCastComponent, spellToCast);
-   });
-   queryRequest.Execute(EEnvQueryRunMode::SingleResult, castSpellAfterQuery);
+   if(AUnitController* unitController = Cast<AUnitController>(spellCastComponent->GetOwner()))
+   {
+      FEnvQueryRequest queryRequest{targetFindingQuery, unitController->GetUnitOwner()};
+
+      if(UMySpell* spellCDO = spellToCast.GetDefaultObject())
+      {
+         const float aoe = spellCDO->GetAOE(unitController->GetUnitOwner()->GetAbilitySystemComponent());
+         if(aoe > 0)
+         {
+            queryRequest.SetFloatParam("radius", aoe);
+         }
+
+         const auto castSpellAfterQuery =
+             FQueryFinishedSignature::CreateLambda([spellToCast, spellCastComponent, spellCDO, unitController](const TSharedPtr<FEnvQueryResult> res) {
+                if(spellToCast)
+                {
+                   if(const TSubclassOf<UUpSpellTargeting> targetingStrategyClass = spellCDO->GetTargeting())
+                   {
+                      if(UUpSpellTargeting* targetingStrategy = targetingStrategyClass.GetDefaultObject())
+                      {
+                         targetingStrategy->HandleQueryResult(res, unitController->GetUnitOwner(), spellCastComponent, spellToCast);
+                      }
+                   }
+                }
+             });
+         queryRequest.Execute(EEnvQueryRunMode::SingleResult, castSpellAfterQuery);
+      }
+   }
 }

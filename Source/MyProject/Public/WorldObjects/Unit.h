@@ -103,10 +103,13 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    bool IsEnabled() const { return unitProperties.bIsEnabled; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   const TSet<AUnit*>& GetVisibleEnemies() const { return *GetVisibleEnemies_Impl(); }
+   const TArray<AUnit*>& GetVisibleEnemies() const { return *GetVisibleEnemies_Impl(); }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   const TSet<AUnit*>& GetAllies() const { return *GetAllies_Impl(); }
+   const TArray<AUnit*>& GetEnemies() const { return *GetEnemies_Impl(); }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   const TArray<AUnit*>& GetAllies() const { return *GetAllies_Impl(); }
 
    URTSAbilitySystemComponent* GetAbilitySystemComponent() const override { return abilitySystemComponent; }
 
@@ -186,7 +189,7 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    */
    UPROPERTY(EditAnywhere)
    UMaterialInterface* originalMaterial;
-   
+
    class AUserInput* controllerRef;
 
  private:
@@ -204,9 +207,11 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    void SetupSelectionCircle() const;
    void StoreUnitHeight();
 
-   virtual const TSet<AUnit*>* GetVisibleEnemies_Impl() const PURE_VIRTUAL(AUnit::GetVisibleEnemies, return nullptr;);
+   virtual const TArray<AUnit*>* GetVisibleEnemies_Impl() const PURE_VIRTUAL(AUnit::GetVisibleEnemies, return nullptr;);
 
-   virtual const TSet<AUnit*>* GetAllies_Impl() const PURE_VIRTUAL(AUnit::GetAllies, return nullptr;);
+   virtual const TArray<AUnit*>* GetAllies_Impl() const PURE_VIRTUAL(AUnit::GetAllies, return nullptr;);
+
+   virtual const TArray<AUnit*>* GetEnemies_Impl() const PURE_VIRTUAL(AUnit::GetEnemies_Impl, return nullptr;);
 
    class AUnitController* unitController = nullptr;
 

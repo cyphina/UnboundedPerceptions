@@ -1,7 +1,6 @@
 #include "MyProject.h"
 
 #include "AIStuff/AIControllers/UnitController.h"
-#include "BehaviorTree/BlackboardComponent.h"
 #include "SpellCastComponent.h"
 
 #include "SpellSystem/MySpell.h"
@@ -13,6 +12,7 @@
 
 #include "SingleUnitTargeting.h"
 #include "AOETargeting.h"
+#include "NoTargeting.h"
 #include "TargetComponent.h"
 
 #include "UnitMessages.h"
@@ -35,33 +35,38 @@ UBTTask_CastSpell::UBTTask_CastSpell(const FObjectInitializer& ObjectInitializer
 EBTNodeResult::Type UBTTask_CastSpell::ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory)
 {
    AUnitController*     unitController     = Cast<AUnitController>(ownerComp.GetAIOwner());
-   USpellCastComponent* spellCastComponent = unitController->GetUnitOwner()->FindComponentByClass<USpellCastComponent>();
+   USpellCastComponent* spellCastComponent = unitController->FindComponentByClass<USpellCastComponent>();
 
    if(!CheckPreconditions(unitController, spellCastComponent))
    {
       return EBTNodeResult::Failed;
    }
 
-   WaitForMessage(ownerComp, UnitMessages::AIMessage_SpellCasted);
-   WaitForMessage(ownerComp, UnitMessages::AIMessage_SpellCastFail);
-   WaitForMessage(ownerComp, UnitMessages::AIMessage_SpellInterrupt);
-   WaitForMessage(ownerComp, UnitMessages::AIMessage_TargetLoss);
-
-   if(targetFindingLogic)
+   if(spellCastComponent->CanCast(spellToCast))
    {
-      UUpAIHelperLibrary::AIBeginCastSpell(targetFindingLogic, spellToCast, spellCastComponent);
-   }
-   else
-   {
-      HandleTargetSetFromPrevQuery(ownerComp, unitController, spellCastComponent);
-   }
+      WaitForMessage(ownerComp, UnitMessages::AIMessage_SpellFinished);
+      WaitForMessage(ownerComp, UnitMessages::AIMessage_SpellCastFail);
+      WaitForMessage(ownerComp, UnitMessages::AIMessage_Stunned);
+      WaitForMessage(ownerComp, UnitMessages::AIMessage_SpellInterrupt);
+      WaitForMessage(ownerComp, UnitMessages::AIMessage_TargetLoss);
 
-   return EBTNodeResult::InProgress;
+      if(targetFindingLogic && !spellToCast.GetDefaultObject()->GetSpellDefaults().Targeting->IsChildOf(UUpSpellTargeting_None::StaticClass()))
+      {
+         UUpAIHelperLibrary::AIBeginCastSpell(targetFindingLogic, spellToCast, spellCastComponent);     
+      }
+      else
+      {
+         spellCastComponent->BeginCastSpell(spellToCast);
+      }
+      return EBTNodeResult::InProgress;
+   }
+   return EBTNodeResult::Failed;
 }
 
 void UBTTask_CastSpell::OnMessage(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory, FName message, int32 requestID, bool bSuccess)
 {
-   bSuccess = message != UnitMessages::AIMessage_SpellInterrupt & message != UnitMessages::AIMessage_TargetLoss & message != UnitMessages::AIMessage_SpellCastFail;
+   bSuccess = message != UnitMessages::AIMessage_SpellInterrupt & message != UnitMessages::AIMessage_TargetLoss & message != UnitMessages::AIMessage_SpellCastFail &
+              message != UnitMessages::AIMessage_Stunned;
    Super::OnMessage(ownerComp, nodeMemory, message, requestID, bSuccess);
 }
 
@@ -74,18 +79,24 @@ void UBTTask_CastSpell::InitializeFromAsset(UBehaviorTree& Asset)
       UMySpell* spell = spellToCast.GetDefaultObject();
       if(targetFindingLogic)
       {
-         if(targetFindingLogic->GetOptionsMutable()[0]->Generator->ItemType->IsChildOf(UEnvQueryItemType_Point::StaticClass()))
+         if(UEnvQueryOption* queryOption = targetFindingLogic->GetOptionsMutable()[0])
          {
-            if(spell->GetTargeting()->IsChildOf(UUpSpellTargeting_SingleUnit::StaticClass()))
+            if(UEnvQueryGenerator* queryGenerator = queryOption->Generator)
             {
-               UE_LOG(LogTemp, Error, TEXT("%s tried to cast a spell %s with the wrong targeting!"), *GetName(), *spell->GetSpellName().ToString());
-            }
-         }
-         else if(targetFindingLogic->GetOptionsMutable()[0]->Generator->ItemType->IsChildOf(UEnvQueryItemType_ActorBase::StaticClass()))
-         {
-            if(spell->GetTargeting()->IsChildOf(UUpSpellTargeting_Area::StaticClass()))
-            {
-               UE_LOG(LogTemp, Error, TEXT("%s tried to cast a spell %s with the wrong targeting!"), *GetName(), *spell->GetSpellName().ToString());
+               if(queryGenerator->ItemType->IsChildOf(UEnvQueryItemType_Point::StaticClass()))
+               {
+                  if(spell->GetTargeting()->IsChildOf(UUpSpellTargeting_SingleUnit::StaticClass()))
+                  {
+                     UE_LOG(LogTemp, Error, TEXT("%s tried to cast a spell %s with the wrong targeting!"), *GetName(), *spell->GetSpellName().ToString());
+                  }
+               }
+               else if(queryGenerator->ItemType->IsChildOf(UEnvQueryItemType_ActorBase::StaticClass()))
+               {
+                  if(spell->GetTargeting()->IsChildOf(UUpSpellTargeting_Area::StaticClass()))
+                  {
+                     UE_LOG(LogTemp, Error, TEXT("%s tried to cast a spell %s with the wrong targeting!"), *GetName(), *spell->GetSpellName().ToString());
+                  }
+               }
             }
          }
       }
@@ -130,20 +141,4 @@ bool UBTTask_CastSpell::CheckPreconditions(AUnitController* unitController, USpe
       return false;
    }
    return true;
-}
-
-void UBTTask_CastSpell::HandleTargetSetFromPrevQuery(UBehaviorTreeComponent& ownerComp, AUnitController* unitController, USpellCastComponent* spellCastComponent) const
-{
-   const TSubclassOf<UUpSpellTargeting> spellTargeting = spellToCast.GetDefaultObject()->GetSpellDefaults().Targeting;
-   if(spellTargeting->IsChildOf(UUpSpellTargeting_SingleUnit::StaticClass()))
-   {
-      const FVector targetLocation = ownerComp.GetBlackboardComponent()->GetValueAsVector("targetLocation");
-      unitController->GetUnitOwner()->GetTargetComponent()->SetTarget(targetLocation);
-   }
-   else if(spellTargeting->IsChildOf(UUpSpellTargeting_Area::StaticClass()))
-   {
-      AUnit* targetUnit = Cast<AUnit>(ownerComp.GetBlackboardComponent()->GetValueAsObject("target"));
-      unitController->GetUnitOwner()->GetTargetComponent()->SetTarget(targetUnit);
-   }
-   spellCastComponent->BeginCastSpell(spellToCast);
 }

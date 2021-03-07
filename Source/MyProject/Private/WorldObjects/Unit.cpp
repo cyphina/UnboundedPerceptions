@@ -274,16 +274,21 @@ FBox2D AUnit::FindBoundary() const
    FBox2D  boundary = FBox2D(ForceInit);
    FVector origin, extent;
    GetActorBounds(true, origin, extent);
-
-   FVector2D                                        screenLocation;
+   int sizeX, sizeY;
+   controllerRef->GetViewportSize(sizeX, sizeY);
    static const int                                 CORNER_COUNT = 8;
    TArray<FVector2D, TFixedAllocator<CORNER_COUNT>> corners; // Get 8 corners of box
 
    for(int i = 0; i < CORNER_COUNT; ++i)
    {
-      controllerRef->ProjectWorldLocationToScreen(origin + extent * UpResourceManager::BoundsPointMapping[i], screenLocation, true);
-      corners.Add(screenLocation);
-      boundary += corners[i];
+      FVector2D screenLocation = FVector2D::ZeroVector;
+      controllerRef->ProjectWorldLocationToScreen(origin + extent * UpResourceManager::BoundsPointMapping[i], screenLocation, false);
+
+      if(screenLocation.X > 0 && screenLocation.X < sizeX && screenLocation.Y > 0 && screenLocation.Y < sizeY)
+      {
+         corners.Add(screenLocation);
+         boundary += screenLocation;
+      }
    }
    return boundary;
 }

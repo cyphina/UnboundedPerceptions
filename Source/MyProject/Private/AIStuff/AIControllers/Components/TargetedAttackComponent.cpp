@@ -103,7 +103,11 @@ void UTargetedAttackComponent::BeginPlay()
                hitDelegate->AddUObject(this, &UTargetedAttackComponent::OnUnitAttackSwingDone);
                attackAnimInterface->OnAttackAnimFinished()->AddWeakLambda(this, [this]() {
                   GetWorld()->GetTimerManager().SetTimer(
-                      attackUpdateHandle, [this]() { readyToAttack = true; }, AttackTimerThreshold(), false);
+                      attackUpdateHandle,
+                      [this]() {
+                         bReadyToAttack = true;
+                      },
+                      AttackTimerThreshold(), false);
                   bAttackAnimationPlaying = false;
                });
             }
@@ -117,6 +121,7 @@ void UTargetedAttackComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
    if(GetWorld())
    {
       GetWorld()->GetTimerManager().ClearTimer(attackUpdateHandle);
+      StopAttackAnim();
    }
 }
 
@@ -131,7 +136,9 @@ void UTargetedAttackComponent::SearchForTargetInRange()
 
 bool UTargetedAttackComponent::AttemptReposition()
 {
-   return agent->GetUnitController()->AdjustPosition(AgentAttackRange(), AgentTargetUnit(), [this]() { OnFinishReposition(); });
+   return agent->GetUnitController()->AdjustPosition(AgentAttackRange(), AgentTargetUnit(), [this]() {
+      OnFinishReposition();
+   });
 }
 
 void UTargetedAttackComponent::OnUnitAttackSwingDone()
@@ -141,7 +148,7 @@ void UTargetedAttackComponent::OnUnitAttackSwingDone()
       GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, "Hit Unit!");
    }
 
-   readyToAttack = false;
+   bReadyToAttack = false;
    OnAttackSwingDoneEffect();
 
    const FAIMessage msg(UnitMessages::AIMessage_AttackExecuted, agent);
@@ -161,7 +168,7 @@ void UTargetedAttackComponent::FollowAndTryAttackTarget()
       {
          if(HandlePositionalAdjustments())
          {
-            if(readyToAttack) PlayAttackAnimation();
+            if(bReadyToAttack) PlayAttackAnimation();
          }
       }
       else
@@ -174,7 +181,7 @@ void UTargetedAttackComponent::FollowAndTryAttackTarget()
 
 void UTargetedAttackComponent::OnFinishReposition()
 {
-   bMvingTwdTarg           = false;
+   bMvingTwdTarg = false;
 }
 
 bool UTargetedAttackComponent::CheckAndHandleCancelConditions()
@@ -283,7 +290,7 @@ void UTargetedAttackComponent::OnUnitStopped()
 {
    if(agent)
    {
-      bMvingTwdTarg           = false;
+      bMvingTwdTarg = false;
       StopAttackAnim();
       GetWorld()->GetTimerManager().ClearTimer(attackChecksHandle);
       GetWorld()->GetTimerManager().ClearTimer(targetSearchHandle);
@@ -319,6 +326,7 @@ void UTargetedAttackComponent::OnAttackSwingDoneEffect()
          break;
       }
    }
+   agent->GetStatComponent()->ModifyStats(agent->GetStatComponent()->GetVitalCurValue(EVitals::Mana) + 5, EVitals::Mana);
 }
 
 void UTargetedAttackComponent::HandleAutoAttackModifierTags()
@@ -346,7 +354,8 @@ void UTargetedAttackComponent::CreateRangedProjectile(FDamageScalarStruct projec
 {
    const FVector    agentLocation = agent->GetActorLocation();
    const FTransform transform     = FTransform{FVector(agentLocation.X, agentLocation.Y, agentLocation.Z + agent->GetCapsuleComponent()->GetScaledCapsuleHalfHeight())};
-   ARTSProjectile*  projectile = ARTSProjectile::MakeRTSProjectile(GetWorld(), agent->GetTargetComponent(), transform, ARTSProjectile::StaticClass(), projectileStrategyClass.GetDefaultObject());
+   ARTSProjectile*  projectile =
+       ARTSProjectile::MakeRTSProjectile(GetWorld(), agent->GetTargetComponent(), transform, ARTSProjectile::StaticClass(), projectileStrategyClass.GetDefaultObject());
 
    projectile->hitEffects.Add(agent->GetAbilitySystemComponent()->MakeDamageEffect(projectileDamageScalars, GetAttackElement()));
 }

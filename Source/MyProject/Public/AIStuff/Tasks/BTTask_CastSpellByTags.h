@@ -20,7 +20,7 @@ class MYPROJECT_API UBTTask_CastSpellByTags : public UBTTaskNode
 {
    GENERATED_BODY()
 
-public:
+ public:
    UBTTask_CastSpellByTags();
 
    UPROPERTY(EditAnywhere)
@@ -29,14 +29,13 @@ public:
    UPROPERTY(EditAnywhere)
    TMap<FGameplayTag, UEnvQuery*> spellToTargetingMap;
 
-protected:
+ protected:
    EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) override;
 
-private:
+ private:
    void                  OnMessage(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory, FName message, int32 requestID, bool bSuccess) override;
-   TSubclassOf<UMySpell> GetFirstCastableSpellMatchingTagCriteria
-   (const FGameplayTagContainer&      spellRequirementTags, const AUnit& ownerRef, const USpellCastComponent* spellCastComp,
-    const URTSAbilitySystemComponent* abilitySystemComp);
+   TSubclassOf<UMySpell> GetFirstCastableSpellMatchingTagCriteria(const FGameplayTagContainer& spellRequirementTags, const AUnit& ownerRef,
+                                                                  const USpellCastComponent* spellCastComp, const URTSAbilitySystemComponent* abilitySystemComp);
 
    /**
     * @brief Attempts to cast spells that are off cooldown and ones that we have the required mana to cast IF they have the required tags
@@ -44,4 +43,6 @@ private:
     * @return Returns true if an eligible spell was found.
     */
    bool TryCastSpellsWithTag(const FGameplayTagContainer& spellRequirementTags, const AUnit& ownerRef);
+
+   FString GetStaticDescription() const override;
 };

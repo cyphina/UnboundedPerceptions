@@ -23,7 +23,6 @@ void UNullAttackAnim::PlayAttackAnimation(ACharacter* characterToPlayMontageOn, 
        mockAnimationTimer,
        [this]() {
           SetupHitTimer();
-          OnAttackAnimFinished()->Broadcast();
        },
        timelineLength, true);
 }
@@ -63,9 +62,16 @@ void UNullAttackAnim::AttackNotify()
    }
 
    OnAttackNotifyEvent.Broadcast();
+
+   // Set this up here else we have a situation where the animation finishing puts our attacks on CD and they can't be unfroze by the hit event.
+   // Attack timer starts on the end of the hit in dota, but for animations it starts at the very end of the animation (after all hits).
+   OnAttackAnimFinished()->Broadcast();
 }
 
 void UNullAttackAnim::SetupHitTimer()
 {
-   GetWorld()->GetTimerManager().SetTimer(hitNotifyTimer, this, &UNullAttackAnim::AttackNotify, hitNotifyTime, false);
+   if(UWorld* world = GetWorld())
+   {
+      world->GetTimerManager().SetTimer(hitNotifyTimer, this, &UNullAttackAnim::AttackNotify, hitNotifyTime, false);
+   }
 }

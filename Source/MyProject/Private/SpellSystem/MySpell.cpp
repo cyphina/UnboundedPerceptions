@@ -7,16 +7,21 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemGlobals.h"
+#include "BrainComponent.h"
 #include "UpStatComponent.h"
 #include "DA_DefaultTargetingScheme.h"
 #include "GlobalDataAssetsSS.h"
 #include "SpellFunctionLibrary.h"
 #include "TargetComponent.h"
 #include "SpellTargetingTypes.h"
+#include "UnitMessages.h"
 
 UMySpell::UMySpell() : UGameplayAbility()
 {
    CooldownGameplayEffectClass = UCoolDownEffect::StaticClass();
+   InstancingPolicy            = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+   spellDefaults.nameTag       = FGameplayTag::RequestGameplayTag("Skill.Name");
+   spellDefaults.Elem          = FGameplayTag::RequestGameplayTag("Combat.Element");
 }
 
 TSubclassOf<UUpSpellTargeting> UMySpell::GetTargeting() const
@@ -85,9 +90,34 @@ float UMySpell::GetCooldownTimeRemaining(const FGameplayAbilityActorInfo* ActorI
    return 0.f;
 }
 
+void UMySpell::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+                          bool bReplicateEndAbility, bool bWasCancelled)
+{
+   Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+   if(!bCasterDone)
+   {
+      const FAIMessage msg(UnitMessages::AIMessage_SpellFinished, this);
+      FAIMessage::Send(GetAvatarUnit()->GetUnitController(), msg);
+   }
+   bCasterDone = false;
+}
+
+void UMySpell::FinishBlockingCaster()
+{
+   if(!bCasterDone)
+   {
+      const FAIMessage msg(UnitMessages::AIMessage_SpellFinished, this);
+      FAIMessage::Send(GetAvatarUnit()->GetUnitController(), msg);
+      bCasterDone = true;
+   }
+}
+
 bool UMySpell::IsOnCD(const UAbilitySystemComponent* abilityComponent) const
 {
-   if(abilityComponent->HasMatchingGameplayTag(spellDefaults.nameTag)) return true;
+   if(abilityComponent->HasMatchingGameplayTag(spellDefaults.nameTag))
+   {
+      return true;
+   }
    return false;
 }
 
@@ -153,12 +183,12 @@ float UMySpell::GetAOE(const UAbilitySystemComponent* abilityComponent) const
 
 int UMySpell::GetLevel(const UAbilitySystemComponent* abilityComponent) const
 {
-  FGameplayAbilitySpec* spec = GetAbilitySpec(abilityComponent);
-  if(spec)
-  {
-     return spec->Level;
-  }
-  return 0;
+   FGameplayAbilitySpec* spec = GetAbilitySpec(abilityComponent);
+   if(spec)
+   {
+      return spec->Level;
+   }
+   return 0;
 }
 
 FGameplayEffectSpecHandle UMySpell::SetScaling(FGameplayEffectSpecHandle specHandle)
@@ -299,7 +329,7 @@ TArray<TEnumAsByte<ECollisionChannel>> UMySpell::GetTraceChannelForFriendly() co
 FGameplayAbilitySpec* UMySpell::GetAbilitySpec(const UAbilitySystemComponent* abilityComponent) const
 {
    FGameplayAbilitySpec* abilitySpec = const_cast<UAbilitySystemComponent*>(abilityComponent)->FindAbilitySpecFromClass(GetClass());
-   ensureMsgf(abilitySpec,  TEXT("Ability hasn't been registered to unit"));
+   ensureMsgf(abilitySpec, TEXT("Ability hasn't been registered to unit"));
    return abilitySpec;
 }
 
@@ -311,7 +341,7 @@ int UMySpell::GetIndex(int currentLevel, int numCategories, int maxLevel)
    }
    if(maxLevel != 0)
    {
-      const int index = FMath::CeilToInt(static_cast<float>(numCategories) * currentLevel /  maxLevel) - 1;
+      const int index = FMath::CeilToInt(static_cast<float>(numCategories) * currentLevel / maxLevel) - 1;
       return index;
    }
    return -1;

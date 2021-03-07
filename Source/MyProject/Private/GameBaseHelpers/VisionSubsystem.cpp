@@ -28,7 +28,6 @@ void UVisionSubsystem::BeginDestroy()
       UE_LOG(LogTemp, Log, TEXT("Destroying vision subsystem..."));
       visionUpdateThread->Kill(true);
       UE_LOG(LogTemp, Log, TEXT("Vision subsystem destroyed..."));
-
    }
 }
 
@@ -51,7 +50,6 @@ UVisionSubsystem* UVisionSubsystem::Create(UObject* outer)
       gameModeRef->OnLevelLoaded.AddDynamic(newVisionManager, &UVisionSubsystem::OnLevelLoaded);
    }
 
-   newVisionManager->visionUpdateThread = FRunnableThread::Create(newVisionManager, TEXT("VisionWorker"));
    return newVisionManager;
 }
 
@@ -98,7 +96,7 @@ void UVisionSubsystem::Stop()
 
 void UVisionSubsystem::OnPreLoadMap(const FString& MapName)
 {
-   visionUpdateThread->Kill(true);
+   Stop();
 }
 
 void UVisionSubsystem::OnPostLoadMap(UWorld* World)
@@ -115,7 +113,7 @@ void UVisionSubsystem::OnLevelLoaded()
 
 void UVisionSubsystem::OnLevelAboutToUnload()
 {
-   visionUpdateThread->Kill(true);
+   Stop();
 }
 
 void UVisionSubsystem::AddVisibleAlly(AUnit* newAlly)
@@ -222,7 +220,10 @@ void UVisionSubsystem::MakeUnitsInVisionVisible(TSet<AUnit*>& unitsEligibleForHi
 {
    for(AUnit* unit : unitsEligibleForHidingVisibleLastCheck)
    {
-      unit->SetIsUnitHidden(false);
+      if(unit)
+      {
+         unit->SetIsUnitHidden(false);
+      }
    }
 }
 
@@ -230,9 +231,12 @@ void UVisionSubsystem::MakeUnitsOutOfVisionInvisible(TSet<AUnit*>& unitsEligible
 {
    for(AUnit* visibleUnit : unitsEligibleForHidingVisibleLastCheck)
    {
-      if(!unitsDeemedVisibleAfterCheck.Contains(visibleUnit))
+      if(visibleUnit)
       {
-         visibleUnit->SetIsUnitHidden(true);
+         if(!unitsDeemedVisibleAfterCheck.Contains(visibleUnit))
+         {
+            visibleUnit->SetIsUnitHidden(true);
+         }
       }
    }
 }

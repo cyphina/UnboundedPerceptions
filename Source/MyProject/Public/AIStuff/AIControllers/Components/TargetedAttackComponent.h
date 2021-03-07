@@ -67,6 +67,8 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
    UFUNCTION(BlueprintCallable)
    virtual void OverrideAttackWithSpell(TSubclassOf<UMySpell> overridingSpell);
 
+   bool GetIsReadyToAttack() const { return bReadyToAttack; }
+   
  protected:
    void BeginPlay() override;
    void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -77,10 +79,10 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
    UPROPERTY()
    UObject* animAttackStrategyInst;
 
-   TScriptInterface<IAttackAnim> attackAnim;
-
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<URTSProjectileStrategy> projectileStrategyClass = nullptr;
+
+   TScriptInterface<IAttackAnim> attackAnim;
 
  private:
    void OnUnitStopped();
@@ -162,7 +164,7 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
 
    bool bAttackAnimationPlaying = false;
 
-   bool readyToAttack = true;
+   bool bReadyToAttack = true;
 
    FVector attackMoveLocation;
 

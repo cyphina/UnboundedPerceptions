@@ -48,6 +48,9 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    float GetCurrentChannelingTime() const;
 
+   /** Do we have the resources necessary to cast this spell; also make sure we don't have any status effects preventing us*/
+   bool CanCast(TSubclassOf<UMySpell> spellToCheck) const;
+
    void CancelIncantation();
 
    void CancelChanneling();
@@ -58,6 +61,9 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
    /**Setup a move towards an actor so we're in range to cast our spell (Requires currentSpell be set)*/
    void AdjustCastingPosition(TSubclassOf<UMySpell> spellClass, AActor* spellTargetActor);
 
+   /**
+    * @brief Represents the point in which our resources for a spell has been used (the spell may be "active" for a while meaning we can't do anything)
+    */
    FOnSpellCasted& OnSpellCasted() { return OnSpellCastedEvent; }
 
  protected:
@@ -76,7 +82,7 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
    UAnimMontage* castAnimation = nullptr;
 
  private:
-	   /**
+   /**
     * Activates the ability when we're in position AND after we've incanted. It represents us having to focus energy while the spell is activating.
     * Some abilities are casted in phases, which means they get replaced by another spell.  
     * Also used for item usage (which also triggers abilities).
@@ -90,8 +96,6 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
    void OnUnitStopped();
 
    void OnChannelingFinished();
-	
-   void NotifyAIAboutSpellCast() const;
 
    int GetRange(TSubclassOf<UMySpell> spellClass) const;
 

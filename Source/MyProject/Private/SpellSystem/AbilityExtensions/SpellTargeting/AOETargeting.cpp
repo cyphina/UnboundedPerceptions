@@ -55,7 +55,9 @@ void UUpSpellTargeting_Area::HandleQueryResult(TSharedPtr<FEnvQueryResult> resul
                                                TSubclassOf<UMySpell> spellToCast) const
 {
    if(result->IsSuccsessful()) {
-      casterRef->GetTargetComponent()->SetTarget(result->GetItemAsLocation(0));
+      TArray<FVector> locations;
+      result->GetAllAsLocations(locations);
+      casterRef->GetTargetComponent()->SetTarget(locations[0]);
       if(spellCastComponent->BeginCastSpell(spellToCast)) { return; }
    }
 

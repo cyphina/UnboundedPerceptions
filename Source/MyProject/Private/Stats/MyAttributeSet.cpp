@@ -89,16 +89,18 @@ void UMyAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, fl
 {
    if(AUnit* unit = Cast<AUnit>(GetOwningActor()))
    {
-      if(Attribute == GetHealthAttribute())
-      { // Health clamping
-         Health.SetCurrentValue(FMath::Clamp(Health.GetCurrentValue(), 0.0f, Health.GetBaseValue()));
+      if(Attribute == GetHealthAttribute() || Attribute == GetManaAttribute())
+      {
+         FGameplayAttributeData* ChangedVital = Attribute.GetGameplayAttributeData(this);
+         NewValue                             = FMath::Clamp(NewValue, 0.0f, ChangedVital->GetBaseValue());
+         ChangedVital->SetCurrentValue(NewValue);
       }
       else if(attSet.Contains(Attribute))
       { // Needs to be run before the broadcast to get proper values to the stat widget in the character menu
          unit->GetStatComponent()->UpdateStats(Attribute);
       }
-
-      if(Attribute == GetMovementSpeedAttribute()) {
+      if(Attribute == GetMovementSpeedAttribute())
+      {
          unit->GetCharacterMovement()->MaxWalkSpeed = NewValue;
       }
       statUpdatedEvent.Broadcast(Attribute, NewValue, unit);

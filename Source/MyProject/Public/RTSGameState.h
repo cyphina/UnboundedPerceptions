@@ -25,21 +25,21 @@ UCLASS()
 class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsContext, public IGameSpeedContext, public IVisionContext
 {
    GENERATED_BODY()
-
+   
  public:
    ARTSGameState();
 
    UFUNCTION(BlueprintCallable)
-   const TSet<AUnit*>& GetAllFriendlyUnits() const override { return allyList; }
+   const TArray<AUnit*>& GetAllFriendlyUnits() const override { return allyList; }
 
    UFUNCTION(BlueprintCallable)
-   const TSet<AUnit*>& GetAllEnemyUnits() const override { return enemyList; }
+   const TArray<AUnit*>& GetAllEnemyUnits() const override { return enemyList; }
 
    UFUNCTION(BlueprintCallable)
-   const TSet<AUnit*>& GetVisibleEnemies() const override;
+   const TArray<AUnit*>& GetVisibleEnemies() const override;
 
    UFUNCTION(BlueprintCallable)
-   const TSet<AUnit*>& GetVisiblePlayerUnits() const override;
+   const TArray<AUnit*>& GetVisiblePlayerUnits() const override;
 
    /** Callback to update our time unit when we change game speed (done only within GameSpeedWidget */
    UFUNCTION()
@@ -103,8 +103,16 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsConte
     * Faster to keep stuff in a set for quick removal (granted items are kept together so we don't
     * suffer in terms of cache coherency.
     */
-   TSet<AUnit*> allyList;
+   TArray<AUnit*> allyList;
 
    /** Lists of all enemies in the level */
-   TSet<AUnit*> enemyList;
+   TArray<AUnit*> enemyList;
+
+   FTimerHandle updateCachedVisibleUnitsTimerHandle;
+   
+   /** Copy of cached value (value gotten from reading thread last) */
+   TArray<AUnit*> visiblePlayerUnits;
+
+   /** Copy of cached value (value gotten from reading thread last) */
+   TArray<AUnit*> visibleEnemies;
 };

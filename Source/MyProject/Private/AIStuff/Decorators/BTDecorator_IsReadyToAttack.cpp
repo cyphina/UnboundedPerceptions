@@ -1,7 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "BTDecorator_IsReadyToAttack.h"
+
+#include "TargetedAttackComponent.h"
 #include "UnitController.h"
 #include "WorldObjects/Unit.h"
 
@@ -16,7 +16,11 @@ UBTDecorator_IsReadyToAttack::UBTDecorator_IsReadyToAttack()
 
 bool UBTDecorator_IsReadyToAttack::CalculateRawConditionValue(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) const
 {
-   // TODO: Fix this
-   // return Cast<AUnitController>(ownerComp.GetAIOwner())->GetUnitOwner()->GetIsReadyToAttack();
+   if(UTargetedAttackComponent* targetedAttackComp = ownerComp.GetAIOwner()->FindComponentByClass<UTargetedAttackComponent>())
+   {
+      return targetedAttackComp->GetIsReadyToAttack();
+   }
+
+   // Units without a targeted attack component should control their attack timings in the behavior tree.
    return true;
 }

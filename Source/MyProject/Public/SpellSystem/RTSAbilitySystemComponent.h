@@ -33,9 +33,6 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
 
    int FindSlotIndexOfSpell(TSubclassOf<UMySpell> spellToLookFor) const;
 
-   /** Do we have the resources necessary to cast this spell; also make sure we don't have any status effects preventing us*/
-   bool CanCast(TSubclassOf<UMySpell> spellToCheck) const;
-
    /** Attempts to removes invisibility effect. Usually called when a unit performs an action when they are invisible, thus breaking the invisibility*/
    void TryRemoveInvisibility();
 

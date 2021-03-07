@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "EnvQueryTest_IsEnemy.h"
 #include "EnvironmentQuery/Items/EnvQueryItemType_Actor.h"
@@ -22,15 +20,23 @@ void UEnvQueryTest_IsEnemy::RunTest(FEnvQueryInstance& QueryInstance) const
 
    // make sure we have an owner for this test instance
    UObject* QueryOwner = QueryInstance.Owner.Get();
-   if (QueryOwner == nullptr) { return; }
+   if(QueryOwner == nullptr)
+   {
+      return;
+   }
 
-   for (FEnvQueryInstance::ItemIterator It(this, QueryInstance); It; ++It) {
+   for(FEnvQueryInstance::ItemIterator It(this, QueryInstance); It; ++It)
+   {
       float         score     = 0;
       const AActor* itemActor = GetItemActor(QueryInstance, It.GetIndex());
-      if (const AUnit* unitRef = Cast<AUnit>(itemActor)) {
-         if (QueryOwner->GetClass()->IsChildOf(AEnemy::StaticClass())) {
+      if(const AUnit* unitRef = Cast<AUnit>(itemActor))
+      {
+         if(QueryOwner->GetClass()->IsChildOf(AEnemy::StaticClass()))
+         {
             It.SetScore(TestPurpose, FilterType, unitRef->GetIsEnemy(), false);
-         } else {
+         }
+         else
+         {
             It.SetScore(TestPurpose, FilterType, unitRef->GetIsEnemy(), true);
          }
       }

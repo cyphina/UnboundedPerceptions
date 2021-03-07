@@ -44,13 +44,13 @@ AEnemy::AEnemy(const FObjectInitializer& oI) : AUnit(oI)
    GetMesh()->CustomDepthStencilValue = 254;
 }
 
-const TSet<AUnit*>* AEnemy::GetVisibleEnemies_Impl() const
+const TArray<AUnit*>* AEnemy::GetVisibleEnemies_Impl() const
 {
    const auto& gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
    return &gameStateRef->GetVisiblePlayerUnits();
 }
 
-const TSet<AUnit*>* AEnemy::GetAllies_Impl() const
+const TArray<AUnit*>* AEnemy::GetAllies_Impl() const
 {
    const auto& gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
    return &gameStateRef->GetAllEnemyUnits();
@@ -152,4 +152,10 @@ void AEnemy::InitializeStats()
    {
       statComponent->ModifyStats<true>(x.defaultValue, x.mech);
    }
+}
+
+const TArray<AUnit*>* AEnemy::GetEnemies_Impl() const
+{
+   const auto& gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
+   return &gameStateRef->GetAllFriendlyUnits();
 }

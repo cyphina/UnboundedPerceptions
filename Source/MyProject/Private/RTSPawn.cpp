@@ -297,6 +297,19 @@ AActor* ARTSPawn::GetHitActorClick(FHitResult& clickHitResult)
 
 void ARTSPawn::CreateSelectionRect()
 {
+   if(LIKELY(!GameplayModifierCVars::bEnableEnemyControl))
+   {
+      CreateSelectionRect_Impl<AAlly>();
+   }
+   else
+   {
+      CreateSelectionRect_Impl<AUnit>();
+   }
+}
+
+template <typename T>
+void ARTSPawn::CreateSelectionRect_Impl()
+{
    if(GetCursorState() != ECursorStateEnum::UI)
    {
       float locX, locY;
@@ -305,13 +318,14 @@ void ARTSPawn::CreateSelectionRect()
       if(IsSelectionRectActive())
       {
          controllerRef->GetHUD()->DrawRect(GetSelectionRectColor(), startMousePos.X, startMousePos.Y, endMousePos.X - startMousePos.X, endMousePos.Y - startMousePos.Y);
-         TArray<AUnit*> actorsInSelectRect;
-         controllerRef->GetHUD()->GetActorsInSelectionRectangle<AUnit>(startMousePos, endMousePos, actorsInSelectRect, false, false);
+
+         TArray<T*> actorsInSelectRect;
+         controllerRef->GetHUD()->GetActorsInSelectionRectangle<T>(startMousePos, endMousePos, actorsInSelectRect, false, false);
 
          // Only update if we just overlapped a new actor (not one we already have selected)
          if(controllerRef->GetBasePlayer()->GetSelectedUnits().Num() != actorsInSelectRect.Num())
          {
-            for(AUnit* unitInSelectionRect : actorsInSelectRect)
+            for(T* unitInSelectionRect : actorsInSelectRect)
             {
                if(IsValid(unitInSelectionRect))
                {
@@ -388,8 +402,9 @@ void ARTSPawn::CursorHover()
                {
                   if(basePlayer->GetSelectedUnits().Num() > 0)
                   {
-                     const auto selectedEnemy = controllerRef->GetBasePlayer()->GetSelectedUnits().FindByPredicate(
-                         [](const AUnit* unit) { return unit->GetClass()->IsChildOf(AEnemy::StaticClass()); });
+                     const auto selectedEnemy = controllerRef->GetBasePlayer()->GetSelectedUnits().FindByPredicate([](const AUnit* unit) {
+                        return unit->GetClass()->IsChildOf(AEnemy::StaticClass());
+                     });
 
                      if(selectedEnemy)
                      {
@@ -675,7 +690,11 @@ void ARTSPawn::RightClick()
    if(bAutoClick)
    {
       GetWorld()->GetTimerManager().SetTimer(
-          autoClickTimerHandle, [this]() { clickFunctionalityClass->HandleRightClick(); }, 0.1f, true, 0.f);
+          autoClickTimerHandle,
+          [this]() {
+             clickFunctionalityClass->HandleRightClick();
+          },
+          0.1f, true, 0.f);
    }
    else
    {
@@ -688,7 +707,11 @@ void ARTSPawn::RightClickShift()
    if(bAutoClick)
    {
       GetWorld()->GetTimerManager().SetTimer(
-          autoClickTimerHandle, [this]() { clickFunctionalityClass->HandleShiftRightClick(); }, 0.1f, true, 0.f);
+          autoClickTimerHandle,
+          [this]() {
+             clickFunctionalityClass->HandleShiftRightClick();
+          },
+          0.1f, true, 0.f);
    }
    else
    {
@@ -820,7 +843,9 @@ void ARTSPawn::UseAbility(int abilityIndex)
             const TSubclassOf<UMySpell> currentSpell = selectedUnit->GetAbilitySystemComponent()->GetAbilities()[abilityIndex];
             if(currentSpell.GetDefaultObject()->GetSpellDefaults().Targeting == UUpSpellTargeting_None::StaticClass())
             {
-               selectedUnit->GetUnitController()->QueueAction([currentSpell, manSpellComp]() { manSpellComp->GetSpellCastComp()->BeginCastSpell(currentSpell); });
+               selectedUnit->GetUnitController()->QueueAction([currentSpell, manSpellComp]() {
+                  manSpellComp->GetSpellCastComp()->BeginCastSpell(currentSpell);
+               });
             }
             else
             {
@@ -830,8 +855,9 @@ void ARTSPawn::UseAbility(int abilityIndex)
                   {
                      if(manSpellComp->OnSpellConfirmInput(hitResult, currentSpell))
                      {
-                        selectedUnit->GetUnitController()->QueueAction(
-                            [this, hitResult = this->hitResult, manSpellComp, currentSpell]() { manSpellComp->StartSpellCastAction(hitResult, currentSpell); });
+                        selectedUnit->GetUnitController()->QueueAction([this, hitResult = this->hitResult, manSpellComp, currentSpell]() {
+                           manSpellComp->StartSpellCastAction(hitResult, currentSpell);
+                        });
                         HideSpellCircle();
                         SetSecondaryCursor();
                      }
@@ -946,7 +972,9 @@ void ARTSPawn::MakeControlGroup(int controlGroupIndex)
    auto& allies = controllerRef->GetBasePlayer()->GetSelectedAllies();
    auto& cgroup = controlGroups[controlGroupIndex];
 
-   Algo::Transform(allies, cgroup, [](AAlly* ally) { return MakeWeakObjectPtr(ally); });
+   Algo::Transform(allies, cgroup, [](AAlly* ally) {
+      return MakeWeakObjectPtr(ally);
+   });
 }
 
 void ARTSPawn::OnSkillSlotSelected(int skillIndex)

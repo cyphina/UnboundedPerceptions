@@ -39,20 +39,6 @@ int URTSAbilitySystemComponent::FindSlotIndexOfSpell(TSubclassOf<UMySpell> spell
    return abilities.Find(spellToLookFor);
 }
 
-bool URTSAbilitySystemComponent::CanCast(TSubclassOf<UMySpell> spellToCheck) const
-{
-   UMySpell* spell = spellToCheck.GetDefaultObject();
-
-   if(IsValid(spell) && GetActivatableAbilities().ContainsByPredicate([&spellToCheck](const FGameplayAbilitySpec& registeredAbilitySpec) {
-         return registeredAbilitySpec.Ability == spellToCheck.GetDefaultObject();
-      })) {
-      if(spell->GetCost(this) <= unitOwnerRef->FindComponentByClass<UUpStatComponent>()->GetVitalCurValue(EVitals::Mana)) {
-         if(!spell->IsOnCD(this) && !USpellDataLibrary::IsStunned(this) && !USpellDataLibrary::IsSilenced(this)) { return true; }
-      }
-   }
-   return false;
-}
-
 FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecToSelf(const FGameplayEffectSpec& Spec, FPredictionKey PredictionKey)
 {
    // Scope lock the container after the addition has taken place to prevent the new effect from potentially getting mangled during the remainder

@@ -1,11 +1,14 @@
 #include "AIControllers/Components/SpellCastComponent.h"
 #include "BrainComponent.h"
+#include "SpellDataLibrary.h"
+#include "StatEnums.h"
 #include "AIControllers/Components/RTSStateComponent.h"
 #include "SpellSystem/AbilityExtensions/SpellTargeting/SpellTargetingTypes.h"
 #include "TargetComponent.h"
 #include "UnitMessages.h"
 #include "Unit.h"
 #include "UnitController.h"
+#include "UpStatComponent.h"
 #include "SpellSystem/MySpell.h"
 #include "SpellSystem/RTSAbilitySystemComponent.h"
 
@@ -31,16 +34,10 @@ bool USpellCastComponent::CheckSpellCastBreakInvis(TSubclassOf<UMySpell> spellTo
 
 void USpellCastComponent::OnUnitStopped()
 {
+   CancelIncantation();
+   CancelChanneling();
+   // Remove current spell after
    currentSpell       = nullptr;
-   auto& timerManager = GetWorld()->GetTimerManager();
-   timerManager.ClearTimer(incantationTimer);
-   timerManager.ClearTimer(channelingTimer);
-}
-
-void USpellCastComponent::NotifyAIAboutSpellCast() const
-{
-   const FAIMessage msg(UnitMessages::AIMessage_SpellCasted, unitOwnerRef);
-   FAIMessage::Send(unitOwnerRef, msg);
 }
 
 int USpellCastComponent::GetRange(TSubclassOf<UMySpell> spellClass) const
@@ -70,8 +67,7 @@ void USpellCastComponent::AdjustCastingPosition(TSubclassOf<UMySpell> spellClass
    }
 
    const float range = static_cast<int>(spellClass.GetDefaultObject()->GetRange(abilityComponentRef));
-   unitOwnerRef->GetUnitController()->AdjustPosition(range, spellTargetActor,
-                                                        [this]() { IncantationCheck(GetCurrentSpell()); });
+   unitOwnerRef->GetUnitController()->AdjustPosition(range, spellTargetActor, [this]() { IncantationCheck(GetCurrentSpell()); });
 }
 
 bool USpellCastComponent::BeginCastSpell(TSubclassOf<UMySpell> spellToCast)
@@ -80,26 +76,29 @@ bool USpellCastComponent::BeginCastSpell(TSubclassOf<UMySpell> spellToCast)
 
    // TODO: Add some checks to AI spellcasting maybe so we can make sure designers don't screw up the set queries?
 
-   if(IsValid(spell))
+   if(unitOwnerRef)
    {
-      if(abilityComponentRef->CanCast(spellToCast))
+      if(IsValid(spell))
       {
-         unitOwnerRef->GetUnitController()->StopCurrentAction();
-         currentSpell = spellToCast;
-
-         if(!spell->GetTargeting().GetDefaultObject()->ShouldTryAdjustPosition(unitOwnerRef))
+         if(CanCast(spellToCast))
          {
-            IncantationCheck(GetCurrentSpell());
+            unitOwnerRef->GetUnitController()->StopCurrentAction();
+            currentSpell = spellToCast;
+
+            if(!spell->GetTargeting().GetDefaultObject()->ShouldTryAdjustPosition(unitOwnerRef))
+            {
+               IncantationCheck(GetCurrentSpell());
+               return true;
+            }
+
+            spell->GetTargeting().GetDefaultObject()->AdjustCastPosition(this, spellToCast, unitOwnerRef->GetTargetComponent());
             return true;
          }
-
-         spell->GetTargeting().GetDefaultObject()->AdjustCastPosition(this, spellToCast, unitOwnerRef->GetTargetComponent());
-         return true;
       }
-   }
-   else
-   {
-      unitOwnerRef->GetUnitController()->StopCurrentAction();
+      else
+      {
+         unitOwnerRef->GetUnitController()->StopCurrentAction();
+      }
    }
    return false;
 }
@@ -110,8 +109,6 @@ void USpellCastComponent::CastSpell(TSubclassOf<UMySpell> spellToCast)
    {
       if(unitOwnerRef->GetAbilitySystemComponent()->TryActivateAbilityByClass(spellToCast))
       {
-         NotifyAIAboutSpellCast();
-
          OnSpellCasted().Broadcast(spellToCast);
 
          const float channelTime = spellToCast.GetDefaultObject()->GetSecondaryTime(unitOwnerRef->GetAbilitySystemComponent());
@@ -142,6 +139,31 @@ void USpellCastComponent::OnChannelingFinished()
    eD.EventTag                   = confirmTag;
    unitOwnerRef->GetAbilitySystemComponent()->HandleGameplayEvent(confirmTag, &eD);
    unitOwnerRef->GetUnitController()->FinishCurrentAction();
+}
+
+bool USpellCastComponent::CanCast(TSubclassOf<UMySpell> spellToCheck) const
+{
+   UMySpell* spell = spellToCheck.GetDefaultObject();
+
+   if(unitOwnerRef)
+   {
+      if(UAbilitySystemComponent* ASC = unitOwnerRef->GetAbilitySystemComponent())
+      {
+         if(IsValid(spell) && ASC->GetActivatableAbilities().ContainsByPredicate([&spellToCheck](const FGameplayAbilitySpec& registeredAbilitySpec) {
+               return registeredAbilitySpec.Ability == spellToCheck.GetDefaultObject();
+            }))
+         {
+            if(spell->GetCost(ASC) <= unitOwnerRef->FindComponentByClass<UUpStatComponent>()->GetVitalCurValue(EVitals::Mana))
+            {
+               if(!spell->IsOnCD(ASC) && !USpellDataLibrary::IsStunned(ASC) && !USpellDataLibrary::IsSilenced(ASC))
+               {
+                  return true;
+               }
+            }
+         }
+      }
+   }
+   return false;
 }
 
 void USpellCastComponent::IncantationCheck(TSubclassOf<UMySpell> spellToCast)

@@ -16,12 +16,6 @@ class MYPROJECT_API UVisionSubsystem : public UObject, public FRunnable
    /** Creates a new UVisionSubsystem* and it is on the onus of the class in which the UVisionSubsystem is being created in to manage its memory (probably using UROPERTY())*/
    static UVisionSubsystem* Create(UObject* outer);
 
-   UFUNCTION(BlueprintCallable, BlueprintPure)
-   const TSet<AUnit*>& GetVisibleEnemies() const { return visibleEnemies; }
-
-   UFUNCTION(BlueprintCallable, BlueprintPure)
-   const TSet<AUnit*>& GetVisiblePlayerUnits() const { return visiblePlayerUnits; }
-
    void ToggleEnemyPerspective();
 
  protected:
