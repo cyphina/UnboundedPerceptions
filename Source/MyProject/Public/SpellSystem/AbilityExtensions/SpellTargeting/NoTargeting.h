@@ -7,21 +7,16 @@ class UUpSpellTargeting_None : public UUpSpellTargeting
 {
    GENERATED_BODY()
 
-public:
-
+ public:
    bool ManualTargetingCheck(const AUnit* caster, const FHitResult& hitResult) const override { return true; }
 
-   void ClickResponse(const FHitResult& hitResult, TSubclassOf<UMySpell> spellClass, IManualTargetingController& sourceUnitController) const override
-   {
-   }
+   void ClickResponse(const FHitResult& hitResult, TSubclassOf<UMySpell> spellClass, IManualTargetingController& sourceUnitController) const override {}
 
-   void ManualSetSpellTarget(UTargetComponent* targetComp, const FHitResult& hitResult) const override
-   {
-   }
+   void ManualSetSpellTarget(UTargetComponent* targetComp, const FHitResult& hitResult) const override {}
 
-   void AdjustCastPosition(USpellCastComponent* spellCastComp, TSubclassOf<UMySpell> spellClass, UTargetComponent* targetComp) const override
-   {
-   }
+   void AdjustCastPosition(USpellCastComponent* spellCastComp, TSubclassOf<UMySpell> spellClass, UTargetComponent* targetComp) const override {}
+
+   virtual bool IsProperTargetSet(UTargetComponent* targetComp) const override { return true; }
 
    UEnvQuery* GetDefaultQueryForTargetingScheme(UDA_DefaultTargetingScheme* targetingSchemes) const override { return nullptr; }
 

@@ -103,8 +103,8 @@ void DefaultCursorClickFunctionality::HandleRightClick()
                }
             }
             break;
-            case ENEMY_CHANNEL:
-            case FRIENDLY_CHANNEL:
+            case ENEMY_OBJECT_CHANNEL:
+            case ALLY_OBJECT_CHANNEL:
             {
                if(AUnit* unit = Cast<AUnit>(clickHitResult.GetActor()))
                {
@@ -172,7 +172,7 @@ void DefaultCursorClickFunctionality::HandleShiftRightClick()
             QueueActionToSelectedUnits([location](AUnit* unit) { unit->GetUnitController()->Move(location); });
          }
          break;
-         case ENEMY_CHANNEL:
+         case ENEMY_OBJECT_CHANNEL:
          {
             AEnemy* enemy = Cast<AEnemy>(clickHitResult.GetActor());
 

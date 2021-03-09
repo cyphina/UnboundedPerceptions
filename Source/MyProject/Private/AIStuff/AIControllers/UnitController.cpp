@@ -142,12 +142,21 @@ void AUnitController::Attack()
 
 void AUnitController::OnDamageReceived(const FUpDamage& d)
 {
-   GetUnitOwner()->GetStatComponent()->ModifyStats<false>(GetUnitOwner()->GetStatComponent()->GetVitalCurValue(EVitals::Health) - d.damage, EVitals::Health);
+   if(d.accuracy <= 100)
+   {
+      d.sourceUnit->GetCombatInfo()->bMissLastHit = false;
+      GetUnitOwner()->GetStatComponent()->ModifyStats<false>(GetUnitOwner()->GetStatComponent()->GetVitalCurValue(EVitals::Health) - d.damage, EVitals::Health);
+   }
+   else
+   {
+      d.sourceUnit->GetCombatInfo()->bMissLastHit = true;
+   }
 
    if(GetUnitOwner()->GetStatComponent()->GetVitalAdjValue(EVitals::Health) <= 0)
    {
       Die();
    }
+
    else if(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) >= d.targetUnit->GetStatComponent()->GetVitalBaseValue(EVitals::Health))
    {
       d.sourceUnit->GetStatComponent()->ModifyStats<false>(d.sourceUnit->GetStatComponent()->GetVitalBaseValue(EVitals::Health), EVitals::Health);
@@ -176,7 +185,7 @@ void AUnitController::ResumeCurrentMovement()
    ResumeMove(GetCurrentMoveRequestID());
 }
 
-EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation)
+EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation, float stopRange)
 {
    EPathFollowingRequestResult::Type moveRequestResult = EPathFollowingRequestResult::Type::Failed;
 
@@ -193,7 +202,7 @@ EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation)
          }
 
          ownerRef->GetTargetComponent()->SetTarget(shiftedLocation);
-         if(!AdjustPosition(smallMoveIgnoreRange, shiftedLocation, moveRequestResult))
+         if(!AdjustPosition(stopRange, shiftedLocation, moveRequestResult))
          {
             if(URTSStateComponent* stateComponent = FindComponentByClass<URTSStateComponent>())
             {
@@ -205,24 +214,23 @@ EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation)
    return moveRequestResult;
 }
 
-EPathFollowingRequestResult::Type AUnitController::MoveActor(AActor* targetActor)
+EPathFollowingRequestResult::Type AUnitController::MoveActor(AActor* targetActor, float stopRange)
 {
+   EPathFollowingRequestResult::Type moveRequestResult = EPathFollowingRequestResult::Type::Failed;
    if(!USpellDataLibrary::IsStunned(GetUnitOwner()->GetAbilitySystemComponent()))
    {
       StopCurrentAction();
       ownerRef->GetTargetComponent()->SetTarget(targetActor);
-      const EPathFollowingRequestResult::Type result = MoveToActor(targetActor);
 
-      if(result == EPathFollowingRequestResult::RequestSuccessful)
+      if(!AdjustPosition(stopRange, targetActor, moveRequestResult))
       {
          if(URTSStateComponent* stateComponent = FindComponentByClass<URTSStateComponent>())
          {
             stateComponent->ChangeState(EUnitState::STATE_MOVING);
          }
       }
-      return result;
    }
-   return EPathFollowingRequestResult::Failed;
+   return moveRequestResult;
 }
 
 void AUnitController::StopCurrentAction()
@@ -425,6 +433,31 @@ bool AUnitController::AdjustPosition(float range, AActor* targetActor)
       if(!previousMoveGoal || previousMoveGoal != targetActor)
       {
          MoveToActor(targetActor, range, false, true, false);
+         QueueTurnAfterMovement(targetActor);
+      }
+      return false;
+   }
+
+   StopMovement();
+
+   if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetActor->GetActorLocation()))
+   {
+      TurnTowardsActor(targetActor);
+      return false;
+   }
+
+   return true;
+}
+
+bool AUnitController::AdjustPosition(float range, AActor* targetActor, EPathFollowingRequestResult::Type& outPathReqRes)
+{
+   // The move functionality automatically accounts for the target actor radius and the moving actor's radius (See UPathFollowingComponent::HasReachedInternal), but we have to add that into our own manual range check
+   if(!UUpAIHelperLibrary::IsTargetInRangeOfActor(GetUnitOwner(), targetActor, range))
+   {
+      const AActor* previousMoveGoal = GetPathFollowingComponent()->GetMoveGoal();
+      if(!previousMoveGoal || previousMoveGoal != targetActor)
+      {
+         outPathReqRes = MoveToActor(targetActor, range, false, true, false);
          QueueTurnAfterMovement(targetActor);
       }
       return false;

@@ -19,7 +19,7 @@ EBTNodeResult::Type UBTTask_QueryMove::ExecuteTask(UBehaviorTreeComponent& owner
 
    if(unitController)
    {
-      FEnvQueryRequest queryRequest{positionFindingLogic, unitController->GetUnitOwner()};
+      FEnvQueryRequest queryRequest{actionQuery, unitController->GetUnitOwner()};
       const auto       moveAfterPositionFound = FQueryFinishedSignature::CreateUObject(this, &UBTTask_QueryMove::OnMovePositionFound, unitController, &ownerComp);
 
       const int  requestId = queryRequest.Execute(EEnvQueryRunMode::SingleResult, moveAfterPositionFound);
@@ -39,16 +39,6 @@ void UBTTask_QueryMove::OnMessage(UBehaviorTreeComponent& ownerComp, uint8* node
    Super::OnMessage(ownerComp, nodeMemory, message, requestID, bSuccess);
 }
 
-FString UBTTask_QueryMove::GetStaticDescription() const
-{
-   FString positionQueryName = "";
-   if(positionFindingLogic)
-   {
-      positionQueryName = positionFindingLogic->GetName();
-   }
-   return FString::Printf(TEXT("%s: %s"), *Super::GetStaticDescription(), *positionQueryName);
-}
-
 void UBTTask_QueryMove::OnMovePositionFound(TSharedPtr<FEnvQueryResult> queryResult, AUnitController* AICon, UBehaviorTreeComponent* ownerComp)
 {
    if(queryResult.IsValid())
@@ -58,12 +48,12 @@ void UBTTask_QueryMove::OnMovePositionFound(TSharedPtr<FEnvQueryResult> queryRes
 
       if(targetActor)
       {
-         moveRequestResult = AICon->MoveActor(targetActor);
+         moveRequestResult = AICon->MoveActor(targetActor, stopRange);
       }
       else
       {
          const FVector targetLocation = queryResult->GetItemAsLocation(0);
-         moveRequestResult            = AICon->Move(targetLocation);
+         moveRequestResult            = AICon->Move(targetLocation, stopRange);
       }
 
       if(moveRequestResult == EPathFollowingRequestResult::Type::RequestSuccessful)

@@ -95,7 +95,7 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
     * Creates a gameplay effect setting the duration and period according to the table values
     * @param effectClass - Type of effect we want to create. This effect will have its values like duration and period set from the table values.
     * @param name - Name of the effect. The effect doesn't need to have a name if it's instantaneous.
-    * @param assetTags - Any extra tags we want this effect to have (like secondary elements ,etc.).s
+    * @param assetTags - Any extra tags we want this effect to have (like secondary elements ,etc.)
     */
    UFUNCTION(BlueprintCallable, Category = "Spell Creation Helper")
    struct FGameplayEffectSpecHandle CreateGameplayEffectFromTableValues(TSubclassOf<UGameplayEffect> effectClass, FGameplayTag name, FGameplayTagContainer assetTags);
@@ -194,17 +194,42 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
 
    /**
     * Only use this inside ActivateAbility in a blueprint derived from UMySpell.
-    * Gives us the collision channel for units that would be considered an enemy to the caster.
+    * Gives us the collision trace channel for units that would be considered an enemy to the caster.
     */
    UFUNCTION(BlueprintCallable, Category = "Spell Helper")
    TArray<TEnumAsByte<ECollisionChannel>> GetTraceChannelForEnemy() const;
 
    /**
    * Only use this inside ActivateAbility in a blueprint derived from UMySpell.
-   * Gives us the collision channel for units that would be considered a friendly to the caster.
+   * Gives us the collision trace channel for units that would be considered a friendly to the caster.
    */
    UFUNCTION(BlueprintCallable, Category = "Spell Helper")
    TArray<TEnumAsByte<ECollisionChannel>> GetTraceChannelForFriendly() const;
+
+   /**
+   * Only use this inside ActivateAbility in a blueprint derived from UMySpell.
+   * Gives us the collision object channel for units that would be considered a friendly to the caster.
+   */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   TArray<TEnumAsByte<ECollisionChannel>> GetObjectChannelForEnemy() const;
+
+   /** Applies several other effects if the damage effect hits. The Damage effect values is read off the table. */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   void ApplyEffectsTargetIfNoMiss(const FGameplayAbilityTargetDataHandle& targetData, const TArray<FGameplayEffectSpecHandle>& effects);
+
+   /**
+    * Call this to check if the last hit was a miss or not.
+    * Call this after enacting a damage effect to quickly determine if other effects should apply.
+    */
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spell Helper")
+   bool IsLastHitAMiss();
+
+   /**
+   * Only use this inside ActivateAbility in a blueprint derived from UMySpell.
+   * Gives us the collision object channel for units that would be considered a friendly to the caster.
+   */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   TArray<TEnumAsByte<ECollisionChannel>> GetObjectChannelForFriendly() const;
 
    FGameplayAbilitySpec* GetAbilitySpec(const UAbilitySystemComponent* abilityComponent) const;
 

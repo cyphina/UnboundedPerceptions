@@ -52,14 +52,19 @@ void UMontageAttackAnim::OnMontageEnded(UAnimMontage* montage, bool bInterrupted
    OnAttackAnimFinished()->Broadcast();
 }
 
-UAnimMontage* UMontageAttackAnim::GetAttackMontage(ACharacter* characterWithMontage) const
+UAnimMontage* UMontageAttackAnim::GetAttackMontage(ACharacter* characterWithMontage)
 {
+   if(loadedAnimMontage) {
+      return loadedAnimMontage;
+   }
+
    if(UAnimInstance* animBP = characterWithMontage->GetMesh()->GetAnimInstance())
    {
       if(URTSUnitAnim* unitAnim = Cast<URTSUnitAnim>(animBP))
       {
          const TSoftObjectPtr<UAnimMontage> animMontageToLoad = unitAnim->GetAnimMontage(FGameplayTag::RequestGameplayTag("Skill.Name.AutoAttack"));
-         return animMontageToLoad.LoadSynchronous();
+         loadedAnimMontage = animMontageToLoad.LoadSynchronous();
+         return loadedAnimMontage;
       }
    }
    return nullptr;

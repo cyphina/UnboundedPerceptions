@@ -27,6 +27,11 @@ AActor* UTargetComponent::GetTargetActorOrUnit() const
    }
 }
 
+bool UTargetComponent::IsTargetingTypeIndex(int targetTypeIndex) const
+{
+   return targetData.target.GetIndex() == targetTypeIndex;
+}
+
 bool UTargetComponent::IsTargetingSelf() const
 {
    return GetTargetUnit() == GetOwner();

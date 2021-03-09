@@ -7,6 +7,7 @@
 
 /**
  * @brief Base class of any action that requires us to query what to do before acting.
+ * Any action that takes some time to perform is recommended to have some kind of timer (to stop it if it's going too long).
  */
 UCLASS(Abstract)
 class MYPROJECT_API UBTTask_QueryAction : public UBTTaskNode

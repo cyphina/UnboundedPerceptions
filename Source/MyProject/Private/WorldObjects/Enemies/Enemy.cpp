@@ -35,7 +35,7 @@ AEnemy::AEnemy(const FObjectInitializer& oI) : AUnit(oI)
    GetCapsuleComponent()->SetCollisionProfileName("Enemy");
 
    visionComponent->SetCollisionProfileName("EnemyVision");
-   visionComponent->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Overlap); //Friendly
+   visionComponent->SetCollisionResponseToChannel(ALLY_OBJECT_CHANNEL, ECR_Overlap); //Friendly
    visionComponent->SetCanEverAffectNavigation(true);
    visionComponent->AreaClass = UNavArea_EnemySpot::StaticClass();
    visionComponent->SetAbsolute(false, false, true);
@@ -157,5 +157,5 @@ void AEnemy::InitializeStats()
 const TArray<AUnit*>* AEnemy::GetEnemies_Impl() const
 {
    const auto& gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
-   return &gameStateRef->GetAllFriendlyUnits();
+   return &gameStateRef->GetAllAllyUnits();
 }

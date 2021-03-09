@@ -18,8 +18,6 @@ class MYPROJECT_API UMontageAttackAnim : public UObject, public IAttackAnim
    GENERATED_BODY()
 
  public:
-   UMontageAttackAnim();
-
    UFUNCTION()
    void AttackNotify() override {}
 
@@ -30,10 +28,15 @@ class MYPROJECT_API UMontageAttackAnim : public UObject, public IAttackAnim
    FOnAttackAnimFinished* OnAttackAnimFinished() override { return &OnAttackAnimFinishedEvent; }
 
  private:
+   UMontageAttackAnim();
+
    void OnMontageEnded(UAnimMontage* montage, bool bInterrupted);
-   
-   UAnimMontage* GetAttackMontage(ACharacter* characterWithMontage) const;
-   
+
+   UAnimMontage* GetAttackMontage(ACharacter* characterWithMontage);
+
+   UPROPERTY()
+   UAnimMontage* loadedAnimMontage = nullptr;
+
    FOnHitNotify          OnAttackNotifyEvent;
    FOnAttackAnimFinished OnAttackAnimFinishedEvent;
 };

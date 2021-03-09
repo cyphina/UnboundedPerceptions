@@ -307,12 +307,13 @@ void UTargetedAttackComponent::LockOnTarget() const
 
 void UTargetedAttackComponent::OnAttackSwingDoneEffect()
 {
+   bool bDamageEffectSucceeded = false;
    switch(agent->GetCombatInfo()->combatStyle)
    {
       case ECombatType::Melee:
       {
-         agent->GetAbilitySystemComponent()->ApplyDamageToTarget(agent->GetTargetComponent()->GetTargetUnit()->GetAbilitySystemComponent(),
-                                                                 FDamageScalarStruct(0, 100, 0, 0, 0), GetAttackElement());
+         bDamageEffectSucceeded = agent->GetAbilitySystemComponent()->ApplyDamageToTarget(agent->GetTargetComponent()->GetTargetUnit()->GetAbilitySystemComponent(),
+                                                                                          FDamageScalarStruct(0, 100, 0, 0, 0), GetAttackElement());
          break;
       }
       case ECombatType::Ranged:
@@ -326,7 +327,11 @@ void UTargetedAttackComponent::OnAttackSwingDoneEffect()
          break;
       }
    }
-   agent->GetStatComponent()->ModifyStats(agent->GetStatComponent()->GetVitalCurValue(EVitals::Mana) + 5, EVitals::Mana);
+
+   if(!agent->GetCombatInfo()->bMissLastHit)
+   {
+      agent->GetStatComponent()->ModifyStats(agent->GetStatComponent()->GetVitalCurValue(EVitals::Mana) + 5, EVitals::Mana);
+   }
 }
 
 void UTargetedAttackComponent::HandleAutoAttackModifierTags()

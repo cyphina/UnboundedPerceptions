@@ -14,7 +14,7 @@ FString UBTTask_QueryAction::GetStaticDescription() const
 {
    if(actionQuery)
    {
-      return FString::Printf(TEXT("Using query\n%s to find target"), *actionQuery->GetQueryName().ToString());
+      return FString::Printf(TEXT("Using query\n%s to find target"), *actionQuery->GetName());
    }
    else
    {

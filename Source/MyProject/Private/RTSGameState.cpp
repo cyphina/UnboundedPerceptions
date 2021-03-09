@@ -25,19 +25,19 @@ ARTSGameState::ARTSGameState()
 void ARTSGameState::BeginPlay()
 {
    Super::BeginPlay();
-   visionManager = UVisionSubsystem::Create(this);
-   GetWorld()->GetTimerManager().SetTimer(updateCachedVisibleUnitsTimerHandle, [this]()
-   {
-      visibleEnemies = enemyList.FilterByPredicate([](const AUnit* enemy)
-      {
-         return !enemy->GetIsUnitHidden();
-      });
+   StartVisionChecks();
+   GetWorld()->GetTimerManager().SetTimer(
+       updateCachedVisibleUnitsTimerHandle,
+       [this]() {
+          visibleEnemies = enemyList.FilterByPredicate([](const AUnit* enemy) {
+             return !enemy->GetIsUnitHidden();
+          });
 
-      visiblePlayerUnits = allyList.FilterByPredicate([](const AUnit* ally)
-      {
-         return !ally->GetIsUnitHidden();
-      });
-   }, 0.1f, true, 0.f);
+          visiblePlayerUnits = allyList.FilterByPredicate([](const AUnit* ally) {
+             return !ally->GetIsUnitHidden();
+          });
+       },
+       0.1f, true, 0.f);
 
    clock = MakeUnique<FUpGameClock>(*this, FUpTime(), FUpDate());
    OnGameSpeedUpdated().AddDynamic(this, &ARTSGameState::UpdateGameSpeed);
@@ -74,6 +74,19 @@ const TArray<AUnit*>& ARTSGameState::GetVisiblePlayerUnits() const
    return visiblePlayerUnits;
 }
 
+void ARTSGameState::StartVisionChecks()
+{
+   if(!visionManager)
+   {
+      visionManager = UVisionSubsystem::Create(this);
+   }
+}
+
+void ARTSGameState::StopVisionChecks()
+{
+   visionManager->ConditionalBeginDestroy();
+}
+
 void ARTSGameState::AddGameTime(FUpTime timeToAdd, FUpDate daysToAdd)
 {
    clock->AddGameTime(timeToAdd, daysToAdd);
@@ -102,7 +115,8 @@ void ARTSGameState::OnAllyActiveChanged(AAlly* allyRef, bool isActive)
    if(isActive)
    {
       RegisterFriendlyUnit(allyRef);
-   } else
+   }
+   else
    {
       UnRegisterFriendlyUnit(allyRef);
    }
@@ -113,7 +127,8 @@ void ARTSGameState::OnEnemyActiveChanged(AEnemy* enemyRef, bool isActive)
    if(isActive)
    {
       RegisterEnemyUnit(enemyRef);
-   } else
+   }
+   else
    {
       UnRegisterEnemyUnit(enemyRef);
    }

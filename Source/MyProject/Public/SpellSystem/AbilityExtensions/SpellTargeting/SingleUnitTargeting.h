@@ -15,6 +15,8 @@ class UUpSpellTargeting_SingleUnit : public UUpSpellTargeting
 
    void ManualSetSpellTarget(UTargetComponent* targetComp, const FHitResult& hitResult) const override;
 
+   bool IsProperTargetSet(UTargetComponent* targetComp) const override;
+
    void AdjustCastPosition(USpellCastComponent* spellCastComp, TSubclassOf<UMySpell> spellClass, UTargetComponent* targetComp) const override;
 
    bool ShouldTryAdjustPosition(AUnit* spellCaster) const override;
@@ -57,6 +59,8 @@ class UUpSpellTargeting_InteractableOrUnit : public UUpSpellTargeting
    void ClickResponse(const FHitResult& hitResult, TSubclassOf<UMySpell> spellClass, IManualTargetingController& sourceUnitController) const override;
 
    void ManualSetSpellTarget(UTargetComponent* targetComp, const FHitResult& hitResult) const override;
+
+   bool IsProperTargetSet(UTargetComponent* targetComp) const override;
 
    void AdjustCastPosition(USpellCastComponent* spellCastComp, TSubclassOf<UMySpell> spellClass, UTargetComponent* targetComp) const override;
 

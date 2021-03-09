@@ -60,6 +60,9 @@ class MYPROJECT_API UTargetComponent : public UActorComponent
 
    AActor* GetTargetActorOrUnit() const;
 
+   /** Checks to see if our target is of a certain type */
+   bool IsTargetingTypeIndex(int targetTypeIndex) const;
+
    /** Check to see if we're targeting ourselves with a spell*/
    bool IsTargetingSelf() const;
 

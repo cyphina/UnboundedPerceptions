@@ -52,11 +52,14 @@ EBTNodeResult::Type UBTTask_CastSpell::ExecuteTask(UBehaviorTreeComponent& owner
 
       if(targetFindingLogic && !spellToCast.GetDefaultObject()->GetSpellDefaults().Targeting->IsChildOf(UUpSpellTargeting_None::StaticClass()))
       {
-         UUpAIHelperLibrary::AIBeginCastSpell(targetFindingLogic, spellToCast, spellCastComponent);     
+         UUpAIHelperLibrary::AIBeginCastSpell(targetFindingLogic, spellToCast, spellCastComponent);
       }
       else
       {
-         spellCastComponent->BeginCastSpell(spellToCast);
+         if(spellToCast.GetDefaultObject()->GetTargeting().GetDefaultObject()->IsProperTargetSet(unitController->GetUnitOwner()->GetTargetComponent()))
+         {
+            spellCastComponent->BeginCastSpell(spellToCast);
+         }
       }
       return EBTNodeResult::InProgress;
    }
@@ -116,7 +119,7 @@ FString UBTTask_CastSpell::GetStaticDescription() const
       if(targetFindingLogic)
       {
          return FString::Printf(TEXT("%s: %s using query\n%s to find target"), *Super::GetStaticDescription(), *spellName,
-                                *targetFindingLogic->GetQueryName().ToString());
+                                *targetFindingLogic->GetName());
       }
       else
       {

@@ -108,14 +108,14 @@ void ARTSDoor::Interact_Implementation(ABaseHero* hero)
          tL.Play();
          // SetActorEnableCollision(false);
          doorCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
-         doorCollision->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Ignore);
-         doorCollision->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Ignore);
+         doorCollision->SetCollisionResponseToChannel(ENEMY_OBJECT_CHANNEL, ECR_Ignore);
+         doorCollision->SetCollisionResponseToChannel(ALLY_OBJECT_CHANNEL, ECR_Ignore);
       } else {
          // Close the Door
          tL.Reverse();
          doorCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
-         doorCollision->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Block);
-         doorCollision->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Block);
+         doorCollision->SetCollisionResponseToChannel(ENEMY_OBJECT_CHANNEL, ECR_Block);
+         doorCollision->SetCollisionResponseToChannel(ALLY_OBJECT_CHANNEL, ECR_Block);
       }
       isOpen = !isOpen;
    }

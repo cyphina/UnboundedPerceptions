@@ -1,9 +1,16 @@
 #pragma once
 
 UENUM(BlueprintType)
-enum class ECombatType : uint8 { Melee, Ranged, Magic };
+enum class ECombatType : uint8
+{
+   Melee,
+   Ranged,
+   Magic
+};
 
-struct UpCombatInfo {
-   bool        isDead  = false;
-   ECombatType combatStyle = ECombatType::Magic;
+struct UpCombatInfo
+{
+   bool        isDead       = false;
+   bool        bMissLastHit = false;
+   ECombatType combatStyle  = ECombatType::Magic;
 };

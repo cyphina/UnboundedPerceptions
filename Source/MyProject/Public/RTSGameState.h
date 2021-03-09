@@ -25,12 +25,12 @@ UCLASS()
 class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsContext, public IGameSpeedContext, public IVisionContext
 {
    GENERATED_BODY()
-   
+
  public:
    ARTSGameState();
 
    UFUNCTION(BlueprintCallable)
-   const TArray<AUnit*>& GetAllFriendlyUnits() const override { return allyList; }
+   const TArray<AUnit*>& GetAllAllyUnits() const override { return allyList; }
 
    UFUNCTION(BlueprintCallable)
    const TArray<AUnit*>& GetAllEnemyUnits() const override { return enemyList; }
@@ -40,6 +40,9 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsConte
 
    UFUNCTION(BlueprintCallable)
    const TArray<AUnit*>& GetVisiblePlayerUnits() const override;
+
+   void StartVisionChecks() override;
+   void StopVisionChecks() override;
 
    /** Callback to update our time unit when we change game speed (done only within GameSpeedWidget */
    UFUNCTION()
@@ -109,7 +112,7 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsConte
    TArray<AUnit*> enemyList;
 
    FTimerHandle updateCachedVisibleUnitsTimerHandle;
-   
+
    /** Copy of cached value (value gotten from reading thread last) */
    TArray<AUnit*> visiblePlayerUnits;
 

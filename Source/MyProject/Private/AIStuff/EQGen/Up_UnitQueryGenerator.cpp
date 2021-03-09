@@ -16,7 +16,7 @@ void UUp_UnitQueryGenerator::GenerateItems(FEnvQueryInstance& queryInstance) con
 
    TArray<AActor*> matchingActors;
 
-   for(AUnit* unit : allUnitsContext->GetAllFriendlyUnits()) {
+   for(AUnit* unit : allUnitsContext->GetAllAllyUnits()) {
       matchingActors.Add(unit);
    }
 

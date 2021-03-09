@@ -15,7 +15,10 @@ class IVisionContext
 {
    GENERATED_BODY()
 
-public:
-   FORCEINLINE virtual const TArray<AUnit*>& GetVisibleEnemies() const = 0;
+ public:
+   FORCEINLINE virtual const TArray<AUnit*>& GetVisibleEnemies() const     = 0;
    FORCEINLINE virtual const TArray<AUnit*>& GetVisiblePlayerUnits() const = 0;
+
+   virtual void StartVisionChecks() = 0;
+   virtual void StopVisionChecks()  = 0;
 };

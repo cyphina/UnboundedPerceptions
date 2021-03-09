@@ -135,7 +135,7 @@ TSet<const URTSVisionComponent*> UVisionSubsystem::GetFriendlyVisionComps() cons
    const auto getFriendlyVisionComp = [](const AUnit* friendlyUnit) {
       return friendlyUnit->GetVisionComponent();
    };
-   Algo::TransformIf(gameStateRef->GetAllFriendlyUnits(), friendlyVisionComps, friendlyUnitSeesSomeone, getFriendlyVisionComp);
+   Algo::TransformIf(gameStateRef->GetAllAllyUnits(), friendlyVisionComps, friendlyUnitSeesSomeone, getFriendlyVisionComp);
    return friendlyVisionComps;
 }
 
@@ -246,7 +246,7 @@ void UVisionSubsystem::ToggleEnemyPerspective()
    bShowEnemyPerspective = !bShowEnemyPerspective;
    if(bShowEnemyPerspective)
    {
-      for(AUnit* alliedUnit : gameStateRef->GetAllFriendlyUnits())
+      for(AUnit* alliedUnit : gameStateRef->GetAllAllyUnits())
       {
          alliedUnit->SetIsUnitHidden(true);
       }
@@ -257,7 +257,7 @@ void UVisionSubsystem::ToggleEnemyPerspective()
    }
    else
    {
-      for(AUnit* alliedUnit : gameStateRef->GetAllFriendlyUnits())
+      for(AUnit* alliedUnit : gameStateRef->GetAllAllyUnits())
       {
          alliedUnit->SetIsUnitHidden(false);
       }

@@ -29,7 +29,8 @@ void URTSAbilitySystemComponent::BeginPlay()
    GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG)));
 
    // TODO: Set this more elegantly I guess.
-   if(Cast<ABaseHero>(GetOwner())) {
+   if(Cast<ABaseHero>(GetOwner()))
+   {
       abilities.SetNum(6);
    }
 }
@@ -50,14 +51,21 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
    const bool bIsNetAuthority = IsOwnerActorAuthoritative();
 
    // Check Network Authority
-   if(!HasNetworkAuthorityToApplyGameplayEffect(PredictionKey)) { return FActiveGameplayEffectHandle(); }
+   if(!HasNetworkAuthorityToApplyGameplayEffect(PredictionKey))
+   {
+      return FActiveGameplayEffectHandle();
+   }
 
    // Don't allow prediction of periodic effects
-   if(PredictionKey.IsValidKey() && Spec.GetPeriod() > 0.f) {
-      if(IsOwnerActorAuthoritative()) {
+   if(PredictionKey.IsValidKey() && Spec.GetPeriod() > 0.f)
+   {
+      if(IsOwnerActorAuthoritative())
+      {
          // Server continue with invalid prediction key
          PredictionKey = FPredictionKey();
-      } else {
+      }
+      else
+      {
          // Client just return now
          return FActiveGameplayEffectHandle();
       }
@@ -65,7 +73,8 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
 
    // Are we currently immune to this? (ApplicationImmunity)
    const FActiveGameplayEffect* ImmunityGE = nullptr;
-   if(ActiveGameplayEffects.HasApplicationImmunityToSpec(Spec, ImmunityGE)) {
+   if(ActiveGameplayEffects.HasApplicationImmunityToSpec(Spec, ImmunityGE))
+   {
       OnImmunityBlockGameplayEffect(Spec, ImmunityGE);
       return FActiveGameplayEffectHandle();
    }
@@ -73,8 +82,10 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
    // Check AttributeSet requirements: make sure all attributes are valid
    // We may want to cache this off in some way to make the runtime check quicker.
    // We also need to handle things in the execution list
-   for(const FGameplayModifierInfo& Mod : Spec.Def->Modifiers) {
-      if(!Mod.Attribute.IsValid()) {
+   for(const FGameplayModifierInfo& Mod : Spec.Def->Modifiers)
+   {
+      if(!Mod.Attribute.IsValid())
+      {
          ABILITY_LOG(Warning, TEXT("%s has a null modifier attribute."), *Spec.Def->GetPathName());
          return FActiveGameplayEffectHandle();
       }
@@ -82,7 +93,10 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
 
    // check if the effect being applied actually succeeds
    float ChanceToApply = Spec.GetChanceToApplyToTarget();
-   if((ChanceToApply < 1.f - SMALL_NUMBER) && (FMath::FRand() > ChanceToApply)) { return FActiveGameplayEffectHandle(); }
+   if((ChanceToApply < 1.f - SMALL_NUMBER) && (FMath::FRand() > ChanceToApply))
+   {
+      return FActiveGameplayEffectHandle();
+   }
 
    // Get MyTags.
    //	We may want to cache off a GameplayTagContainer instead of rebuilding it every time.
@@ -96,12 +110,17 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
 
       GetOwnedGameplayTags(MyTags);
 
-      if(Spec.Def->ApplicationTagRequirements.RequirementsMet(MyTags) == false) { return FActiveGameplayEffectHandle(); }
+      if(Spec.Def->ApplicationTagRequirements.RequirementsMet(MyTags) == false)
+      {
+         return FActiveGameplayEffectHandle();
+      }
    }
 
    // Custom application requirement check
-   for(const TSubclassOf<UGameplayEffectCustomApplicationRequirement>& AppReq : Spec.Def->ApplicationRequirements) {
-      if(*AppReq && AppReq->GetDefaultObject<UGameplayEffectCustomApplicationRequirement>()->CanApplyGameplayEffect(Spec.Def, Spec, this) == false) {
+   for(const TSubclassOf<UGameplayEffectCustomApplicationRequirement>& AppReq : Spec.Def->ApplicationRequirements)
+   {
+      if(*AppReq && AppReq->GetDefaultObject<UGameplayEffectCustomApplicationRequirement>()->CanApplyGameplayEffect(Spec.Def, Spec, this) == false)
+      {
          return FActiveGameplayEffectHandle();
       }
    }
@@ -124,18 +143,24 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
    FGameplayEffectSpec*            OurCopyOfSpec = nullptr;
    TSharedPtr<FGameplayEffectSpec> StackSpec;
    {
-      if(Spec.Def->DurationPolicy != EGameplayEffectDurationType::Instant || bTreatAsInfiniteDuration) {
+      if(Spec.Def->DurationPolicy != EGameplayEffectDurationType::Instant || bTreatAsInfiniteDuration)
+      {
          AppliedEffect = ActiveGameplayEffects.ApplyGameplayEffectSpec(Spec, PredictionKey, bFoundExistingStackableGE);
-         if(!AppliedEffect) { return FActiveGameplayEffectHandle(); }
+         if(!AppliedEffect)
+         {
+            return FActiveGameplayEffectHandle();
+         }
 
          MyHandle      = AppliedEffect->Handle;
          OurCopyOfSpec = &(AppliedEffect->Spec);
 
          // Log results of applied GE spec
-         if(UE_LOG_ACTIVE(VLogAbilitySystem, Log)) {
+         if(UE_LOG_ACTIVE(VLogAbilitySystem, Log))
+         {
             ABILITY_VLOG(OwnerActor, Log, TEXT("Applied %s"), *OurCopyOfSpec->Def->GetFName().ToString());
 
-            for(FGameplayModifierInfo Modifier : Spec.Def->Modifiers) {
+            for(FGameplayModifierInfo Modifier : Spec.Def->Modifiers)
+            {
                float Magnitude = 0.f;
                Modifier.ModifierMagnitude.AttemptCalculateMagnitude(Spec, Magnitude);
                ABILITY_VLOG(OwnerActor, Log, TEXT("         %s: %s %f"), *Modifier.Attribute.GetName(), *EGameplayModOpToString(Modifier.ModifierOp), Magnitude);
@@ -143,7 +168,8 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
          }
       }
 
-      if(!OurCopyOfSpec) {
+      if(!OurCopyOfSpec)
+      {
          StackSpec     = TSharedPtr<FGameplayEffectSpec>(new FGameplayEffectSpec(Spec));
          OurCopyOfSpec = StackSpec.Get();
          UAbilitySystemGlobals::Get().GlobalPreGameplayEffectSpecApply(*OurCopyOfSpec, this);
@@ -151,13 +177,15 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
       }
 
       // if necessary add a modifier to OurCopyOfSpec to force it to have an infinite duration
-      if(bTreatAsInfiniteDuration) {
+      if(bTreatAsInfiniteDuration)
+      {
          // This should just be a straight set of the duration float now
          OurCopyOfSpec->SetDuration(UGameplayEffect::INFINITE_DURATION, true);
       }
    }
 
-   if(OurCopyOfSpec) {
+   if(OurCopyOfSpec)
+   {
       // Update (not push) the global spec being applied [we want to switch it to our copy, from the const input copy)
       UAbilitySystemGlobals::Get().SetCurrentAppliedGE(OurCopyOfSpec);
    }
@@ -165,19 +193,23 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
    // We still probably want to apply tags and stuff even if instant?
    // If bSuppressStackingCues is set for this GameplayEffect, only add the GameplayCue if this is the first instance of the GameplayEffect
    if(!bSuppressGameplayCues && bInvokeGameplayCueApplied && AppliedEffect && !AppliedEffect->bIsInhibited &&
-      (!bFoundExistingStackableGE || !Spec.Def->bSuppressStackingCues)) {
+      (!bFoundExistingStackableGE || !Spec.Def->bSuppressStackingCues))
+   {
       // We both added and activated the GameplayCue here.
       // On the client, who will invoke the gameplay cue from an OnRep, he will need to look at the StartTime to determine
       // if the Cue was actually added+activated or just added (due to relevancy)
 
       // Fixme: what if we wanted to scale Cue magnitude based on damage? E.g, scale an cue effect when the GE is buffed?
 
-      if(OurCopyOfSpec->StackCount > Spec.StackCount) {
+      if(OurCopyOfSpec->StackCount > Spec.StackCount)
+      {
          // Because PostReplicatedChange will get called from modifying the stack count
          // (and not PostReplicatedAdd) we won't know which GE was modified.
          // So instead we need to explicitly RPC the client so it knows the GC needs updating
          UAbilitySystemGlobals::Get().GetGameplayCueManager()->InvokeGameplayCueAddedAndWhileActive_FromSpec(this, *OurCopyOfSpec, PredictionKey);
-      } else {
+      }
+      else
+      {
          // Otherwise these will get replicated to the client when the GE gets added to the replicated array
          InvokeGameplayCueEvent(*OurCopyOfSpec, EGameplayCueEvent::OnActive);
          InvokeGameplayCueEvent(*OurCopyOfSpec, EGameplayCueEvent::WhileActive);
@@ -187,15 +219,24 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
    // Execute the GE at least once (if instant, this will execute once and be done. If persistent, it was added to ActiveGameplayEffects above)
 
    // Execute if this is an instant application effect
-   if(bTreatAsInfiniteDuration) {
+   if(bTreatAsInfiniteDuration)
+   {
       // This is an instant application but we are treating it as an infinite duration for prediction. We should still predict the execute GameplayCUE.
       // (in non predictive case, this will happen inside ::ExecuteGameplayEffect)
 
-      if(!bSuppressGameplayCues) { UAbilitySystemGlobals::Get().GetGameplayCueManager()->InvokeGameplayCueExecuted_FromSpec(this, *OurCopyOfSpec, PredictionKey); }
-   } else if(Spec.Def->DurationPolicy == EGameplayEffectDurationType::Instant) {
-      if(OurCopyOfSpec->Def->OngoingTagRequirements.IsEmpty()) {
+      if(!bSuppressGameplayCues)
+      {
+         UAbilitySystemGlobals::Get().GetGameplayCueManager()->InvokeGameplayCueExecuted_FromSpec(this, *OurCopyOfSpec, PredictionKey);
+      }
+   }
+   else if(Spec.Def->DurationPolicy == EGameplayEffectDurationType::Instant)
+   {
+      if(OurCopyOfSpec->Def->OngoingTagRequirements.IsEmpty())
+      {
          ExecuteGameplayEffect(*OurCopyOfSpec, PredictionKey);
-      } else {
+      }
+      else
+      {
          ABILITY_LOG(
              Warning,
              TEXT(
@@ -204,7 +245,8 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
       }
    }
 
-   if(Spec.GetPeriod() != UGameplayEffect::NO_PERIOD && Spec.TargetEffectSpecs.Num() > 0) {
+   if(Spec.GetPeriod() != UGameplayEffect::NO_PERIOD && Spec.TargetEffectSpecs.Num() > 0)
+   {
       ABILITY_LOG(Warning, TEXT("%s is periodic but also applies GameplayEffects to its target. GameplayEffects will only be applied once, not every period."),
                   *Spec.Def->GetPathName());
    }
@@ -216,17 +258,22 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
    //		Remove any active gameplay effects that match the RemoveGameplayEffectsWithTags in the definition for this spec
    //		Only call this if we are the Authoritative owner and we have some RemoveGameplayEffectsWithTags.CombinedTag to remove
    // ------------------------------------------------------
-   if(bIsNetAuthority && Spec.Def->RemoveGameplayEffectsWithTags.CombinedTags.Num() > 0) {
+   if(bIsNetAuthority && Spec.Def->RemoveGameplayEffectsWithTags.CombinedTags.Num() > 0)
+   {
       // Clear tags is always removing all stacks.
       FGameplayEffectQuery ClearQuery = FGameplayEffectQuery::MakeQuery_MatchAllOwningTags(Spec.Def->RemoveGameplayEffectsWithTags.CombinedTags);
-      if(MyHandle.IsValid()) { ClearQuery.IgnoreHandles.Add(MyHandle); }
+      if(MyHandle.IsValid())
+      {
+         ClearQuery.IgnoreHandles.Add(MyHandle);
+      }
 
       // way to add a number to how many buffs get purged
       FGameplayTag purgeDesc =
           Spec.Def->InheritableGameplayEffectTags.CombinedTags.Filter(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Purge"))).First();
 
       TArray<FActiveGameplayEffectHandle> removableEffects = GetActiveEffects(ClearQuery);
-      for(int i = 0; i < USpellDataLibrary::purgeTagMap[purgeDesc] && i < removableEffects.Num(); ++i) {
+      for(int i = 0; i < USpellDataLibrary::purgeTagMap[purgeDesc] && i < removableEffects.Num(); ++i)
+      {
          // TODO: Do some kind of roll to see if it the spell is successfully purged
          // GetActiveGameplayEffect(activeEffectHandle)->Spec.GetSetByCallerMagnitude()
          RemoveActiveGameplayEffect(removableEffects[i]);
@@ -237,8 +284,12 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
    // Apply Linked effects
    // todo: this is ignoring the returned handles, should we put them into a TArray and return all of the handles?
    // ------------------------------------------------------
-   for(const FGameplayEffectSpecHandle TargetSpec : Spec.TargetEffectSpecs) {
-      if(TargetSpec.IsValid()) { ApplyGameplayEffectSpecToSelf(*TargetSpec.Data.Get(), PredictionKey); }
+   for(const FGameplayEffectSpecHandle TargetSpec : Spec.TargetEffectSpecs)
+   {
+      if(TargetSpec.IsValid())
+      {
+         ApplyGameplayEffectSpecToSelf(*TargetSpec.Data.Get(), PredictionKey);
+      }
    }
 
    UAbilitySystemComponent* InstigatorASC = Spec.GetContext().GetInstigatorAbilitySystemComponent();
@@ -247,7 +298,10 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
    OnGameplayEffectAppliedToSelf(InstigatorASC, *OurCopyOfSpec, MyHandle);
 
    // Send the instigator a callback
-   if(InstigatorASC) { InstigatorASC->OnGameplayEffectAppliedToTarget(this, *OurCopyOfSpec, MyHandle); }
+   if(InstigatorASC)
+   {
+      InstigatorASC->OnGameplayEffectAppliedToTarget(this, *OurCopyOfSpec, MyHandle);
+   }
 
    return MyHandle;
 }
@@ -280,7 +334,8 @@ void URTSAbilitySystemComponent::SetSpellAtSlot(TSubclassOf<UMySpell> spellClass
 
 FProperty* URTSAbilitySystemComponent::GetEffectParameterProperty()
 {
-   static FProperty* EffectParamProperty = FindFieldChecked<FProperty>(URTSAbilitySystemComponent::StaticClass(), GET_MEMBER_NAME_CHECKED(URTSAbilitySystemComponent, EffectParameter));
+   static FProperty* EffectParamProperty =
+       FindFieldChecked<FProperty>(URTSAbilitySystemComponent::StaticClass(), GET_MEMBER_NAME_CHECKED(URTSAbilitySystemComponent, EffectParameter));
    return EffectParamProperty;
 }
 
@@ -294,31 +349,6 @@ void URTSAbilitySystemComponent::TryRemoveInvisibility()
 {
    const bool invis = HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility"));
    if(invis) RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
-}
-
-void URTSAbilitySystemComponent::ApplyDamageToSelf(FDamageScalarStruct damageScalars, FGameplayTag attackElement)
-{
-   const auto damageEffect = MakeDamageEffect(damageScalars, attackElement);
-   ApplyGameplayEffectSpecToSelf(*damageEffect.Data.Get(), FPredictionKey());
-}
-
-void URTSAbilitySystemComponent::ApplyDamageToTarget(URTSAbilitySystemComponent* targetComponent, FDamageScalarStruct damageScalars, FGameplayTag attackElement)
-{
-   const auto damageEffect = MakeDamageEffect(damageScalars, attackElement);
-   ApplyGameplayEffectSpecToTarget(*damageEffect.Data.Get(), targetComponent);
-}
-
-FGameplayAbilitySpec* URTSAbilitySystemComponent::FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass)
-{
-   return const_cast<FGameplayAbilitySpec*>(AsConst(this)->FindAbilitySpecFromClass(InAbilityClass));
-}
-
-const FGameplayAbilitySpec* URTSAbilitySystemComponent::FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass) const
-{
-   for(const FGameplayAbilitySpec& Spec : ActivatableAbilities.Items) {
-      if(Spec.Ability->GetClass() == InAbilityClass) { return &Spec; }
-   }
-   return nullptr;
 }
 
 FGameplayEffectSpecHandle URTSAbilitySystemComponent::MakeDamageEffect(FDamageScalarStruct damageScalars, FGameplayTag attackElement)
@@ -340,3 +370,48 @@ FGameplayEffectSpecHandle URTSAbilitySystemComponent::MakeDamageEffect(FDamageSc
    return damageEffectHandle;
 }
 
+bool URTSAbilitySystemComponent::ApplyDamageToSelf(FDamageScalarStruct damageScalars, FGameplayTag attackElement)
+{
+   const auto damageEffect = MakeDamageEffect(damageScalars, attackElement);
+   return ApplyDamageEffectSpecToTarget(damageEffect, this);
+}
+
+bool URTSAbilitySystemComponent::ApplyDamageToTarget(URTSAbilitySystemComponent* targetComponent, FDamageScalarStruct damageScalars, FGameplayTag attackElement)
+{
+   const auto damageEffect = MakeDamageEffect(damageScalars, attackElement);
+   return ApplyDamageEffectSpecToTarget(damageEffect, targetComponent);
+}
+
+bool URTSAbilitySystemComponent::ApplyDamageEffectSpecToTarget(const FGameplayEffectSpecHandle& damageEffectSpecHandle, UAbilitySystemComponent* targetComp)
+{
+   if(damageEffectSpecHandle.IsValid() && damageEffectSpecHandle.Data->Def->GetClass()->IsChildOf(URTSDamageEffect::StaticClass()))
+   {
+      const float healthBeforeDamageApplied = unitOwnerRef->GetStatComponent()->GetVitalCurValue(EVitals::Health);
+      unitOwnerRef->GetAbilitySystemComponent()->BP_ApplyGameplayEffectSpecToTarget(damageEffectSpecHandle, targetComp);
+
+      // Check if damage was blocked or missed
+      // TODO: Maybe differentiate betweeen blocks and misses someday?
+      if(healthBeforeDamageApplied > unitOwnerRef->GetStatComponent()->GetVitalCurValue(EVitals::Health))
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
+FGameplayAbilitySpec* URTSAbilitySystemComponent::FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass)
+{
+   return const_cast<FGameplayAbilitySpec*>(AsConst(this)->FindAbilitySpecFromClass(InAbilityClass));
+}
+
+const FGameplayAbilitySpec* URTSAbilitySystemComponent::FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass) const
+{
+   for(const FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
+   {
+      if(Spec.Ability->GetClass() == InAbilityClass)
+      {
+         return &Spec;
+      }
+   }
+   return nullptr;
+}

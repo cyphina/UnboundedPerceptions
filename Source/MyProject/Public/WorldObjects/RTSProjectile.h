@@ -21,9 +21,8 @@ class MYPROJECT_API ARTSProjectile : public AActor
 
  public:
    static ARTSProjectile* MakeRTSProjectile(UWorld* worldToSpawnIn, UTargetComponent* targetComp, FTransform initialTransform = FTransform::Identity,
-                                            TSubclassOf<ARTSProjectile>         projectileClass         = ARTSProjectile::StaticClass(),
-                                            URTSProjectileStrategy* projectileStrategy = nullptr);
-                                            
+                                            TSubclassOf<ARTSProjectile> projectileClass    = ARTSProjectile::StaticClass(),
+                                            URTSProjectileStrategy*     projectileStrategy = nullptr);
 
    UFUNCTION(BlueprintCallable, Category = "Projectile")
    FORCEINLINE bool IsHoming() { return projectileMovementComponent->bIsHomingProjectile; }
@@ -35,20 +34,27 @@ class MYPROJECT_API ARTSProjectile : public AActor
    virtual void BeginPlay() override;
    virtual void Tick(float DeltaTime) override;
 
-   UPROPERTY(VisibleDefaultsOnly, Category = "Projectile")
+   UFUNCTION(BlueprintImplementableEvent)
+   void OnProjectileHitNoDodge(FVector projectileHitLocation);
+
+   UFUNCTION(BlueprintImplementableEvent)
+   void OnProjectileDodge(FVector projectileHitLocation);
+
+   UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
    USphereComponent* collisionComponent;
 
-   UPROPERTY(VisibleAnywhere, Category = "Movement")
+   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
    UProjectileMovementComponent* projectileMovementComponent;
 
-   UPROPERTY(EditAnywhere, Category = "Projectile")
+   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
    UStaticMeshComponent* bulletMesh;
 
  private:
    ARTSProjectile();
 
    UFUNCTION()
-   void OnHit(UPrimitiveComponent* hitComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, FVector normalImpulse, const FHitResult& hit);
+   void OnSweep(UPrimitiveComponent* overlappedComponent, AActor* overlappedActor, UPrimitiveComponent* otherComponent, int32 hitBodyIndex, bool bFromSweep,
+                const FHitResult& sweepResult);
 
    void FireInDirection(const FVector& shootDirection) const;
 

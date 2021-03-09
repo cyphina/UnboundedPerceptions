@@ -22,7 +22,7 @@ AStorageContainer::AStorageContainer() : AInteractableBase()
    sphereCollision->SetupAttachment(sceneLocation);
    sphereCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
    sphereCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
-   sphereCollision->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Overlap);
+   sphereCollision->SetCollisionResponseToChannel(ALLY_OBJECT_CHANNEL, ECR_Overlap);
    sphereCollision->SetSphereRadius(200.f);
    sphereCollision->SetUsingAbsoluteScale(true);
 }

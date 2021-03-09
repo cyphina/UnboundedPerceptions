@@ -100,7 +100,7 @@ const TArray<AUnit*>* AAlly::GetVisibleEnemies_Impl() const
 const TArray<AUnit*>* AAlly::GetAllies_Impl() const
 {
    const auto& gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
-   return &gameStateRef->GetAllFriendlyUnits();
+   return &gameStateRef->GetAllAllyUnits();
 }
 
 const TArray<AUnit*>* AAlly::GetEnemies_Impl() const

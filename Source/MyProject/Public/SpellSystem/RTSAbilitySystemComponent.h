@@ -27,6 +27,10 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
    TSubclassOf<UMySpell> GetSpellAtSlot(int index) const;
 
+   /** We can use this to apply a damage effect if we care to know if the damage effect was blocked or missed */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   bool ApplyDamageEffectSpecToTarget(const FGameplayEffectSpecHandle& damageEffectSpecHandle, UAbilitySystemComponent* targetComp);
+
    void SetSpellAtSlot(TSubclassOf<UMySpell> spellClassToSet, int slotIndex);
 
    const TArray<TSubclassOf<UMySpell>>& GetAbilities() const { return abilities; }
@@ -40,10 +44,10 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
    FActiveGameplayEffectHandle ApplyGameplayEffectSpecToSelf(const FGameplayEffectSpec& Spec, FPredictionKey PredictionKey) override;
 
    FGameplayEffectSpecHandle MakeDamageEffect(FDamageScalarStruct damageScalars, FGameplayTag attackElement);
-   void                      ApplyDamageToSelf(FDamageScalarStruct damageScalars, FGameplayTag attackElement);
-   void                      ApplyDamageToTarget(URTSAbilitySystemComponent* targetComponent, FDamageScalarStruct damageScalars, FGameplayTag attackElement);
+   bool                      ApplyDamageToSelf(FDamageScalarStruct damageScalars, FGameplayTag attackElement);
+   bool                      ApplyDamageToTarget(URTSAbilitySystemComponent* targetComponent, FDamageScalarStruct damageScalars, FGameplayTag attackElement);
 
-   FGameplayAbilitySpec* FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass);
+   FGameplayAbilitySpec*       FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass);
    const FGameplayAbilitySpec* FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass) const;
 
    /** Dedicated attribute for passing in parameters to our effect exec calculations */
@@ -53,7 +57,7 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
    static FProperty* GetEffectParameterProperty();
 
    static const FGameplayEffectAttributeCaptureDefinition& GetEffectParameterCapture();
-   
+
  protected:
    /**
     * List of abilities that are in unit's skill slots.

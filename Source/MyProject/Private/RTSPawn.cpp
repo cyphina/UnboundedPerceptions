@@ -280,10 +280,10 @@ void ARTSPawn::GetHitResultRightClick(FHitResult& clickHitResult) const
       const auto                  endPos = worldLocation + worldDirection * GetMaxArmLength() * CLICK_TRACE_LENGTH_MULTIPLIER;
       FCollisionObjectQueryParams queryParams;
       queryParams.AddObjectTypesToQuery(ECC_WorldStatic);
-      queryParams.AddObjectTypesToQuery(ENEMY_CHANNEL);
+      queryParams.AddObjectTypesToQuery(ENEMY_OBJECT_CHANNEL);
       if(GameplayModifierCVars::bEnableEnemyControl)
       {
-         queryParams.AddObjectTypesToQuery(FRIENDLY_CHANNEL);
+         queryParams.AddObjectTypesToQuery(ALLY_OBJECT_CHANNEL);
       }
       GetWorld()->LineTraceSingleByObjectType(clickHitResult, worldLocation, endPos, queryParams);
    }
@@ -408,7 +408,7 @@ void ARTSPawn::CursorHover()
 
                      if(selectedEnemy)
                      {
-                        if(hitResult.GetComponent()->GetCollisionObjectType() == FRIENDLY_CHANNEL)
+                        if(hitResult.GetComponent()->GetCollisionObjectType() == ALLY_OBJECT_CHANNEL)
                         {
                            ChangeCursor(ECursorStateEnum::Attack);
                            return;
@@ -416,7 +416,7 @@ void ARTSPawn::CursorHover()
                      }
                      else
                      {
-                        if(hitResult.GetComponent()->GetCollisionObjectType() == ENEMY_CHANNEL)
+                        if(hitResult.GetComponent()->GetCollisionObjectType() == ENEMY_OBJECT_CHANNEL)
                         {
                            ChangeCursor(ECursorStateEnum::Attack);
                            return;
@@ -428,7 +428,7 @@ void ARTSPawn::CursorHover()
                {
                   if(basePlayer->GetSelectedAllies().Num() > 0)
                   {
-                     if(hitResult.GetComponent()->GetCollisionObjectType() == ENEMY_CHANNEL)
+                     if(hitResult.GetComponent()->GetCollisionObjectType() == ENEMY_OBJECT_CHANNEL)
                      {
                         ChangeCursor(ECursorStateEnum::Attack);
                         return;

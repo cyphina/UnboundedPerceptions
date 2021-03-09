@@ -2,7 +2,9 @@
 #include "RTSProjectile.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "RTSDamageEffect.h"
 #include "RTSProjectileStrategy.h"
+#include "SpellFunctionLibrary.h"
 #include "TargetComponent.h"
 #include "Unit.h"
 
@@ -19,7 +21,7 @@ ARTSProjectile::ARTSProjectile()
    projectileMovementComponent->bShouldBounce            = false;
 
    collisionComponent->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
-   collisionComponent->OnComponentHit.AddDynamic(this, &ARTSProjectile::OnHit);
+   collisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ARTSProjectile::OnSweep);
 
    bulletMesh = CreateDefaultSubobject<UStaticMeshComponent>("BulletMesh");
    bulletMesh->SetupAttachment(RootComponent);
@@ -38,12 +40,13 @@ void ARTSProjectile::Tick(float DeltaTime)
 
 ARTSProjectile* ARTSProjectile::MakeRTSProjectile(UWorld* worldToSpawnIn, UTargetComponent* targetComp, FTransform initialTransform,
                                                   TSubclassOf<ARTSProjectile> projectileClass, URTSProjectileStrategy* projectileStrategy)
-{   
+{
    if(AUnit* unitShooter = Cast<AUnit>(targetComp->GetOwner()))
    {
-      ARTSProjectile* projectile = worldToSpawnIn->SpawnActorDeferred<ARTSProjectile>(projectileClass, initialTransform);
+      ARTSProjectile* projectile = worldToSpawnIn->SpawnActorDeferred<ARTSProjectile>(projectileClass, initialTransform, unitShooter);
 
-      if(!projectileStrategy) {
+      if(!projectileStrategy)
+      {
          projectileStrategy = URTSProjectileStrategy::StaticClass()->GetDefaultObject<URTSProjectileStrategy>();
       }
 
@@ -68,11 +71,11 @@ ARTSProjectile* ARTSProjectile::MakeRTSProjectile(UWorld* worldToSpawnIn, UTarge
          {
             if(unitShooter->GetIsEnemy())
             {
-               projectile->collisionComponent->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Block);
+               projectile->collisionComponent->SetCollisionResponseToChannel(ENEMY_OBJECT_CHANNEL, ECR_Block);
             }
             else
             {
-               projectile->collisionComponent->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Block);
+               projectile->collisionComponent->SetCollisionResponseToChannel(ALLY_OBJECT_CHANNEL, ECR_Block);
             }
             break;
          }
@@ -80,18 +83,18 @@ ARTSProjectile* ARTSProjectile::MakeRTSProjectile(UWorld* worldToSpawnIn, UTarge
          {
             if(unitShooter->GetIsEnemy())
             {
-               projectile->collisionComponent->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Block);
+               projectile->collisionComponent->SetCollisionResponseToChannel(ALLY_OBJECT_CHANNEL, ECR_Block);
             }
             else
             {
-               projectile->collisionComponent->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Block);
+               projectile->collisionComponent->SetCollisionResponseToChannel(ENEMY_OBJECT_CHANNEL, ECR_Block);
             }
             break;
          }
          case EBulletTargetingScheme::Bullet_Either:
          {
-            projectile->collisionComponent->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Block);
-            projectile->collisionComponent->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Block);
+            projectile->collisionComponent->SetCollisionResponseToChannel(ENEMY_OBJECT_CHANNEL, ECR_Block);
+            projectile->collisionComponent->SetCollisionResponseToChannel(ALLY_OBJECT_CHANNEL, ECR_Block);
             break;
          }
       }
@@ -135,14 +138,46 @@ void ARTSProjectile::FireAtTarget(const AActor* target) const
    projectileMovementComponent->HomingTargetComponent = target->GetRootComponent();
 }
 
-void ARTSProjectile::OnHit(UPrimitiveComponent* hitComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, FVector normalImpulse, const FHitResult& hit)
+void ARTSProjectile::OnSweep(UPrimitiveComponent* overlappedComponent, AActor* overlappedActor, UPrimitiveComponent* otherComponent, int32 hitBodyIndex, bool bFromSweep,
+                             const FHitResult& sweepResult)
 {
-   UAbilitySystemComponent* collidedActorAbilityComp = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(otherActor);
+   UAbilitySystemComponent* collidedActorAbilityComp = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(overlappedActor);
    if(collidedActorAbilityComp)
    {
-      for(FGameplayEffectSpecHandle eff : hitEffects)
+      const FGameplayEffectSpecHandle* damageEffect = hitEffects.FindByPredicate([](const FGameplayEffectSpecHandle& effectHandle) {
+         if(effectHandle.Data->Def->GetClass()->IsChildOf(URTSDamageEffect::StaticClass()))
+         {
+            return true;
+         }
+         return false;
+      });
+
+      // REMARK: Note that projectiles without damage are at the mercy of hitting depending on the very last attack done without damage, so for now all projectils should have a little damage
+      if(damageEffect)
       {
-         collidedActorAbilityComp->ApplyGameplayEffectSpecToSelf(*eff.Data.Get());
+         collidedActorAbilityComp->ApplyGameplayEffectSpecToSelf(*damageEffect->Data.Get());
+         hitEffects.RemoveSingle(*damageEffect);
+      }
+
+      if(AUnit* unitShooter = Cast<AUnit>(GetOwner()))
+      {
+         if(!unitShooter->GetCombatInfo()->bMissLastHit)
+         {
+            for(FGameplayEffectSpecHandle eff : hitEffects)
+            {
+               collidedActorAbilityComp->ApplyGameplayEffectSpecToSelf(*eff.Data.Get());
+            }
+
+            OnProjectileHitNoDodge(sweepResult.Location);
+
+            GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+               Destroy();
+            });
+         }
+         else
+         {
+            OnProjectileDodge(sweepResult.Location);
+         }
       }
    }
 }

@@ -76,7 +76,7 @@ void AUnit::SetupHealthbarComponent()
    healthBar->SetupAttachment(RootComponent);
    healthBar->SetDrawAtDesiredSize(true);
 
-   ConstructorHelpers::FClassFinder<UUserWidget> healthBarWig(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/Hitpoints/HealthbarWidget"));
+   ConstructorHelpers::FClassFinder<UUserWidget> healthBarWig(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/Hitpoints/Up_W_HealthbarWidget"));
    if(healthBarWig.Succeeded())
    {
       healthBar->SetWidgetClass(healthBarWig.Class);
@@ -87,8 +87,16 @@ void AUnit::SetupCharacterCollision() const
 {
    // Mesh needs an offset because it isn't aligned with capsule component at the beginning.  Offset by the mesh size
    GetMesh()->SetRelativeLocation(FVector(0, 0, -GetMesh()->Bounds.BoxExtent.Z));
-   GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
+   GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+
+   GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
+   GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
    GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECR_Block);
+   GetCapsuleComponent()->SetSimulatePhysics(false); // can't move w/o physics
+
+   GetCharacterMovement()->bEnablePhysicsInteraction = false;
+   GetCharacterMovement()->bPushForceScaledToMass    = false;
+   GetCharacterMovement()->PushForceFactor           = 0;
 }
 
 void AUnit::SetupMovementComponent() const
@@ -219,9 +227,8 @@ void AUnit::SetEnabled(bool bEnabled)
       SetActorTickEnabled(true);
       GetCapsuleComponent()->SetEnableGravity(true);
       GetCharacterMovement()->GravityScale = 1;
-      GetCapsuleComponent()->SetSimulatePhysics(false); // can't move w/o physics
-      bCanAffectNavigationGeneration = true;
-      unitProperties.bIsEnabled      = true;
+      bCanAffectNavigationGeneration       = true;
+      unitProperties.bIsEnabled            = true;
       damageIndicatorWidget->RegisterComponent();
    }
    else
@@ -232,7 +239,6 @@ void AUnit::SetEnabled(bool bEnabled)
       SetActorTickEnabled(false);
       GetCapsuleComponent()->SetEnableGravity(false);
       GetCharacterMovement()->GravityScale = 0;
-      GetCapsuleComponent()->SetSimulatePhysics(true); // but will drop if physics isn't set to true
       GetCapsuleComponent()->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
       bCanAffectNavigationGeneration = false;
       unitProperties.bIsEnabled      = false;

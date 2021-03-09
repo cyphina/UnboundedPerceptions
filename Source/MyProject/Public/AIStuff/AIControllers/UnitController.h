@@ -44,14 +44,15 @@ class MYPROJECT_API AUnitController : public AAIController
    /**
     * @brief Used when the player moves units to a certain location (only on right click move)
     * @param newLocation Location we want to move the selected units to.
+    * @param stopRange - How far from the target location we can stop
     * @return Returns a enum that denotes if the move was successful or why it failed.
     */
    UFUNCTION(BlueprintCallable, Category = "Action")
-   EPathFollowingRequestResult::Type Move(FVector newLocation);
+   EPathFollowingRequestResult::Type Move(FVector newLocation, float stopRange = 50);
 
    /** Similar to Move function but moves towards a target  actor */
    UFUNCTION(BlueprintCallable, Category = "Action")
-   EPathFollowingRequestResult::Type MoveActor(AActor* targetActor);
+   EPathFollowingRequestResult::Type MoveActor(AActor* targetActor, float stopRange);
 
    /** Function to turn self towards a direction*/
    UFUNCTION(BlueprintCallable, Category = "Movement")
@@ -121,9 +122,7 @@ class MYPROJECT_API AUnitController : public AAIController
    }
 
    static const int CHASE_RANGE = 100;
-
-   UPROPERTY(EditDefaultsOnly)
-   float smallMoveIgnoreRange = 50.f;
+   static const inline float smallMoveIgnoreRange = 50.f;
    
  protected:
    UFUNCTION(BlueprintCallable)
@@ -181,6 +180,7 @@ class MYPROJECT_API AUnitController : public AAIController
     * Function to move to appropriate distance from target and face the target
     */
    bool AdjustPosition(const float range, AActor* targetActor);
+   bool AdjustPosition(float range, AActor* targetActor, EPathFollowingRequestResult::Type& outPathReqRes);
 
    /**
     * @brief Used in adjust position to setup turning after we finished moving, else we trigger the finish move action.

@@ -64,11 +64,13 @@ FGameplayEffectContextHandle UMySpell::MakeEffectContext(const FGameplayAbilityS
 void UMySpell::CommitExecute(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
    // Our cooldown effects are all the same but we manually add the name tag of this spell to know it is on cooldown.
-   FGameplayEffectSpecHandle sH = MakeOutgoingGameplayEffectSpec(CooldownGameplayEffectClass, 1);
-   UAbilitySystemBlueprintLibrary::SetDuration(sH, GetCDDuration(ActorInfo->AbilitySystemComponent.Get()));
-   UAbilitySystemBlueprintLibrary::AddGrantedTag(sH, spellDefaults.nameTag);
-
-   K2_ApplyGameplayEffectSpecToOwner(sH);
+   if(GetCDDuration(ActorInfo->AbilitySystemComponent.Get()) > 0)
+   {
+      FGameplayEffectSpecHandle sH = MakeOutgoingGameplayEffectSpec(CooldownGameplayEffectClass, 1);
+      UAbilitySystemBlueprintLibrary::SetDuration(sH, GetCDDuration(ActorInfo->AbilitySystemComponent.Get()));
+      UAbilitySystemBlueprintLibrary::AddGrantedTag(sH, spellDefaults.nameTag);
+      K2_ApplyGameplayEffectSpecToOwner(sH);
+   }
 
    if(AUnit* unitRef = GetAvatarUnit())
    {
@@ -305,11 +307,11 @@ TArray<TEnumAsByte<ECollisionChannel>> UMySpell::GetTraceChannelForEnemy() const
    AUnit* unit = GetAvatarUnit();
    if(unit->GetIsEnemy())
    {
-      return {FRIENDLY_CHANNEL};
+      return {ALLY_TRACE_CHANNEL};
    }
    else
    {
-      return {ENEMY_CHANNEL};
+      return {ENEMY_TRACE_CHANNEL};
    }
 }
 
@@ -318,11 +320,80 @@ TArray<TEnumAsByte<ECollisionChannel>> UMySpell::GetTraceChannelForFriendly() co
    AUnit* unit = GetAvatarUnit();
    if(unit->GetIsEnemy())
    {
-      return {ENEMY_CHANNEL};
+      return {ENEMY_TRACE_CHANNEL};
    }
    else
    {
-      return {FRIENDLY_CHANNEL};
+      return {ALLY_TRACE_CHANNEL};
+   }
+}
+
+TArray<TEnumAsByte<ECollisionChannel>> UMySpell::GetObjectChannelForEnemy() const
+{
+   AUnit* unit = GetAvatarUnit();
+   if(unit->GetIsEnemy())
+   {
+      return {ALLY_OBJECT_CHANNEL};
+   }
+   else
+   {
+      return {ENEMY_OBJECT_CHANNEL};
+   }
+}
+
+void UMySpell::ApplyEffectsTargetIfNoMiss(const FGameplayAbilityTargetDataHandle& targetData, const TArray<FGameplayEffectSpecHandle>& effects)
+{
+   AUnit*                           avatarUnit   = GetAvatarUnit();
+   const FGameplayEffectSpecHandle& damageHandle = CreateGameplayEffectFromTableValues(URTSDamageEffect::StaticClass(), FGameplayTag::EmptyTag, FGameplayTagContainer());
+
+   if(damageHandle.IsValid() && HasAuthorityOrPredictionKey(CurrentActorInfo, &CurrentActivationInfo))
+   {
+      TARGETLIST_SCOPE_LOCK(*CurrentActorInfo->AbilitySystemComponent);
+
+      if(targetData.Data[0].IsValid())
+      {
+         for(TWeakObjectPtr<AActor> actor : targetData.Data[0]->GetActors())
+         {
+            if(actor.IsValid())
+            {
+               if(AUnit* target = Cast<AUnit>(actor.Get()))
+               {
+                  const float healthBeforeDamageApplied = target->GetStatComponent()->GetVitalCurValue(EVitals::Health);
+
+                  avatarUnit->GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*damageHandle.Data.Get(), target->GetAbilitySystemComponent());
+                  if(healthBeforeDamageApplied > target->GetStatComponent()->GetVitalCurValue(EVitals::Health))
+                  {
+                     for(const FGameplayEffectSpecHandle& specHandle : effects)
+                     {
+                        avatarUnit->GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*specHandle.Data.Get(), target->GetAbilitySystemComponent());
+                     }
+                  }
+               }
+            }
+         }
+      }
+      else
+      {
+         ABILITY_LOG(Warning, TEXT("UGameplayAbility::ApplyGameplayEffectSpecToTarget invalid target data passed in. Ability: %s"), *GetPathName());
+      }
+   }
+}
+
+bool UMySpell::IsLastHitAMiss()
+{
+   return GetAvatarUnit()->GetCombatInfo()->bMissLastHit;
+}
+
+TArray<TEnumAsByte<ECollisionChannel>> UMySpell::GetObjectChannelForFriendly() const
+{
+   AUnit* unit = GetAvatarUnit();
+   if(unit->GetIsEnemy())
+   {
+      return {ENEMY_OBJECT_CHANNEL};
+   }
+   else
+   {
+      return {ALLY_OBJECT_CHANNEL};
    }
 }
 

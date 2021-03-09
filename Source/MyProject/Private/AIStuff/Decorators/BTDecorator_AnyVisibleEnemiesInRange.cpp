@@ -34,12 +34,26 @@ bool UBTDecorator_AnyVisibleEnemiesInRange::CalculateRawConditionValue(UBehavior
 
 FString UBTDecorator_AnyVisibleEnemiesInRange::GetStaticDescription() const
 {
-   if(rangeCutoff >= 0)
+   if(IsInversed())
    {
-      return FString::Printf(TEXT("Checks: %f units away"), rangeCutoff);
+      if(rangeCutoff >= 0)
+      {
+         return FString::Printf(TEXT("Checks: if any units over %f units away"), rangeCutoff);
+      }
+      else
+      {
+         return FString::Printf(TEXT("Checks if any units outside vision radius"));
+      }
    }
    else
    {
-      return FString::Printf(TEXT("Checks for units in vision radius"));
+      if(rangeCutoff >= 0)
+      {
+         return FString::Printf(TEXT("Checks: if units inside %f unit radius"), rangeCutoff);
+      }
+      else
+      {
+         return FString::Printf(TEXT("Checks if units within vision radius"));
+      }
    }
 }

@@ -56,6 +56,11 @@ void UUpSpellTargeting_SingleUnit::ManualSetSpellTarget(UTargetComponent* target
    targetComp->SetTarget(GetHitUnit(hitResult));
 }
 
+bool UUpSpellTargeting_SingleUnit::IsProperTargetSet(UTargetComponent* targetComp) const
+{
+   return targetComp->IsTargetingTypeIndex(2);
+}
+
 void UUpSpellTargeting_SingleUnit::AdjustCastPosition(USpellCastComponent* spellCastComp, TSubclassOf<UMySpell> spellClass, UTargetComponent* targetComp) const
 {
    spellCastComp->AdjustCastingPosition(spellClass, targetComp->GetTargetUnit());
@@ -136,6 +141,11 @@ void UUpSpellTargeting_InteractableOrUnit::ClickResponse(const FHitResult& hitRe
 void UUpSpellTargeting_InteractableOrUnit::ManualSetSpellTarget(UTargetComponent* targetComp, const FHitResult& hitResult) const
 {
    GetHitUnit(hitResult) ? targetComp->SetTarget(GetHitUnit(hitResult)) : targetComp->SetTarget(hitResult.Actor.Get());
+}
+
+bool UUpSpellTargeting_InteractableOrUnit::IsProperTargetSet(UTargetComponent* targetComp) const
+{
+   return targetComp->IsTargetingTypeIndex(1);
 }
 
 void UUpSpellTargeting_InteractableOrUnit::AdjustCastPosition(USpellCastComponent* spellCastComp, TSubclassOf<UMySpell> spellClass, UTargetComponent* targetComp) const
