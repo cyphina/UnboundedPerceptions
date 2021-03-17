@@ -1,5 +1,6 @@
 #pragma once
 
+#include "EnvironmentQuery/EnvQueryTypes.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "UpAIHelperLibrary.generated.h"
 
@@ -57,5 +58,6 @@ class UUpAIHelperLibrary : public UBlueprintFunctionLibrary
     * @param spellCastComponent - Spell cast component of the caster
     */
    UFUNCTION(BlueprintCallable, Category = "Spell Casting")
-   static void AIBeginCastSpell(UEnvQuery* targetFindingQuery, const TSubclassOf<UMySpell> spellToCast, USpellCastComponent* spellCastComponent);
+   static void AIBeginCastSpell(UEnvQuery* targetFindingQuery, const TSubclassOf<UMySpell> spellToCast, USpellCastComponent* spellCastComponent,
+                                EEnvQueryRunMode::Type queryRunMode = EEnvQueryRunMode::Type::SingleResult);
 };

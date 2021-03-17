@@ -10,14 +10,21 @@ UBTTask_QueryAction::UBTTask_QueryAction()
    queryRunMode = EEnvQueryRunMode::Type::SingleResult;
 }
 
+FString UBTTask_QueryAction::GetQueryName() const
+{
+   FString queryName = actionQuery->GetName();
+   queryName.RemoveFromStart("UpEQS_");
+   return queryName;
+}
+
 FString UBTTask_QueryAction::GetStaticDescription() const
 {
    if(actionQuery)
    {
-      return FString::Printf(TEXT("Using query\n%s to find target"), *actionQuery->GetName());
+      return FString::Printf(TEXT("Query:\n%s"), *GetQueryName());
    }
    else
    {
-      return FString::Printf(TEXT("Using target from prior task"));
+      return FString::Printf(TEXT("Prior Task Target"));
    }
 }

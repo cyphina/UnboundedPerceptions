@@ -21,8 +21,10 @@ class MYPROJECT_API URTSDamageEffect : public UGameplayEffect
 {
    GENERATED_BODY()
 
+ public:
    URTSDamageEffect();
 
+ private:
    UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
    FDamageScalarStruct damageVals;
 

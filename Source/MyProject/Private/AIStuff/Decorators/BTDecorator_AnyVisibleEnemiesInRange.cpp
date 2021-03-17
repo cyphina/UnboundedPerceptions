@@ -38,22 +38,22 @@ FString UBTDecorator_AnyVisibleEnemiesInRange::GetStaticDescription() const
    {
       if(rangeCutoff >= 0)
       {
-         return FString::Printf(TEXT("Checks: if any units over %f units away"), rangeCutoff);
+         return FString::Printf(TEXT("Units over %f units away"), rangeCutoff);
       }
       else
       {
-         return FString::Printf(TEXT("Checks if any units outside vision radius"));
+         return FString::Printf(TEXT("Units outside vision radius?"));
       }
    }
    else
    {
       if(rangeCutoff >= 0)
       {
-         return FString::Printf(TEXT("Checks: if units inside %f unit radius"), rangeCutoff);
+         return FString::Printf(TEXT("Units inside %f unit radius"), rangeCutoff);
       }
       else
       {
-         return FString::Printf(TEXT("Checks if units within vision radius"));
+         return FString::Printf(TEXT("Units within vision radius?"));
       }
    }
 }

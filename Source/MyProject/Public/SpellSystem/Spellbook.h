@@ -1,7 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-/**Spellbook class is just a skill tree for a hero*/
-
 #pragma once
 #include "MyProject.h"
 #include "SpellBook.generated.h"
@@ -13,7 +9,8 @@ class ABaseHero;
 class USpellBook;
 
 /**
- * @brief Holds all the abilities a hero can learn
+ * All abilities start at level 1!
+ * Holds all the abilities a hero can learn and contains data about what is unlocked/unlockable. All abilities start at level 1 when they are first unlocked!
  */
 UCLASS(Blueprintable)
 class MYPROJECT_API USpellBook : public UObject
@@ -28,19 +25,16 @@ class MYPROJECT_API USpellBook : public UObject
       TArray<SpellNode*>    unlockedSpellNodes;
 
       SpellNode(int index, TArray<SpellNode*> prevSpellNodes, TArray<SpellNode*> nextSpellNodes, TSubclassOf<UMySpell> spellRef) :
-         index(index), spellRef(spellRef), prereqSpellNodes(prevSpellNodes), unlockedSpellNodes(nextSpellNodes)
+          index(index), spellRef(spellRef), prereqSpellNodes(prevSpellNodes), unlockedSpellNodes(nextSpellNodes)
       {
       }
 
       SpellNode(const SpellNode& otherSpellNode) = default;
 
-      bool operator==(const SpellNode& otherSpellNode) const
-      {
-         return spellRef == otherSpellNode.spellRef;
-      }
+      bool operator==(const SpellNode& otherSpellNode) const { return spellRef == otherSpellNode.spellRef; }
    };
 
-public:
+ public:
    static USpellBook* CreateSpellBook(ABaseHero* heroRef, TSubclassOf<USpellBook> spellBookClass);
 
    /** Spells that we have the reqs to learn */
@@ -74,12 +68,12 @@ public:
 
    bool IsSpellLearnable(TSubclassOf<UMySpell> spellClass);
 
-protected:
+ protected:
    /** List of all the spells learnable in this spell book.  Edit this to add/remove skills*/
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spellbook")
    TArray<TSubclassOf<UMySpell>> availableSpells;
 
-private:
+ private:
    USpellBook() = default;
 
    void Init();

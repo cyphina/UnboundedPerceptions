@@ -10,7 +10,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "BasePlayer.h"
-#include "ManualSpellComponent.h"
+
 #include "PanelWidget.h"
 #include "RTSAbilitySystemComponent.h"
 #include "RTSActionBarSkillDrag.h"
@@ -18,7 +18,6 @@
 #include "SpellFunctionLibrary.h"
 #include "ToolTipWidget.h"
 #include "UIDelegateContext.h"
-#include "UpWidgetHelperLibrary.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UMG/Public/Components/Image.h"
@@ -29,8 +28,7 @@ class UUIDelegateContext;
 UMaterialInterface* USkillSlot::cdMatInstance    = nullptr;
 UMaterialInterface* USkillSlot::skillMatInstance = nullptr;
 
-USkillSlot::USkillSlot(const FObjectInitializer& o) :
-   UActionSlot(o)
+USkillSlot::USkillSlot(const FObjectInitializer& o) : UActionSlot(o)
 {
    // static ConstructorHelpers::FObjectFinder<UCurveFloat> curve(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/StandardLinear"));
    // checkf(curve.Object, TEXT("Curve for ability timelines not found!"))
@@ -98,12 +96,14 @@ void USkillSlot::UpdateSkillSlot(TSubclassOf<UMySpell> spellClass)
          if(bIsSpellOffCooldown)
          {
             ShowCooldown();
-         } else
+         }
+         else
          {
             OnCDFinished();
          }
       }
-   } else
+   }
+   else
    {
       ResetSkillSlot();
    }
@@ -113,19 +113,26 @@ void USkillSlot::UpdateCD()
 {
    if(const URTSAbilitySystemComponent* abilityComponent = GetOwningAbilityComponent())
    {
+      if(abilityComponent->GetAbilities().Num() < slotIndex || abilityComponent->GetSpellAtSlot(slotIndex) == nullptr) {
+         OnCDFinished();
+         return;
+      }
+
       const float cdTimeRemaining =
-      abilityComponent->GetAbilities()[slotIndex].GetDefaultObject()->GetCooldownTimeRemaining(GetOwningAbilityComponent()->AbilityActorInfo.Get());
+          abilityComponent->GetAbilities()[slotIndex].GetDefaultObject()->GetCooldownTimeRemaining(GetOwningAbilityComponent()->AbilityActorInfo.Get());
       const float cdDuration = abilityComponent->GetAbilities()[slotIndex].GetDefaultObject()->GetCDDuration(GetOwningAbilityComponent());
 
       if(LIKELY(cdTimeRemaining > 0))
       {
          cdDMatInst->SetScalarParameterValue("Percent", cdTimeRemaining / cdDuration);
          Text_CDTime->SetText(FText::AsNumber(static_cast<int>(cdTimeRemaining)));
-      } else
+      }
+      else
       {
          OnCDFinished();
       }
-   } else
+   }
+   else
    {
       OnCDFinished();
    }
@@ -170,7 +177,8 @@ void USkillSlot::SetSlotImage(UTexture2D* image)
       SetImageFromMaterial(imageDMatInst);
       cdDMatInst->SetTextureParameterValue("RadialTexture", image); // update the cooldown image
       Image_CD->SetBrushFromMaterial(cdDMatInst);
-   } else
+   }
+   else
    {
       imageDMatInst->SetTextureParameterValue("RadialTexture", defaultSlotTexture);
       SetImageFromMaterial(imageDMatInst);
@@ -193,9 +201,13 @@ void USkillSlot::ShowDesc(UToolTipWidget* tooltip)
          const FString relevantSpellInfo = "Costs " + FString::FromInt(spellAtSlot->GetCost(ownerAbilityComp)) + " mana\r\n" +
                                            FString::FromInt(spellAtSlot->GetCDDuration(ownerAbilityComp)) + " second CD \r\n" +
                                            FString::FromInt(spellAtSlot->GetRange(ownerAbilityComp)) + " range";
-         tooltip->SetupTTBoxText(spellAtSlot->GetSpellName(), USpellFunctionLibrary::ParseDesc(spellAtSlot->GetDescription(), ownerAbilityComp, spellAtSlot),
-                                 spellAtSlot->GetElem(), FText::FromString(relevantSpellInfo),
-                                 FText::GetEmpty());
+         if(AUserInput* CPCRef = Cast<AUserInput>(GetOwningPlayer<AUserInput>()))
+         {
+            tooltip->SetupTTBoxText(
+                spellAtSlot->GetSpellName(),
+                USpellFunctionLibrary::ParseDesc(spellAtSlot->GetDescription(), ownerAbilityComp, spellAtSlot, CPCRef->GetHUDManager()->effectPowerTableRef),
+                spellAtSlot->GetElem(), FText::FromString(relevantSpellInfo), FText::GetEmpty());
+         }
       }
    }
 }

@@ -78,6 +78,7 @@ uint32 UVisionSubsystem::Run()
          UpdateVisibleEnemies();
          UpdateVisiblePlayerUnits();
 
+         // TODO: Set friendly units to also be invisible in the model but do not change that in the view unless debugging options to test enemy vision is active.
          MakeUnitsInVisionVisible(unitsEligibleForHidingVisibleLastCheck);
          MakeUnitsOutOfVisionInvisible(unitsEligibleForHidingVisibleLastCheck, *unitsEligibleForHiding);
 

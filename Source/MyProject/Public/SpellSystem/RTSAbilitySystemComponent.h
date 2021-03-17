@@ -1,13 +1,25 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
-#include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
 #include "RTSAbilitySystemComponent.generated.h"
 
 struct FDamageScalarStruct;
 class UMySpell;
+
+/**
+ * @brief Spells that a unit starts out with.
+ */
+USTRUCT(BlueprintType)
+struct FDefaultLearnedAbility
+{
+   GENERATED_BODY()
+
+   UPROPERTY(EditAnywhere)
+   TSubclassOf<UMySpell> spellClass = nullptr;
+
+   UPROPERTY(EditAnywhere, Meta = (ClampMin = "1"))
+   int initialLevel = 1;
+};
 
 /**
  * Custom ability component with extra functionality
@@ -31,9 +43,10 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
    UFUNCTION(BlueprintCallable, Category = "Spell Helper")
    bool ApplyDamageEffectSpecToTarget(const FGameplayEffectSpecHandle& damageEffectSpecHandle, UAbilitySystemComponent* targetComp);
 
-   void SetSpellAtSlot(TSubclassOf<UMySpell> spellClassToSet, int slotIndex);
-
+   UFUNCTION(BlueprintCallable)
    const TArray<TSubclassOf<UMySpell>>& GetAbilities() const { return abilities; }
+
+   void SetSpellAtSlot(TSubclassOf<UMySpell> spellClassToSet, int slotIndex);
 
    int FindSlotIndexOfSpell(TSubclassOf<UMySpell> spellToLookFor) const;
 
@@ -60,12 +73,19 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
 
  protected:
    /**
-    * List of abilities that are in unit's skill slots.
+    * For allies, this is the list of abilities that are in their skill slot (max 6).
     * Heroes can potentially swap out skills from their spell book to a skill slot.
     * For enemies, this is all the skills they have.
     */
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+   UPROPERTY(Transient)
    TArray<TSubclassOf<class UMySpell>> abilities;
+
+   /**
+    * Abilities that this unit should start out with. Used to give enemies a set of abilities to work with,
+    * although enemies could gain or lose abilities in certain scenarios in which that would refelct in the abilities property.
+    */
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+   TArray<FDefaultLearnedAbility> defaultAbilities;
 
  private:
    class AUnit* unitOwnerRef;

@@ -24,12 +24,13 @@
 #include "EnvironmentQuery/Items/EnvQueryItemType_ActorBase.h"
 #include "EnvironmentQuery/Items/EnvQueryItemType_Point.h"
 
-UBTTask_CastSpell::UBTTask_CastSpell(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+UBTTask_CastSpell::UBTTask_CastSpell() : Super()
 {
-   NodeName           = "Cast Spell";
-   bNotifyTick        = false;
-   spellToCast        = nullptr;
-   targetFindingLogic = nullptr;
+   NodeName     = "Cast Spell";
+   bNotifyTick  = false;
+   spellToCast  = nullptr;
+   actionQuery  = nullptr;
+   queryRunMode = EEnvQueryRunMode::Type::SingleResult;
 }
 
 EBTNodeResult::Type UBTTask_CastSpell::ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory)
@@ -50,15 +51,19 @@ EBTNodeResult::Type UBTTask_CastSpell::ExecuteTask(UBehaviorTreeComponent& owner
       WaitForMessage(ownerComp, UnitMessages::AIMessage_SpellInterrupt);
       WaitForMessage(ownerComp, UnitMessages::AIMessage_TargetLoss);
 
-      if(targetFindingLogic && !spellToCast.GetDefaultObject()->GetSpellDefaults().Targeting->IsChildOf(UUpSpellTargeting_None::StaticClass()))
+      if(actionQuery && !spellToCast.GetDefaultObject()->GetSpellDefaults().Targeting->IsChildOf(UUpSpellTargeting_None::StaticClass()))
       {
-         UUpAIHelperLibrary::AIBeginCastSpell(targetFindingLogic, spellToCast, spellCastComponent);
+         UUpAIHelperLibrary::AIBeginCastSpell(actionQuery, spellToCast, spellCastComponent, queryRunMode);
       }
       else
       {
          if(spellToCast.GetDefaultObject()->GetTargeting().GetDefaultObject()->IsProperTargetSet(unitController->GetUnitOwner()->GetTargetComponent()))
          {
             spellCastComponent->BeginCastSpell(spellToCast);
+         }
+         else
+         {
+            return EBTNodeResult::Failed;
          }
       }
       return EBTNodeResult::InProgress;
@@ -80,9 +85,9 @@ void UBTTask_CastSpell::InitializeFromAsset(UBehaviorTree& Asset)
    if(spellToCast)
    {
       UMySpell* spell = spellToCast.GetDefaultObject();
-      if(targetFindingLogic)
+      if(actionQuery)
       {
-         if(UEnvQueryOption* queryOption = targetFindingLogic->GetOptionsMutable()[0])
+         if(UEnvQueryOption* queryOption = actionQuery->GetOptionsMutable()[0])
          {
             if(UEnvQueryGenerator* queryGenerator = queryOption->Generator)
             {
@@ -116,14 +121,20 @@ FString UBTTask_CastSpell::GetStaticDescription() const
          spellName = "Missing Spell Name...";
       }
 
-      if(targetFindingLogic)
+      if(actionQuery)
       {
-         return FString::Printf(TEXT("%s: %s using query\n%s to find target"), *Super::GetStaticDescription(), *spellName,
-                                *targetFindingLogic->GetName());
+         return FString::Printf(TEXT("Casting %s. \nQuery:\n%s"), *spellName, *GetQueryName());
       }
       else
       {
-         return FString::Printf(TEXT("%s: %s\nUsing target from prior task"), *Super::GetStaticDescription(), *spellName);
+         if(spellToCast.GetDefaultObject()->GetSpellDefaults().Targeting == UUpSpellTargeting_None::StaticClass())
+         {
+            return FString::Printf(TEXT("Casting %s. \nNo target required."), *spellName);
+         }
+         else
+         {
+            return FString::Printf(TEXT("Casting %s. \nTarget from prior task"), *spellName);
+         }
       }
    }
    return Super::GetStaticDescription();

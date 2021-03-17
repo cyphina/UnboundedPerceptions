@@ -20,10 +20,12 @@ class UEnemySkillData : public UObject
    GENERATED_BODY()
 
  public:
-   static UEnemySkillData* CreateEnemySkillData(TSubclassOf<UMySpell> spellClass);
+   static UEnemySkillData* CreateEnemySkillData(TSubclassOf<UMySpell> spellClass, int slotIndex);
 
    UPROPERTY(Transient, BlueprintReadOnly)
    TSubclassOf<UMySpell> spellClass;
+
+   int slotIndex;
 };
 
 /**
@@ -35,8 +37,8 @@ class UEnemySkillSlot : public USkillSlot, public IUserObjectListEntry
    GENERATED_BODY()
 
  protected:
-   void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) final {}
-   bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) final { return false; }
+   void   NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) final {}
+   bool   NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) final { return false; }
    FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
    FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 

@@ -32,15 +32,25 @@ void UEffectStatusBar::UpdateStatusBar()
 
       for(int i = 0; i < numDisplaySlots; ++i)
       {
-         auto                  effect = effects[i];
-         FGameplayTagContainer tagContainer;
-         effect.GetOwningAbilitySystemComponent()->GetActiveGameplayEffect(effect)->Spec.GetAllAssetTags(
-         tagContainer);
+         auto                         effect = effects[i];
+         FGameplayTagContainer        tagContainer;
+         const FActiveGameplayEffect* activeEffect = effect.GetOwningAbilitySystemComponent()->GetActiveGameplayEffect(effect);
+         activeEffect->Spec.GetAllAssetTags(tagContainer);
+
          FGameplayTag nameTag = tagContainer.Filter(nameFilter).First();
 
 #if UE_EDITOR
-         checkf(nameTag != FGameplayTag::EmptyTag, TEXT("Name tag not found!!"));
-         checkf(effectIconDatabase->effectIconMap.Contains(nameTag), TEXT("Tag name %s does not exist in list of nametags!!"), *nameTag.GetTagName().ToString());
+         if(!ensure(effectIconDatabase->effectIconMap.Contains(nameTag)))
+         {
+            UE_LOG(LogTemp, Error, TEXT("Effect tag does not have an icon in the data asset holding tag to icon maps"));
+            break;
+         }
+
+         if(!ensure(nameTag != FGameplayTag::EmptyTag))
+         {
+            UE_LOG(LogTemp, Error, TEXT("Effect tag with empty name was added as a status effect"));
+            break;
+         }
 #endif
 
          UTexture2D*           effectIcon = effectIconDatabase->effectIconMap[nameTag];

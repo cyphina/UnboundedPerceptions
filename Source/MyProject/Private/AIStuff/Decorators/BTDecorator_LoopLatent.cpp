@@ -8,8 +8,9 @@
 
 UBTDecorator_LoopLatent::UBTDecorator_LoopLatent()
 {
-   NodeName                = "Loop (handles latent tasks)";
-   NumLoops                = 3;
+   NodeName                = "Latent Loop";
+   MaxNumLoops             = 3;
+   MinNumLoops             = 0;
    InfiniteLoopTimeoutTime = -1.f;
    bNotifyActivation       = true;
    bNotifyDeactivation     = true;
@@ -28,7 +29,8 @@ void UBTDecorator_LoopLatent::OnNodeActivation(FBehaviorTreeSearchData& SearchDa
    // Before the first activation these values won't be initialized, so we can use them to know if it's the first time this loop will be run.
    if((bIsSpecialNode && ParentMemory->CurrentChild == BTSpecialChild::NotInitialized) || (!bIsSpecialNode && ParentMemory->CurrentChild != ChildIndex))
    {
-      DecoratorMemory->RemainingExecutions = NumLoops;
+      int numLoops                         = FMath::RandRange(MinNumLoops, MaxNumLoops);
+      DecoratorMemory->RemainingExecutions = numLoops;
       DecoratorMemory->TimeStarted         = GetWorld()->GetTimeSeconds();
    }
 }
@@ -98,16 +100,16 @@ FString UBTDecorator_LoopLatent::GetStaticDescription() const
    {
       if(InfiniteLoopTimeoutTime < 0.f)
       {
-         return FString::Printf(TEXT("%s: infinite"), *Super::GetStaticDescription());
+         return FString::Printf(TEXT("Loops Infinitely"));
       }
       else
       {
-         return FString::Printf(TEXT("%s: loop for %s seconds"), *Super::GetStaticDescription(), *FString::SanitizeFloat(InfiniteLoopTimeoutTime));
+         return FString::Printf(TEXT("Loops for %s seconds"), *FString::SanitizeFloat(InfiniteLoopTimeoutTime));
       }
    }
    else
    {
-      return FString::Printf(TEXT("%s: %d loops"), *Super::GetStaticDescription(), NumLoops);
+      return FString::Printf(TEXT("Loops %d-%d times"), MinNumLoops, MaxNumLoops);
    }
 }
 

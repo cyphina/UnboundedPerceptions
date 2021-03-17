@@ -23,8 +23,12 @@ class MYPROJECT_API UBTDecorator_LoopLatent : public UBTDecorator
 
  public:
    /** number of executions */
-   UPROPERTY(Category = Decorator, EditAnywhere, meta = (EditCondition = "!bInfiniteLoop"))
-   int32 NumLoops;
+   UPROPERTY(Category = Decorator, EditAnywhere, meta = (EditCondition = "!bInfiniteLoop", ClampMin = "0"))
+   int32 MinNumLoops;
+
+   /** random number of loops to add or remove */
+   UPROPERTY(Category = Decorator, EditAnywhere, meta = (EditCondition = "!bInfiniteLoop", ClampMin = "0"))
+   int32 MaxNumLoops;
 
    /** infinite loop */
    UPROPERTY(Category = Decorator, EditAnywhere)

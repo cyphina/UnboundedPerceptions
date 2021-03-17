@@ -7,7 +7,8 @@
 
 /** Sets what kind of targets this bullet can hit */
 UENUM(BlueprintType)
-enum class EBulletTargetingScheme : uint8 {
+enum class EBulletTargetingScheme : uint8
+{
    Bullet_Ally,  // hits allies
    Bullet_Enemy, // hits enemies
    Bullet_Either // hits both
@@ -26,11 +27,11 @@ class MYPROJECT_API URTSProjectileStrategy : public UDataAsset
 
  public:
    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Visuals")
-   UStaticMeshComponent* defaultBulletMesh;
+   UStaticMesh* defaultBulletMesh;
 
    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile Visuals")
-   UParticleSystemComponent* defaultParticleEffect;
-   
+   UMaterialInterface* defaultBulletMat;
+
    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
    TArray<FGameplayEffectSpecHandle> defaultHitEffects;
 
@@ -45,7 +46,10 @@ class MYPROJECT_API URTSProjectileStrategy : public UDataAsset
    bool isHoming = false;
 
    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-   float bulletSphereRadius = 10.f;
+   float bulletHomingAcceleration = 25.f;
+	
+   UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+   float bulletSphereRadius = 50.f;
 
    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
    float bulletInitSpeed = 3000.f;

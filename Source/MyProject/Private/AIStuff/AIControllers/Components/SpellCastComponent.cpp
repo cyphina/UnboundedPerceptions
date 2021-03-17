@@ -35,9 +35,12 @@ bool USpellCastComponent::CheckSpellCastBreakInvis(TSubclassOf<UMySpell> spellTo
 void USpellCastComponent::OnUnitStopped()
 {
    CancelIncantation();
+   if(GetCurrentChannelingTime() > 0) {
+      unitOwnerRef->GetAbilitySystemComponent()->CancelAbilities();
+   }
    CancelChanneling();
    // Remove current spell after
-   currentSpell       = nullptr;
+   currentSpell = nullptr;
 }
 
 int USpellCastComponent::GetRange(TSubclassOf<UMySpell> spellClass) const
@@ -53,7 +56,9 @@ void USpellCastComponent::AdjustCastingPosition(TSubclassOf<UMySpell> spellClass
    }
 
    const float range = static_cast<int>(spellClass.GetDefaultObject()->GetRange(abilityComponentRef));
-   if(unitOwnerRef->GetUnitController()->AdjustPosition(range, spellTargetLocation, [this]() { IncantationCheck(GetCurrentSpell()); }))
+   if(unitOwnerRef->GetUnitController()->AdjustPosition(range, spellTargetLocation, [this]() {
+         IncantationCheck(GetCurrentSpell());
+      }))
    {
       // We could add some functionality here if we are already in position...
    }
@@ -67,7 +72,9 @@ void USpellCastComponent::AdjustCastingPosition(TSubclassOf<UMySpell> spellClass
    }
 
    const float range = static_cast<int>(spellClass.GetDefaultObject()->GetRange(abilityComponentRef));
-   unitOwnerRef->GetUnitController()->AdjustPosition(range, spellTargetActor, [this]() { IncantationCheck(GetCurrentSpell()); });
+   unitOwnerRef->GetUnitController()->AdjustPosition(range, spellTargetActor, [this]() {
+      IncantationCheck(GetCurrentSpell());
+   });
 }
 
 bool USpellCastComponent::BeginCastSpell(TSubclassOf<UMySpell> spellToCast)
@@ -113,17 +120,17 @@ void USpellCastComponent::CastSpell(TSubclassOf<UMySpell> spellToCast)
 
          const float channelTime = spellToCast.GetDefaultObject()->GetSecondaryTime(unitOwnerRef->GetAbilitySystemComponent());
 
-         if(!spellToCast.Get()->GetDefaultObject<UMySpell>()->AbilityTags.HasTag(FGameplayTag::RequestGameplayTag("Skill.Channeled")))
+         if(channelTime <= 0)
          {
             unitOwnerRef->GetUnitController()->FinishCurrentAction();
          }
          else
          {
-            if(channelTime > 0)
+            if(URTSStateComponent* stateComp = GetOwner()->FindComponentByClass<URTSStateComponent>())
             {
-               unitOwnerRef->FindComponentByClass<URTSStateComponent>()->ChangeState(EUnitState::STATE_CHANNELING);
-               GetWorld()->GetTimerManager().SetTimer(channelingTimer, this, &USpellCastComponent::OnChannelingFinished, channelTime, false, -1.f);
+               stateComp->ChangeState(EUnitState::STATE_CHANNELING);
             }
+            GetWorld()->GetTimerManager().SetTimer(channelingTimer, this, &USpellCastComponent::OnChannelingFinished, channelTime, false, -1.f);
          }
 
          PlayCastAnimIfValid(castAnimation, channelTime);

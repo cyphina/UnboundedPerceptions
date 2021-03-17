@@ -4,6 +4,7 @@
 #include "Unit.h"
 #include "EnvironmentQuery/EnvQueryManager.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
+#include "AIStuff/AI_Globals.h"
 #include "MySpell.h"
 #include "SpellCastComponent.h"
 #include "UnitController.h"
@@ -95,7 +96,8 @@ AUnit* UUpAIHelperLibrary::FindClosestUnit(const FVector referenceLocation, cons
    return closestUnit;
 }
 
-void UUpAIHelperLibrary::AIBeginCastSpell(UEnvQuery* targetFindingQuery, const TSubclassOf<UMySpell> spellToCast, USpellCastComponent* spellCastComponent)
+void UUpAIHelperLibrary::AIBeginCastSpell(UEnvQuery* targetFindingQuery, const TSubclassOf<UMySpell> spellToCast, USpellCastComponent* spellCastComponent,
+                                          EEnvQueryRunMode::Type queryRunMode)
 {
    if(AUnitController* unitController = Cast<AUnitController>(spellCastComponent->GetOwner()))
    {
@@ -106,7 +108,7 @@ void UUpAIHelperLibrary::AIBeginCastSpell(UEnvQuery* targetFindingQuery, const T
          const float aoe = spellCDO->GetAOE(unitController->GetUnitOwner()->GetAbilitySystemComponent());
          if(aoe > 0)
          {
-            queryRequest.SetFloatParam("radius", aoe);
+            queryRequest.SetFloatParam(AIGlobals::EQS_RADIUS_PARAM, aoe);
          }
 
          const auto castSpellAfterQuery =
@@ -122,7 +124,7 @@ void UUpAIHelperLibrary::AIBeginCastSpell(UEnvQuery* targetFindingQuery, const T
                    }
                 }
              });
-         queryRequest.Execute(EEnvQueryRunMode::SingleResult, castSpellAfterQuery);
+         queryRequest.Execute(queryRunMode, castSpellAfterQuery);
       }
    }
 }

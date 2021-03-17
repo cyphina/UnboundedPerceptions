@@ -74,7 +74,7 @@ bool USpellDataLibrary::IsSilenced(const IGameplayTagAssetInterface* abilityComp
 
 bool USpellDataLibrary::IsInvisible(const IGameplayTagAssetInterface* abilityComponent)
 {
-   return abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")) &&
+   return abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Invisibility")) &&
           !abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Marked"));
 }
 

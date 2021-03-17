@@ -50,18 +50,27 @@ ARTSProjectile* ARTSProjectile::MakeRTSProjectile(UWorld* worldToSpawnIn, UTarge
          projectileStrategy = URTSProjectileStrategy::StaticClass()->GetDefaultObject<URTSProjectileStrategy>();
       }
 
-      projectile->projectileMovementComponent->InitialSpeed = projectileStrategy->bulletInitSpeed;
-      projectile->projectileMovementComponent->MaxSpeed     = projectileStrategy->bulletMaxSpeed;
-      projectile->InitialLifeSpan                           = projectileStrategy->bulletLifeSpan;
+      projectile->projectileMovementComponent->InitialSpeed                = projectileStrategy->bulletInitSpeed;
+      projectile->projectileMovementComponent->MaxSpeed                    = projectileStrategy->bulletMaxSpeed;
+      projectile->projectileMovementComponent->HomingAccelerationMagnitude = projectileStrategy->bulletHomingAcceleration;
+      projectile->InitialLifeSpan                                          = projectileStrategy->bulletLifeSpan;
 
       projectile->collisionComponent->InitSphereRadius(projectileStrategy->bulletSphereRadius);
+
+      const static float INIT_BULLET_RADIUS = 50.f;
+      projectile->SetActorScale3D(FVector(projectileStrategy->bulletSphereRadius / INIT_BULLET_RADIUS));
       projectile->hitEffects.Append(projectileStrategy->defaultHitEffects);
 
-      if(!projectile->bulletMesh)
+      if(projectile->bulletMesh)
       {
          if(projectileStrategy->defaultBulletMesh)
          {
-            projectile->bulletMesh = projectileStrategy->defaultBulletMesh;
+            projectile->bulletMesh->SetStaticMesh(projectileStrategy->defaultBulletMesh);
+         }
+
+         if(projectileStrategy->defaultBulletMat)
+         {
+            projectile->bulletMesh->SetMaterial(0, projectileStrategy->defaultBulletMat);
          }
       }
 
@@ -134,8 +143,11 @@ void ARTSProjectile::FireInDirection(const FVector& shootDirection) const
 
 void ARTSProjectile::FireAtTarget(const AActor* target) const
 {
-   projectileMovementComponent->bIsHomingProjectile   = true;
-   projectileMovementComponent->HomingTargetComponent = target->GetRootComponent();
+   if(target)
+   {
+      projectileMovementComponent->bIsHomingProjectile   = true;
+      projectileMovementComponent->HomingTargetComponent = target->GetRootComponent();
+   }
 }
 
 void ARTSProjectile::OnSweep(UPrimitiveComponent* overlappedComponent, AActor* overlappedActor, UPrimitiveComponent* otherComponent, int32 hitBodyIndex, bool bFromSweep,

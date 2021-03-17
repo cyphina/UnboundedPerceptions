@@ -62,7 +62,9 @@ class MYPROJECT_API UUpStatComponent : public UActorComponent
    */
    UFUNCTION(BlueprintCallable, Category = "Stats")
    void UpdateStats(const FGameplayAttribute& updatedStat) const;
-   
+
+   float GetElementalStatValueFromElemTag(const FGameplayTag& elemTag, bool bGetAff = true, bool bGetBaseValue = false);
+
    /**
     * @brief Allows us to apply some bonuses to this hero's stat
     * @tparam bModifyBase - Modify the base stat or the adjusted value
@@ -76,32 +78,53 @@ class MYPROJECT_API UUpStatComponent : public UActorComponent
       static_assert(std::is_enum<StatType>::value, "Must pass one of the stat Enums!");
       const int specificStatTypeVal = static_cast<int>(specificStatType);
 
-      if constexpr(std::is_same<StatType, EAttributes>::value) {
-         if constexpr(!bModifyBase) {
+      if constexpr(std::is_same<StatType, EAttributes>::value)
+      {
+         if constexpr(!bModifyBase)
+         {
             baseC->SetAttributeAdj(specificStatTypeVal, value);
-         } else {
+         }
+         else
+         {
             baseC->SetAttributeBase(specificStatTypeVal, value);
          }
          UpdateStats(UMyAttributeSet::IndexAtts(static_cast<int>(specificStatTypeVal)));
-      } else if constexpr(std::is_same<StatType, EUnitScalingStats>::value) {
-         if constexpr(!bModifyBase) {
+      }
+      else if constexpr(std::is_same<StatType, EUnitScalingStats>::value)
+      {
+         if constexpr(!bModifyBase)
+         {
             baseC->SetSkillAdj(specificStatTypeVal, value);
-         } else {
+         }
+         else
+         {
             baseC->SetSkillBase(specificStatTypeVal, value);
          }
-      } else if constexpr(std::is_same<StatType, EVitals>::value) {
-         if constexpr(!bModifyBase) {
+      }
+      else if constexpr(std::is_same<StatType, EVitals>::value)
+      {
+         if constexpr(!bModifyBase)
+         {
             baseC->SetVitalAdj(specificStatTypeVal, value);
-         } else {
+         }
+         else
+         {
             baseC->SetVitalBase(specificStatTypeVal, value);
          }
-      } else if constexpr(std::is_same<StatType, EMechanics>::value) {
-         if constexpr(!bModifyBase) {
+      }
+      else if constexpr(std::is_same<StatType, EMechanics>::value)
+      {
+         if constexpr(!bModifyBase)
+         {
             baseC->SetMechanicAdj(specificStatTypeVal, value);
-         } else {
+         }
+         else
+         {
             baseC->SetMechanicBase(specificStatTypeVal, value);
          }
-      } else {
+      }
+      else
+      {
          static_assert(std::is_same_v<StatType*, void>, "Error, please ensure you're passing in one of the correct stat enums");
       }
    }

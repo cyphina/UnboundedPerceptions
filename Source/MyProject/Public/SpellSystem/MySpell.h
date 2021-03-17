@@ -88,6 +88,7 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
    UFUNCTION(BlueprintCallable, Category = "Spell")
    float GetAOE(const UAbilitySystemComponent* abilityComponent) const;
 
+   /** You can call GetAbilityLevel() on an active spell (aka in spell blueprints) which doesn't require us to pass in an abilityComponent */
    UFUNCTION(BlueprintCallable, Category = "Spell")
    int GetLevel(const UAbilitySystemComponent* abilityComponent) const;
 
@@ -102,6 +103,13 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
 
    UFUNCTION(BlueprintCallable)
    UEnvQuery* GetDefaultQueryForSpell(UWorld* worldRef);
+
+   /**
+    * Some abilities have logic that blocks the caster till the spell is active. This means the AI shouldn't do anything till EndAbility is called.
+    * Other abilities do something but don't require the spell caster to stay blocked, so we need to tell the AI they are free to move onto their next action (see ability called Up_Ability_Grenade)
+    */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   void FinishBlockingCaster();
 
    TSubclassOf<UUpSpellTargeting> GetTargeting() const;
 
@@ -126,11 +134,13 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
                    bool bReplicateEndAbility, bool bWasCancelled) override;
 
    /**
-    * Some abilities have logic that blocks the caster till the spell is active. This means the AI shouldn't do anything till EndAbility is called.
-    * Other abilities do something but don't require the spell caster to stay blocked, so we need to tell the AI they are free to move onto their next action (see ability called Up_Ability_Grenade)
+    * Used to get the 0'based index from some spell information array based on current spell level
+    * ! Invariant - AbilityLevels start at 1
+    * @param currentLevel : Current level of spell property (ex. Fireball has had 2 points put into it so it's level 2)
+    * @param numCategories : Number of levels in spell property (ex. there may be 3 range upgrades for a spell)
+    * @param maxLevel : Number of times this spell can be leveled up (ex. there may 5 total level upgrades for a spell, only 3 upgrades increase range)
     */
-   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
-   void FinishBlockingCaster();
+   static int GetIndex(int currentLevel, int numCategories, int maxLevel);
 
  protected:
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
@@ -164,9 +174,22 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spell Helper")
    FGameplayAbilityTargetingLocationInfo MakeTargetLocationInfoFromTargetComponent();
 
+   /** Whenever we need to target something in a "Wait Target Data" node we should use this or the node that makes target location info a location we can pass in */
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spell Helper")
+   FGameplayAbilityTargetingLocationInfo MakeTargetLocationInfoFromLocation(FVector targetLocation);
+
    /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
    UFUNCTION(BlueprintCallable, Category = "Spell Helper")
    FGameplayAbilityTargetDataHandle GetAvatarTargetData() const;
+
+   /** Only use this inside ActivateAbility in a blueprint derived from UMySpell.
+    * (Will crash if the current target is not a unit i.e. you cast an AOE spell) */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   AUnit* GetAvatarTargetUnit() const;
+
+   /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   FVector GetAvatarActorLocation() const;
 
    /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
    UFUNCTION(BlueprintCallable, Category = "Spell Helper")
@@ -191,6 +214,10 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
    /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
    UFUNCTION(BlueprintCallable, Category = "Spell Helper")
    float GetActivePeriod() const { return GetPeriod(GetAvatarAbilitySystemComponent()); }
+
+   /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   FDamageScalarStruct GetActiveDamage() const { return GetDamage(GetAvatarAbilitySystemComponent()); }
 
    /**
     * Only use this inside ActivateAbility in a blueprint derived from UMySpell.
@@ -259,15 +286,6 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
       }
       return T();
    }
-
-   /**
-    * Used to get the index from some spell information array based on current spell level
-    * ! Invariant - AbilityLevels start at 1
-    * @param currentLevel : Current level of spell property (ex. Fireball has had 2 points put into it so it's level 2)
-    * @param numCategories : Number of levels in spell property (ex. there may be 3 range upgrades for a spell)
-    * @param maxLevel : Number of times this spell can be leveld up (ex. there may 5 total level upgrades for a spell, only 3 upgrades increase range)
-    */
-   static int GetIndex(int currentLevel, int numCategories, int maxLevel);
 
    /**
     * @brief Checks to see if we already sent the AI a message about finishing the whole spell (the spell may have some logic left but the caster is free to do other actions)

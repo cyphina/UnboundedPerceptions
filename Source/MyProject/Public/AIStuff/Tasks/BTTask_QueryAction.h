@@ -27,5 +27,6 @@ class MYPROJECT_API UBTTask_QueryAction : public UBTTaskNode
    UPROPERTY(EditAnywhere)
    TEnumAsByte<EEnvQueryRunMode::Type> queryRunMode;
 
-   FString      GetStaticDescription() const override;
+   FString GetQueryName() const;
+   FString GetStaticDescription() const override;
 };

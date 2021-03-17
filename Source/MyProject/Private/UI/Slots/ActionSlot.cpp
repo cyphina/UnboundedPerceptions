@@ -125,6 +125,11 @@ FReply UActionSlot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPo
    return FReply::Unhandled();
 }
 
+FReply UActionSlot::NativeOnMouseButtonDoubleClick(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+   return FReply::Handled();
+}
+
 void UActionSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
    if(AUserInput* CPCRef = Cast<AUserInput>(GetOwningPlayer<AUserInput>()))

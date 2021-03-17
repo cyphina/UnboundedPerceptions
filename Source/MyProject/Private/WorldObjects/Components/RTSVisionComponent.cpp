@@ -12,6 +12,7 @@ URTSVisionComponent::URTSVisionComponent()
    UPrimitiveComponent::SetCollisionEnabled(ECollisionEnabled::QueryOnly);
    SphereRadius          = 1000.f;
    bUseAttachParentBound = true;
+   SetHiddenInGame(true);
    UPrimitiveComponent::SetCollisionObjectType(TRIGGER_CHANNEL);
 }
 
@@ -31,6 +32,7 @@ void URTSVisionComponent::BeginPlay()
 {
    Super::BeginPlay();
    unitOwnerRef = Cast<AUnit>(GetOwner());
+   SetSphereRadius(visionRadius);
    OnComponentBeginOverlap.AddDynamic(this, &URTSVisionComponent::OnVisionSphereOverlap);
    OnComponentEndOverlap.AddDynamic(this, &URTSVisionComponent::OnVisionSphereEndOverlap);
    if(unitOwnerRef)

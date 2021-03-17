@@ -20,8 +20,6 @@ UMySpell::UMySpell() : UGameplayAbility()
 {
    CooldownGameplayEffectClass = UCoolDownEffect::StaticClass();
    InstancingPolicy            = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-   spellDefaults.nameTag       = FGameplayTag::RequestGameplayTag("Skill.Name");
-   spellDefaults.Elem          = FGameplayTag::RequestGameplayTag("Combat.Element");
 }
 
 TSubclassOf<UUpSpellTargeting> UMySpell::GetTargeting() const
@@ -74,8 +72,11 @@ void UMySpell::CommitExecute(const FGameplayAbilitySpecHandle Handle, const FGam
 
    if(AUnit* unitRef = GetAvatarUnit())
    {
-      unitRef->GetStatComponent()->ModifyStats<false>(unitRef->GetStatComponent()->GetVitalCurValue(EVitals::Mana) - GetCost(unitRef->GetAbilitySystemComponent()),
-                                                      EVitals::Mana);
+      if(GetCost(ActorInfo->AbilitySystemComponent.Get()) > 0)
+      {
+         unitRef->GetStatComponent()->ModifyStats<false>(unitRef->GetStatComponent()->GetVitalCurValue(EVitals::Mana) - GetCost(unitRef->GetAbilitySystemComponent()),
+                                                         EVitals::Mana);
+      }
    }
 }
 
@@ -224,7 +225,7 @@ FGameplayEffectSpecHandle UMySpell::SetPeriod(FGameplayEffectSpecHandle specHand
 FGameplayEffectSpecHandle UMySpell::CreateGameplayEffectFromTableValues(TSubclassOf<UGameplayEffect> effectClass, FGameplayTag name, FGameplayTagContainer assetTags)
 {
    UAbilitySystemComponent*  abilityComp = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetActorInfo().AvatarActor.Get());
-   FGameplayEffectSpecHandle effect      = MakeOutgoingGameplayEffectSpec(effectClass, GetLevel(abilityComp));
+   FGameplayEffectSpecHandle effect      = MakeOutgoingGameplayEffectSpec(effectClass, GetAbilityLevel());
 
    effect.Data->DynamicAssetTags.AddTag(GetElemTag());
    effect.Data->DynamicAssetTags.AddTag(name);
@@ -292,9 +293,28 @@ FGameplayAbilityTargetingLocationInfo UMySpell::MakeTargetLocationInfoFromTarget
    return targetLocInfo;
 }
 
+FGameplayAbilityTargetingLocationInfo UMySpell::MakeTargetLocationInfoFromLocation(FVector targetLocation)
+{
+   FGameplayAbilityTargetingLocationInfo targetLocInfo;
+   targetLocInfo.LiteralTransform = FTransform(targetLocation);
+   targetLocInfo.SourceAbility    = this;
+   targetLocInfo.SourceActor      = GetAvatarActorFromActorInfo();
+   return targetLocInfo;
+}
+
 FGameplayAbilityTargetDataHandle UMySpell::GetAvatarTargetData() const
 {
    return GetAvatarUnit()->GetTargetComponent()->GetTargetData();
+}
+
+AUnit* UMySpell::GetAvatarTargetUnit() const
+{
+   return GetAvatarUnit()->GetTargetComponent()->GetTargetUnit();
+}
+
+FVector UMySpell::GetAvatarActorLocation() const
+{
+   return GetAvatarUnit()->GetActorLocation();
 }
 
 FVector UMySpell::GetAvatarTargetLocation() const

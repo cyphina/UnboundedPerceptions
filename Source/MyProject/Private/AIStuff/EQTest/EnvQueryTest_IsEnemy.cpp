@@ -18,26 +18,44 @@ void UEnvQueryTest_IsEnemy::RunTest(FEnvQueryInstance& QueryInstance) const
 {
    SCOPE_CYCLE_COUNTER(Stat_EnvQuery_IsEnemy);
 
-   // make sure we have an owner for this test instance
-   UObject* QueryOwner = QueryInstance.Owner.Get();
-   if(QueryOwner == nullptr)
+   AUnit* unitOwner = Cast<AUnit>(QueryInstance.Owner.Get());
+   if(!unitOwner)
    {
       return;
    }
 
-   for(FEnvQueryInstance::ItemIterator It(this, QueryInstance); It; ++It)
+   const bool isUnitOwnerEnemy = unitOwner->GetIsEnemy();
+
+   if(isUnitOwnerEnemy)
    {
-      float         score     = 0;
-      const AActor* itemActor = GetItemActor(QueryInstance, It.GetIndex());
-      if(const AUnit* unitRef = Cast<AUnit>(itemActor))
+      for(FEnvQueryInstance::ItemIterator It(this, QueryInstance); It; ++It)
       {
-         if(QueryOwner->GetClass()->IsChildOf(AEnemy::StaticClass()))
+         const AActor* itemActor = GetItemActor(QueryInstance, It.GetIndex());
+
+         if(itemActor->GetClass()->IsChildOf(AEnemy::StaticClass()))
          {
-            It.SetScore(TestPurpose, FilterType, unitRef->GetIsEnemy(), false);
+            It.SetScore(TestPurpose, FilterType, false, true);
          }
          else
          {
-            It.SetScore(TestPurpose, FilterType, unitRef->GetIsEnemy(), true);
+            It.SetScore(TestPurpose, FilterType, true, true);
+         }
+      }
+   }
+
+   else
+   {
+      for(FEnvQueryInstance::ItemIterator It(this, QueryInstance); It; ++It)
+      {
+         const AActor* itemActor = GetItemActor(QueryInstance, It.GetIndex());
+
+         if(itemActor->GetClass()->IsChildOf(AEnemy::StaticClass()))
+         {
+            It.SetScore(TestPurpose, FilterType, true, true);
+         }
+         else
+         {
+            It.SetScore(TestPurpose, FilterType, false, true);
          }
       }
    }

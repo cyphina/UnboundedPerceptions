@@ -33,10 +33,12 @@ bool UBTDecorator_VitalThreshold::CalculateRawConditionValue(UBehaviorTreeCompon
 
 FString UBTDecorator_VitalThreshold::GetStaticDescription() const
 {
-   FString description = FString::Printf(TEXT("%s threshold: %f"), *UEnum::GetDisplayValueAsText(Vital).ToString(), Threshold);
    if(IsInversed())
    {
-      description += "\n(Inversed)";
+      return FString::Printf(TEXT("%s above %f%%"), *UEnum::GetDisplayValueAsText(Vital).ToString(), Threshold);
    }
-   return description;
+   else
+   {
+      return FString::Printf(TEXT("%s below %f%%"), *UEnum::GetDisplayValueAsText(Vital).ToString(), Threshold);
+   }
 }

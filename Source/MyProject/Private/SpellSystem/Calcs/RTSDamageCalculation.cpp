@@ -18,12 +18,10 @@ DECLARE_LOG_CATEGORY_CLASS(UpDamageSystem, Verbose, All);
 
 static TAutoConsoleVariable<bool> CVARDamageDebugging(TEXT("RTSDebug.DamageDebugging"), false, TEXT("Used to toggle on or off logging for damage system."), ECVF_Cheat);
 
-URTSDamageCalculation::URTSDamageCalculation(const FObjectInitializer& objectInitializer) :
-   Super(objectInitializer)
+URTSDamageCalculation::URTSDamageCalculation(const FObjectInitializer& objectInitializer) : Super(objectInitializer)
 {
-   // TODO: Fix this. This should be used to capture the units stats at a point of time (important for networked games). We need to stop overriding this and actually use it as intended
    AttStruct attributes;
-   RelevantAttributesToCapture.Add(attributes.HealthDef); // Some spells deal damage based on how much health we have
+   RelevantAttributesToCapture.Add(attributes.HealthDef); 
    RelevantAttributesToCapture.Add(attributes.StrengthDef);
    RelevantAttributesToCapture.Add(attributes.UnderstandingDef);
    RelevantAttributesToCapture.Add(attributes.IntelligenceDef);
@@ -61,19 +59,31 @@ void URTSDamageCalculation::ReceiveEffects(FUpDamage& d, FGameplayTagContainer& 
    // Apply effects from buffs and armor
    // --This tag means this damage is pure, that is it doesn't get reduced by the global damage modifier--  Ex: Iron Maiden
    if(!effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Absolute")))
-      d.damage = d.damage * (100 - d.targetUnit->GetStatComponent()->GetMechanicAdjValue(EMechanics::GlobalDamageModifier)) / 100;
+   {
+      d.damage = d.damage * (100 + d.targetUnit->GetStatComponent()->GetMechanicAdjValue(EMechanics::GlobalDamageModifier)) / 100;
+   }
 
-   // This tag that means the ability triggering this damage event can never miss
-   if(effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.NeverMiss")))
-      d.accuracy = 0;
+   if(effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.ElementalNuke")))
+   {
+      if(d.targetUnit->GetStatComponent()->GetElementalStatValueFromElemTag(d.element, false) -
+             d.sourceUnit->GetStatComponent()->GetElementalStatValueFromElemTag(d.element, true) <
+         0)
+      {
+         d.damage *= 10;
+      }
+   }
 
    // This tag means that the target unit is a ward and can only take 1 damage maximum
    if(USpellDataLibrary::IsWard(d.targetUnit->GetAbilitySystemComponent()))
+   {
       d.damage = -1;
+   }
 
    // This tag means that
    if(USpellDataLibrary::IsGodMode(d.targetUnit->GetAbilitySystemComponent()))
+   {
       d.damage = 0;
+   }
 }
 
 void URTSDamageCalculation::PrintDamageCalcsBeforeProcessing(const FUpDamage& d, const int damageRange)
@@ -84,8 +94,7 @@ void URTSDamageCalculation::PrintDamageCalcsBeforeProcessing(const FUpDamage& d,
       %t Damage Roll %d
       %t Damage before Calculations: %d)-");
 
-      GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald,
-                                       FString::Printf(debugFormat, *d.sourceUnit->GetGameName().ToString(), damageRange, d.damage));
+      GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, FString::Printf(debugFormat, *d.sourceUnit->GetGameName().ToString(), damageRange, d.damage));
    }
 }
 
@@ -110,7 +119,7 @@ void URTSDamageCalculation::PrintFinalCalculatedDamageValues(const FUpDamage& d)
       }
 
       const auto& debugFormat = TEXT(
-      R"-(-- %s FinalDamage Information ---
+          R"-(-- %s FinalDamage Information ---
       %t Damage: %d
       %t Piercing: %d
       %t Accuracy: %d
@@ -118,8 +127,8 @@ void URTSDamageCalculation::PrintFinalCalculatedDamageValues(const FUpDamage& d)
       %t Element: %s
       %t Effects: %s)-");
 
-      const FString debugString = FString::Printf(debugFormat, *d.sourceUnit->GetGameName().ToString(), d.damage, d.piercing, d.accuracy, d.crit, *elementString,
-                                                  *effectsString);
+      const FString debugString =
+          FString::Printf(debugFormat, *d.sourceUnit->GetGameName().ToString(), d.damage, d.piercing, d.accuracy, d.crit, *elementString, *effectsString);
       GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, debugString);
    }
 }
@@ -130,8 +139,8 @@ void URTSDamageCalculation::PrintCritRollInfo(const FUpDamage& d, const float pe
    {
       const float criticalChance = d.sourceUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Critical_Chance);
       GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange,
-                                       FString("Piercing Bonus: ") + FString::SanitizeFloat(percentageConversion) + FString(" Critical Bonus: ") + FString::SanitizeFloat(
-                                       criticalChance));
+                                       FString("Piercing Bonus: ") + FString::SanitizeFloat(percentageConversion) + FString(" Critical Bonus: ") +
+                                           FString::SanitizeFloat(criticalChance));
       GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange, FString("Critical Roll: ") + FString::SanitizeFloat(critRoll));
    }
 }
@@ -139,7 +148,7 @@ void URTSDamageCalculation::PrintCritRollInfo(const FUpDamage& d, const float pe
 void URTSDamageCalculation::CalculateDamageReduction(FUpDamage& d, FGameplayTagContainer& effects) const
 {
    CalculatePiercing(d.targetUnit, d, false); // Calculate defensive piercing
-   
+
    PrintPreDamageReductionValues(d);
 
    ///--After we successfully calculate piercing, apply piercing effects
@@ -154,7 +163,8 @@ void URTSDamageCalculation::CalculateDamageReduction(FUpDamage& d, FGameplayTagC
    {
       d.crit   = true;
       d.damage = d.damage * d.sourceUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Critical_Damage);
-   } else
+   }
+   else
    {
       d.crit = false;
    }
@@ -163,13 +173,7 @@ void URTSDamageCalculation::CalculateDamageReduction(FUpDamage& d, FGameplayTagC
 
    ///--End of piercing application
 
-   /// 3 - Calculate accuracy based on our accuracy and the opponent's dodge --.
-   if(d.sourceUnit->GetIsEnemy() != d.targetUnit->GetIsEnemy())
-   {
-      d.accuracy = d.sourceUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Accuracy) / 35.f;
-      d.accuracy =
-      FMath::RandRange(0, 100) + FMath::Clamp(d.targetUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Dodge) - d.accuracy, 0.f, 95.f);
-   }
+   CalculateAccuracy(d, effects);
 
    /// 4 - Apply any effects that need everything properly calculated
    ReceiveEffects(d, effects);
@@ -177,62 +181,28 @@ void URTSDamageCalculation::CalculateDamageReduction(FUpDamage& d, FGameplayTagC
    PrintFinalCalculatedDamageValues(d);
 }
 
+void URTSDamageCalculation::CalculateAccuracy(FUpDamage& d, FGameplayTagContainer& effects) const
+{
+   // This tag that means the ability triggering this damage event can never miss
+   if(effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.NeverMiss")))
+   {
+      d.accuracy = 0;
+      return;
+   }
+
+   /// 3 - Calculate accuracy based on our accuracy and the opponent's dodge --.
+   /// (Allies won't dodge our spells casted on them :D)
+   if(d.sourceUnit->GetIsEnemy() != d.targetUnit->GetIsEnemy())
+   {
+      d.accuracy = d.sourceUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Accuracy) / 35.f;
+      d.accuracy = FMath::RandRange(0, 100) + FMath::Clamp(d.targetUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Dodge) - d.accuracy, 0.f, 95.f);
+   }
+}
+
 void URTSDamageCalculation::CalculatePiercing(AUnit* unit, FUpDamage& d, bool isAtt)
 {
    // TODO: Piecewise soulslike function calculation
-   if(d.element.GetTagName() == "Combat.Element.Arcane")
-   {
-      d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Arcane_Aff) * isAtt -
-      !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Arcane_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Blood")
-   {
-      d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Blood_Aff) * isAtt -
-      !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Blood_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Chaos")
-   {
-      d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Chaos_Aff) * isAtt -
-      !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Chaos_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Dark")
-   {
-      d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Darkness_Aff) * isAtt -
-      !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Darkness_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Earth")
-   {
-      d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Earth_Aff) * isAtt -
-      !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Earth_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Electric")
-   {
-      d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Electric_Aff) * isAtt -
-      !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Electric_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Ethereal")
-   {
-      d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Ethereal_Aff) * isAtt -
-      !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Ethereal_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Fire")
-   {
-      d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Fire_Aff) * isAtt -
-      !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Fire_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Force")
-   {
-      d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Physical_Aff) * isAtt -
-      !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Physical_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Light")
-   {
-      d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Light_Aff) * isAtt -
-      !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Light_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Poison")
-   {
-      d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Poison_Aff) * isAtt -
-      !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Poison_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Water")
-   {
-      d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Water_Aff) * isAtt -
-      !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Water_Resist);
-   } else if(d.element.GetTagName() == "Combat.Element.Wind")
-   {
-      d.piercing += unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Wind_Aff) * isAtt -
-      !isAtt * unit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Wind_Resist);
-   }
+   d.piercing += (-1 * static_cast<int>(isAtt)) * unit->GetStatComponent()->GetElementalStatValueFromElemTag(d.element, isAtt);
 }
 
 void URTSDamageCalculation::ShowDamageDealt(const FUpDamage& damageInfo)
@@ -245,8 +215,7 @@ void URTSDamageCalculation::ShowDamageDealt(const FUpDamage& damageInfo)
 
    UWorld*    worldRef = damageInfo.targetUnit->GetWorld();
    UDIRender* tRC      = NewObject<UDIRender>(damageInfo.targetUnit,
-                                              Cast<AUserInput>(worldRef->GetGameInstance()->GetFirstLocalPlayerController(worldRef))->GetHUDManager()->
-                                              damageIndicatorClass);
+                                         Cast<AUserInput>(worldRef->GetGameInstance()->GetFirstLocalPlayerController(worldRef))->GetHUDManager()->damageIndicatorClass);
    if(tRC)
    {
       tRC->AttachToComponent(damageInfo.targetUnit->GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepRelative, true));
@@ -255,7 +224,8 @@ void URTSDamageCalculation::ShowDamageDealt(const FUpDamage& damageInfo)
       if(damageInfo.accuracy > 100)
       {
          tRC->Text = (NSLOCTEXT("Combat", "Dodge", "Dodged!"));
-      } else
+      }
+      else
       {
          tRC->Text = FText::AsNumber(damageInfo.damage);
       }

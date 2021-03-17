@@ -14,6 +14,8 @@
 #include "UserInput.h"
 #include "HUDManager.h"
 #include "RTSProjectileStrategy.h"
+#include "TextFormatter.h"
+#include "Engine/CompositeCurveTable.h"
 
 const FGameplayTag USpellFunctionLibrary::CONFIRM_SPELL_TAG        = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Spell");
 const FGameplayTag USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Target");
@@ -22,7 +24,7 @@ USpellFunctionLibrary::USpellFunctionLibrary(const FObjectInitializer& o) : Supe
 {
 }
 
-FGameplayEffectSpecHandle USpellFunctionLibrary::MakeGameplayEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration,
+FGameplayEffectSpecHandle USpellFunctionLibrary::MakeGameplayEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
                                                                     float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags)
 {
    FGameplayEffectSpecHandle effect = AbilityRef->MakeOutgoingGameplayEffectSpec(EffectClass, Level);
@@ -45,7 +47,7 @@ FGameplayEffectSpecHandle USpellFunctionLibrary::MakeGameplayEffect(UGameplayAbi
    return effect;
 }
 
-FGameplayEffectSpecHandle USpellFunctionLibrary::MakeDamageEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration,
+FGameplayEffectSpecHandle USpellFunctionLibrary::MakeDamageEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
                                                                   float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
                                                                   FDamageScalarStruct damageVals)
 {
@@ -62,7 +64,7 @@ FGameplayEffectSpecHandle USpellFunctionLibrary::MakeDamageEffect(UGameplayAbili
    return effect;
 }
 
-FGameplayEffectSpecHandle USpellFunctionLibrary::MakeStatChangeEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration,
+FGameplayEffectSpecHandle USpellFunctionLibrary::MakeStatChangeEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
                                                                       float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
                                                                       TArray<FStatChange> StatChanges = TArray<FStatChange>())
 {
@@ -89,8 +91,12 @@ ARTSProjectile* USpellFunctionLibrary::SetupBulletTargetting(AUnit* casterRef, T
    {
       projectileStrategy                    = NewObject<URTSProjectileStrategy>(casterRef, projectileStrategyClass);
       projectileStrategy->canGoThroughWalls = canGoThroughWalls;
-      projectileStrategy->defaultHitEffects = specHandles;
    }
+   else
+   {
+      projectileStrategy = URTSProjectileStrategy::StaticClass()->GetDefaultObject<URTSProjectileStrategy>();
+   }
+   projectileStrategy->defaultHitEffects = specHandles;
 
    ARTSProjectile* projectile =
        ARTSProjectile::MakeRTSProjectile(casterRef->GetWorld(), casterRef->GetTargetComponent(), casterRef->GetActorTransform(), bulletClass, projectileStrategy);
@@ -98,18 +104,51 @@ ARTSProjectile* USpellFunctionLibrary::SetupBulletTargetting(AUnit* casterRef, T
    return projectile;
 }
 
-FText USpellFunctionLibrary::ParseDesc(const FText& inputText, const UAbilitySystemComponent* compRef, UMySpell* spell)
+FText USpellFunctionLibrary::ParseDesc(const FText& inputText, const UAbilitySystemComponent* compRef, UMySpell* spell, UCompositeCurveTable* effectPowerTableRef)
 {
+   FTextFormatPatternDefinitionRef descriptionPatternDef = MakeShared<FTextFormatPatternDefinition, ESPMode::ThreadSafe>();
+   descriptionPatternDef->SetArgStartChar(TEXT('['));
+   descriptionPatternDef->SetArgEndChar(TEXT(']'));
+
+   const FString descriptionString = inputText.ToString();
+
+   FFormatNamedArguments effectArgs;
+   const FTextFormat     effectFormat = FTextFormat::FromString(descriptionString, descriptionPatternDef);
+
+   if(FCString::Strchr(*descriptionString, descriptionPatternDef->ArgStartChar) != nullptr)
+   {
+      if(effectFormat.IsValid())
+      {
+         TArray<FString> effectFormatTokens;
+
+         effectFormat.GetFormatArgumentNames(effectFormatTokens);
+
+         for(const FString& token : effectFormatTokens)
+         {
+            if(effectPowerTableRef->GetRowMap().Contains(*token))
+            {
+               FRealCurve* effectPowerCurve = effectPowerTableRef->GetRowMap()[*token];
+               float       minTime, maxTime;
+               effectPowerCurve->GetTimeRange(minTime, maxTime);
+               const int   index               = UMySpell::GetIndex(spell->GetLevel(compRef), maxTime, spell->GetMaxLevel());
+               const float effectTokenArgValue = effectPowerCurve->Eval(index + 1);
+               effectArgs.Add(*token, effectTokenArgValue);
+            }
+         }
+      }
+   }
+
+   FFormatNamedArguments args;
+
    static const TCHAR* strKey      = TEXT("str");
    static const TCHAR* intKey      = TEXT("int");
    static const TCHAR* agiKey      = TEXT("agi");
    static const TCHAR* undKey      = TEXT("und");
-   static const TCHAR* hpKey       = TEXT("hp");
+   static const TCHAR* hpKey       = TEXT("hit");
    static const TCHAR* aoeKey      = TEXT("aoe");
    static const TCHAR* durationKey = TEXT("dur");
    static const TCHAR* periodKey   = TEXT("per");
 
-   FFormatNamedArguments args;
    args.Add(strKey, spell->GetDamage(compRef).strength);
    args.Add(intKey, spell->GetDamage(compRef).intelligence);
    args.Add(agiKey, spell->GetDamage(compRef).agility);
@@ -119,7 +158,7 @@ FText USpellFunctionLibrary::ParseDesc(const FText& inputText, const UAbilitySys
    args.Add(durationKey, spell->GetSpellDuration(compRef));
    args.Add(periodKey, spell->GetPeriod(compRef));
 
-   return FText::Format(inputText, args);
+   return FText::Format(FText::FromString(FTextFormatter::FormatStr(effectFormat, effectArgs, false, true)), args);
 }
 
 void USpellFunctionLibrary::SpellConfirmSwap(TSubclassOf<UMySpell> confirmSpell, TSubclassOf<UMySpell> originalSpell, AUnit* ownerRef, bool bSwapInConfirm)

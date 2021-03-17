@@ -34,8 +34,9 @@ void USpellBook::Init()
       }
 
       SetupInitialSpellNodeConnections();
-      GetWorld()->GetTimerManager().SetTimerForNextTick(
-          [this]() { cpcRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->OnSlotSelected().AddUObject(this, &USpellBook::OnSpellSlotSelected); });
+      GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+         cpcRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->OnSlotSelected().AddUObject(this, &USpellBook::OnSpellSlotSelected);
+      });
    }
 }
 
@@ -195,7 +196,8 @@ void USpellBook::OnSpellSlotSelected(int index)
          if(!GetLearnedSpellIndices().Contains(index))
          {
             LearnNewSpell(availableSpells[index]);
-         } else
+         }
+         else
          {
             TryUpgradeSpellLevel(spellObject, abilityInfo);
          }

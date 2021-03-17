@@ -14,12 +14,15 @@ UCLASS()
 class MYPROJECT_API UStatChangeCalc : public UGameplayEffectExecutionCalculation
 {
    GENERATED_UCLASS_BODY()
-   void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& executionParams, OUT FGameplayEffectCustomExecutionOutput& outExecutionOutput) const override;
+   void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& executionParams,
+                               OUT FGameplayEffectCustomExecutionOutput& outExecutionOutput) const override;
 };
 
-struct AttStruct {
+struct AttStruct
+{
    /// Declare attributes to be captured
    DECLARE_ATTRIBUTE_CAPTUREDEF(Health); // declares two variables (pointer to UProperty that will be captured and GameplayEffectAttributeCapture)
+   DECLARE_ATTRIBUTE_CAPTUREDEF(Mana);
    DECLARE_ATTRIBUTE_CAPTUREDEF(Strength);
    DECLARE_ATTRIBUTE_CAPTUREDEF(Understanding);
    DECLARE_ATTRIBUTE_CAPTUREDEF(Intelligence);
@@ -40,7 +43,8 @@ struct AttStruct {
 
    AttStruct()
    {
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Health, Source, false); // sets up property and definition.  Last parameter means if we snapshot value at time of this definition
+      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Health, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Mana, Source, false);
       DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Strength, Source, false);
       DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Understanding, Source, false);
       DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Intelligence, Source, false);

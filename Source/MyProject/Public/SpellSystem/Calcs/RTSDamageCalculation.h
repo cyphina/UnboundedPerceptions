@@ -17,15 +17,18 @@ class MYPROJECT_API URTSDamageCalculation : public UGameplayEffectExecutionCalcu
 {
    GENERATED_UCLASS_BODY()
 
-public:
-   /** Create some text to display the damage dealt to this unit */
+ public:
+   /** DEPRECATED: Create some text to display the damage dealt to this unit */
    static void ShowDamageDealt(const FUpDamage& damageInfo);
 
-protected:
+   /** Used to figure out of our attack hits or misses */	
+   void CalculateAccuracy(FUpDamage& d, FGameplayTagContainer& effects) const;
+
+ protected:
    void BroadcastDamageEvents(FUpDamage& d) const;
 
    /** Damage a target from a unit source*/
-   virtual void DamageTarget(UPARAM(ref) FUpDamage& d, FGameplayTagContainer effects) const PURE_VIRTUAL(URTSDamageCalculation::DamageTarget,);
+   virtual void DamageTarget(UPARAM(ref) FUpDamage& d, FGameplayTagContainer effects) const PURE_VIRTUAL(URTSDamageCalculation::DamageTarget, );
 
    /** Plug in damage to damage formula and modify the damage amount based on crit or piercing */
    void CalculateDamage(FUpDamage& d, FGameplayTagContainer& effects) const;

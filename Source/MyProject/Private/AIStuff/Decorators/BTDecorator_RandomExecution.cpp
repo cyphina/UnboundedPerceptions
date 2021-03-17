@@ -25,10 +25,10 @@ FString UBTDecorator_RandomExecution::GetStaticDescription() const
 {
    if(IsInversed())
    {
-      return FString::Printf(TEXT("Chance: %d"), 100 - chanceToExecute);
+      return FString::Printf(TEXT("Chance: %d%%"), 100 - chanceToExecute);
    }
    else
    {
-      return FString::Printf(TEXT("Chance: %d"), chanceToExecute);
+      return FString::Printf(TEXT("Chance: %d%%"), chanceToExecute);
    }
 }

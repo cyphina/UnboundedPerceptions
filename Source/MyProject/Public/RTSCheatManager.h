@@ -116,11 +116,15 @@ class MYPROJECT_API URTSCheatManager : public UCheatManager
 
    /** Stops enemies from being autonomous */
    UFUNCTION(exec, Category = "Cheats")
-   virtual void Up_ToggleEnemyAI(bool bShouldStop);
+   virtual void Up_ToggleEnemyAI();
 
-   /** Stops enemies from being autonomous */
+   /** Shows collision capsules around every unit. They are used for queries and distance (Like move overlap) */
    UFUNCTION(exec, Category = "Cheats")
    virtual void Up_ShowDebugCapsules(bool bShouldShow);
+
+   /** Shows vision sphere's around every unit */
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void Up_ShowVisionSpheres(bool bShouldShow);
 
    /**
     * @brief Used to debug the damage indicator

@@ -32,7 +32,6 @@ class MYPROJECT_API UMyAttributeSet : public UAttributeSet
    static TArray<FGameplayAttribute> attList;
    static TSet<FGameplayAttribute>   attSet;
 
-   UPROPERTY()
    class AUserInput* cpcRef;
 
  public:

@@ -27,22 +27,20 @@ class MYPROJECT_API USpellFunctionLibrary : public UBlueprintFunctionLibrary
 {
    GENERATED_UCLASS_BODY()
 
-   static  const FGameplayTag CONFIRM_SPELL_TAG     ;   
-   static  const FGameplayTag CONFIRM_SPELL_TARGET_TAG; 
+   static const FGameplayTag CONFIRM_SPELL_TAG;
+   static const FGameplayTag CONFIRM_SPELL_TARGET_TAG;
 
-public:
+ public:
    /** Function with custom BPNode which wraps around make gameplay effect to provide it with more functionality*/
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Gameplay Effect", BlueprintInternalUseOnly = "true"), Category = "Spell Creation Helper")
-   static struct FGameplayEffectSpecHandle MakeGameplayEffect
-   (UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float                Duration,
-    float             Period, FGameplayTag                     Elem, FGameplayTag Name, FGameplayTagContainer assetTags);
+   static struct FGameplayEffectSpecHandle MakeGameplayEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
+                                                              float Period, UPARAM(meta=(Categories="Combat.Element")) FGameplayTag Elem, UPARAM(meta=(Categories="Skill.Name")) FGameplayTag Name, FGameplayTagContainer assetTags);
 
    /** Creates gameplay damage effect (the name damageVals cannot be changed for the custom node to work) */
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Damage Effect", BlueprintInternalUseOnly = "true"), Category = "EffectFactory")
-   static struct FGameplayEffectSpecHandle MakeDamageEffect
-   (UGameplayAbility*   AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float                Duration,
-    float               Period, FGameplayTag                     Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
-    FDamageScalarStruct damageVals);
+   static struct FGameplayEffectSpecHandle MakeDamageEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
+                                                            float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
+                                                            FDamageScalarStruct damageVals);
 
    /**
     * Stat change effects all have their individual gameplay effect classes with name and element already setup (ideally).
@@ -53,20 +51,18 @@ public:
     * since some logic in the GA system loops through all the modifiers.
     */
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Stat Change Effect", BlueprintInternalUseOnly = "true"), Category = "EffectFactory")
-   static struct FGameplayEffectSpecHandle MakeStatChangeEffect
-   (UGameplayAbility*   AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float                Duration,
-    float               Period, FGameplayTag                     Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
-    TArray<FStatChange> StatChanges);
+   static struct FGameplayEffectSpecHandle MakeStatChangeEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
+                                                                float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
+                                                                TArray<FStatChange> StatChanges);
 
    /** Exposes factory bullet function to BPs */
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Setup Bullet Targetting"), Category = "EffectFactory")
-   static ARTSProjectile* SetupBulletTargetting
-   (AUnit* casterRef, TSubclassOf<ARTSProjectile> bulletClass, TSubclassOf<URTSProjectileStrategy> projectileStrategyClass, TArray<FGameplayEffectSpecHandle> specHandles,
-    bool   canGoThroughWalls);
+   static ARTSProjectile* SetupBulletTargetting(AUnit* casterRef, TSubclassOf<ARTSProjectile> bulletClass, TSubclassOf<URTSProjectileStrategy> projectileStrategyClass,
+                                                TArray<FGameplayEffectSpecHandle> specHandles, bool canGoThroughWalls);
 
    /** Parses spell descriptions to place keywords with the actual statistic*/
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Parse Descrption"), Category = "Spell Description Helper")
-   static FText ParseDesc(const FText& inputText, const UAbilitySystemComponent* compRef, UMySpell* spell);
+   static FText ParseDesc(const FText& inputText, const UAbilitySystemComponent* compRef, UMySpell* spell, class UCompositeCurveTable* effectPowerTableRef);
 
    /** If a spell requires another press for confirmation like telekinesis and ice pillar, we can use this function to swap out a unit's spell temporarily */
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Spell Swap"), Category = "Spell Functionality Extender")

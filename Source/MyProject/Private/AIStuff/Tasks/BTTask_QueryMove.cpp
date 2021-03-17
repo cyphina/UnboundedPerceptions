@@ -22,7 +22,7 @@ EBTNodeResult::Type UBTTask_QueryMove::ExecuteTask(UBehaviorTreeComponent& owner
       FEnvQueryRequest queryRequest{actionQuery, unitController->GetUnitOwner()};
       const auto       moveAfterPositionFound = FQueryFinishedSignature::CreateUObject(this, &UBTTask_QueryMove::OnMovePositionFound, unitController, &ownerComp);
 
-      const int  requestId = queryRequest.Execute(EEnvQueryRunMode::SingleResult, moveAfterPositionFound);
+      const int  requestId = queryRequest.Execute(queryRunMode, moveAfterPositionFound);
       const bool bValid    = (requestId >= 0);
 
       if(bValid)

@@ -1,10 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
-#include "CoreMinimal.h"
 #include "EnvironmentQuery/EnvQueryTest.h"
-#include "MyEnvQueryTest_DamageScore.generated.h"
+#include "EnvQueryTest_DamageScore.generated.h"
 
 class AUnit;
 
@@ -12,14 +9,14 @@ class AUnit;
  * Used to score how dangerous the enemies around ups are (based on stats, damage dealt recently, etc).
  */
 UCLASS()
-class MYPROJECT_API UMyEnvQueryTest_DamageScore : public UEnvQueryTest
+class MYPROJECT_API UEnvQueryTest_DamageScore : public UEnvQueryTest
 {
    GENERATED_BODY()
 
    static const int STAT_AFF_START_INDEX = 6;  // index of affinities in our stats
    static const int STAT_AFF_END_INDEX   = 18; // last index of the last element's affinity
 
-   UMyEnvQueryTest_DamageScore();
+   UEnvQueryTest_DamageScore();
 
    virtual void RunTest(FEnvQueryInstance& QueryInstance) const override;
 

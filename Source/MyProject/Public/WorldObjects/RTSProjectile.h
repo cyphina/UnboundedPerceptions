@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "GameFramework/Actor.h"
@@ -14,7 +12,7 @@ class URTSProjectileStrategy;
  * @brief Base class for all simple projectiles that can be fired in a direction or is homing.
  * TODO: Add some functionality for bullet patterns?
  */
-UCLASS()
+UCLASS(Abstract)
 class MYPROJECT_API ARTSProjectile : public AActor
 {
    GENERATED_BODY()

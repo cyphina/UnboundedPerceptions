@@ -4,18 +4,21 @@
 #include "GameplayTagContainer.h"
 #include "SpellDefaults.generated.h"
 
+/**
+ * @brief Default values describing what a spell does
+ */
 USTRUCT(BlueprintType)
 struct FSpellDefaults
 {
    GENERATED_BODY()
 
-public:
+ public:
    /** Spell Icon */
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
    UTexture2D* image;
 
-   /** Used for cooldown purposes. Every spell has its own unique name tag. */
-   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
+   /** Used for cooldown purposes. Every spell has its own unique name tag starting with Skill.Name. */
+   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters", meta = (Categories="Skill.Name"))
    FGameplayTag nameTag;
 
    /** Used for UI purposes */
@@ -25,7 +28,7 @@ public:
    /** Number of times we can upgrade this spell */
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
    int MaxLevel = 0;
-   
+
    /** Level required for each spell upgrade */
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
    TArray<int> LevelReq = TArray<int>();
@@ -45,17 +48,30 @@ public:
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
    TArray<int> Cost = TArray<int>();
 
+   /**
+    * Use {key} to add formatting that replaces the named argument with the value of the spell with the correct level applied.
+    * str - Strength
+    * int - Intelligence
+    * agi - Agility
+    * und - Understanding
+    * hit - Hitpoints
+    * aoe - Area of Effect
+    * dur - Duration
+    * per - Period
+    * Use [row_name] to add formatting that reads from the Composite Curve Table holding effect power values (e.g. [Reflective_Armor_DamageReduction]).
+    */
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
    FText Desc = FText();
 
    /** A tag deriving from Combat.Element */
-   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
+   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters",  meta = (Categories="Combat.Element"))
    FGameplayTag Elem = FGameplayTag();
 
    /** The strategy used this class to target something when casting */
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
    TSubclassOf<UUpSpellTargeting> Targeting;
 
+   /** How far we have to move towards the target to cast this spell. If the spell has no targeting, range doesn't do anything. */
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
    TArray<int> Range = TArray<int>();
 

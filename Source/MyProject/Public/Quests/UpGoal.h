@@ -256,7 +256,7 @@ protected:
    UPROPERTY(EditAnywhere, Category = "Goal Specifications")
    TSubclassOf<ANPC> npcToTurnInItemsTo;
 
-   UPROPERTY(EditAnywhere, Category = "Goal Specifications")
+   UPROPERTY(EditAnywhere, Category = "Goal Specifications", meta = (Categories="Dialog"))
    FGameplayTag topicToTalkAbout;
 };
 

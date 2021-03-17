@@ -24,10 +24,12 @@ void USpellbookSlot::UpdateSlotColor()
    if(spellBook->GetLearnedSpellIndices().Contains(slotIndex))
    {
       SetColorAndOpacity(learnedSpellColor);
-   } else if(spellBook->GetLearnableSpellsIndices().Contains(slotIndex))
+   }
+   else if(spellBook->GetLearnableSpellsIndices().Contains(slotIndex))
    {
       SetColorAndOpacity(canLearnSpellColor);
-   } else if(spellBook->GetUnknownSpellIndices().Contains(slotIndex))
+   }
+   else if(spellBook->GetUnknownSpellIndices().Contains(slotIndex))
    {
       SetColorAndOpacity(tooHighLevelSpellColor);
    }
@@ -43,7 +45,8 @@ void USpellbookSlot::UpdateSlotLevelText()
          {
             const int newLevel = spellBook->GetSpellFromIndex(slotIndex).GetDefaultObject()->GetLevel(heroRef->GetAbilitySystemComponent());
             infoText->SetText(FText::FromString(FString::FromInt(newLevel)));
-         } else
+         }
+         else
          {
             infoText->SetText(FText::GetEmpty());
          }
@@ -94,8 +97,8 @@ void USpellbookSlot::ShowDesc(UToolTipWidget* tooltip)
    const auto  spellObj        = spellClassRef.GetDefaultObject();
    const FText costAndManaDesc = FText::Format(LOCTEXT("SpellSlotCostAndMana", "Costs {0} mana \r\n{1} second cooldown \r\n{2} Element"),
                                                spellObj->GetCost(abilitySystemCompRef), spellObj->GetCDDuration(abilitySystemCompRef), spellObj->GetElem());
-   FText preReqNamesDesc =
-   spellObj->GetPreReqNames().Num() > 0 ? LOCTEXT("LearnedSpellReqsStart", "Must have learned - ") : LOCTEXT("NoSpellReqs", "No spell requirements");
+   FText       preReqNamesDesc =
+       spellObj->GetPreReqNames().Num() > 0 ? LOCTEXT("LearnedSpellReqsStart", "Must have learned - ") : LOCTEXT("NoSpellReqs", "No spell requirements");
    const FText levelRequirementString = FText::Format(LOCTEXT("LevelReq", "Requires Level: {0}"), spellObj->GetReqLevel(abilitySystemCompRef));
 
    for(auto& preReqName : spellObj->GetPreReqNames())
@@ -105,8 +108,13 @@ void USpellbookSlot::ShowDesc(UToolTipWidget* tooltip)
 
    if(IsValid(spellObj))
    {
-      tooltip->SetupTTBoxText(spellObj->GetSpellName(), levelRequirementString, preReqNamesDesc,
-                              USpellFunctionLibrary::ParseDesc(spellObj->GetDescription(), abilitySystemCompRef, spellObj), costAndManaDesc);
+      if(AUserInput* CPCRef = Cast<AUserInput>(GetOwningPlayer<AUserInput>()))
+      {
+         tooltip->SetupTTBoxText(
+             spellObj->GetSpellName(), levelRequirementString, preReqNamesDesc,
+             USpellFunctionLibrary::ParseDesc(spellObj->GetDescription(), abilitySystemCompRef, spellObj, CPCRef->GetHUDManager()->effectPowerTableRef),
+             costAndManaDesc);
+      }
    }
 }
 

@@ -203,7 +203,6 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    void SetupDamageInidicatorContainerWidget();
    void RemoveArrowComponent() const;
 
-   void SetupAbilitiesAndStats();
    void SetupSelectionCircle() const;
    void StoreUnitHeight();
 

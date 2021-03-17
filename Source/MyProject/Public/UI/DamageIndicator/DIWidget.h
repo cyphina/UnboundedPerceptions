@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "UserWidget.h"
@@ -8,7 +6,7 @@
 class AUnit;
 
 /**
- * C++ class for the widget that the widget component holds when
+ * DEPRECIATED: Using RTSDamageNumber classes instead
  */
 UCLASS()
 class MYPROJECT_API UDIWidget : public UUserWidget

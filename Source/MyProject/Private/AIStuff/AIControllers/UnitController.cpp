@@ -146,6 +146,11 @@ void AUnitController::OnDamageReceived(const FUpDamage& d)
    {
       d.sourceUnit->GetCombatInfo()->bMissLastHit = false;
       GetUnitOwner()->GetStatComponent()->ModifyStats<false>(GetUnitOwner()->GetStatComponent()->GetVitalCurValue(EVitals::Health) - d.damage, EVitals::Health);
+
+      if(d.sourceUnit->GetAbilitySystemComponent()->HasAnyMatchingGameplayTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Lifesteal"))))
+      {
+         d.sourceUnit->GetStatComponent()->ModifyStats(d.sourceUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) + d.damage, EVitals::Health);
+      }
    }
    else
    {
@@ -169,6 +174,11 @@ void AUnitController::Die()
    GetUnitOwner()->SetUnitSelected(false);
    GetUnitOwner()->SetEnabled(false);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnUnitDieGlobal().Broadcast(GetUnitOwner());
+
+   FGameplayEffectQuery removeAllEffectsQuery;
+   removeAllEffectsQuery.EffectSource = this;
+   GetUnitOwner()->GetAbilitySystemComponent()->RemoveActiveEffects(removeAllEffectsQuery);
+
    GetUnitOwner()->OnUnitDie().Broadcast();
    // Eventually this object will get GC'd. If we have something like resurrection, store unit data in the OnUnitDieEvent as opposed to keeping around a deactivated copy.
    // Also we need to destroy this unit in a delay else our vision system in the other thread will have some data races.

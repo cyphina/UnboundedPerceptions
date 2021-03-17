@@ -245,9 +245,10 @@ void URTSCheatManager::Up_SpawnEnemies(FName id, int level, int numberToSpawn, F
    }
 }
 
-void URTSCheatManager::Up_ToggleEnemyAI(bool bShouldStop)
+void URTSCheatManager::Up_ToggleEnemyAI()
 {
-   if(bShouldStop)
+   static int AI_IS_ACTIVE = 1;
+   if(AI_IS_ACTIVE)
    {
       for(AUnit* unit : gameStateRef->GetAllEnemyUnits())
       {
@@ -256,6 +257,7 @@ void URTSCheatManager::Up_ToggleEnemyAI(bool bShouldStop)
             BTComp->StopTree();
          }
       }
+      AI_IS_ACTIVE = 0;
    }
    else
    {
@@ -267,18 +269,62 @@ void URTSCheatManager::Up_ToggleEnemyAI(bool bShouldStop)
          }
       }
    }
+   AI_IS_ACTIVE = 1;
 }
 
 void URTSCheatManager::Up_ShowDebugCapsules(bool bShouldShow)
 {
-   for(AUnit* unit : gameStateRef->GetAllEnemyUnits())
+   if(!bShouldShow)
    {
-      unit->GetCapsuleComponent()->SetHiddenInGame(false);
-   }
+      for(AUnit* unit : gameStateRef->GetAllEnemyUnits())
+      {
+         unit->GetCapsuleComponent()->SetHiddenInGame(false);
+      }
 
-   for(AUnit* unit : gameStateRef->GetAllAllyUnits())
+      for(AUnit* unit : gameStateRef->GetAllAllyUnits())
+      {
+         unit->GetCapsuleComponent()->SetHiddenInGame(false);
+      }
+   }
+   else
    {
-      unit->GetCapsuleComponent()->SetHiddenInGame(false);
+      for(AUnit* unit : gameStateRef->GetAllEnemyUnits())
+      {
+         unit->GetCapsuleComponent()->SetHiddenInGame(true);
+      }
+
+      for(AUnit* unit : gameStateRef->GetAllAllyUnits())
+      {
+         unit->GetCapsuleComponent()->SetHiddenInGame(true);
+      }
+   }
+}
+
+void URTSCheatManager::Up_ShowVisionSpheres(bool bShouldShow)
+{
+   if(!bShouldShow)
+   {
+      for(AUnit* unit : gameStateRef->GetAllEnemyUnits())
+      {
+         unit->GetVisionComponent()->SetHiddenInGame(false);
+      }
+
+      for(AUnit* unit : gameStateRef->GetAllAllyUnits())
+      {
+         unit->GetVisionComponent()->SetHiddenInGame(false);
+      }
+   }
+   else
+   {
+      for(AUnit* unit : gameStateRef->GetAllEnemyUnits())
+      {
+         unit->GetVisionComponent()->SetHiddenInGame(true);
+      }
+
+      for(AUnit* unit : gameStateRef->GetAllAllyUnits())
+      {
+         unit->GetVisionComponent()->SetHiddenInGame(true);
+      }
    }
 }
 

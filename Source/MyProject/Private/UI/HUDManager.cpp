@@ -46,8 +46,7 @@
 
 #include "ToolTipWidget.h"
 
-AHUDManager::AHUDManager() :
-   Super()
+AHUDManager::AHUDManager() : Super()
 {
    PrimaryActorTick.bCanEverTick = false;
    widgetReferences.SetNum(HUDCount);
@@ -80,7 +79,6 @@ void AHUDManager::BeginPlay()
 
    startMenu = CreateWidget<UStartMenu>(playerControllerRef, startMenuClass, "Start Menu");
    InjectDependency(startMenu);
-
 
    // For some reason the hardware cursor doesn't show in a packaged build, so we need to do what was written here:
    // https://forums.unrealengine.com/development-discussion/blueprint-visual-scripting/1700190-custom-hardware-cursor-does-odd-thing
@@ -135,24 +133,15 @@ void AHUDManager::AddHUD(uint8 newState)
    {
       switch(newState)
       {
-         case EHUDs::HS_Ingame: ApplyHUD(newState, true, true, false);
-            break;
-         case EHUDs::HS_Inventory: ApplyHUD(newState, true, true, false);
-            break;
-         case EHUDs::HS_Equipment: ApplyHUD(newState, true, true, false);
-            break;
-         case EHUDs::HS_Character: ApplyHUD(newState, true, false, true);
-            break;
-         case EHUDs::HS_QuestJournal: ApplyHUD(newState, true, false, true);
-            break;
-         case EHUDs::HS_QuestList: ApplyHUD(newState, true, true, false);
-            break;
-         case EHUDs::HS_Spellbook: ApplyHUD(newState, true, true, false);
-            break;
-         case EHUDs::HS_Shop_General: ApplyHUD(static_cast<int>(EHUDs::HS_Shop_General), true, false, false);
-            break;
-         case EHUDs::HS_Storage: ApplyHUD(newState, true, true, false);
-            break;
+         case EHUDs::HS_Ingame: ApplyHUD(newState, true, true, false); break;
+         case EHUDs::HS_Inventory: ApplyHUD(newState, true, true, false); break;
+         case EHUDs::HS_Equipment: ApplyHUD(newState, true, true, false); break;
+         case EHUDs::HS_Character: ApplyHUD(newState, true, false, true); break;
+         case EHUDs::HS_QuestJournal: ApplyHUD(newState, true, false, true); break;
+         case EHUDs::HS_QuestList: ApplyHUD(newState, true, true, false); break;
+         case EHUDs::HS_Spellbook: ApplyHUD(newState, true, true, false); break;
+         case EHUDs::HS_Shop_General: ApplyHUD(static_cast<int>(EHUDs::HS_Shop_General), true, false, false); break;
+         case EHUDs::HS_Storage: ApplyHUD(newState, true, true, false); break;
          case EHUDs::HS_Dialog:
          case EHUDs::HS_Confirmation:
          case EHUDs::HS_InputBox:
@@ -163,18 +152,12 @@ void AHUDManager::AddHUD(uint8 newState)
             break;
          }
          case EHUDs::HS_ExamineMenu: ApplyHUD(newState, true, false, false);
-         case EHUDs::HS_Social: ApplyHUD(newState, true, false, false);
-            break;
-         case EHUDs::HS_Break: ApplyHUD(newState, true, false, false);
-            break;
-         case EHUDs::HS_Settings: ApplyHUD(newState, true, false, true);
-            break;
-         case EHUDs::HS_SaveLoad: ApplyHUD(newState, true, false, true);
-            break;
-         case EHUDs::HS_ChatBox: ApplyHUD(newState, true, true, false);
-            break;
-         case EHUDs::HS_KeyMap: ApplyHUD(newState, true, false, false);
-            break;
+         case EHUDs::HS_Social: ApplyHUD(newState, true, false, false); break;
+         case EHUDs::HS_Break: ApplyHUD(newState, true, false, false); break;
+         case EHUDs::HS_Settings: ApplyHUD(newState, true, false, true); break;
+         case EHUDs::HS_SaveLoad: ApplyHUD(newState, true, false, true); break;
+         case EHUDs::HS_ChatBox: ApplyHUD(newState, true, true, false); break;
+         case EHUDs::HS_KeyMap: ApplyHUD(newState, true, false, false); break;
          default: break;
       }
    }
@@ -222,7 +205,8 @@ void AHUDManager::ShowConfirmationBox(const FOnConfirmation& funcToCallOnConfirm
       GetConfirmationBox()->SetTitle(newTitle);
       GetConfirmationBox()->SetDesc(newDesc);
       ApplyHUD(static_cast<int>(EHUDs::HS_Confirmation), true, false, false);
-   } else
+   }
+   else
    {
       ApplyHUD(static_cast<int>(EHUDs::HS_Confirmation), true, false, false);
    }
@@ -236,7 +220,8 @@ void AHUDManager::ShowInputBox(const FOnInputConfirmed& funcToCallOnConfirmed, F
       GetInputBox()->SetTitle(newTitle);
       GetInputBox()->SetDesc(newDesc);
       ApplyHUD(static_cast<int>(EHUDs::HS_InputBox), true, false, false);
-   } else
+   }
+   else
    {
       ApplyHUD(static_cast<int>(EHUDs::HS_InputBox), true, false, false);
    }
@@ -287,11 +272,13 @@ void AHUDManager::HideWidgetOnScreen(UMyUserWidget* widgetToApply) const
       if(widgetToApply->IsAnimationPlaying(anim))
       {
          widgetToApply->ReverseAnimation(anim);
-      } else
+      }
+      else
       {
          widgetToApply->PlayAnimation(anim, 0, 1, EUMGSequencePlayMode::Reverse, 1);
       }
-   } else
+   }
+   else
    {
       widgetToApply->OnWidgetRemovedFromViewport();
       widgetToApply->SetVisibility(ESlateVisibility::Collapsed);
@@ -306,15 +293,23 @@ bool AHUDManager::ShowHiddenWidget(UMyUserWidget* widgetToApply) const
       if(widgetToApply->IsAnimationPlaying(anim))
       {
          widgetToApply->ReverseAnimation(anim);
-      } else
+      }
+      else
       {
-         if(!widgetToApply->OnWidgetAddToViewport()) { return false; }
+         if(!widgetToApply->OnWidgetAddToViewport())
+         {
+            return false;
+         }
          widgetToApply->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
          widgetToApply->PlayAnimation(anim, 0, 1, EUMGSequencePlayMode::Forward, 1);
       }
-   } else
+   }
+   else
    {
-      if(!widgetToApply->OnWidgetAddToViewport()) { return false; }
+      if(!widgetToApply->OnWidgetAddToViewport())
+      {
+         return false;
+      }
       widgetToApply->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
    }
    return true;
@@ -340,7 +335,8 @@ void AHUDManager::UpdateWidgetTracking(int updateIndex, bool enableClickEvents, 
          playerControllerRef->GetCameraPawn()->DisableInput(playerControllerRef);
          playerControllerRef->GetCameraPawn()->SetActorTickEnabled(false);
          playerControllerRef->GetCameraPawn()->ChangeCursor(ECursorStateEnum::UI);
-      } else
+      }
+      else
       {
          playerControllerRef->GetCameraPawn()->isCamNavDisabled = false;
          playerControllerRef->GetCameraPawn()->EnableInput(playerControllerRef);
@@ -351,12 +347,18 @@ void AHUDManager::UpdateWidgetTracking(int updateIndex, bool enableClickEvents, 
 
 void AHUDManager::BP_AddConfirmationBox(const FText& newTitle, const FText& newDesc, FName funcName, UObject* funcObject)
 {
-   ShowConfirmationBox(FOnConfirmation::CreateUFunction(funcObject, funcName), newTitle, newDesc);
+   if(funcObject)
+   {
+      ShowConfirmationBox(FOnConfirmation::CreateUFunction(funcObject, funcName), newTitle, newDesc);
+   }
 }
 
 void AHUDManager::BP_AddInputBox(FText newTitle, const FText& newDesc, FName funcName, UObject* funcObject)
 {
-   ShowInputBox(FOnInputConfirmed::CreateUFunction(funcObject, funcName), newTitle, newDesc);
+   if(funcObject)
+   {
+      ShowInputBox(FOnInputConfirmed::CreateUFunction(funcObject, funcName), newTitle, newDesc);
+   }
 }
 
 URTSIngameWidget* AHUDManager::GetIngameHUD() const

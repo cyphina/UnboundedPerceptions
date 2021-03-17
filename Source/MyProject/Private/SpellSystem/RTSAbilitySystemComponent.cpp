@@ -25,14 +25,36 @@ void URTSAbilitySystemComponent::BeginPlay()
    Super::BeginPlay();
    unitOwnerRef = Cast<AUnit>(GetOwner());
 
-   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_TAG)));
-   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG)));
-
    // TODO: Set this more elegantly I guess.
    if(Cast<ABaseHero>(GetOwner()))
    {
       abilities.SetNum(6);
    }
+   else
+   {
+      abilities.Reserve(defaultAbilities.Num());
+   }
+
+   if(unitOwnerRef->HasAuthority())
+   {
+      int index = 0;
+      for(const FDefaultLearnedAbility& defaultAbility : defaultAbilities)
+      {
+         if(IsValid(defaultAbility.spellClass))
+         {
+            const int spellMaxLevel = defaultAbility.spellClass.GetDefaultObject()->GetMaxLevel();
+            const int initialLevel  = defaultAbility.initialLevel > spellMaxLevel ? spellMaxLevel : defaultAbility.initialLevel;
+            GiveAbility(FGameplayAbilitySpec(defaultAbility.spellClass.GetDefaultObject(), initialLevel));
+            abilities.EmplaceAt(index++, defaultAbility.spellClass);
+         }
+      }
+   }
+   defaultAbilities.Empty();
+
+   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_TAG)));
+   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG)));
+
+   InitAbilityActorInfo(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(), unitOwnerRef);
 }
 
 int URTSAbilitySystemComponent::FindSlotIndexOfSpell(TSubclassOf<UMySpell> spellToLookFor) const

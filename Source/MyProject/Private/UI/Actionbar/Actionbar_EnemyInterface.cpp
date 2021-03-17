@@ -12,10 +12,11 @@
 #include "UIDelegateContext.h"
 #include "WidgetBlueprintLibrary.h"
 
-UEnemySkillData* UEnemySkillData::CreateEnemySkillData(TSubclassOf<UMySpell> spellClass)
+UEnemySkillData* UEnemySkillData::CreateEnemySkillData(TSubclassOf<UMySpell> spellClass, int slotIndex)
 {
    UEnemySkillData* skillData = NewObject<UEnemySkillData>();
    skillData->spellClass      = spellClass;
+   skillData->slotIndex       = slotIndex;
    return skillData;
 }
 
@@ -42,6 +43,7 @@ void UEnemySkillSlot::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
    if(UEnemySkillData* itemData = Cast<UEnemySkillData>(ListItemObject))
    {
+      slotIndex = itemData->slotIndex;
       UpdateSkillSlot(itemData->spellClass);
       if(UActionbar_EnemyInterface* enemyInterface = Cast<UActionbar_EnemyInterface>(GetParentContainer()))
       {
@@ -66,9 +68,10 @@ void UActionbar_EnemyInterface::OnWidgetShown(AUnit* focusedUnit)
    enemyRef = Cast<AEnemy>(focusedUnit);
    TArray<UEnemySkillData*> listData;
 
+   int index = -1;
    for(const TSubclassOf<UMySpell> skill : focusedUnit->GetAbilitySystemComponent()->GetAbilities())
    {
-      listData.Add(UEnemySkillData::CreateEnemySkillData(skill));
+      listData.Add(UEnemySkillData::CreateEnemySkillData(skill, ++index));
    }
 
    TView_SkillList->SetListItems(listData);
@@ -76,13 +79,13 @@ void UActionbar_EnemyInterface::OnWidgetShown(AUnit* focusedUnit)
 
 void UActionbar_EnemyInterface::OnFocusedUnitSpellCasted(AUnit* focusedUnit, int spellIndex)
 {
-   if(GameplayModifierCVars::bEnableEnemyControl)
+   /*if(GameplayModifierCVars::bEnableEnemyControl)
+   {*/
+   if(UObject* dataItem = TView_SkillList->GetItemAt(spellIndex))
    {
-      if(UObject* dataItem = TView_SkillList->GetItemAt(spellIndex))
-      {
-         TView_SkillList->GetEntryWidgetFromItem<UEnemySkillSlot>(dataItem)->ShowCooldown();
-      }
+      TView_SkillList->GetEntryWidgetFromItem<UEnemySkillSlot>(dataItem)->ShowCooldown();
    }
+   //}
 }
 
 void UActionbar_EnemyInterface::HandleEnemySkillClicked(UObject* item)

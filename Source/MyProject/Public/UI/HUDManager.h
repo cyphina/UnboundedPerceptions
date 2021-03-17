@@ -15,6 +15,7 @@
 
 #include "HUDManager.generated.h"
 
+class UCompositeCurveTable;
 class UToolTipWidget;
 class ARTSGameMode;
 class AUserInput;
@@ -74,8 +75,11 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    TSubclassOf<UDIRender> damageIndicatorClass;
 
    UPROPERTY(EditDefaultsOnly)
+   UCompositeCurveTable* effectPowerTableRef;
+	
+   UPROPERTY(EditDefaultsOnly)
    TSubclassOf<URTSDamageNumberContainer> damageIndicatorContainerClass;
-   
+
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<UToolTipWidget> toolTipWidgetClass;
 
