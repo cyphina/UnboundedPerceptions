@@ -8,18 +8,6 @@
 #include "UserInput.h"
 #include "Items/Backpack.h"
 #include "UI/HUDManager.h"
-<<<<<<< HEAD
-#include "DialogSystem/NPCSocialMenu.h"
-#include "RTSIngameWidget.h"
-#include "LevelSaveStructs.h"
-
-FItemPrice AShopNPC::defaultItemPrice = FItemPrice();
-
-void AShopNPC::SetupAppropriateView()
-{
-   controllerRef->GetWidgetProvider()->GetIngameHUD()->GetSocialWindow()->SetShopView();
-}
-=======
 #include "DialogSystem/DialogUI.h"
 #include "RTSIngameWidget.h"
 #include "StoreInventory.h"
@@ -29,19 +17,14 @@ const FText AShopNPC::NotEnoughMoneyText       = NSLOCTEXT("HelpMessages", "NotE
 const FText AShopNPC::confirmTitleText         = NSLOCTEXT("HelpMessages", "ItemPurchaseConfirmTitle", "Purchase");
 const FText AShopNPC::ensurePurchaseText       = NSLOCTEXT("HelpMessages", "ItemPurchaseConfirm", "How many of these would you like to purchase?");
 const FText AShopNPC::ensurePurchaseSingleText = NSLOCTEXT("HelpMessages", "ItemPurchaseConfirm", "Are you sure you want to purchase this?");
->>>>>>> componentrefactor
 
 void AShopNPC::BeginPlay()
 {
    Super::BeginPlay();
    itemsToSellBackpack = UBackpack::CreateBackpack(this, 20);
-<<<<<<< HEAD
-   for(FMyItem& item : itemsToSell) {
-=======
 
    for(FMyItem& item : itemsToSell)
    {
->>>>>>> componentrefactor
       itemsToSellBackpack->AddItem(item);
    }
    controllerRef->GetHUDManager()->GetIngameHUD()->GetShopHUD()->OnSlotSelected().AddUObject(this, &AShopNPC::OnAskToPurchaseItem);
@@ -201,10 +184,5 @@ TArray<FBackpackUpdateResult> AShopNPC::PayItemReqsForEachItemPurchased(const FI
 
 void AShopNPC::SetupAppropriateView()
 {
-<<<<<<< HEAD
-   if(itemPrices.Contains(itemID)) { return itemPrices[itemID]; }
-   return defaultItemPrice;
-=======
    controllerRef->GetWidgetProvider()->GetIngameHUD()->GetSocialWindow()->SetShopView();
->>>>>>> componentrefactor
 }

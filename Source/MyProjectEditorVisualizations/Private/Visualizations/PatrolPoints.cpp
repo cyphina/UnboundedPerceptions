@@ -53,33 +53,6 @@ void FPatrolVisualizer::OnRegister()
 
 void FPatrolVisualizer::DrawVisualization(const UActorComponent* component, const FSceneView* view, FPrimitiveDrawInterface* pdi)
 {
-<<<<<<< HEAD
-	if (const UPatrolComponent* patrolComponent = Cast<const UPatrolComponent>(component))
-	{
-		const FLinearColor selectedColor = patrolComponent->EDITOR_SELECTED_PATROL_COLOR;
-		const FLinearColor unselectedColor = patrolComponent->EDITOR_UNSELECTED_PATROL_COLOR;
-
-		const FVector location = patrolComponent->GetComponentLocation();
-
-		if (patrolComponent->patrolPoints.Num() > 0)
-		{
-			FLinearColor color = (currentlySelectedPointIndex == 0) ? selectedColor : unselectedColor;
-			pdi->SetHitProxy(new HPatrolProxy(component, 0));
-			pdi->DrawLine(location, patrolComponent->patrolPoints[0], color, SDPG_Foreground);
-			pdi->DrawPoint(patrolComponent->patrolPoints[0], color, 20.f, SDPG_Foreground);
-			pdi->SetHitProxy(NULL);
-		}
-
-		for (int i = 1; i < patrolComponent->patrolPoints.Num(); ++i)
-		{
-			FLinearColor color = (i == currentlySelectedPointIndex) ? selectedColor : unselectedColor;
-			pdi->SetHitProxy(new HPatrolProxy(component, i));
-			pdi->DrawLine(patrolComponent->patrolPoints[i - 1], patrolComponent->patrolPoints[i], color, SDPG_Foreground);
-			pdi->DrawPoint(patrolComponent->patrolPoints[i], color, 20.f, SDPG_Foreground);
-			pdi->SetHitProxy(NULL);
-		}
-	}
-=======
    if(const UPatrolComponent* patrolComponent = Cast<const UPatrolComponent>(component))
    {
       const FLinearColor selectedColor   = patrolComponent->EDITOR_SELECTED_PATROL_COLOR;
@@ -105,7 +78,6 @@ void FPatrolVisualizer::DrawVisualization(const UActorComponent* component, cons
          pdi->SetHitProxy(NULL);
       }
    }
->>>>>>> componentrefactor
 }
 
 bool FPatrolVisualizer::VisProxyHandleClick(FEditorViewportClient* inViewportClient, HComponentVisProxy* visProxy, const FViewportClick& click)

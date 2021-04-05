@@ -15,11 +15,7 @@ class UEquipmentContainer;
 class UTriggerManager;
 class AHeroAIController;
 
-<<<<<<< HEAD
-using Equip_Slot_Arr = TStaticArray<int, 10>;
-=======
 using Equip_Slot_Arr = TStaticArray<int, 7>;
->>>>>>> componentrefactor
 
 DECLARE_EVENT(ABaseHero, FOnLevelUp);
 DECLARE_DELEGATE_RetVal_OneParam(bool, FOnPickupItem, FMyItem&);
@@ -40,7 +36,6 @@ class MYPROJECT_API ABaseHero : public AAlly
     * Equip an item
     * @param backpackIndex - Index of the slot holding the item we want to equip
     */
-<<<<<<< HEAD
    UFUNCTION(BlueprintCallable, Category = "Interfacing Equipment")
    void Equip(const int backpackIndex);
 
@@ -50,39 +45,12 @@ class MYPROJECT_API ABaseHero : public AAlly
     */
    UFUNCTION(BlueprintCallable, Category = "Interfacing Equipment")
    void Unequip(const int unequipSlot) const;
-
-   /**
-    * Swap an item from one slot to another
-    * @param equipSlot1 - First slot to be swapped
-    * @param equipSlot2 - Second slot to be swapped
-    */
-   UFUNCTION(BlueprintCallable, Category = "Interfacing Equipment")
-   void SwapEquip(int equipSlot1, int equipSlot2);
-=======
-   UFUNCTION(BlueprintCallable, Category = "Interfacing Equipment")
-   void Equip(const int backpackIndex);
-
-   /**
-    * Unequip an item
-    * @param unequipSlot - Equipment slot index of the item to unequip
-    */
-   UFUNCTION(BlueprintCallable, Category = "Interfacing Equipment")
-   void Unequip(const int unequipSlot) const;
->>>>>>> componentrefactor
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Stats")
    int GetCurrentExp() const;
 
    UFUNCTION(BlueprintCallable, Category = "Stats")
    void SetCurrentExp(int amount);
-<<<<<<< HEAD
-
-   UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Stats")
-   int GetExpToLevel() const;
-
-   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Stats")
-   void LevelUp();
-=======
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Stats")
    int GetExpToLevel() const;
@@ -92,7 +60,6 @@ class MYPROJECT_API ABaseHero : public AAlly
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Items")
    int GetCurrentItemId() { return currentItemId.IsSet() ? currentItemId.GetValue() : INDEX_NONE; }
->>>>>>> componentrefactor
 
    /**Set the item set to be used currently by this hero*/
    UFUNCTION(BlueprintCallable, Category = "Items")
@@ -103,12 +70,7 @@ class MYPROJECT_API ABaseHero : public AAlly
    AActor* GetCurrentInteractable() const { return Cast<AActor>(currentInteractable); }
 
    /** Allows us to change this character's base attributes (PERMANENTLY), which can modify their other stats which scale off that attribute */
-<<<<<<< HEAD
-   UFUNCTION(BlueprintCallable)
-   void ChangeAttribute(EAttributes att, bool isIncrementing);
-=======
    void OnAttributePointAllocated(ABaseHero* heroWithAttChange, EAttributes att, bool isIncrementing);
->>>>>>> componentrefactor
 
    /** Get a copy of our spell book which holds all the spells in our skill tree*/
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
@@ -119,26 +81,16 @@ class MYPROJECT_API ABaseHero : public AAlly
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
    int GetAttPoints() const { return attPoints; }
-<<<<<<< HEAD
-   
-=======
 
->>>>>>> componentrefactor
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
    AHeroAIController* GetHeroController() const { return heroController; }
 
    void SetCurrentInteractable(AActor* newInteractable);
 
    /** Gets the item set to be used currently by this hero */
-<<<<<<< HEAD
-   TOptional<int> GetCurrentItem() const { return currentItemId; }
-
-   void SetSelected(bool value) override;
-=======
    TOptional<int> GetCurrentItem() const { return currentItemId.GetValue(); }
 
    void SetUnitSelected(bool value) override;
->>>>>>> componentrefactor
 
    FOnLevelUp& OnLevelUp() { return OnLevelUpEvent; }
 
@@ -199,15 +151,8 @@ class MYPROJECT_API ABaseHero : public AAlly
     */
    void OnSpellCasted(TSubclassOf<UMySpell> spellCasted);
 
-<<<<<<< HEAD
-   void OnItemSelected(int hIndex, int itemUsedSlotIndex);
-
-   void OnSpellLearned(TSubclassOf<UMySpell> spellLearned);
-   void OnSpellUpgraded(TSubclassOf<UMySpell> spellLearned);
-=======
    void OnSpellLearned(const ABaseHero& heroThatLearnedSpell, TSubclassOf<UMySpell> spellLearned);
    void OnSpellUpgraded(const ABaseHero& heroThatLearnedSpell, TSubclassOf<UMySpell> spellLearned);
->>>>>>> componentrefactor
 
    /**
     * @brief Activates triggers that were supposed to fire off on this hero if it were alive

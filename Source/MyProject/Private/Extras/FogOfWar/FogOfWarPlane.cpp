@@ -26,11 +26,7 @@ void AFogOfWarPlane::UpdateVisionPlane()
    if(HasAuthority()) {
       int index = 0;
       for(ABasePlayer* basePlayer : basePlayerRefs) {
-<<<<<<< HEAD
-         for(AAlly* ally : basePlayer->allies) {
-=======
          for(AAlly* ally : basePlayer->GetAllies()) {
->>>>>>> componentrefactor
             auto FOWComponent = ally->FindComponentByClass<UFogOfWarComponent>();
             FOWComponent->FindVisibilityPoints();
 

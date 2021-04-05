@@ -33,11 +33,7 @@ void CombatInfo::RTSUnitStat::ChangeModifier(ModifyingAttribute mod)
    attMod = mod;
 }
 
-<<<<<<< HEAD
-void CombatInfo::RTSUnitStat::CalculateModValue(UMyAttributeSet* attSet)
-=======
 void CombatInfo::RTSUnitStat::CalculateModValue(URTSAttributeSet* attSet)
->>>>>>> componentrefactor
 {
    // When recalculating the modified value due to an attribute change, we don't recalculate the buff values (so you can get larger buffs if you increase your base value first)
    const float currentBaseValue = GetBaseValue(attSet);

@@ -27,7 +27,7 @@
 #include "Quests/UI/Minimap.h"
 
 #include "DialogSystem/DialogBox.h"
-#include "DialogSystem/NPCSocialMenu.h"
+#include "DialogSystem/DialogUI.h"
 #include "DialogSystem/DialogWheel.h"
 #include "EventSystem/Trigger.h"
 
@@ -44,11 +44,7 @@
 #include "Minigames/MinigameManager.h"
 #include "Quests/QuestManager.h"
 
-<<<<<<< HEAD
-TBitArray<FDefaultBitArrayAllocator> AHUDManager::currentlyDisplayedWidgetsBitSet = TBitArray<FDefaultBitArrayAllocator>(false, HUDCount);
-=======
 #include "ToolTipWidget.h"
->>>>>>> componentrefactor
 
 AHUDManager::AHUDManager() : Super()
 {
@@ -62,12 +58,6 @@ void AHUDManager::BeginPlay()
    Super::BeginPlay();
 
    playerControllerRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
-<<<<<<< HEAD
-   if(!ensure(playerControllerRef != nullptr)) return;
-
-   gameMode = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
-   if(!ensure(gameMode != nullptr)) return;
-=======
    if(!ensure(playerControllerRef != nullptr))
    {
       return;
@@ -84,7 +74,6 @@ void AHUDManager::BeginPlay()
    {
       return;
    }
->>>>>>> componentrefactor
 
    CreateMainWidget();
 
@@ -102,10 +91,7 @@ void AHUDManager::BeginPlay()
    playerControllerRef->SetInputMode(inputModeData);
    playerControllerRef->bShowMouseCursor = true;
 
-<<<<<<< HEAD
-=======
    SetupWidgetReferences();
->>>>>>> componentrefactor
    InjectDependentClasses();
 
    ANPC::SetHUDManagerRef(this);
@@ -143,15 +129,10 @@ void AHUDManager::SetupWidgetReferences()
 
 void AHUDManager::AddHUD(uint8 newState)
 {
-<<<<<<< HEAD
-   if(!bBlocked || currentlyDisplayedWidgetsBitSet[newState] == true) {
-      switch(newState) {
-=======
    if(!blockingWidget || currentlyDisplayedWidgetsBitSet[newState] == true)
    {
       switch(newState)
       {
->>>>>>> componentrefactor
          case EHUDs::HS_Ingame: ApplyHUD(newState, true, true, false); break;
          case EHUDs::HS_Inventory: ApplyHUD(newState, true, true, false); break;
          case EHUDs::HS_Equipment: ApplyHUD(newState, true, true, false); break;
@@ -163,19 +144,11 @@ void AHUDManager::AddHUD(uint8 newState)
          case EHUDs::HS_Storage: ApplyHUD(newState, true, true, false); break;
          case EHUDs::HS_Dialog:
          case EHUDs::HS_Confirmation:
-<<<<<<< HEAD
-         case EHUDs::HS_InputBox: {
-            UE_LOG(LogTemp, Verbose, TEXT("Don't call AddHUD(uint8) for widgets with parameters.  Call their respective AddHUD"));
-            GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("Don't call AddHUD(uint8) for widgets with parameters.  Call their respective AddHUD"));
-            ensure(false);
-            return;
-=======
          case EHUDs::HS_InputBox:
          {
             UE_LOG(LogTemp, Verbose, TEXT("Don't call AddHUD(uint8) for widgets with parameters.  Call their respective AddHUD"));
             GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("Don't call AddHUD(uint8) for widgets with parameters.  Call their respective AddHUD"));
             ensure(false);
->>>>>>> componentrefactor
             break;
          }
          case EHUDs::HS_ExamineMenu: ApplyHUD(newState, true, false, false);
@@ -206,12 +179,8 @@ void AHUDManager::HideHUD(EHUDs newState)
 
 void AHUDManager::ShowDialogWithSource(FName conversationName, EDialogBoxCloseCase dialogSource)
 {
-<<<<<<< HEAD
-   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_Dialog)] && conversationName != "") {
-=======
    if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_Dialog)] && conversationName != "")
    {
->>>>>>> componentrefactor
       GetIngameHUD()->GetDialogBox()->SetConversation(conversationName);
       GetIngameHUD()->GetDialogBox()->SetDialogSource(dialogSource);
    }
@@ -220,12 +189,8 @@ void AHUDManager::ShowDialogWithSource(FName conversationName, EDialogBoxCloseCa
 
 void AHUDManager::ShowDialogCustomLines(TArray<FDialogData> linesToDisplay, EDialogBoxCloseCase dialogSource)
 {
-<<<<<<< HEAD
-   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_Dialog)] && linesToDisplay.Num() > 0) {
-=======
    if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_Dialog)] && linesToDisplay.Num() > 0)
    {
->>>>>>> componentrefactor
       GetIngameHUD()->GetDialogBox()->SetDialogLines(linesToDisplay);
       GetIngameHUD()->GetDialogBox()->SetDialogSource(dialogSource);
       ApplyHUD(static_cast<int>(EHUDs::HS_Dialog), true, true, false);
@@ -234,16 +199,6 @@ void AHUDManager::ShowDialogCustomLines(TArray<FDialogData> linesToDisplay, EDia
 
 void AHUDManager::ShowConfirmationBox(const FOnConfirmation& funcToCallOnConfirmed, FText newTitle, FText newDesc)
 {
-<<<<<<< HEAD
-   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_Confirmation)]) {
-      if(funcObject) {
-         GetConfirmationBox()->OnConfirmationMade().BindUFunction(funcObject, funcName);
-         GetConfirmationBox()->SetTitle(newTitle);
-         GetConfirmationBox()->SetDesc(newDesc);
-         ApplyHUD(static_cast<int>(EHUDs::HS_Confirmation), true, false, false);
-      }
-   } else {
-=======
    if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_Confirmation)])
    {
       GetConfirmationBox()->SetOnConfirmationMade(funcToCallOnConfirmed);
@@ -253,23 +208,12 @@ void AHUDManager::ShowConfirmationBox(const FOnConfirmation& funcToCallOnConfirm
    }
    else
    {
->>>>>>> componentrefactor
       ApplyHUD(static_cast<int>(EHUDs::HS_Confirmation), true, false, false);
    }
 }
 
 void AHUDManager::ShowInputBox(const FOnInputConfirmed& funcToCallOnConfirmed, FText newTitle, FText newDesc)
 {
-<<<<<<< HEAD
-   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_InputBox)]) {
-      if(funcObject) {
-         GetInputBox()->OnInputConfirmed().BindUFunction(funcObject, funcName);
-         GetInputBox()->SetTitle(newTitle);
-         GetInputBox()->SetDesc(newDesc);
-         ApplyHUD(static_cast<int>(EHUDs::HS_InputBox), true, false, false);
-      }
-   } else {
-=======
    if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_InputBox)])
    {
       GetInputBox()->SetOnInputConfirmed(funcToCallOnConfirmed);
@@ -279,7 +223,6 @@ void AHUDManager::ShowInputBox(const FOnInputConfirmed& funcToCallOnConfirmed, F
    }
    else
    {
->>>>>>> componentrefactor
       ApplyHUD(static_cast<int>(EHUDs::HS_InputBox), true, false, false);
    }
 }
@@ -289,12 +232,8 @@ bool AHUDManager::ApplyHUD(uint8 newState, bool bEnableClickEvents, bool canOpen
    check(newState >= 0 && newState < widgetReferences.Num());
    UMyUserWidget* widgetToApply = widgetReferences[newState];
 
-<<<<<<< HEAD
-   if(!widgetToApply) {
-=======
    if(!widgetToApply)
    {
->>>>>>> componentrefactor
       UE_LOG(LogTemp, Error, TEXT("Invalid Widget Reference being added or removed"))
       return false;
    }
@@ -302,28 +241,6 @@ bool AHUDManager::ApplyHUD(uint8 newState, bool bEnableClickEvents, bool canOpen
    if(currentlyDisplayedWidgetsBitSet[newState]) // if our widget is already on screen, we probably pressed button to take it off
    {
       HideWidgetOnScreen(widgetToApply);
-<<<<<<< HEAD
-   } else {
-      if(!ShowHiddenWidget(widgetToApply)) return false;
-   }
-
-   if(bBlocking) bBlocked = !bBlocked;
-
-   UpdateWidgetTracking(newState, bEnableClickEvents, canOpenCombat);
-   return true;
-}
-
-void AHUDManager::HideWidgetOnScreen(UMyUserWidget* widgetToApply) const
-{
-   if(widgetToApply->GetClass()->IsChildOf(UAnimHudWidget::StaticClass())) {
-      UWidgetAnimation* anim = Cast<UAnimHudWidget>(widgetToApply)->GetAnim();
-      if(widgetToApply->IsAnimationPlaying(anim)) {
-         widgetToApply->ReverseAnimation(anim);
-      } else {
-         widgetToApply->PlayAnimation(anim, 0, 1, EUMGSequencePlayMode::Reverse, 1);
-      }
-   } else {
-=======
    }
    else
    {
@@ -363,7 +280,6 @@ void AHUDManager::HideWidgetOnScreen(UMyUserWidget* widgetToApply) const
    }
    else
    {
->>>>>>> componentrefactor
       widgetToApply->OnWidgetRemovedFromViewport();
       widgetToApply->SetVisibility(ESlateVisibility::Collapsed);
    }
@@ -371,14 +287,6 @@ void AHUDManager::HideWidgetOnScreen(UMyUserWidget* widgetToApply) const
 
 bool AHUDManager::ShowHiddenWidget(UMyUserWidget* widgetToApply) const
 {
-<<<<<<< HEAD
-   if(widgetToApply->GetClass()->IsChildOf(UAnimHudWidget::StaticClass())) {
-      UWidgetAnimation* anim = Cast<UAnimHudWidget>(widgetToApply)->GetAnim();
-      if(widgetToApply->IsAnimationPlaying(anim)) {
-         widgetToApply->ReverseAnimation(anim);
-      } else {
-         if(!widgetToApply->OnWidgetAddToViewport()) { return false; }
-=======
    if(widgetToApply->GetClass()->IsChildOf(UAnimHudWidget::StaticClass()))
    {
       UWidgetAnimation* anim = Cast<UAnimHudWidget>(widgetToApply)->GetAnim();
@@ -392,16 +300,10 @@ bool AHUDManager::ShowHiddenWidget(UMyUserWidget* widgetToApply) const
          {
             return false;
          }
->>>>>>> componentrefactor
          widgetToApply->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
          widgetToApply->PlayAnimation(anim, 0, 1, EUMGSequencePlayMode::Forward, 1);
       }
-   } else {
-      if(!widgetToApply->OnWidgetAddToViewport()) { return false; }
-      widgetToApply->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
    }
-<<<<<<< HEAD
-=======
    else
    {
       if(!widgetToApply->OnWidgetAddToViewport())
@@ -410,7 +312,6 @@ bool AHUDManager::ShowHiddenWidget(UMyUserWidget* widgetToApply) const
       }
       widgetToApply->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
    }
->>>>>>> componentrefactor
    return true;
 }
 
@@ -444,11 +345,6 @@ void AHUDManager::UpdateWidgetTracking(int updateIndex, bool enableClickEvents, 
    }
 }
 
-<<<<<<< HEAD
-URTSIngameWidget* AHUDManager::GetIngameHUD() const
-{
-   return Cast<URTSIngameWidget>(widgetReferences[static_cast<int>(EHUDs::HS_Ingame)]);
-=======
 void AHUDManager::BP_AddConfirmationBox(const FText& newTitle, const FText& newDesc, FName funcName, UObject* funcObject)
 {
    if(funcObject)
@@ -473,82 +369,39 @@ URTSIngameWidget* AHUDManager::GetIngameHUD() const
 UBreakMenu* AHUDManager::GetBreakMenu() const
 {
    return Cast<UBreakMenu>(widgetReferences[static_cast<int>(EHUDs::HS_Break)]);
->>>>>>> componentrefactor
 }
 
 USettingsMenu* AHUDManager::GetSettingsMenu() const
 {
-<<<<<<< HEAD
-   return Cast<UBreakMenu>(widgetReferences[static_cast<int>(EHUDs::HS_Break)]);
-=======
    return Cast<USettingsMenu>(widgetReferences[static_cast<int>(EHUDs::HS_Settings)]);
->>>>>>> componentrefactor
 }
 
 UConfirmationBox* AHUDManager::GetConfirmationBox() const
 {
-<<<<<<< HEAD
-   return Cast<USettingsMenu>(widgetReferences[static_cast<int>(EHUDs::HS_Settings)]);
-=======
    return Cast<UConfirmationBox>(widgetReferences[static_cast<int>(EHUDs::HS_Confirmation)]);
 }
 
 URTSInputBox* AHUDManager::GetInputBox() const
 {
    return Cast<URTSInputBox>(widgetReferences[static_cast<int>(EHUDs::HS_InputBox)]);
->>>>>>> componentrefactor
 }
 
 UStartMenu* AHUDManager::GetStartMenu() const
 {
-<<<<<<< HEAD
-   return Cast<UConfirmationBox>(widgetReferences[static_cast<int>(EHUDs::HS_Confirmation)]);
-=======
    return Cast<UStartMenu>(widgetReferences[static_cast<int>(EHUDs::HS_Start)]);
->>>>>>> componentrefactor
 }
 
 void AHUDManager::InjectDependency(UObject* objectToInject)
 {
-<<<<<<< HEAD
-   return Cast<URTSInputBox>(widgetReferences[static_cast<int>(EHUDs::HS_InputBox)]);
-=======
    FObjectProperty* objectProperty = FindFProperty<FObjectProperty>(objectToInject->GetClass(), "hudManagerRef"); // Find the property on that object
    if(objectProperty)
    {
       objectProperty->SetPropertyValue_InContainer(objectToInject, this); // Get that property and set its value in the container (which is the actual object instance)
    }
->>>>>>> componentrefactor
 }
 
 void AHUDManager::InjectDependentClasses()
 {
-<<<<<<< HEAD
-   return Cast<UStartMenu>(widgetReferences[static_cast<int>(EHUDs::HS_Start)]);
-}
-
-void AHUDManager::InjectDependentClasses()
-{
-   InjectDependency(GetIngameHUD());
-   InjectDependency(GetIngameHUD()->GetDialogBox());
-   InjectDependency(GetIngameHUD()->GetSocialWindow());
-   InjectDependency(GetIngameHUD()->GetSocialWindow()->dialogWheel);
-   InjectDependency(GetIngameHUD()->GetShopHUD());
-   InjectDependency(gameMode->GetMinigameManager());
-   InjectDependency(gameMode->GetQuestManager());
-   InjectDependency(gameMode->GetTriggerManager());
-   InjectDependency(GetBreakMenu());
-   InjectDependency(GetConfirmationBox());
-   InjectDependency(GetInputBox());
-   InjectDependency(GetIngameHUD()->GetSpellBookMenu());
-   InjectDependency(GetIngameHUD()->GetExamineMenu());
-}
-
-void AHUDManager::CreateMainWidget()
-{
-   if(ensure(mainMenuClass != nullptr)) {
-      if(mainWidget = CreateWidget<UMainWidget>(playerControllerRef, mainMenuClass, "Main Menu"); ensure(mainWidget)) {
-=======
    InjectDependency(GetIngameHUD());
    InjectDependency(GetIngameHUD()->GetDialogBox());
    InjectDependency(GetIngameHUD()->GetSocialWindow());
@@ -570,7 +423,6 @@ void AHUDManager::CreateMainWidget()
    {
       if(mainWidget = CreateWidget<UMainWidget>(playerControllerRef, mainMenuClass, "Main Menu"); ensure(mainWidget))
       {
->>>>>>> componentrefactor
          mainWidget->bIsFocusable = false;
          InjectDependency(mainWidget);
          InjectDependency(playerControllerRef); // Set this here else we can't use this reference during widget construction

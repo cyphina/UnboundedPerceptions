@@ -5,12 +5,6 @@
 
 TUniquePtr<RTSStateMachine> StateMachineFactory::BuildStateMachine(AUnit* unitToBuildMachineFor)
 {
-<<<<<<< HEAD
-   if(unitToBuildMachineFor->GetClass() == ABaseHero::StaticClass()) {
-      return MakeUnique<HeroStateMachine>(Cast<ABaseHero>(unitToBuildMachineFor));
-   } else if(unitToBuildMachineFor->GetClass()->IsChildOf(AUnit::StaticClass())) {
-      return MakeUnique<RTSStateMachine>(unitToBuildMachineFor);
-=======
    if(unitToBuildMachineFor)
    {
       if(unitToBuildMachineFor->GetClass()->IsChildOf(ABaseHero::StaticClass()))
@@ -21,7 +15,6 @@ TUniquePtr<RTSStateMachine> StateMachineFactory::BuildStateMachine(AUnit* unitTo
       {
          return MakeUnique<RTSStateMachine>(unitToBuildMachineFor);
       }
->>>>>>> componentrefactor
    }
    return nullptr;
 }

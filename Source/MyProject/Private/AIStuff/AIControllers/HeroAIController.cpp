@@ -18,10 +18,7 @@
 #include <Runtime\NavigationSystem\Public\NavigationSystem.h>
 
 #include "ManualSpellComponent.h"
-<<<<<<< HEAD
-=======
 #include "NoTargeting.h"
->>>>>>> componentrefactor
 #include "RTSStateComponent.h"
 #include "SpellTargetingTypes.h"
 #include "TargetComponent.h"
@@ -35,14 +32,6 @@ void AHeroAIController::OnPossess(APawn* InPawn)
 void AHeroAIController::BeginInteract(AActor* interactable)
 {
    if(IsValid(interactable) && interactable->GetClass()->ImplementsInterface(UInteractable::StaticClass())) {
-<<<<<<< HEAD
-      Stop();
-
-      // Make sure this is set before we call GetInteractableLocation when handling a door
-      heroRef->SetCurrentInteractable(interactable);
-
-      GetStateComponent()->ChangeState(EUnitState::STATE_INTERACTING);
-=======
       StopCurrentAction();
 
       // Make sure this is set before we call GetInteractableLocation when handling a door
@@ -50,7 +39,6 @@ void AHeroAIController::BeginInteract(AActor* interactable)
 
       GetStateComponent()->ChangeState(EUnitState::STATE_INTERACTING);
 
->>>>>>> componentrefactor
       UStaticMeshComponent* meshComp = interactable->FindComponentByClass<UStaticMeshComponent>();
 
       // If the interactable cannot be moved, then we have to move to the interact point since the point is fixed
@@ -90,22 +78,14 @@ void AHeroAIController::BeginUseItem(int itemToUseID, int slotIndex)
    const TSubclassOf<UMySpell> itemAbility = UItemManager::Get().GetConsumableInfo(itemToUseID)->abilityClass;
    GetManualSpellComponent()->PressedCastSpell(itemAbility);
 
-<<<<<<< HEAD
-   if(itemAbility.GetDefaultObject()->GetTargeting()->GetTargetTag() != FGameplayTag::RequestGameplayTag("Skill.Targetting.None")) {
-=======
    if(itemAbility.GetDefaultObject()->GetTargeting() != TSubclassOf<UUpSpellTargeting_None>()) {
->>>>>>> componentrefactor
       Cast<AUserInput>(GetWorld()->GetFirstPlayerController())->GetCameraPawn()->SetSecondaryCursor(ECursorStateEnum::Item);
    }
 }
 
 void AHeroAIController::StopCurrentAction()
 {
-<<<<<<< HEAD
-   Super::Stop();
-=======
    Super::StopCurrentAction();
->>>>>>> componentrefactor
    const AUserInput* PC = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
    if(ABasePlayer* basePlayer = PC ? PC->GetBasePlayer() : nullptr) {
       if(basePlayer->heroInBlockingInteraction != heroRef) {

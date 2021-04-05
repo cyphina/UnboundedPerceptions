@@ -30,7 +30,7 @@ namespace CombatInfo
    {
     public:
       ModifyingAttribute  attMod;
-      FGameplayAttribute& attribute; // Since a stat can be directly modified by things like equipment and buffs, we need it to have features of an attribute as well
+      FGameplayAttribute attribute; // Since a stat can be directly modified by things like equipment and buffs, we need it to have features of an attribute as well
 
       RTSUnitStat(FGameplayAttribute attData);
       /// <param name="attData"> Link to AttSet  </param>
@@ -40,17 +40,6 @@ namespace CombatInfo
       ~RTSUnitStat();
 
       void ChangeModifier(ModifyingAttribute arr);
-<<<<<<< HEAD
-      void CalculateModValue(UMyAttributeSet* attSet); // Sets up base value for this stat
-
-      float GetBaseValue(UMyAttributeSet* attSet) const;
-      void  SetBaseValue(float value, UMyAttributeSet* attSet);
-
-      float GetBuffValue(UMyAttributeSet* attSet) const; // Can be negative if we're debuffed
-
-      void  SetAdjustedValue(float value, UMyAttributeSet* attSet);
-      float GetAdjustedValue(UMyAttributeSet* attSet) const;
-=======
       void CalculateModValue(URTSAttributeSet* attSet); // Sets up base value for this stat
 
       float GetBaseValue(URTSAttributeSet* attSet) const;
@@ -60,7 +49,6 @@ namespace CombatInfo
 
       void  SetAdjustedValue(float value, URTSAttributeSet* attSet);
       float GetAdjustedValue(URTSAttributeSet* attSet) const;
->>>>>>> componentrefactor
 
       void Update(URTSAttributeSet* attSet);
    };

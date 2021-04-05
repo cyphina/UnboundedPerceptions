@@ -3,11 +3,7 @@
 #include "ActorPriorityCalculation.h"
 #include "GameplayTagContainer.h"
 
-<<<<<<< HEAD
-#include "UnitQueryGenerator.h"
-=======
 #include "Up_UnitQueryGenerator.h"
->>>>>>> componentrefactor
 #include "EnvQueryTest_LowHPTarget.h"
 #include "MySpell.h"
 #include "PointPriorityCalculation.h"
@@ -28,11 +24,7 @@
 void UUpPriorityComponent::FindBestTargetForSpell(TSubclassOf<UMySpell> spell)
 {
    FEnvQueryRequest queryRequest;
-<<<<<<< HEAD
-   priorityCalculation = MakePriorityCalculation(GetManualTag(spell));
-=======
    //priorityCalculation = MakePriorityCalculation(GetManualTag(spell));
->>>>>>> componentrefactor
    queryRequest.SetFloatParam("SimpleGrid.GridSize", 700);
    queryRequest.Execute(EEnvQueryRunMode::RandomBest25Pct, this, &UUpPriorityComponent::OnTargetFound);
 }
@@ -44,10 +36,7 @@ void UUpPriorityComponent::BeginPlay()
 
 UPriorityCalculation* UUpPriorityComponent::MakePriorityCalculation(FGameplayTag targetingTag) const
 {
-<<<<<<< HEAD
-=======
    // TODO: Figure out if we want to keep the priority component. If we do, we have to make this use the Targeting strategy objects
->>>>>>> componentrefactor
    if(targetingTag.MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Single"))) {
       return NewObject<UPriorityCalculation>();
    } else if(targetingTag.MatchesTag(FGameplayTag::RequestGameplayTag("Skill.Targetting.Area"))) {
@@ -75,20 +64,9 @@ UTargetComponent* UUpPriorityComponent::GetTargetComp() const
    return unitControllerRef->GetUnitOwner()->FindComponentByClass<UTargetComponent>();
 }
 
-<<<<<<< HEAD
-FGameplayTag UUpPriorityComponent::GetManualTag(TSubclassOf<UMySpell> spell) const
-{
-   return spell.GetDefaultObject()->GetTargeting()->GetTargetTag();
-}
-
-FGameplayTagContainer UUpPriorityComponent::GetDescriptorTags(TSubclassOf<UMySpell> spell) const
-{
-   return spell.GetDefaultObject()->AbilityTags.Filter(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Category")));
-=======
 FGameplayTagContainer UUpPriorityComponent::GetDescriptorTags(TSubclassOf<UMySpell> spell) const
 {
    return spell.GetDefaultObject()->GetSpellDefaults().descriptionTags.Filter(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Category")));
->>>>>>> componentrefactor
 }
 
 UBehaviorTreeComponent* UUpPriorityComponent::GetBehaviorTreeComp() const

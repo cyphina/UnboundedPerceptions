@@ -11,7 +11,7 @@
  * Displays the conversation topics so we can navigate through them when choosing what to say
  */
 
-class UNPCSocialMenu;
+class UDialogUI;
 
 UCLASS()
 class MYPROJECT_API UDialogWheel : public UMyUserWidget
@@ -55,11 +55,7 @@ class MYPROJECT_API UDialogWheel : public UMyUserWidget
    void UpdateDialogWheel();
 
    UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "References")
-<<<<<<< HEAD
-   UNPCSocialMenu* socialWindowRef;
-=======
    UDialogUI* socialWindowRef;
->>>>>>> componentrefactor
 
    UPROPERTY()
    class AHUDManager* hudManagerRef;

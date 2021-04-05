@@ -30,13 +30,10 @@ class MYPROJECT_API UChannelingBar : public UUserWidget
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Interface")
    ESlateVisibility IsFocusedUnitChanneling();
 
-<<<<<<< HEAD:Source/MyProject/Public/UI/UserWidgets/ChannelingBar.h
-=======
 
 protected:
 	void NativeOnInitialized() override;
 	
->>>>>>> componentrefactor:Source/MyProject/Public/UI/Actionbar/ChannelingBar.h
 private:
    UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (ExposeOnSpawn = "true", AllowPrivateAccess = "true"))
    AUserInput* controllerRef;

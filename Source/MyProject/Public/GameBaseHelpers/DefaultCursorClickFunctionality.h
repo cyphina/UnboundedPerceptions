@@ -15,35 +15,19 @@ enum class ECursorStateEnum : uint8;
  * Holds functionality for clicking during different click states when playing the base game.
  * There's not much proper null checking in this class because this class will get swapped out if we are in a different click mode (like a debug mode where we can actually select enemies)
  */
-<<<<<<< HEAD
-class UDefaultCursorClickFunctionality : public ICursorClickFunctionality
-{
-   ARTSPawn* const   pawnRef;
-   AUserInput* const controllerRef;
-   FHitResult        clickHitResult;
-
-public:
-   UDefaultCursorClickFunctionality(ARTSPawn* pawnRef, AUserInput* controllerRef);
-   ~UDefaultCursorClickFunctionality() = default;
-=======
 class DefaultCursorClickFunctionality : public CursorClickFunctionalityBase
 {
 public:
    DefaultCursorClickFunctionality(ARTSPawn* pawnRef, AUserInput* controllerRef);
    ~DefaultCursorClickFunctionality() = default;
->>>>>>> componentrefactor
 
    /** Used to talk, interact, confirm spell usage, confirm item usage, and create a selection rectangle */
    void HandleLeftClick() final;
-<<<<<<< HEAD
-   void HandleLeftClickRelease() final;
-=======
 
    /** Handles changing some state variables pertaining to mouse controls but doesn't actually do anything on its own */
    void HandleLeftClickRelease() final;
 
    /** Used for attacking and moving */
->>>>>>> componentrefactor
    void HandleRightClick() final;
    
    /** Can queue item usage, attack moves, and spell casting*/
@@ -53,10 +37,6 @@ public:
    void HandleShiftRightClick() final;
 
 private:
-<<<<<<< HEAD
-   /// Left click functionality
-=======
->>>>>>> componentrefactor
    void ToggleSingleAllySelection();
    
    void AttackMoveQueue();
@@ -76,15 +56,8 @@ private:
    void ClickCastSpell();
    void ClickAttackMove();
 
-<<<<<<< HEAD
-   ECursorStateEnum      GetCursorState() const;
-   static bool           CheckAllyWantToCast(const AAlly* ally);
-   inline bool           AttemptAllyCastOnTarget(const AAlly* ally);
-   const TArray<AAlly*>& GetSelectedAllies() const;
-=======
    void MoveInFormation(FVector newLocation);
    
    ECursorStateEnum      GetCursorState() const;
    static bool           CheckWantToCast(USpellCastComponent* spellCastComp);
->>>>>>> componentrefactor
 };

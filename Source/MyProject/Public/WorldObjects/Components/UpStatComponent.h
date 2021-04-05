@@ -7,11 +7,7 @@
 #include "UpStatComponent.generated.h"
 
 struct FUpDamage;
-<<<<<<< HEAD
-class UMyAttributeSet;
-=======
 class URTSAttributeSet;
->>>>>>> componentrefactor
 
 /** A component used for anything that has stats. Can be used on units, or maybe towers.
  * Doesn't handle any logic with the stats, only provides means to access them and properly modify them.
@@ -58,11 +54,7 @@ class MYPROJECT_API UUpStatComponent : public UActorComponent
    void SetUnitLevel(int newLevel) const { return baseC->SetLevel(newLevel); }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
-<<<<<<< HEAD
-   FORCEINLINE UMyAttributeSet* GetAttSet() const { return baseC->GetAttSet(); }
-=======
    FORCEINLINE URTSAttributeSet* GetAttSet() const { return baseC->GetAttSet(); }
->>>>>>> componentrefactor
 
    /**
    * Call whenever we want stats to get recalculated. Typically done after a stat change
@@ -70,13 +62,9 @@ class MYPROJECT_API UUpStatComponent : public UActorComponent
    */
    UFUNCTION(BlueprintCallable, Category = "Stats")
    void UpdateStats(const FGameplayAttribute& updatedStat) const;
-<<<<<<< HEAD
-   
-=======
 
    float GetElementalStatValueFromElemTag(const FGameplayTag& elemTag, bool bGetAff = true, bool bGetBaseValue = false);
 
->>>>>>> componentrefactor
    /**
     * @brief Allows us to apply some bonuses to this hero's stat
     * @tparam bModifyBase - Modify the base stat or the adjusted value
@@ -90,33 +78,6 @@ class MYPROJECT_API UUpStatComponent : public UActorComponent
       static_assert(std::is_enum<StatType>::value, "Must pass one of the stat Enums!");
       const int specificStatTypeVal = static_cast<int>(specificStatType);
 
-<<<<<<< HEAD
-      if constexpr(std::is_same<StatType, EAttributes>::value) {
-         if constexpr(!bModifyBase) {
-            baseC->SetAttributeAdj(specificStatTypeVal, value);
-         } else {
-            baseC->SetAttributeBase(specificStatTypeVal, value);
-         }
-      } else if constexpr(std::is_same<StatType, EUnitScalingStats>::value) {
-         if constexpr(!bModifyBase) {
-            baseC->SetSkillAdj(specificStatTypeVal, value);
-         } else {
-            baseC->SetSkillBase(specificStatTypeVal, value);
-         }
-      } else if constexpr(std::is_same<StatType, EVitals>::value) {
-         if constexpr(!bModifyBase) {
-            baseC->SetVitalAdj(specificStatTypeVal, value);
-         } else {
-            baseC->SetVitalBase(specificStatTypeVal, value);
-         }
-      } else if constexpr(std::is_same<StatType, EMechanics>::value) {
-         if constexpr(!bModifyBase) {
-            baseC->SetMechanicAdj(specificStatTypeVal, value);
-         } else {
-            baseC->SetMechanicBase(specificStatTypeVal, value);
-         }
-      } else {
-=======
       if constexpr(std::is_same<StatType, EAttributes>::value)
       {
          if constexpr(!bModifyBase)
@@ -164,17 +125,13 @@ class MYPROJECT_API UUpStatComponent : public UActorComponent
       }
       else
       {
->>>>>>> componentrefactor
          static_assert(std::is_same_v<StatType*, void>, "Error, please ensure you're passing in one of the correct stat enums");
       }
    }
 
-<<<<<<< HEAD
-=======
    FOnStatsUpdated& OnBaseStatsUpdated() const;
    FOnStatsUpdated& OnStatsUpdated() const;
 
->>>>>>> componentrefactor
  protected:
    void BeginPlay() override;
    void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

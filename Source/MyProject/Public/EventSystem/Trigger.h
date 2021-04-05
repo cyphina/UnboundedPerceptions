@@ -123,11 +123,7 @@ class MYPROJECT_API UTriggerManager : public UObject
    UPROPERTY()
    class AHUDManager* hudManagerRef;
 
-<<<<<<< HEAD
- public:
-=======
 public:
->>>>>>> componentrefactor
    void Init();
 
    UPROPERTY()
@@ -171,15 +167,9 @@ private:
    void PlaySequence(const FTriggerData& tdata);
 
    /**Function that triggers an effect when the trigger is activated*/
-<<<<<<< HEAD
-   void TriggerEffect(FTriggerData& tdata);
-
-   static int TriggerValueToNum(const FTriggerData& tdata, int triggerValueIndex) { return FCString::Atoi(*tdata.triggerValues[triggerValueIndex]); }
-=======
    void TriggerEffect(const FTriggerData& tdata);
 
    static int TriggerValueToNum(const FTriggerData& tdata, int triggerValueIndex) { return FCString::Atoi(*tdata.triggerValues[triggerValueIndex]); }
 
->>>>>>> componentrefactor
    static int TriggerObjectToNum(const FTriggerData& tdata, int triggerObjectIndex) { return FCString::Atoi(*tdata.triggerObjects[triggerObjectIndex]); }
 };

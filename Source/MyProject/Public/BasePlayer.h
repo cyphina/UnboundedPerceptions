@@ -32,20 +32,10 @@ class MYPROJECT_API ABasePlayer : public APlayerState
 
    void BeginPlay() override;
 
-<<<<<<< HEAD
- public:
-   static const int MAX_NUM_HEROES = 4;
-
-   const TArray<ABaseHero*>& GetHeroes() const { return heroes; }
-
-   AUnit* GetFocusedUnit() const { return focusedUnit; }
-   void   SetFocusedUnit(AUnit* newFocusedUnit);
-=======
 public:
    static const int MAX_NUM_HEROES = 4;
 
    const TArray<ABaseHero*>& GetHeroes() const { return heroes; }
->>>>>>> componentrefactor
 
    const TArray<AAlly*>& GetAllies() const { return allies; }
 
@@ -80,10 +70,7 @@ public:
 
    /**
     * If there's any hero that is interacting currently with something blocking (e.g., storage or dialog)
-<<<<<<< HEAD
-=======
     * TODO: Remove this and only let the party leader interact for simplicity
->>>>>>> componentrefactor
     */
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    ABaseHero* heroInBlockingInteraction;
@@ -153,28 +140,13 @@ public:
    int GetMoney() const { return money; }
 
    UFUNCTION(BlueprintCallable)
-<<<<<<< HEAD
-   void SetMoney(int newMoneyVal) { money = newMoneyVal; }
-
- protected:
-=======
    void SetMoney(int newMoneyVal);
 
 protected:
->>>>>>> componentrefactor
    /**
     * List of active heroes.
     * Party leader should always be at slot 0.
     */
-<<<<<<< HEAD
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-   TArray<ABaseHero*> heroes;
-
-   /** Enemy or hero unit that we see detailed information in our actionbar */
-   AUnit* focusedUnit = nullptr;
-
- private:
-=======
    UPROPERTY(BlueprintReadOnly, Category = "Party")
    TArray<ABaseHero*> heroes;
 
@@ -203,28 +175,20 @@ protected:
    AUnit* focusedUnit = nullptr;
 
 private:
->>>>>>> componentrefactor
    void OnHeroSelected(ABaseHero* heroRef);
    void OnAllySelected(AAlly* allyRef);
    void OnUnitSelected(AUnit* unitRef);
    void OnHeroDeselected(ABaseHero* heroRef);
    void OnAllyDeselected(AAlly* allyRef);
    void OnUnitDeselected(AUnit* unitRef);
-<<<<<<< HEAD
-
-=======
    void OnUnitSlotSelected(AUnit* unitSelected);
    void OnGroupTabbed(AUnit* newFocusedUnit);
->>>>>>> componentrefactor
    void OnAllyActiveChanged(AAlly* allyRef, bool isActive);
    void OnHeroActiveChanged(ABaseHero* heroRef, bool isActive);
    void OnSummonActiveChanged(ASummon* summonRef, bool isActive);
 
-<<<<<<< HEAD
-=======
    void SetFocusedUnit(AUnit* newFocusedUnit);
 
->>>>>>> componentrefactor
    /** How much squeezies we have (that's the currency name... for now) */
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (AllowPrivateAccess = true))
    int money;

@@ -30,23 +30,15 @@ class AUnit;
  * -- -- a. Note that targeting a new unit starts up a new initiation which calls Stop() meaning we return to idle state, changes targets, then returns to this state with our new target
  * -- 3. Initiate an attack if the attack timer is already filled (if not then wait)
  * -- -- a. Initiation of the attack may involve an animation in which the damage is only applied on the animation's damage notify event (which may delay the actual damage)
-<<<<<<< HEAD
- * -- -- b. If the unit runs out of the buffer range during the attack animation the animation will be canceled.
-=======
  * -- -- b. Look up https://dota2.gamepedia.com/Attack_animation. Basically the hit event is at the attack point and the rest is backswing.
  * -- -- c. If the unit runs out of the buffer range during the attack animation the animation will be canceled.
->>>>>>> componentrefactor
  * -- -- -- i. If this occurs, we have to chase the enemy unit if it is still in vision.
  * -- -- -- ii. If it leaves vision, then we change states into chasing state which involves different algorithms to search for a unit in the FOW
  * -- 4. Once the attack notification occurs, the timer resets back to 0 (meaning we can start up a new action (even spell casting)
  * -- -- during the animation back swing (known as animation cancelling, but AIs don't leverage this)
  * -- 5. The timer fills up in between attacks (as soon as the damage notify plays) 
  */
-<<<<<<< HEAD
-UCLASS()
-=======
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
->>>>>>> componentrefactor
 class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
 {
    GENERATED_BODY()
@@ -75,20 +67,6 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
    UFUNCTION(BlueprintCallable)
    virtual void OverrideAttackWithSpell(TSubclassOf<UMySpell> overridingSpell);
 
-<<<<<<< HEAD
- protected:
-   void BeginPlay() override;
-
-   UPROPERTY(EditDefaultsOnly)
-   TSubclassOf<IAttackAnim> attackAnimClass = nullptr;
-
-   UPROPERTY(EditDefaultsOnly)
-   URTSProjectileStrategy* projectileStrategy = nullptr;
-
-   UPROPERTY(EditDefaultsOnly)
-   TScriptInterface<IAttackAnim> attackAnim;
-   
-=======
    bool GetIsReadyToAttack() const { return bReadyToAttack; }
    
  protected:
@@ -106,7 +84,6 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
 
    TScriptInterface<IAttackAnim> attackAnim;
 
->>>>>>> componentrefactor
  private:
    void OnUnitStopped();
 
@@ -145,38 +122,23 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
 
    void SearchForTargetInRange();
 
-<<<<<<< HEAD
-   void InitializeAttackParams();
-
-=======
->>>>>>> componentrefactor
    bool AttemptReposition();
 
    /** Called if the repositioning is successful (requires us to be in range and called only once turn succeeds or we're already facing target) */
    void OnFinishReposition();
 
    /** If any of the cancel conditions become true, the unit will transition to another state */
-<<<<<<< HEAD
-   bool CheckAndHandleCancelConditions() const;
-=======
    bool CheckAndHandleCancelConditions();
->>>>>>> componentrefactor
 
    bool CheckTargetVisionLost() const;
 
    bool CheckTargetAttackable() const;
 
-<<<<<<< HEAD
-   void TransitionToChaseState() const;
-
-   void StopAgent() const;
-=======
    void TransitionToChaseState();
 
    void StopAgent();
 
    void StopAttackAnim();
->>>>>>> componentrefactor
 
    /**
     * @brief Checks to see if we need to reposition to attack and if so, repositions us.
@@ -200,17 +162,6 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
     */
    bool bMvingTwdTarg = false;
 
-<<<<<<< HEAD
-   bool attackAnimationPlaying = false;
-
-   bool readyToAttack = true;
-
-   AUnit*                  agent;                   // Unit whose behavior is specified through the behavioral logic within this state
-   static const int        shortAttRngBuff = 25.f;  // Distance that an attack in progress will cancel since it is out of range
-   static const int        attRngCnclBuff  = 350.f; // Distance that an attack in progress will cancel since it is out of range
-   FTimerHandle            targetSearchHandle;
-   FTimerHandle            attackUpdateHandle;
-=======
    bool bAttackAnimationPlaying = false;
 
    bool bReadyToAttack = true;
@@ -229,5 +180,4 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
 
    // This is time between attacks (recharges even if we're not auto attacking)
    FTimerHandle attackUpdateHandle;
->>>>>>> componentrefactor
 };

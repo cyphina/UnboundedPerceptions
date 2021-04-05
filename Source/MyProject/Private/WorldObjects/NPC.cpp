@@ -9,7 +9,7 @@
 #include "RTSGameState.h"
 #include "UI/HUDManager.h"
 #include "DialogSystem/DialogBox.h"
-#include "DialogSystem/NPCSocialMenu.h"
+#include "DialogSystem/DialogUI.h"
 #include "Quests/QuestManager.h"
 #include "LevelSaveStructs.h"
 #include "RTSIngameWidget.h"

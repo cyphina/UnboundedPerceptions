@@ -7,10 +7,6 @@
 class AUnit;
 
 /**
-<<<<<<< HEAD
-  * ! CALL SETUP BEFORE USING !
-=======
->>>>>>> componentrefactor
   * To have a notification event trigger, ensure we have an event named
   * AnimNotify_<EVENTNAME> in our animation BP. We can do this in C++ too - just add
   * it to the UAnimInstance derived type. Ensure our event is a UFUNCTION.
@@ -21,26 +17,6 @@ class MYPROJECT_API UMontageAttackAnim : public UObject, public IAttackAnim
    GENERATED_BODY()
 
  public:
-<<<<<<< HEAD
-   UMontageAttackAnim();
-
-   UFUNCTION()
-   void AttackNotify() override;
-   
-   void          PlayAttackAnimation(float playRate) override;
-   void          StopAttackAnimation() override;
-   FOnHitNotify& OnAttackNotify() override;
-   
- protected:
-   AUnit* unitRef;
-
-   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
-   UAnimMontage* attackMontage;
-
- private:
-   AUnit*       animatedUnit;
-   FOnHitNotify OnAttackNotifyEvent;
-=======
    UFUNCTION()
    void AttackNotify() override {}
 
@@ -62,5 +38,4 @@ class MYPROJECT_API UMontageAttackAnim : public UObject, public IAttackAnim
 
    FOnHitNotify          OnAttackNotifyEvent;
    FOnAttackAnimFinished OnAttackAnimFinishedEvent;
->>>>>>> componentrefactor
 };

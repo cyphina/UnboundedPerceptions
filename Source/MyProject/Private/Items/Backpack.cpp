@@ -3,12 +3,8 @@
 #include "ItemManager.h"
 #include "LevelSaveStructs.h"
 #include "BaseHero.h"
-<<<<<<< HEAD
-#include "ItemDelegateStore.h"
-=======
 #include "ItemDelegateContext.h"
 #include "JsonTypes.h"
->>>>>>> componentrefactor
 #include "RTSIngameWidget.h"
 
 UBackpack::UBackpack()
@@ -20,52 +16,14 @@ UBackpack* UBackpack::CreateBackpack(UObject* outer, const int itemMax)
 {
    UBackpack* backpack = NewObject<UBackpack>(outer);
    backpack->SetItemMax(itemMax);
-<<<<<<< HEAD
-   ItemChangeEvents::OnItemUsedEvent.AddUObject(backpack, &UBackpack::OnItemUsed);
-   return backpack;
-}
-
-bool UBackpack::AddItem(FMyItem& newItem)
-=======
    return backpack;
 }
 
 FBackpackUpdateResult UBackpack::AddItem(FMyItem newItem)
->>>>>>> componentrefactor
 {
    check(newItem.id > 0);
 
    const bool bIsNewItemStackable = UItemManager::Get().GetItemInfo(newItem.id)->isStackable;
-<<<<<<< HEAD
-   if(bIsNewItemStackable) {
-      return AddStackableItem(newItem);
-   } else {
-      return AddUnstackableItem(newItem);
-   }
-}
-
-bool UBackpack::AddItem(FMyItem&& newItem)
-{
-   return AddItem(newItem);
-}
-
-bool UBackpack::AddStackableItem(FMyItem& newItem)
-{
-   // Loop through the items we have
-   for(FMyItem& i : items) {
-      if(i.id == newItem.id && i.count != STACK_MAX) {
-         // If this item slot's stack is not filled up by our new additions
-         if(i.count + newItem.count <= STACK_MAX) {
-            i.count += newItem.count;
-            newItem.count = 0;
-            ItemChangeEvents::OnItemAddedToInventoryEvent.Broadcast(GetOuter(), newItem);
-            return true;
-         }
-         // Else fill up the slot and find another one to try and fill
-         else {
-            newItem.count -= STACK_MAX - i.count;
-            i.count = STACK_MAX;
-=======
    if(bIsNewItemStackable)
    {
       return AddStackableItem(newItem);
@@ -90,7 +48,6 @@ FBackpackUpdateResult UBackpack::AddStackableItem(FMyItem itemToAdd)
             i.count += itemToAdd.count;
             itemToAdd.count = 0;
             return updateResultData({index}, true, itemToAdd.count);
->>>>>>> componentrefactor
          }
 
          // Else fill up the slot and find another one to try and fill
@@ -98,47 +55,6 @@ FBackpackUpdateResult UBackpack::AddStackableItem(FMyItem itemToAdd)
          i.count = STACK_MAX;
          updatedSlots.Add(index);
       }
-<<<<<<< HEAD
-   }
-
-   // We filled up existing slots, so now we check for empty slots
-   while(newItem.count > 0) {
-      if(items.Num() >= backpack_max_items) // If there are extra slots in the backpack
-      {
-         ItemChangeEvents::OnItemOverflowEvent.Broadcast(GetOuter(), newItem);
-         return false;
-      }
-
-      if(const int emptySlotIndex = FindEmptySlot(); emptySlotIndex != -1) {
-         const int howManyItemsAdded = FMath::Min(STACK_MAX, newItem.count);
-         items.Insert(emptySlotIndex, FMyItem(newItem.id, howManyItemsAdded));
-         newItem.count -= howManyItemsAdded;
-      }
-   }
-
-   ItemChangeEvents::OnItemAddedToInventoryEvent.Broadcast(GetOuter(), newItem);
-   return true;
-}
-
-bool UBackpack::AddUnstackableItem(FMyItem& newItem)
-{
-   if(items.Num() < backpack_max_items) {
-      while(newItem.count > 0) {
-         if(const int emptySlotIndex = FindEmptySlot(); emptySlotIndex != -1) {
-            items.Insert(emptySlotIndex, FMyItem(newItem.id, 1));
-            newItem.count -= 1;
-         } else {
-            ItemChangeEvents::OnItemOverflowEvent.Broadcast(GetOuter(), newItem);
-            return false;
-         }
-      }
-      ItemChangeEvents::OnItemAddedToInventoryEvent.Broadcast(GetOuter(), newItem);
-      return true;
-   }
-
-   ItemChangeEvents::OnItemOverflowEvent.Broadcast(GetOuter(), newItem);
-   return false;
-=======
       ++index;
    }
 
@@ -186,26 +102,16 @@ FBackpackUpdateResult UBackpack::AddUnstackableItem(FMyItem itemToAdd)
    }
 
    return FBackpackUpdateResult(itemToAdd.count);
->>>>>>> componentrefactor
 }
 
 FBackpackUpdateResult UBackpack::AddItemToSlot(FMyItem newItem, int slot)
 {
-<<<<<<< HEAD
-   const bool bIsNewItemStackable = UItemManager::Get().GetItemInfo(newItem.id)->isStackable;
-
-   check(newItem.id > 0);
-   check(newItem.count <= STACK_MAX);
-   check(bIsNewItemStackable || newItem.count == 1); // Ensure this item is stackable or it is just a single item
-   check(slot >= 0 && slot <= backpack_max_items);
-=======
    check(newItem.id > 0);
    check(newItem.count <= STACK_MAX);
    check(IsItemStackable(newItem.id) || newItem.count == 1); // Ensure this item is stackable or it is just a single item
    check(slot >= 0 && slot <= backpack_max_items);
 
    FBackpackUpdateResult updateResultData{newItem};
->>>>>>> componentrefactor
 
    // Check if this slot has something in it already
    const bool isSlotAllocated = items.IsAllocated(slot);
@@ -241,10 +147,6 @@ TArray<FBackpackUpdateResult> UBackpack::AddItems(const TArray<FMyItem>& newItem
 {
    TArray<FBackpackUpdateResult> updateResults;
    // Don't need to check for size of our backpack since newItems may contain stackable items
-<<<<<<< HEAD
-   for(FMyItem& newIt : newItems) {
-      if(!AddItem(newIt)) return false;
-=======
    for(const FMyItem& newIt : newItems)
    {
       FBackpackUpdateResult updateResult = AddItem(newIt);
@@ -253,33 +155,22 @@ TArray<FBackpackUpdateResult> UBackpack::AddItems(const TArray<FMyItem>& newItem
       {
          break;
       }
->>>>>>> componentrefactor
    }
    return updateResults;
 }
 
 FBackpackUpdateResult UBackpack::RemoveItem(FMyItem itemToRemove)
 {
-<<<<<<< HEAD
-   const int newID    = itemToRemove.id;
-   const int newCount = itemToRemove.count;
-
-   check(newID > 0);
-=======
    const int newID       = itemToRemove.id;
    const int removeCount = itemToRemove.count;
 
    check(itemToRemove.id > 0);
->>>>>>> componentrefactor
 
    if(items.Num() > 0)
    {
       TArray<int>           updatedSlots;
       FBackpackUpdateResult updateResultData{itemToRemove};
 
-<<<<<<< HEAD
-      if(index == -1) return false;
-=======
       while(itemToRemove.count > 0)
       {
          const int index = FindItem(newID);
@@ -287,7 +178,6 @@ FBackpackUpdateResult UBackpack::RemoveItem(FMyItem itemToRemove)
          {
             return updateResultData(updatedSlots, false, itemToRemove.count);
          }
->>>>>>> componentrefactor
 
          if(IsItemStackable(itemToRemove.id))
          {
@@ -313,22 +203,6 @@ FBackpackUpdateResult UBackpack::RemoveItem(FMyItem itemToRemove)
    return updateResultData;
 }
 
-<<<<<<< HEAD
-bool UBackpack::RemoveItemAtSlot(const int slot, const int removeCount)
-{
-   if(items.Num() > 0) {
-      if(items.IsAllocated(slot)) {
-         FMyItem removedItem = FMyItem(items[slot].id, 0);
-         if(UItemManager::Get().GetItemInfo(items[slot].id)->isStackable && items[slot].count > removeCount) {
-            removedItem.count = removeCount;
-            items[slot].count -= removeCount;
-         } else {
-            removedItem.count = removeCount - items[slot].count;
-            items.RemoveAt(slot);
-         }
-         ItemChangeEvents::OnItemRemovedFromInventoryEvent.Broadcast(GetOuter(), removedItem);
-         return true;
-=======
 FBackpackUpdateResult UBackpack::RemoveItemAtSlot(const int slot, const int removeCount)
 {
    if(items.Num() > 0)
@@ -347,7 +221,6 @@ FBackpackUpdateResult UBackpack::RemoveItemAtSlot(const int slot, const int remo
             items.RemoveAt(slot);
          }
          return updateResultData;
->>>>>>> componentrefactor
       }
    }
    return FBackpackUpdateResult(removeCount);
@@ -355,11 +228,6 @@ FBackpackUpdateResult UBackpack::RemoveItemAtSlot(const int slot, const int remo
 
 TArray<FBackpackUpdateResult> UBackpack::RemoveItems(const TArray<FMyItem>& itemsToRemove)
 {
-<<<<<<< HEAD
-   bool success = true;
-   for(const FMyItem& newIt : itemsToRemove) {
-      if(!RemoveItem(newIt)) success = false;
-=======
    TArray<FBackpackUpdateResult> updateResults;
    for(const FMyItem& newIt : itemsToRemove)
    {
@@ -369,16 +237,11 @@ TArray<FBackpackUpdateResult> UBackpack::RemoveItems(const TArray<FMyItem>& item
       {
          break;
       }
->>>>>>> componentrefactor
    }
    return updateResults;
 }
 
-<<<<<<< HEAD
-void UBackpack::EmptySlot(const int slot)
-=======
 FBackpackUpdateResult UBackpack::EmptySlot(const int slot)
->>>>>>> componentrefactor
 {
    FBackpackUpdateResult updateResultInfo{{slot}, true, items[slot].id, items[slot].count, 0};
    items.RemoveAtUninitialized(slot);
@@ -416,22 +279,12 @@ TPair<FBackpackUpdateResult, FBackpackUpdateResult> UBackpack::TransferItems(UBa
    return TPair<FBackpackUpdateResult, FBackpackUpdateResult>();
 }
 
-<<<<<<< HEAD
-void UBackpack::SwapItems(UBackpack* otherPack, const int slot1, const int slot2)
-=======
 void UBackpack::SwapItems(UBackpack* pack1, UBackpack* pack2, const int slot1, const int slot2)
->>>>>>> componentrefactor
 {
    if(pack2->items.IsAllocated(slot2))
    {
       if(pack1->items.IsAllocated(slot1)) // if there's an item in the slot we want to swap
       {
-<<<<<<< HEAD
-         const FMyItem itemFromOtherPack = otherPack->items[slot2];
-         otherPack->items[slot2]         = items[slot1];
-         items[slot1]                    = itemFromOtherPack;
-      } else // if not, just insert an item there
-=======
          const FMyItem itemFromOtherPack = pack2->items[slot2];
          pack2->items[slot2]             = pack1->items[slot1];
          pack1->items[slot1]             = itemFromOtherPack;
@@ -445,7 +298,6 @@ void UBackpack::SwapItems(UBackpack* pack1, UBackpack* pack2, const int slot1, c
    else
    {
       if(pack1->items.IsAllocated(slot1))
->>>>>>> componentrefactor
       {
          pack2->items.Insert(slot2, pack1->items[slot1]);
          pack1->EmptySlot(slot1);
@@ -455,15 +307,10 @@ void UBackpack::SwapItems(UBackpack* pack1, UBackpack* pack2, const int slot1, c
 
 FMyItem UBackpack::GetItem(const int slot) const
 {
-<<<<<<< HEAD
-   check(slot >= 0 && slot < backpack_max_items);
-   if(items.IsAllocated(slot)) { return items[slot]; }
-=======
    if(items.IsAllocated(slot))
    {
       return items[slot];
    }
->>>>>>> componentrefactor
    return FMyItem();
 }
 
@@ -494,28 +341,19 @@ TArray<int> UBackpack::GetItemIndices()
 
 int UBackpack::FindEmptySlot() const
 {
-<<<<<<< HEAD
-   for(int i = 0; i < items.GetMaxIndex(); i++) {
-      if(!items.IsAllocated(i)) { return i; }
-=======
    for(int i = 0; i < items.GetMaxIndex(); i++)
    {
       if(!items.IsAllocated(i))
       {
          return i;
       }
->>>>>>> componentrefactor
    }
    return -1;
 }
 
 bool UBackpack::IsEmptySlot(const int slotIndex) const
 {
-<<<<<<< HEAD
-   check((unsigned)slotIndex < (unsigned)GetItemMax()) return !items.IsAllocated(slotIndex) ? true : false;
-=======
    check(static_cast<unsigned>(slotIndex) < static_cast<unsigned>(GetItemMax())) return !items.IsAllocated(slotIndex) ? true : false;
->>>>>>> componentrefactor
 }
 
 void UBackpack::SetItemMax(const int newMax)
@@ -527,12 +365,8 @@ void UBackpack::SetItemMax(const int newMax)
 
 int UBackpack::FindItem(const int itemID) const
 {
-<<<<<<< HEAD
-   for(auto it = items.CreateConstIterator(); it; ++it) {
-=======
    for(auto it = items.CreateConstIterator(); it; ++it)
    {
->>>>>>> componentrefactor
       if((*it).id == itemID) return it.GetIndex();
    }
    return INDEX_NONE;
@@ -541,12 +375,8 @@ int UBackpack::FindItem(const int itemID) const
 int UBackpack::FindItemCount(int itemID) const
 {
    int itemCount = 0;
-<<<<<<< HEAD
-   for(auto it = items.CreateConstIterator(); it; ++it) {
-=======
    for(auto it = items.CreateConstIterator(); it; ++it)
    {
->>>>>>> componentrefactor
       if((*it).id == itemID) itemCount += (*it).count;
    }
    return itemCount;
@@ -578,22 +408,12 @@ void UBackpack::LoadBackpack(FBackpackSaveInfo& backpackInfo)
    }
 }
 
-<<<<<<< HEAD
-void UBackpack::OnItemUsed(const ABaseHero* heroUsingItem, const FMyItem& itemID)
-{
-
-=======
 bool UBackpack::IsItemStackable(int itemID)
 {
    return UItemManager::Get().GetItemInfo(itemID)->isStackable;
->>>>>>> componentrefactor
 }
 
 void UBackpack::BeginDestroy()
 {
-<<<<<<< HEAD
-   ItemChangeEvents::OnItemUsedEvent.RemoveAll(this);
-=======
    Super::BeginDestroy();
->>>>>>> componentrefactor
 }

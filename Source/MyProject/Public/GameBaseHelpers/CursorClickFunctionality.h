@@ -11,14 +11,6 @@ class ABaseHero;
 
 class MYPROJECT_API CursorClickFunctionalityBase
 {
-<<<<<<< HEAD
- public:
-   virtual void HandleLeftClick()        = 0;
-   virtual void HandleRightClick()       = 0;
-   virtual void HandleShiftLeftClick()   = 0;
-   virtual void HandleShiftRightClick()  = 0;
-   virtual void HandleLeftClickRelease() = 0;
-=======
 public:
    virtual void HandleLeftClick() = 0;
    virtual void HandleRightClick() = 0;
@@ -27,7 +19,6 @@ public:
    virtual void HandleLeftClickRelease() = 0;
 
    virtual ~CursorClickFunctionalityBase() = default;
->>>>>>> componentrefactor
 
 protected:
    void IssueMoveToSelectedUnits(FVector moveLocation);

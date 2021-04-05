@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-// Fill out your copyright notice in the Description page of Project Settings.
-=======
->>>>>>> componentrefactor
 #pragma once
 #include "IUnitState.h"
 
@@ -12,22 +8,6 @@
  */
 class MYPROJECT_API AttackMoveState : public IUnitState
 {
-<<<<<<< HEAD
- public:
-   AttackMoveState();
-   virtual void Enter(AUnit& unit) override;
-   virtual void Exit(AUnit& unit) override;
-   virtual void Update(AUnit& unit, float deltaSeconds) override;
-
-   virtual EUnitState GetName() const override { return EUnitState::STATE_ATTACKING; }
-
-   ~AttackMoveState();
-
- private:
-   static const int attackRangeCancel = 350.f; // distance that an attack in progress will cancel since it is out of range
-   float            currentAttTime    = 0.f;   // keeps track of how long we wait between autoattacks
-   bool             readyToAttack     = false; // True if our target is in range and we're in attack state
-=======
 public:
    AttackMoveState();
    void Enter(AUnit& unit) override;
@@ -41,5 +21,4 @@ public:
 private:
    FVector attackMoveLocation;
    
->>>>>>> componentrefactor
 };

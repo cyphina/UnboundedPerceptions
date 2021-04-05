@@ -34,18 +34,12 @@ void URTSSidebarWidget::UpdatePartyInformation()
    {
       // Unsubscribe existing party members
       int index = 0;
-<<<<<<< HEAD
-      for(auto& handles : subscribedAttributeSetDelegateHandles) {
-         if(handles.Key.IsValid() && handles.Value.IsValid()) {
-            UMyAttributeSet* attributeSet = const_cast<UMyAttributeSet*>(cpcRef->GetBasePlayer()->GetHeroes()[index]->GetAbilitySystemComponent()->GetSet<UMyAttributeSet>());
-=======
       for(auto& handles : subscribedAttributeSetDelegateHandles)
       {
          if(handles.Key.IsValid() && handles.Value.IsValid())
          {
             URTSAttributeSet* attributeSet = const_cast<URTSAttributeSet*>(cpcRef->GetBasePlayer()->GetHeroes()[index]->GetAbilitySystemComponent()->GetSet<URTSAttributeSet
             >());
->>>>>>> componentrefactor
             attributeSet->statUpdatedEvent.Remove(handles.Key);
             attributeSet->baseStatUpdatedEvent.Remove(handles.Value);
          } else
@@ -62,23 +56,15 @@ void URTSSidebarWidget::UpdatePartyInformation()
 
       writer->WriteArrayStart();
       // Create JSON for each hero object which is used to update the sidebar browser
-<<<<<<< HEAD
-      for(auto hero : cpcRef->GetBasePlayer()->GetHeroes()) {
-=======
       for(auto hero : cpcRef->GetBasePlayer()->GetHeroes())
       {
->>>>>>> componentrefactor
          TSharedPtr<FJsonObject> heroObj = MakeShareable(new FJsonObject);
          heroObj->SetStringField("name", hero->GetGameName().ToString());
          heroObj->SetNumberField("hitpoints", hero->GetStatComponent()->GetVitalCurValue(EVitals::Health));
          heroObj->SetNumberField("maxHitpoints", hero->GetStatComponent()->GetVitalBaseValue(EVitals::Health));
          heroObj->SetNumberField("mana", hero->GetStatComponent()->GetVitalCurValue(EVitals::Mana));
          heroObj->SetNumberField("maxMana", hero->GetStatComponent()->GetVitalBaseValue(EVitals::Mana));
-<<<<<<< HEAD
-         heroObj->SetBoolField("bSelected", hero->GetSelected());
-=======
          heroObj->SetBoolField("bSelected", hero->GetUnitSelected());
->>>>>>> componentrefactor
 
          // Start listening to the health values
          URTSAttributeSet* attSet = const_cast<URTSAttributeSet*>(hero->GetAbilitySystemComponent()->GetSet<URTSAttributeSet>());
@@ -222,16 +208,6 @@ void URTSSidebarWidget::HandleBluEvent(const FString& eventName, const FString& 
       // Notify pawn we clicked on the browser (since the the pawn deselects everything when we click on the ground typically and we don't want that)
       // When this flag is set it means we performed a successful browser interaction and the browser fires off a blu_event
       cpcRef->GetCameraPawn()->clickedOnBrowserHud = true;
-<<<<<<< HEAD
-      UBluJsonObj* jsonObj                         = UBluBlueprintFunctionLibrary::ParseJSON(eventMessage);
-      int          heroIndex                       = jsonObj->getNumValue("value");
-      ABaseHero*   selectedHeroRef                 = cpcRef->GetBasePlayer()->GetHeroes()[heroIndex];
-      if(!cpcRef->IsInputKeyDown(EKeys::LeftShift)) {
-         cpcRef->GetBasePlayer()->ClearSelectedAllies();
-         selectedHeroRef->SetSelected(true);
-      } else {
-         selectedHeroRef->SetSelected(!selectedHeroRef->GetSelected());
-=======
 
       UBluJsonObj* jsonObj         = UBluBlueprintFunctionLibrary::ParseJSON(eventMessage);
       const int    heroIndex       = jsonObj->GetNumValue("value");
@@ -244,7 +220,6 @@ void URTSSidebarWidget::HandleBluEvent(const FString& eventName, const FString& 
       } else
       {
          selectedHeroRef->SetUnitSelected(!selectedHeroRef->GetUnitSelected());
->>>>>>> componentrefactor
       }
    }
 }

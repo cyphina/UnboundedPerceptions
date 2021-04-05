@@ -70,11 +70,7 @@ void AUserInput::ToggleBreakMenu()
 
 void AUserInput::ToggleInventory()
 {
-<<<<<<< HEAD
-   if(GetBasePlayer()->selectedHeroes.Num() > 0 && NotInMinigame()) { hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Inventory)); }
-=======
    if(GetBasePlayer()->GetSelectedHeroes().Num() > 0 && NotInMinigame()) { hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Inventory)); }
->>>>>>> componentrefactor
 }
 
 void AUserInput::ToggleQuestJournal()
@@ -89,32 +85,20 @@ void AUserInput::ToggleQuestList()
 
 void AUserInput::ToggleCharacterMenu()
 {
-<<<<<<< HEAD
-   if(GetBasePlayer()->selectedHeroes.Num() > 0 || GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Character)) {
-=======
    if(GetBasePlayer()->GetSelectedHeroes().Num() > 0 || GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Character)) {
->>>>>>> componentrefactor
       if(NotInMinigame()) hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Character));
    }
 }
 
 void AUserInput::ToggleEquipmentMenu()
 {
-<<<<<<< HEAD
-   int numSelectedHeroes = GetBasePlayer()->selectedHeroes.Num();
-=======
    const int numSelectedHeroes = GetBasePlayer()->GetSelectedHeroes().Num();
->>>>>>> componentrefactor
    if(numSelectedHeroes > 0 && NotInMinigame()) { hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Equipment)); }
 }
 
 void AUserInput::ToggleSpellbookMenu()
 {
-<<<<<<< HEAD
-   int numSelectedHeroes = GetBasePlayer()->selectedHeroes.Num();
-=======
    const int numSelectedHeroes = GetBasePlayer()->GetSelectedHeroes().Num();
->>>>>>> componentrefactor
    if(numSelectedHeroes > 0 && NotInMinigame()) { hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Spellbook)); }
 }
 

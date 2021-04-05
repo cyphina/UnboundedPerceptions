@@ -8,14 +8,8 @@
 
 #include "WorldObjects/BaseHero.h"
 
-<<<<<<< HEAD
-#include "ItemDelegateStore.h"
-#include "PartyDelegateStore.h"
-
-=======
 #include "ItemDelegateContext.h"
 #include "PartyDelegateContext.h"
->>>>>>> componentrefactor
 #include "AIStuff/AIControllers/HeroAIController.h"
 #include "Backpack.h"
 #include "InventoryView.h"
@@ -71,34 +65,6 @@ void UHeroInventory::OnItemPurchased(const ABaseHero* heroRef, const FBackpackUp
    ReloadSlots(updatedSlotIndices);
 }
 
-<<<<<<< HEAD
-void UHeroInventory::NativeOnInitialized()
-{
-   ItemChangeEvents::OnEquipmentChangedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
-   ItemChangeEvents::OnItemPickedUpEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
-   ItemChangeEvents::OnItemPurchasedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
-   ItemChangeEvents::OnItemUsedEvent.AddUObject(this, &UHeroInventory::OnItemChangeEvent);
-   GetOwningLocalPlayer()->GetSubsystem<UPartyDelegateStore>()->OnHeroActiveChanged().AddUObject(this, &UHeroInventory::OnHeroActiveChanged);
-}
-
-void UHeroInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)
-{
-   if(!GetBackpack()->IsEmptySlot(iSlot)) {
-      OnItemSelected().Broadcast(hIndex, iSlot);
-   }
-}
-
-void UHeroInventory::OnItemChangeEvent(const ABaseHero* heroUsingItem, const FMyItem& item)
-{
-   if(GetVisibility() == ESlateVisibility::Visible) LoadItems();
-}
-
-void UHeroInventory::OnHeroActiveChanged(ABaseHero* heroThatChangedActivefState, bool newActiveState)
-{
-   // TODO: Refresh inventory and move from the selected page. Also change hIndex... if we plan to keep it around.
-   if(!newActiveState) {
-      LoadItems();
-=======
 void UHeroInventory::OnHeroActiveChanged(ABaseHero* heroThatChangedActiveState, bool newActiveState)
 {
    // TODO: Refresh inventory and move from the selected page. Also change hIndex... if we plan to keep it around.
@@ -108,6 +74,5 @@ void UHeroInventory::OnHeroActiveChanged(ABaseHero* heroThatChangedActiveState, 
       {
          LoadItems();
       });
->>>>>>> componentrefactor
    }
 }

@@ -38,20 +38,6 @@ class MYPROJECT_API AEnemy : public AUnit
    /**Sets a target as active/inactive, which tells the game that this enemy's ai is active*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Combat")
    bool GetIsActive() const { return isActive; }
-<<<<<<< HEAD
-
-   UFUNCTION(BlueprintCallable, Category = "Combat")
-   void SetIsActive(bool value) { isActive = value; }
-
-   bool GetIsEnemy() const override final { return true; }
-
-   FDefaultStats& GetInitialStats() { return initialStats; }
-
-   const TSet<AUnit*>* GetVisibleEnemies_Impl() const override;
-   const TSet<AUnit*>* GetAllies_Impl() const override;
-
-   void SetSelected(bool value) override final;
-=======
 
    UFUNCTION(BlueprintCallable, Category = "Combat")
    void SetIsActive(bool value) { isActive = value; }
@@ -61,7 +47,6 @@ class MYPROJECT_API AEnemy : public AUnit
    FDefaultStats& GetInitialStats() { return initialStats; }
 
    void SetUnitSelected(bool value) override final;
->>>>>>> componentrefactor
 
  protected:
    void BeginPlay() override;
@@ -88,19 +73,11 @@ class MYPROJECT_API AEnemy : public AUnit
    FDefaultStats initialStats;
 
    /** Range enemy will attack you */
-<<<<<<< HEAD
-   UPROPERTY(EditAnywhere)
-   int aggroRange;
-
-   /** If this enemy is in a combat ready state */
-   UPROPERTY(EditAnywhere)
-=======
    UPROPERTY(EditAnywhere, Category = "Enemy Parameters")
    int aggroRange;
 
    /** If this enemy is in a combat ready state */
    UPROPERTY(EditAnywhere, Category = "Enemy Parameters")
->>>>>>> componentrefactor
    bool isActive;
 
  private:
@@ -108,11 +85,8 @@ class MYPROJECT_API AEnemy : public AUnit
    void InitializeStats();
 
    void SpawnItemDrops();
-<<<<<<< HEAD
-=======
 
    const TArray<AUnit*>* GetVisibleEnemies_Impl() const override;
    const TArray<AUnit*>* GetAllies_Impl() const override;
    const TArray<AUnit*>* GetEnemies_Impl() const override;
->>>>>>> componentrefactor
 };

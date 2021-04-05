@@ -11,8 +11,6 @@ class UButton;
 class UTextBlock;
 class UImage;
 class UToolTipWidget;
-<<<<<<< HEAD
-=======
 class UActionSlotStyle;
 
 /**
@@ -24,7 +22,6 @@ class UActionSlotStyle;
  * Has styling options\n
  * Has tooltip support\n
  */
->>>>>>> componentrefactor
 
 UCLASS(Abstract)
 class MYPROJECT_API UActionSlot : public UUserWidget
@@ -33,14 +30,6 @@ class MYPROJECT_API UActionSlot : public UUserWidget
 
  public:
    UActionSlot(const FObjectInitializer& o);
-<<<<<<< HEAD
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Action")
-   UTexture2D* GetImage() const;
-
-   UFUNCTION(BlueprintCallable, Category = "Action")
-   virtual void SetSlotImage(UTexture2D* image);
-=======
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Action")
    UTexture2D* GetImage() const;
@@ -50,7 +39,6 @@ class MYPROJECT_API UActionSlot : public UUserWidget
 
    UFUNCTION(BlueprintCallable, Category = "Action")
    void SetSlotStyle(TSubclassOf<UActionSlotStyle> newStyle);
->>>>>>> componentrefactor
 
    UFUNCTION(BlueprintCallable, Category = "Action")
    void SetInfo(FText newInfo);
@@ -58,14 +46,8 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    UFUNCTION(BlueprintCallable, Category = "Action")
    void SetImageFromMaterial(UMaterialInstanceDynamic* image);
 
-<<<<<<< HEAD
- protected:
-   UFUNCTION()
-   virtual void OnBtnClick() PURE_VIRTUAL(UActionSlot::OnBtnClick, );
-=======
    UFUNCTION(BlueprintCallable, Category = "Action")
    int GetSlotIndex() const { return slotIndex; }
->>>>>>> componentrefactor
 
    void SetIsEnabled(bool bInIsEnabled) override;
 
@@ -74,30 +56,6 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    UFUNCTION()
    virtual void ShowDesc(UToolTipWidget* tooltip) PURE_VIRTUAL(UActionSlot::ShowDesc, );
 
-<<<<<<< HEAD
-   void NativeOnInitialized() override;
-
-   // A button we can press to trigger the slot
-   UPROPERTY(Meta = (BindWidget))
-   UButton* btnAction;
-
-   // An image covering the slot (used for items, spells, etc.)
-   UPROPERTY(Meta = (BindWidget))
-   UImage* actionImage;
-
-   // Text that shows up in corner of the slot
-   UPROPERTY(Meta = (BindWidget))
-   UTextBlock* infoText;
-
-   UPROPERTY(BlueprintReadOnly)
-   AUserInput* CPCRef;
-
-   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Action", Meta = (ExposeOnSpawn = true))
-   int slotIndex;
-
- private:
-   static TSubclassOf<UToolTipWidget> toolTipWidgetClass;
-=======
    FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
    FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
    FReply NativeOnMouseButtonDoubleClick(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
@@ -143,5 +101,4 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    // This has to be set to enable drag and drop.
    UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
    TSubclassOf<UDraggedActionWidget> draggedActionWidgetClass;
->>>>>>> componentrefactor
 };

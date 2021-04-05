@@ -49,10 +49,6 @@ void UMyUserWidget::SetVisibility(ESlateVisibility newVisibility)
    OnMyWidgetVisibilityChanged(newVisibility);
 }
 
-void UMyUserWidget::OnWidgetRemovedFromViewport_Implementation()
-{
-}
-
 void UMyUserWidget::NativeConstruct()
 {
    CPC = Cast<AUserInput>(GetOwningPlayer());

@@ -6,17 +6,10 @@
 #include "GameSpeedWidget.h"
 #include "HUDManager.h"
 #include "ParallelFor.h"
-<<<<<<< HEAD
-#include "RTSGameMode.h"
-#include "RTSIngameWidget.h"
-#include "UserInput.h"
-#include "VisionSubsystem.h"
-=======
 #include "PartyDelegateContext.h"
 #include "RTSGameMode.h"
 #include "RTSIngameWidget.h"
 #include "UserInput.h"
->>>>>>> componentrefactor
 #include "WorldObjects/Ally.h"
 #include "WorldObjects/Enemies/Enemy.h"
 #include "FogOfWar/FogOfWarPlane.h"
@@ -32,9 +25,6 @@ ARTSGameState::ARTSGameState()
 void ARTSGameState::BeginPlay()
 {
    Super::BeginPlay();
-<<<<<<< HEAD
-   visionManager = UVisionSubsystem::Create(this);
-=======
    StartVisionChecks();
    GetWorld()->GetTimerManager().SetTimer(
        updateCachedVisibleUnitsTimerHandle,
@@ -49,7 +39,6 @@ void ARTSGameState::BeginPlay()
        },
        0.1f, true, 0.f);
 
->>>>>>> componentrefactor
    clock = MakeUnique<FUpGameClock>(*this, FUpTime(), FUpDate());
    OnGameSpeedUpdated().AddDynamic(this, &ARTSGameState::UpdateGameSpeed);
 
@@ -58,91 +47,6 @@ void ARTSGameState::BeginPlay()
    // Implemented via https://www.redblobgames.com/articles/visibility/.
    // ! Not using this currently however...
    GetWorld()->SpawnActor<AFogOfWarPlane>(FOWplaneClass, FVector(0, 0, 0), FRotator());
-<<<<<<< HEAD
-
-   Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode())->OnLevelAboutToUnload.AddDynamic(this, &ARTSGameState::CleanupUnitLists);
-}
-
-void ARTSGameState::CleanupUnitLists()
-{
-   Cast<ARTSGameState>(GetWorld()->GetGameState())->enemyList.Shrink();
-   Cast<ARTSGameState>(GetWorld()->GetGameState())->enemyList.Compact();
-   Cast<ARTSGameState>(GetWorld()->GetGameState())->allyList.Shrink();
-   Cast<ARTSGameState>(GetWorld()->GetGameState())->allyList.Compact();
-}
-
-void ARTSGameState::RegisterFriendlyUnit(AAlly* friendlyUnit)
-{
-   allyList.Add(friendlyUnit);
-}
-
-void ARTSGameState::RegisterEnemyUnit(AEnemy* enemyUnit)
-{
-   enemyList.Add(enemyUnit);
-}
-
-void ARTSGameState::UnRegisterFriendlyUnit(AAlly* friendlyUnit)
-{
-   allyList.Remove(friendlyUnit);
-   // Even if we remove the item there will be some kind of empty space in the set that can be hit when iterating, so compact it.
-   allyList.CompactStable();
-}
-
-void ARTSGameState::UnRegisterEnemyUnit(AEnemy* enemyUnit)
-{
-   enemyList.Remove(enemyUnit);
-   // Even if we remove the item there will be some kind of empty space in the set that can be hit when iterating, so compact it.
-   enemyList.CompactStable();
-}
-
-const TSet<AUnit*>& ARTSGameState::GetVisibleEnemies() const
-{
-   return visionManager->GetVisibleEnemies();
-}
-
-const TSet<AUnit*>& ARTSGameState::GetVisiblePlayerUnits() const
-{
-   return visionManager->GetVisiblePlayerUnits();
-}
-
-void ARTSGameState::AddGameTime(FUpTime timeToAdd, FUpDate daysToAdd)
-{
-   clock->AddGameTime(timeToAdd, daysToAdd);
-}
-
-void ARTSGameState::SetGameTime(FUpTime timeToAdd, FUpDate daysToAdd)
-{
-   clock->SetGameTime(timeToAdd, daysToAdd);
-}
-
-void ARTSGameState::Tick(float deltaSeconds)
-{
-   Super::Tick(deltaSeconds);
-   clock->TickClock(deltaSeconds);
-}
-
-void ARTSGameState::UpdateGameSpeed(float newSpeedMultiplier)
-{
-   UE_LOG(LogTemp, Warning, TEXT("Setting game speed to: %f"), newSpeedMultiplier);
-   speedModifier = newSpeedMultiplier;
-   UGameplayStatics::SetGlobalTimeDilation(GetWorld(), newSpeedMultiplier);
-}
-
-void ARTSGameState::OnAllyActiveChanged(AAlly* allyRef, bool isActive)
-{
-   if(isActive)
-      RegisterFriendlyUnit(allyRef);
-   else
-      UnRegisterFriendlyUnit(allyRef);
-}
-
-void ARTSGameState::OnEnemyActiveChanged(AEnemy* enemyRef, bool isActive)
-{
-   if(isActive)
-      RegisterEnemyUnit(enemyRef);
-   else
-      UnRegisterEnemyUnit(enemyRef);
-=======
 
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnAllyActiveChanged().AddUObject(this, &ARTSGameState::OnAllyActiveChanged);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnEnemyActiveChanged().AddUObject(this, &ARTSGameState::OnEnemyActiveChanged);
@@ -291,5 +195,4 @@ void ARTSGameState::UnRegisterFriendlyUnit(AAlly* friendlyUnit)
 void ARTSGameState::UnRegisterEnemyUnit(AEnemy* enemyUnit)
 {
    enemyList.Remove(enemyUnit);
->>>>>>> componentrefactor
 }

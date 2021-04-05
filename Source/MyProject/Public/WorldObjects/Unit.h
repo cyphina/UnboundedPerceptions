@@ -4,23 +4,6 @@
 #include "UnitProperties.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
-<<<<<<< HEAD
-#include "UnittargetData.h"
-
-#include "GameplayTags.h"
-#include "RTSAbilitySystemComponent.h"
-
-#include "SaveLoadClass.h"
-#include "SpellCastComponent.h"
-#include "State/IUnitState.h"
-
-#include "State/RTSStateMachine.h"
-#include "CombatParameters.h"
-
-#include "WorldObject.h"
-#include "Unit.generated.h"
-
-=======
 #include "RTSAbilitySystemComponent.h"
 #include "SaveLoadClass.h"
 #include "CombatParameters.h"
@@ -28,18 +11,14 @@
 #include "Unit.generated.h"
 
 class UWidgetComponent;
->>>>>>> componentrefactor
 class URTSDamageEffect;
 class UUpStatComponent;
 class URTSVisionComponent;
 class UTargetComponent;
 class IAttackAnim;
-<<<<<<< HEAD
-=======
 class URTSAttackExecution;
 class URTSDeathExecution;
 class URTSMoveExecution;
->>>>>>> componentrefactor
 struct UpCombatInfo;
 struct FUpDamage;
 
@@ -47,13 +26,10 @@ DECLARE_STATS_GROUP(TEXT("RTSUnits"), STATGROUP_RTSUnits, STATCAT_Advanced);
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDamageReceived, const FUpDamage&);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDamageDealt, const FUpDamage&);
-<<<<<<< HEAD
-=======
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitHealingReceived, const FUpDamage&);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitHealingDealt, const FUpDamage&);
 
->>>>>>> componentrefactor
 DECLARE_EVENT(AUnitController, FOnUnitDie);
 
 DECLARE_EVENT(URTSUnitAnimController, FOnUnitAttackSwingHit); // When a unit initiates an attack (animation begins)
@@ -78,19 +54,9 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    friend class AttackMoveState;
    friend class ChasingState;
 
-public:
+ public:
    AUnit(const FObjectInitializer& oI);
    ~AUnit();
-<<<<<<< HEAD
-
-   /**
-    * @brief Gets current state in state machine
-    * @return Returns enum identifier corresponding to current state the state machine is in.
-    */
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-   EUnitState GetState() const;
-=======
->>>>>>> componentrefactor
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    FORCEINLINE AUnitController* GetUnitController() const { return unitController; }
@@ -110,14 +76,6 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Accessors")
    virtual void SetUnitSelected(bool value);
 
-<<<<<<< HEAD
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   virtual bool GetIsEnemy() const PURE_VIRTUAL(AUnit::GetIsEnemy, return false;);
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   bool GetIsDead() const;
-
-=======
    void ClearSelectedFlag() { unitProperties.isSelected = false; };
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
@@ -132,7 +90,6 @@ public:
    bool GetIsUnitHidden() const { return combatInfo->isUnitHidden; }
    void SetIsUnitHidden(bool isHidden) { combatInfo->isUnitHidden.AtomicSet(isHidden); }
 
->>>>>>> componentrefactor
    /**
     * Function to find the bounds of a unit (screen space points)
     * Used when we're creating our selection ring around a unit
@@ -147,94 +104,6 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Functionality")
    virtual void SetEnabled(bool bEnabled);
 
-<<<<<<< HEAD
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   const TSet<AUnit*>& GetVisibleEnemies() const { return *GetVisibleEnemies_Impl(); }
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   const TSet<AUnit*>& GetAllies() const { return *GetAllies_Impl(); }
-   
-   URTSAbilitySystemComponent* GetAbilitySystemComponent() const override { return abilitySystemComponent; }
-
-   URTSVisionComponent* GetVisionComponent() const { return visionComponent; }
-
-   UUpStatComponent* GetStatComponent() const { return statComponent; }
-
-   UTargetComponent* GetTargetComponent() const { return targetComponent; }
-
-   UpCombatInfo* GetCombatInfo() const { return combatInfo.Get(); }
-
-   FOnUnitDie& OnUnitDie() const { return OnUnitDieEvent; }
-
-   FOnUnitDamageReceived& OnUnitDamageReceived() const { return OnUnitDamageReceivedEvent; }
-
-   FOnUnitDamageDealt& OnUnitDamageDealt() const { return OnUnitDamageDealtEvent; }
-
-   FOnUnitAttackSwingHit& OnUnitAttackSwingHit() const { return OnUnitAttackSwingHitEvent; }
-
-protected:
-   UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-   class UHealthbarComp* healthBar;
-
-   /** A little circle underneath the unit showing the radius of its collider */
-   UPROPERTY(VisibleAnywhere)
-   UDecalComponent* selectionCircleDecal;
-
-   /** Units that don't have any vision can disable this or eventually we can refactor this to be optional*/
-   UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-   URTSVisionComponent* visionComponent;
-
-   UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-   UUpStatComponent* statComponent;
-
-   UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-   UTargetComponent* targetComponent;
-
-   UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
-   URTSAbilitySystemComponent* abilitySystemComponent;
-
-   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
-   FUnitProperties unitProperties;
-
-   /**
-    * @brief Material reference to unit's base material so that if it changes (due to effects) we can revert it back
-    */
-   UPROPERTY(EditAnywhere)
-   UMaterialInterface* originalMaterial;
-
-   void BeginPlay() override;
-   void Tick(float deltaSeconds) override;
-   void PossessedBy(AController* newController) override;
-
-   class AUserInput* controllerRef;
-
-private:
-   /** Change speed-based parameters when time multiplier changes */
-   UFUNCTION(Category = "Callback")
-   void OnUpdateGameSpeed(float speedMultiplier);
-
-   void SetupHealthbarComponent();
-   void SetupCharacterCollision() const;
-   void SetupMovementComponent() const;
-   void RemoveArrowComponent() const;
-
-   void SetupAbilitiesAndStats();
-   void AlignSelectionCircleWithGround() const;
-   void StoreUnitHeight();
-
-   virtual const TSet<AUnit*>* GetVisibleEnemies_Impl() const PURE_VIRTUAL(AUnit::GetVisibleEnemies, return nullptr; );
-   virtual const TSet<AUnit*>* GetAllies_Impl() const PURE_VIRTUAL(AUnit::GetAllies, return nullptr; );
-   
-   class AUnitController* unitController = nullptr;
-
-   // Reference to combat parameters kept in pointer since these values are barely used much (cold splitting)
-   TUniquePtr<UpCombatInfo> combatInfo;
-
-   mutable FOnUnitDie            OnUnitDieEvent;
-   mutable FOnUnitDamageReceived OnUnitDamageReceivedEvent;
-   mutable FOnUnitDamageDealt    OnUnitDamageDealtEvent;
-   mutable FOnUnitAttackSwingHit OnUnitAttackSwingHitEvent;
-=======
    bool IsEnabled() const { return unitProperties.bIsEnabled; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
@@ -364,5 +233,4 @@ private:
    mutable FOnUnitHealingReceived OnUnitHealingReceivedEvent;
    mutable FOnUnitHealingDealt    OnUnitHealingDealtEvent;
    mutable FOnUnitAttackSwingHit  OnUnitAttackSwingHitEvent;
->>>>>>> componentrefactor
 };

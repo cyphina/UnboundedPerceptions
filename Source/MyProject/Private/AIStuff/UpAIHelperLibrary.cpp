@@ -4,9 +4,6 @@
 #include "Unit.h"
 #include "EnvironmentQuery/EnvQueryManager.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
-<<<<<<< HEAD
-#include "MySpell.h"
-=======
 #include "AIStuff/AI_Globals.h"
 #include "MySpell.h"
 #include "SpellCastComponent.h"
@@ -19,7 +16,6 @@ namespace AIHelperCVars
    bool                           bPrintRange = false;
    static FAutoConsoleVariableRef CVarPrintRange(TEXT("RTSDebug.PrintRange"), bPrintRange, TEXT("When checking to see if target is in range, logs the range."));
 }
->>>>>>> componentrefactor
 
 bool UUpAIHelperLibrary::IsTargetInRange(const AActor* referenceActor, const FVector& targetLocation, const float range)
 {
@@ -27,9 +23,6 @@ bool UUpAIHelperLibrary::IsTargetInRange(const AActor* referenceActor, const FVe
    FVector       difference      = currentLocation - targetLocation;
    difference.Z                  = 0;
 
-<<<<<<< HEAD
-   if(FVector::DotProduct(difference, difference) <= range * range + SMALL_NUMBER) return true;
-=======
    const float squaredDist = FVector::DotProduct(difference, difference);
 
 #if UE_EDITOR
@@ -63,7 +56,6 @@ bool UUpAIHelperLibrary::IsTargetInRangeOfActor(const AActor* referenceActor, co
 #endif
 
    if(squaredDist <= adjustedRange * adjustedRange + SMALL_NUMBER) return true;
->>>>>>> componentrefactor
    return false;
 }
 
@@ -84,17 +76,6 @@ FQuat UUpAIHelperLibrary::FindLookRotation(const AActor* referenceActor, const F
    return FRotationMatrix::MakeFromX(FVector(projectedDirection)).ToQuat();
 }
 
-<<<<<<< HEAD
-AUnit* UUpAIHelperLibrary::FindClosestUnit(const AUnit* referenceUnit, const TSet<AUnit*>& otherUnits)
-{
-   AUnit* closestUnit = nullptr;
-   if(otherUnits.Num() > 0) {
-      float closestDistance = TNumericLimits<int>::Max();
-
-      for(AUnit* otherUnit : otherUnits) {
-         const float distToOtherUnit = FVector::Dist2D(referenceUnit->GetActorLocation(), otherUnit->GetActorLocation());
-         if(distToOtherUnit < closestDistance) {
-=======
 AUnit* UUpAIHelperLibrary::FindClosestUnit(const FVector referenceLocation, const TSet<AUnit*>& otherUnits)
 {
    AUnit* closestUnit = nullptr;
@@ -107,7 +88,6 @@ AUnit* UUpAIHelperLibrary::FindClosestUnit(const FVector referenceLocation, cons
          const float distToOtherUnit = FVector::Dist2D(referenceLocation, otherUnit->GetActorLocation());
          if(distToOtherUnit < closestDistance)
          {
->>>>>>> componentrefactor
             closestDistance = distToOtherUnit;
             closestUnit     = otherUnit;
          }
@@ -116,17 +96,6 @@ AUnit* UUpAIHelperLibrary::FindClosestUnit(const FVector referenceLocation, cons
    return closestUnit;
 }
 
-<<<<<<< HEAD
-void UUpAIHelperLibrary::AIBeginCastSpell(UEnvQuery* targetFindingQuery, TSubclassOf<UMySpell> spellToCast, USpellCastComponent* spellCastComponent)
-{
-   FEnvQueryRequest                                                     queryRequest{targetFindingQuery, spellCastComponent->GetOwner()};
-   const auto                                                           castSpellAfterQuery = FQueryFinishedSignature::CreateLambda(
-   [&spellToCast, spellCastComponent](const TSharedPtr<FEnvQueryResult> res) {
-      spellToCast.GetDefaultObject()->GetTargeting()->HandleQueryResult(res,
-                                                                        Cast<AUnit>(spellCastComponent->GetOwner()), spellCastComponent, spellToCast);
-   });
-   queryRequest.Execute(EEnvQueryRunMode::SingleResult, castSpellAfterQuery);
-=======
 void UUpAIHelperLibrary::AIBeginCastSpell(UEnvQuery* targetFindingQuery, const TSubclassOf<UMySpell> spellToCast, USpellCastComponent* spellCastComponent,
                                           EEnvQueryRunMode::Type queryRunMode)
 {
@@ -158,5 +127,4 @@ void UUpAIHelperLibrary::AIBeginCastSpell(UEnvQuery* targetFindingQuery, const T
          queryRequest.Execute(queryRunMode, castSpellAfterQuery);
       }
    }
->>>>>>> componentrefactor
 }

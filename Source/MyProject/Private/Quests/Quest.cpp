@@ -38,14 +38,6 @@ TArray<UUpGoal*> AQuest::GetCurrentGoals() const
 
 void AQuest::FindInitialItemAmount(int goalIndex)
 {
-<<<<<<< HEAD
-   // Figure out how much of this item we have so far
-   int itemCount = 0;
-   const int itemID    = FCString::Atoi(*questInfo.subgoals[goalIndex].additionalNames[0].ToString());
-
-   for (ABaseHero* hero : questManagerRef->controllerRef->GetBasePlayer()->GetHeroes()) {
-      itemCount += hero->GetBackpack().FindItemCount(itemID);
-=======
    int            itemCount     = 0;
    UUpGatherGoal* gatheringGoal = Cast<UUpGatherGoal>(questInfo.GetSubgoals()[goalIndex]);
    const int      itemID        = gatheringGoal->GetItemToGatherId();
@@ -56,7 +48,6 @@ void AQuest::FindInitialItemAmount(int goalIndex)
       {
          itemCount += hero->GetBackpack().FindItemCount(itemID);
       }
->>>>>>> componentrefactor
    }
    gatheringGoal->SetNumCurrentlyGathered(itemCount);
 }
@@ -75,27 +66,10 @@ void AQuest::SetupUnlockedGoals(int completedGoalIndex, ARTSGameMode* gameModeRe
             currentGoalIndices.Add(index);
             goal->SetGoalState(EGoalState::currentGoal);
 
-<<<<<<< HEAD
-      // If this goal should update the description, and we didn't fail it...
-      if (!fail) {
-         if (completedGoals[completedGoals.Add(completedGoal)].shouldUpdateQuestDescription) {
-            // Add on the extra description at the end.
-            currentDescription = FText::Format(NSLOCTEXT("Quest", "Description", "{0}\n\n{1}"), currentDescription, completedGoal.updatedDescription);
-            // If this quest is the one selected in the quest journal, update the journal
-            if (questManagerRef->questJournalRef->GetSelectedQuest() == this) questManagerRef->questJournalRef->UpdateDetailWindow();
-            URTSIngameWidget::NativeDisplayHelpText(questManagerRef->GetWorld(), NSLOCTEXT("Quest", "DetailsUpdated", "Quest Journal Updated!"));
-         } else {
-            URTSIngameWidget::NativeDisplayHelpText(questManagerRef->GetWorld(), NSLOCTEXT("Quest", "GoalCompleted", "Quest Goal Completed!"));
-         }
-         completedGoal.goalState = EGoalState::completedGoal;
-      } else
-         completedGoal.goalState = EGoalState::failedGoal;
-=======
             if(Cast<UUpGatherGoal>(goal))
             {
                FindInitialItemAmount(index);
             }
->>>>>>> componentrefactor
 
             gameModeRef->GetQuestManager()->OnSubgoalUnlocked().Broadcast(this, index);
             
@@ -117,22 +91,10 @@ void AQuest::CompleteSubGoal(int goalIndex)
       return;
    }
 
-<<<<<<< HEAD
-      for (FGoalInfo& goal : questInfo.subgoals) {
-         if (goal.goalState == EGoalState::lockedGoal) {
-            // Attempt to remove this goal from any goals that required this goal as a prereq.  
-            const int numRemoved = goal.requiredSubGoalIndices.Remove(goalIndex);
-            // If a goal was removed and there are no more required goals, then this is OUR NEW GOAL~!
-            if (numRemoved && !goal.requiredSubGoalIndices.Num()) { 
-               currentGoalIndices.Add(index);
-               goal.goalState = EGoalState::currentGoal;
-               questManagerRef->questListRef->GetQuestListSlot(this)->AddSubGoalWidget(this, index);
-=======
    if(currentGoalIndices.Contains(goalIndex))
    {
       currentGoalIndices.Remove(goalIndex);
       completedGoalIndices.Add(goalIndex);
->>>>>>> componentrefactor
 
       UUpGoal* completedGoal = questInfo.GetSubgoals()[goalIndex];
 
@@ -147,15 +109,11 @@ void AQuest::CompleteSubGoal(int goalIndex)
 
       completedGoal->SetGoalState(EGoalState::completedGoal);
 
-<<<<<<< HEAD
-      if (questManagerRef->controllerRef->GetWidgetProvider()->GetIngameHUD()->GetQuestJournal()->GetSelectedQuest() == this) // if our quest selected in quest journal
-=======
       gameModeRef->GetQuestManager()->OnSubgoalCompleted().Broadcast(this, goalIndex);
 
       SetupUnlockedGoals(goalIndex, gameModeRef);
 
       for(FTriggerData& finishedTriggerActivation : completedGoal->afterGoalTriggers)
->>>>>>> componentrefactor
       {
          gameModeRef->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
       }

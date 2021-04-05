@@ -11,11 +11,8 @@ class UBackpack;
 class ABaseHero;
 class UInventoryView;
 
-<<<<<<< HEAD
-=======
 DECLARE_EVENT_OneParam(UInventory, FOnInventoryItemSelected, int);
 
->>>>>>> componentrefactor
 /**
  * @brief Inventory C++ base class. Should be used UI for any item management system like character inventory, treasure chests, etc.
  */
@@ -26,19 +23,6 @@ class MYPROJECT_API UInventory : public USlotContainer
 
  public:
    /**
-<<<<<<< HEAD
-    * Runs when an itemSlot in the inventoryView is clicked on.  Depending on the inventory type, different things may occur.
-    * @iSlot - Index of the slot in the backpack (not inventory view slot index) to be used
-    */
-   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Inventory Functions")
-   void         UseItemAtInventorySlot(int32 iSlot);
-   virtual void UseItemAtInventorySlot_Implementation(int32 iSlot) PURE_VIRTUAL(UInventory::UseItemAtInventorySlot, );
-
-   /** Used to update the view whenever change occurs within the backpack corresponding to our inventory */
-   UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Inventory Functions")
-   void LoadItems();
-
-=======
     * Used to update the view whenever change occurs within the backpack corresponding to our inventory
     * Has to update all the slots at once so it's better to reload only the slots that are changed. Also event driven architecture
     * could help if we one day learn to implement networking...
@@ -49,21 +33,12 @@ class MYPROJECT_API UInventory : public USlotContainer
    UFUNCTION(BlueprintCallable, Category = "Inventory Functions")
    void ReloadSlots(TSet<int> slotIndices);
 
->>>>>>> componentrefactor
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Functions")
    UBackpack* GetBackpack() const { return backpack; }
 
    UFUNCTION(BlueprintCallable, Category = "Inventory Functions")
    void SetBackPack(UBackpack* bPack) { backpack = bPack; }
 
-<<<<<<< HEAD
-   UInventoryView* GetInventoryView() const { return inventoryView; }
-   
- protected:
-   void NativeConstruct() override;
-   bool OnWidgetAddToViewport_Implementation() override;
-
-=======
    /** Maps slot index in the list of displayed widget to the actual index in the backpack (they can be different due to things like pagination) */
    int GetCorrespondingBackpackIndex(int slotIndex) const;
 
@@ -79,7 +54,6 @@ class MYPROJECT_API UInventory : public USlotContainer
 
    TArray<UActionSlot*>& GetInventorySlots() const;
 
->>>>>>> componentrefactor
    UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
    UInventoryView* inventoryView;
 

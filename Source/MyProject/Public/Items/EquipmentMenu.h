@@ -20,30 +20,10 @@ class MYPROJECT_API UEquipmentMenu : public USlotContainer
 {
    GENERATED_BODY()
 
-<<<<<<< HEAD
- public:
-=======
 public:
->>>>>>> componentrefactor
    UFUNCTION(BlueprintCallable)
    ABaseHero* GetEquippedHero() const { return heroRef; }
 
-<<<<<<< HEAD
-   /** Call to redraw what is in equipment */
-   UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Equipment")
-   void Update();
-
-   void NativeOnInitialized() override;
-
-   void Update_Implementation();
-
- protected:
-   UPROPERTY(BlueprintReadWrite, Category = "References")
-   ABaseHero* hero;
-
- private:
-   void OnEquipmentChanged(const ABaseHero* heroThatChanged, const FMyItem& changedEquip);
-=======
    int GetNumValidItems() const override { return equipSlots.Num(); }
 
 protected:
@@ -82,5 +62,4 @@ private:
    void OnEquipmentChanged(const ABaseHero* heroThatChanged, TArray<int> updatedInventorySlots);
 
    TStaticArray<UEquipmentSlot*, 8> equipSlots;
->>>>>>> componentrefactor
 };

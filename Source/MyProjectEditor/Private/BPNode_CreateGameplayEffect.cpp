@@ -138,15 +138,10 @@ void UBPNode_CreateGameplayEffect::ExpandNode(FKismetCompilerContext& compilerCo
 
    ///SETUP NAMES
    //Look for static function in BP Library depending on class type (factory pattern)
-<<<<<<< HEAD
-   if(GetClassToSpawn()->IsChildOf(URTSDamageEffect::StaticClass()))
-      createFunctionName = GET_FUNCTION_NAME_CHECKED(USpellFunctionLibrary, MakeDamageEffect);
-=======
    if(GetClassToSpawn()->IsChildOf(URTSDamageEffect::StaticClass()) || GetClassToSpawn()->IsChildOf(URTSHealingEffect::StaticClass()))
    {
       createFunctionName = GET_FUNCTION_NAME_CHECKED(USpellFunctionLibrary, MakeDamageOrHealingEffect);
    }
->>>>>>> componentrefactor
    else if(GetClassToSpawn()->IsChildOf(UStatChangeEffect::StaticClass()))
    {
       createFunctionName = GET_FUNCTION_NAME_CHECKED(USpellFunctionLibrary, MakeStatChangeEffect);

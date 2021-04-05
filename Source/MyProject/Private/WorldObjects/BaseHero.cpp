@@ -20,15 +20,10 @@
 
 #include "AbilitySystemComponent.h"
 #include "CombatParameters.h"
-<<<<<<< HEAD
-#include "HeroInventory.h"
-#include "PartyDelegateStore.h"
-=======
 #include "GameplayDelegateContext.h"
 #include "HeroInventory.h"
 #include "ItemDelegateContext.h"
 #include "PartyDelegateContext.h"
->>>>>>> componentrefactor
 #include "RTSIngameWidget.h"
 #include "RTSSidebarWidget.h"
 #include "TargetComponent.h"
@@ -37,15 +32,11 @@
 #include "SpellSystem/MySpell.h"
 #include "SpellSystem/Spellbook.h"
 #include "WorldObjects/NPC.h"
-<<<<<<< HEAD
-#include "Items/ItemDelegateStore.h"
-=======
 #include "ItemDelegateContext.h"
 #include "ShopNPC.h"
 #include "SpellDelegateStore.h"
 #include "StorageContainer.h"
 #include "UIDelegateContext.h"
->>>>>>> componentrefactor
 
 ABaseHero::ABaseHero(const FObjectInitializer& oI) : AAlly(oI)
 {
@@ -63,24 +54,12 @@ void ABaseHero::BeginPlay()
    backpack = UBackpack::CreateBackpack(this, 40);
 
    equipment = NewObject<UEquipmentContainer>(this, "Equipment");
-<<<<<<< HEAD
-   equipment->OnEquipmentChanged().BindUObject(this, &ABaseHero::OnEquipped);
-=======
    equipment->OnEquipmentContainerChanged().BindUObject(this, &ABaseHero::OnEquipped);
->>>>>>> componentrefactor
 
    GetHeroController()->GetSpellCastComponent()->OnSpellCasted().AddUObject(this, &ABaseHero::OnSpellCasted);
 
    LoadSavedTriggers();
    GiveItemAbilities();
-<<<<<<< HEAD
-
-   spellbook = USpellBook::CreateSpellBook(this);
-   spellbook->OnSpellLearned().AddUObject(this, &ABaseHero::OnSpellLearned);
-   spellbook->OnSpellUpgraded().AddUObject(this, &ABaseHero::OnSpellUpgraded);
-
-   OnPickupItem().BindUObject(this, &ABaseHero::OnItemPickup);
-=======
 
    spellbook = USpellBook::CreateSpellBook(this, spellbookClass);
 
@@ -96,7 +75,6 @@ void ABaseHero::BeginPlay()
          SetEnabled(true);
       });
    }
->>>>>>> componentrefactor
 }
 
 void ABaseHero::Tick(float deltaSeconds)
@@ -118,23 +96,13 @@ void ABaseHero::PossessedBy(AController* newController)
 
 void ABaseHero::UnPossessed()
 {
-<<<<<<< HEAD
-=======
    Super::UnPossessed();
->>>>>>> componentrefactor
    OnUnitDie().RemoveAll(this);
 }
 
 void ABaseHero::SetEnabled(bool bEnabled)
 {
    Super::SetEnabled(bEnabled);
-<<<<<<< HEAD
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateStore>()->OnHeroActiveChanged().Broadcast(this, bEnabled);
-   if(bEnabled) {
-      controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->OnItemSelected().AddUObject(this, &ABaseHero::OnItemSelected);
-   } else {
-      controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->OnItemSelected().RemoveAll(this);
-=======
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroActiveChanged().Broadcast(this, bEnabled);
    if(bEnabled)
    {
@@ -146,34 +114,24 @@ void ABaseHero::SetEnabled(bool bEnabled)
    {
       GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnAttributePointAllocated().RemoveAll(this);
       OnPickupItem().Unbind();
->>>>>>> componentrefactor
    }
 }
 
 void ABaseHero::CheckGameOverOnDeath() const
 {
    bool isAllDead = true;
-<<<<<<< HEAD
-   for(const ABaseHero* hero : controllerRef->GetBasePlayer()->GetHeroes()) {
-      if(!hero->GetCombatInfo()->isDead) {
-=======
    for(const ABaseHero* hero : controllerRef->GetBasePlayer()->GetHeroes())
    {
       if(!hero->GetCombatInfo()->isDead)
       {
->>>>>>> componentrefactor
          isAllDead = false;
          break;
       }
    }
-<<<<<<< HEAD
-   if(isAllDead) controllerRef->GetGameMode()->GameOver();
-=======
    if(isAllDead)
    {
       controllerRef->GetGameMode()->GameOver();
    }
->>>>>>> componentrefactor
 }
 
 int ABaseHero::GetCurrentExp() const
@@ -198,10 +156,6 @@ void ABaseHero::SetCurrentExp(int amount)
    while(currentExp >= expForLevel)
    {
       currentExp = currentExp - expForLevel;
-<<<<<<< HEAD
-      expForLevel *= NEXT_EXP_MULTIPLIER; //
-=======
->>>>>>> componentrefactor
       LevelUp();
    }
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnExpGained().Broadcast(amount);
@@ -217,46 +171,12 @@ void ABaseHero::LevelUp_Implementation()
    attPoints += 5;
    skillPoints += 1;
    statComponent->SetUnitLevel(statComponent->GetUnitLevel() + 1);
-<<<<<<< HEAD
-   OnLevelUpEvent.Broadcast();
-}
-
-void ABaseHero::SetCurrentInteractable(AActor* newInteractable)
-{
-   currentInteractable = newInteractable;
-   GetTargetComponent()->SetTarget(newInteractable);
-=======
    expForLevel *= NEXT_EXP_MULTIPLIER;
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroLevelUp().Broadcast(this);
->>>>>>> componentrefactor
 }
 
 void ABaseHero::SetCurrentInteractable(AActor* newInteractable)
 {
-<<<<<<< HEAD
-   if(isIncrementing) {
-      GetAbilitySystemComponent()->SetNumericAttributeBase(UMyAttributeSet::IndexAtts(static_cast<int>(att)), statComponent->GetAttributeBaseValue(att) + 1);
-      --attPoints;
-      statComponent->UpdateStats(UMyAttributeSet::IndexAtts(static_cast<int>(att)));
-   } else {
-      GetAbilitySystemComponent()->SetNumericAttributeBase(UMyAttributeSet::IndexAtts(static_cast<int>(att)), statComponent->GetAttributeBaseValue(att) - 1);
-      ++attPoints;
-      statComponent->UpdateStats(UMyAttributeSet::IndexAtts(static_cast<int>(att)));
-   }
-}
-
-void ABaseHero::Equip(const int backpackIndex)
-{
-   const int prevEquipInSlot = equipment->Equip(backpack->GetItem(backpackIndex).id);
-   backpack->RemoveItemAtSlot(backpackIndex);
-
-   if(prevEquipInSlot) {
-      auto item{FMyItem(prevEquipInSlot)};
-      if(!ensure(backpack->AddItem(item))) UE_LOG(LogTemp, Error, TEXT("Impossible case reached no space to swap equipment"));
-   }
-
-   ItemChangeEvents::OnEquipmentChangedEvent.Broadcast(this, backpack->GetItem(backpackIndex));
-=======
    currentInteractable = newInteractable;
    GetTargetComponent()->SetTarget(newInteractable);
 }
@@ -297,21 +217,10 @@ void ABaseHero::Equip(const int backpackIndex)
       }
    }
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().Broadcast(this, updatedSlots);
->>>>>>> componentrefactor
 }
 
 void ABaseHero::Unequip(const int unequipSlot) const
 {
-<<<<<<< HEAD
-   if(const int equipId = equipment->GetEquipAtSlot(unequipSlot)) {
-      if(backpack->Count() < backpack->GetItemMax()) {
-         FMyItem   changedEquip = FMyItem(equipId);
-         backpack->AddItem(changedEquip);
-         equipment->Unequip(unequipSlot);
-         ItemChangeEvents::OnEquipmentChangedEvent.Broadcast(this, changedEquip);
-      } else
-         URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Equipment", "NotEnoughSpaceUnequip", "Not enough space to unequip!"));
-=======
    if(const int equipId = equipment->GetEquipAtSlot(unequipSlot))
    {
       if(backpack->Count() < backpack->GetItemMax())
@@ -338,92 +247,11 @@ void ABaseHero::OnSpellCasted(TSubclassOf<UMySpell> spellCasted)
          GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemUsed().Broadcast(this, itemUseBackpackUpdate);
          currentItemId = INDEX_NONE;
       }
->>>>>>> componentrefactor
    }
 }
 
 void ABaseHero::OnSpellLearned(const ABaseHero& heroThatLearnedSpell, TSubclassOf<UMySpell> spellLearned)
 {
-<<<<<<< HEAD
-   equipment->SwapEquips(equipSlot1, equipSlot2);
-   ItemChangeEvents::OnEquipmentChangedEvent.Broadcast(this, FMyItem(-1, 0));
-}
-
-void ABaseHero::OnSpellCasted(TSubclassOf<UMySpell> spellCasted)
-{
-   // If the spell was triggered due to using an item, then consume that item.
-   if(currentItemId.GetValue()) {
-      if(backpack->FindItem(currentItemId.GetValue()) != INDEX_NONE) { backpack->RemoveItem(FMyItem(currentItemId.GetValue())); }
-   }
-}
-
-void ABaseHero::OnItemSelected(int hIndex, int itemUsedSlotIndex)
-{
-   const FMyItem      itemUsed = GetBackpack().GetItem(itemUsedSlotIndex);
-   const FGameplayTag itemType = UItemManager::Get().GetItemInfo(itemUsed.id)->itemType;
-
-   if(this->heroIndex == hIndex) {
-      if(itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Equippable"))) {
-         Equip(itemUsedSlotIndex);
-         ItemChangeEvents::OnItemUsedEvent.Broadcast(this, itemUsed);
-      } else if(itemType.MatchesTag(UGameplayTagsManager::Get().RequestGameplayTag("Item.Consumeable"))) {
-         GetHeroController()->BeginUseItem(itemUsed.id, itemUsedSlotIndex);
-         ItemChangeEvents::OnItemUsedEvent.Broadcast(this, itemUsed);
-      } else {
-         UE_LOG(LogTemp, Log, TEXT("ERROR WITH ITEM TYPE"));
-      }
-   }
-}
-
-void ABaseHero::OnSpellLearned(TSubclassOf<UMySpell> spellLearned)
-{
-   --skillPoints;
-}
-
-void ABaseHero::OnSpellUpgraded(TSubclassOf<UMySpell> spellLearned)
-{
-   --skillPoints;
-}
-
-void ABaseHero::LoadSavedTriggers() const
-{
-   TArray<FTriggerData> savedTriggers;
-   Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode())->GetTriggerManager()->GetTriggerRecords().MultiFind(*GetGameName().ToString(), savedTriggers);
-   for(FTriggerData& finishedTriggerActivation : savedTriggers) {
-      controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
-   }
-}
-
-void ABaseHero::GiveItemAbilities() const
-{
-   // TODO: Maybe delay this to when the individual items are actually loaded?
-   for(FName& id : UItemManager::Get().GetAllConsumableIDs()) {
-      TSubclassOf<UMySpell> itemAbilityClass = UItemManager::Get().GetConsumableInfo(id)->abilityClass;
-      if(IsValid(itemAbilityClass)) GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(itemAbilityClass.GetDefaultObject(), 1));
-   }
-}
-
-bool ABaseHero::OnItemPickup(FMyItem& itemPickedUp) const
-{
-   if(!backpack->AddItem(itemPickedUp)) {
-      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Pickup", "NoSpaceLeft", "No space in inventory to pickup everything!"));
-      return false;
-   }
-   ItemChangeEvents::OnItemPickedUpEvent.Broadcast(this, itemPickedUp);
-   return true;
-}
-
-void ABaseHero::OnItemDropped(FMyItem& itemDropped, int droppedItemSlot)
-{
-   if(!backpack->IsEmptySlot(droppedItemSlot)) {
-      backpack->RemoveItemAtSlot(droppedItemSlot, itemDropped.count);
-      ItemChangeEvents::OnItemDroppedEvent.Broadcast(this, itemDropped);
-   } else {
-      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Drop", "NoItemAtSlot", "Attempting to drop nothing..."));
-   }
-}
-
-=======
    if(&heroThatLearnedSpell == this)
    {
       --skillPoints;
@@ -484,34 +312,10 @@ void ABaseHero::OnItemDropped(FMyItem& itemDropped, int droppedItemSlot)
    }
 }
 
->>>>>>> componentrefactor
 void ABaseHero::OnEquipped(int equipID, bool isEquip) const
 {
    FEquipLookupRow* e = UItemManager::Get().GetEquipInfo(equipID);
    for(auto& x : e->stats.defaultAttributes)
-<<<<<<< HEAD
-      statComponent->ModifyStats<true>(statComponent->GetAttributeBaseValue(x.att) + x.defaultValue * (2 * isEquip - 1), x.att);
-
-   for(auto& x : e->stats.defaultUnitScalingStats)
-      statComponent->ModifyStats<true>(statComponent->GetSkillBaseValue(x.stat) + x.defaultValue * (2 * isEquip - 1), x.stat);
-
-   for(auto& x : e->stats.defaultVitals)
-      statComponent->ModifyStats<true>(statComponent->GetVitalBaseValue(x.vit) + x.defaultValue * (2 * isEquip - 1), x.vit);
-
-   for(auto& x : e->stats.defaultMechanics)
-      statComponent->ModifyStats<true>(statComponent->GetMechanicBaseValue(x.mech) + x.defaultValue * (2 * isEquip - 1), x.mech);
-}
-
-void ABaseHero::SetSelected(bool value)
-{
-   Super::SetSelected(value);
-   if(value) {
-      controllerRef->GetBasePlayer()->selectedHeroes.AddUnique(this);
-   } else {
-      controllerRef->GetBasePlayer()->selectedHeroes.RemoveSingle(this);
-   }
-}
-=======
    {
       statComponent->ModifyStats<true>(statComponent->GetAttributeBaseValue(x.att) + x.defaultValue * (2 * isEquip - 1), x.att);
    }
@@ -544,4 +348,3 @@ void ABaseHero::SetUnitSelected(bool value)
       controllerRef->GetBasePlayer()->RemoveSelectedHero(this);
    }
 }
->>>>>>> componentrefactor

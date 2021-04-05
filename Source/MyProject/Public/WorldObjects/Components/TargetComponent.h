@@ -28,11 +28,7 @@ class MYPROJECT_API UTargetComponent : public UActorComponent
 
    /** Get data on our spell target.  Is reset after the spell is successfully cast*/
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
-<<<<<<< HEAD
-   FGameplayAbilityTargetDataHandle GetTargetData() const { return Visit(TargetDataVisitor(), targetData->target); }
-=======
    FGameplayAbilityTargetDataHandle GetTargetData() const { return Visit(TargetDataVisitor(), targetData.target); }
->>>>>>> componentrefactor
 
    /**
     * Get data on targeted unit.  Used in single target spell casting and attacking.
@@ -40,32 +36,6 @@ class MYPROJECT_API UTargetComponent : public UActorComponent
     * Faster to use this then cast GetTargetData() to some unit type
     */
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-<<<<<<< HEAD
-   AUnit* GetTargetUnit() const { return targetData->target.Get<AUnit*>(); }
-
-   /** Checks to see if the variant is currently representing a target unit*/
-   bool IsTargetingUnit() const { return targetData->target.TryGet<AUnit*>() != nullptr; }
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   AActor* GetTargetActor() const { return targetData->target.Get<AActor*>(); }
-
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   FVector GetTargetLocation() const { return targetData->target.Get<FVector>(); }
-
-   /** Use this to get the location of a target despite whatever kind of object is stored in the target variant*/
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
-   FVector GetTargetLocationVisit() const { return Visit(TargetLocationVisitor(), targetData->target); }
-
-   FORCEINLINE void SetTarget(AUnit* value) const { targetData->target.Set<AUnit*>(value); }
-   FORCEINLINE void SetTarget(AActor* value) const { targetData->target.Set<AActor*>(value); }
-   FORCEINLINE void SetTarget(FVector value) const { targetData->target.Set<FVector>(value); }
-   FORCEINLINE void SetTarget(FGameplayAbilityTargetDataHandle value) const { targetData->target.Set<FGameplayAbilityTargetDataHandle>(value); }
-
-   void ResetTarget() const { targetData->ResetTarget(); }
-
-   AActor* GetTargetActorOrUnit() const;
-
-=======
    AUnit* GetTargetUnit() const { return targetData.target.Get<AUnit*>(); }
 
    /** Checks to see if the variant is currently representing a target unit*/
@@ -93,7 +63,6 @@ class MYPROJECT_API UTargetComponent : public UActorComponent
    /** Checks to see if our target is of a certain type */
    bool IsTargetingTypeIndex(int targetTypeIndex) const;
 
->>>>>>> componentrefactor
    /** Check to see if we're targeting ourselves with a spell*/
    bool IsTargetingSelf() const;
 
@@ -103,26 +72,6 @@ class MYPROJECT_API UTargetComponent : public UActorComponent
     * when dealing with unit tasks.
     */
    UFUNCTION(BlueprintCallable, Category = "CombatAccessors")
-<<<<<<< HEAD
-   void SetTargetUnit(AUnit* value) const { targetData->target.Set<AUnit*>(value); }
-
-   /** Intended use for targeting an actor that is not a unit*/
-   UFUNCTION(BlueprintCallable, Category = "CombatAccessors")
-   void SetTargetActor(AActor* value) const { targetData->target.Set<AActor*>(value); }
-
-   /** Used to target an actor that is not a unit*/
-   UFUNCTION(BlueprintCallable, Category = "CombatAccessors")
-   void SetTargetLocation(FVector value) const { targetData->target.Set<FVector>(value); }
-
-   UFUNCTION(BlueprintCallable, Category = "CombatAccessors")
-   void SetSpellTarget(FGameplayAbilityTargetDataHandle value) const { targetData->target.Set<FGameplayAbilityTargetDataHandle>(value); }
-
-   void BeginPlay() override;
-
- private:
-   /** Holds data for all this unit's current possible targets. Pointer to make class smaller size (hot cold splitting) */
-   TUniquePtr<UnitTargetData> targetData;
-=======
    void SetTargetUnit(AUnit* value) { targetData.target.Set<AUnit*>(value); }
 
    /** Intended use for targeting an actor that is not a unit*/
@@ -138,7 +87,6 @@ class MYPROJECT_API UTargetComponent : public UActorComponent
 
  private:
    UnitTargetData targetData;
->>>>>>> componentrefactor
 
    /** Used to get the location of a target (depending on what type it is) */
    class TargetLocationVisitor

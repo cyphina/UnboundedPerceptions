@@ -14,23 +14,7 @@ class MYPROJECT_API UHealthbarComp : public UWidgetComponent
 {
    GENERATED_BODY()
 
-<<<<<<< HEAD
-   UPROPERTY()
-   AUnit*                   unitRef;
-
-   float                    healthPercentage;
-
-   UPROPERTY()
-   UHealthbar*              healthBar;
-
-   TSubclassOf<UUserWidget> widgetClass;
-
-   void OnDamageReceived(const FUpDamage& damage);
-
-public:
-=======
  public:
->>>>>>> componentrefactor
    UPROPERTY(BlueprintReadWrite)
    UUserWidget* widgetRef;
 

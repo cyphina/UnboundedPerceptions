@@ -14,25 +14,15 @@
 
 #include "LevelSaveStructs.h"
 #include "RTSIngameWidget.h"
-<<<<<<< HEAD
-
-AStorageContainer::AStorageContainer() :
-   AInteractableBase()
-=======
 #include "StorageInventory.h"
 
 AStorageContainer::AStorageContainer() : AInteractableBase()
->>>>>>> componentrefactor
 {
    sphereCollision = CreateDefaultSubobject<USphereComponent>(FName("InteractRange"));
    sphereCollision->SetupAttachment(sceneLocation);
    sphereCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
    sphereCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
-<<<<<<< HEAD
-   sphereCollision->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Overlap);
-=======
    sphereCollision->SetCollisionResponseToChannel(ALLY_OBJECT_CHANNEL, ECR_Overlap);
->>>>>>> componentrefactor
    sphereCollision->SetSphereRadius(200.f);
    sphereCollision->SetUsingAbsoluteScale(true);
 }
@@ -44,15 +34,10 @@ void AStorageContainer::BeginPlay()
    backpack = NewObject<UBackpack>(this);
    backpack->SetItemMax(maxStorage);
 
-<<<<<<< HEAD
-   if(!backpack->AddItems(initialItems))
-   UE_LOG(LogTemp, Error, TEXT("Problem setting up initial items for storage container %s. Not enough space to add all items."), *GetName());
-=======
    if(!ensure(Algo::AllOf(backpack->AddItems(initialItems))))
    {
       UE_LOG(LogTemp, Error, TEXT("Problem setting up initial items for storage container %s. Not enough space to add all items."), *GetName());
    }
->>>>>>> componentrefactor
 
    sphereCollision->OnComponentEndOverlap.AddDynamic(this, &AStorageContainer::OnLeaveRange);
 }
@@ -79,11 +64,7 @@ FVector AStorageContainer::GetInteractableLocation_Implementation() const
 
 void AStorageContainer::OnLeaveRange(UPrimitiveComponent* overlappedComp, AActor* otherActor, UPrimitiveComponent* otherComp, int otherBodyIndex)
 {
-<<<<<<< HEAD
-   if(GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Storage) && GetPlayerControllerRef()->GetBasePlayer()->heroInBlockingInteraction == otherActor)
-=======
    if(GetWidgetToggler() && GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Storage) && GetPlayerControllerRef()->GetBasePlayer()->heroInBlockingInteraction == otherActor)
->>>>>>> componentrefactor
    {
       GetHUDProvider()->GetIngameHUD()->GetStorageHUD()->SetBackPack(nullptr);
       GetWidgetToggler()->AddHUD(static_cast<uint8>(EHUDs::HS_Storage));
@@ -113,15 +94,11 @@ void AStorageContainer::LoadInteractable(FMapSaveInfo& mapData)
 
 TScriptInterface<IWidgetToggler> AStorageContainer::GetWidgetToggler() const
 {
-<<<<<<< HEAD
-   return GetPlayerControllerRef()->GetWidgetToggler();
-=======
    if(GetPlayerControllerRef())
    {
       return GetPlayerControllerRef()->GetWidgetToggler();
    }
    return nullptr;
->>>>>>> componentrefactor
 }
 
 TScriptInterface<IHUDProvider> AStorageContainer::GetHUDProvider() const

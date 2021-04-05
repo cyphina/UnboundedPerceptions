@@ -4,11 +4,8 @@
 #include "UI/UserWidgetExtensions/MyUserWidget.h"
 #include "MainWidget.generated.h"
 
-<<<<<<< HEAD
-=======
 class UKeyRemapWidget;
 class USaveLoadMenu;
->>>>>>> componentrefactor
 class URTSIngameWidget;
 class USettingsMenu;
 class UBreakMenu;
@@ -29,9 +26,6 @@ public:
 
    UBreakMenu* GetBreakMenu() const { return breakMenu; }
 
-<<<<<<< HEAD
- protected:
-=======
    USettingsMenu* GetSettingsMenu() const { return settingsMenu; }
 
    USaveLoadMenu* GetSaveLoadMenu() const { return saveLoadMenu; }
@@ -43,7 +37,6 @@ protected:
    UPROPERTY(BlueprintReadOnly)
    class AHUDManager* hudManagerRef;
 
->>>>>>> componentrefactor
    UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
    URTSIngameWidget* ingameWidget;
 

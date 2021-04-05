@@ -15,12 +15,6 @@
 
 void UItemSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
 {
-<<<<<<< HEAD
-   const int backpackIndex = inventoryRef->GetInventoryView()->GetCorrespondingBackpackIndex(slotIndex);
-   const int itemId        = inventoryRef->GetBackpack()->GetItem(backpackIndex).id;
-   if(itemId > 0)
-      inventoryRef->UseItemAtInventorySlot(backpackIndex);
-=======
    if(inventoryRef->GetBackpackItemAtSlot(slotIndex))
    {
       UDraggedActionWidget* dragVisual = CreateDragIndicator();
@@ -34,21 +28,10 @@ void UItemSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointer
       dragOp->dragWidget          = inventoryRef;
       OutOperation                = MoveTemp(dragOp);
    }
->>>>>>> componentrefactor
 }
 
 bool UItemSlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
-<<<<<<< HEAD
-   const int backpackIndex = inventoryRef->GetInventoryView()->GetCorrespondingBackpackIndex(slotIndex);
-   if(inventoryRef->GetBackpack()->IsEmptySlot(backpackIndex))
-      return;
-   const int itemId = inventoryRef->GetBackpack()->GetItem(backpackIndex).id;
-
-   if(itemId > 0) {
-      const auto itemInfo = UItemManager::Get().GetItemInfo(itemId);
-      if(itemInfo->itemType.MatchesTag(FGameplayTag::RequestGameplayTag("Item.Equippable", false))) {
-=======
    if(const URTSItemDrag* itemDrag = Cast<URTSItemDrag>(InOperation))
    {
       if(UHeroInventory* heroInventory = Cast<UHeroInventory>(itemDrag->dragWidget))
@@ -86,7 +69,6 @@ void UItemSlot::ShowDesc(UToolTipWidget* tooltip)
       const auto itemInfo = UItemManager::Get().GetItemInfo(item.id);
       if(itemInfo->itemType.MatchesTag(FGameplayTag::RequestGameplayTag("Item.Equippable", false)))
       {
->>>>>>> componentrefactor
          const FText rarityName = UItemFunctionLibrary::GetRarityText(itemInfo->rarity);
          const FText bonusDesc  = UItemFunctionLibrary::GetBonusDescription(item.id);
          tooltip->SetupTTBoxText(itemInfo->name, rarityName, itemInfo->description, bonusDesc, FText::GetEmpty());

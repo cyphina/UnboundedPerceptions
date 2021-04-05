@@ -1,35 +1,17 @@
 #pragma once
 
 #include "ECursorStates.h"
-<<<<<<< HEAD
-=======
 #include "Item.h"
->>>>>>> componentrefactor
 #include "GameFramework/Pawn.h"
 #include "GameBaseHelpers/CursorClickFunctionality.h"
 #include "RTSPawn.generated.h"
 
-<<<<<<< HEAD
-=======
 class UBackpack;
 class ARTSPawn;
->>>>>>> componentrefactor
 class ABaseHero;
 class AUnit;
 class AUserInput;
 class AAlly;
-<<<<<<< HEAD
-class ICursorClickFunctionality;
-class UCameraComponent;
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllySelected, bool, ToggleSelect);       // ToggleAllySelect, SelectAllyUnit, SelectionRect
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllyDeselected, AAlly*, DeselectedAlly); // ToggleAllyDeselect,
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGroundSelected);                                  // SelectGround,
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);                                    // SelectEnemy
-
-/**
- * @brief The RTS Pawn holds controls related to main gameplay. Contrast this to the UserInput which holds control logic for all gameplay types (it's consistent even if we
-=======
 class CursorClickFunctionalityBase;
 class USkillSlot;
 class UCameraComponent;
@@ -39,7 +21,6 @@ DECLARE_EVENT_OneParam(ARTSPawn, FOnGroupTabbed, AUnit*);
 /**
  * @brief This is the object that represents the player controlling all the units so the camera is attached to this pawn.
  * The RTS Pawn holds controls related to main gameplay. Contrast this to the UserInput which holds control logic for all gameplay types (it's consistent even if we
->>>>>>> componentrefactor
  * swap out pawn.
  */
 UCLASS()
@@ -59,14 +40,11 @@ class MYPROJECT_API ARTSPawn : public APawn
 
  protected:
    void BeginPlay() override;
-<<<<<<< HEAD
-=======
    void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
    void Tick(float DeltaTime) override;
    void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
    void PossessedBy(AController* newController) override;
    void UnPossessed() override;
->>>>>>> componentrefactor
 
    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    class USceneComponent* scene;
@@ -80,14 +58,6 @@ class MYPROJECT_API ARTSPawn : public APawn
    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    class USpringArmComponent* mapArm;
 
-<<<<<<< HEAD
-   void Tick(float DeltaTime) override;
-   void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-   void PossessedBy(AController* newController) override;
-   void UnPossessed() override;
-
-=======
->>>>>>> componentrefactor
  private:
    UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true"))
    AUserInput* controllerRef;
@@ -122,11 +92,7 @@ class MYPROJECT_API ARTSPawn : public APawn
    UPROPERTY(BlueprintReadOnly, Category = "Control Settings")
    TArray<TEnumAsByte<EObjectTypeQuery>> rightClickQueryObjects;
 
-<<<<<<< HEAD
-   /**Similar to change cursor but used for changing to secondary cursors.  If cursorType is not a secondary cursor, toggles off secondary cursors*/
-=======
    /** Similar to change cursor but used for changing to secondary cursors.  If cursorType is not a secondary cursor, toggles off secondary cursors*/
->>>>>>> componentrefactor
    void SetSecondaryCursor(const ECursorStateEnum cursorType = ECursorStateEnum::Select);
 
    // Changes cursor to be a different picture.  Called when hovering over different objects.  Changes hardware cursor and cursorState
@@ -185,12 +151,9 @@ class MYPROJECT_API ARTSPawn : public APawn
    FTimerHandle autoClickTimerHandle;
 
  private:
-<<<<<<< HEAD
-=======
    UFUNCTION()
    void ToggleSelectionLock() { bSelectionLockActive = !bSelectionLockActive; }
 
->>>>>>> componentrefactor
    /**Stores last actor hit by the cursor hover trace.  Used so we don't retrace if we hit the same actor, but sometimes canceling actions like clicking the ground should
     *reset this*/
    UPROPERTY()
@@ -321,11 +284,6 @@ class MYPROJECT_API ARTSPawn : public APawn
    void LeftClickReleased();
    void LeftClickShift();
 
-<<<<<<< HEAD
-   void TabThroughSelection();
-   void TabThroughGroup() const;
-   void TabSingleSelection() const;
-=======
    /** When we press tab to cycle through our selected or unselected units. */
    void TabChangeSelection();
 
@@ -336,10 +294,8 @@ class MYPROJECT_API ARTSPawn : public APawn
    void TabSingleSelection() const;
 
    void AttackMoveInitiate();
->>>>>>> componentrefactor
 
    void UseAbility(int abilityIndex);
-
    /** Delegate to pass to BindAction so we can have a parameter for useability*/
    DECLARE_DELEGATE_OneParam(FAbilityUseDelegate, int);
 
@@ -357,14 +313,11 @@ class MYPROJECT_API ARTSPawn : public APawn
    uint8 controlBeingHeldIndex = 0;
 
    /** Pans the camera to the first unit in the control group if we double tap the control select button*/
-<<<<<<< HEAD
-=======
    FTimerHandle ControlGroupDoupleTapHandle;
 
    void ToggleStayInFormation() { bStayInFormation = !bStayInFormation; }
 
    bool bStayInFormation = false;
->>>>>>> componentrefactor
 
    UFUNCTION()
    void ControlGroupDoubleTapTimer();
@@ -387,13 +340,6 @@ class MYPROJECT_API ARTSPawn : public APawn
    void OnEffectSlotSelected(int slotIndex);
    void OnStorageInventoryClosed();
 
-<<<<<<< HEAD
-#pragma region selection
- public:
-   /* If we need the ally that ws just selected, we can get it from baseplayer selectedAllies last */
-   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnAllySelected OnAllySelectedDelegate;
-=======
    UFUNCTION()
    void OnItemSlotDroppedFromInventory(int dragSlotIndex, int dropSlotIndex, UBackpack* dragPack, UBackpack* dropPack);
 
@@ -402,7 +348,6 @@ class MYPROJECT_API ARTSPawn : public APawn
 
    UFUNCTION()
    void OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex);
->>>>>>> componentrefactor
 
    UFUNCTION()
    void OnSkillSlotDroppedSB(int dragSlotIndex, int dropSlotIndex);

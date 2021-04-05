@@ -5,10 +5,7 @@
 #include "RTSDamageCalculation.generated.h"
 
 class AUnit;
-<<<<<<< HEAD
-=======
 class UCurveFloat;
->>>>>>> componentrefactor
 
 /**
  * Damage calculation is used to calculate the damage.  Grabs information from target and receiving unit to figure out damage amounts, as well as
@@ -21,9 +18,6 @@ class MYPROJECT_API URTSDamageCalculation : public UGameplayEffectExecutionCalcu
 {
    GENERATED_UCLASS_BODY()
 
-<<<<<<< HEAD
- protected:    
-=======
  public:
    /** DEPRECATED: Create some text to display the damage dealt to this unit */
    static void ShowDamageDealt(const FUpDamage& damageInfo);
@@ -32,7 +26,6 @@ class MYPROJECT_API URTSDamageCalculation : public UGameplayEffectExecutionCalcu
    void CalculateAccuracy(FUpDamage& d, FGameplayTagContainer& effects) const;
 
  protected:
->>>>>>> componentrefactor
    void BroadcastDamageEvents(FUpDamage& d) const;
 
    /** Damage a target from a unit source*/
@@ -53,17 +46,6 @@ class MYPROJECT_API URTSDamageCalculation : public UGameplayEffectExecutionCalcu
     */
    void CalculateDamageReduction(FUpDamage& damage, FGameplayTagContainer& effects) const;
 
-<<<<<<< HEAD
-   /** Create some text to display the damage dealt to this unit */
-   static void ShowDamageDealt(UWorld* worldRef, const FUpDamage& damageInfo);
-
-   /** Helper function to quickly calculate attack and defense bonuses due to affinity and resistance */
-   static void CalculatePiercing(AUnit* unit, FUpDamage& d, bool isAtt);
-   static void PrintDamageCalcsBeforeProcessing(FUpDamage& d, int damageRange);
-   static void PrintPreDamageReductionValues(FUpDamage& d);
-   static void PrintCritOccurrence(FUpDamage& d);
-   static void PrintFinalCalculatedDamage(FUpDamage& d);
-=======
    /** Helper function to quickly calculate attack and defense bonuses due to affinity and resistance */
    static void CalculatePiercing(FUpDamage& d);
 
@@ -78,5 +60,4 @@ class MYPROJECT_API URTSDamageCalculation : public UGameplayEffectExecutionCalcu
 
  private:
    static UCurveFloat* piercingBonusCurve;
->>>>>>> componentrefactor
 };

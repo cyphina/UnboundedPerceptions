@@ -12,15 +12,11 @@ UUpStatComponent::UUpStatComponent()
 
 void UUpStatComponent::UpdateStats(const FGameplayAttribute& updatedStat) const
 {
-<<<<<<< HEAD
-   baseC->StatUpdate(updatedStat);
-=======
    // There's one time at the start this can be called without a base character since this function is called when we initialize the base attribute values in baseC
    if(baseC)
    {
       baseC->StatUpdate(updatedStat);
    }
->>>>>>> componentrefactor
 }
 
 void UUpStatComponent::BeginPlay()
@@ -28,19 +24,13 @@ void UUpStatComponent::BeginPlay()
    Super::BeginPlay();
    AUnit* unitOwnerRef = Cast<AUnit>(GetOwner());
 
-<<<<<<< HEAD
-   baseC = MakeUnique<FBaseCharacter>(*const_cast<UMyAttributeSet*>(unitOwnerRef->GetAbilitySystemComponent()->AddSet<UMyAttributeSet>()));
-=======
    baseC = MakeUnique<FBaseCharacter>(*const_cast<URTSAttributeSet*>(unitOwnerRef->GetAbilitySystemComponent()->AddSet<URTSAttributeSet>()));
->>>>>>> componentrefactor
 }
 
 void UUpStatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
-<<<<<<< HEAD
-=======
 
 FOnStatsUpdated& UUpStatComponent::OnBaseStatsUpdated() const
 {
@@ -97,4 +87,3 @@ float UUpStatComponent::GetElementalStatValueFromElemTag(const FGameplayTag& ele
       return GetSkillAdjValue(map[elemTag]);
    }
 }
->>>>>>> componentrefactor

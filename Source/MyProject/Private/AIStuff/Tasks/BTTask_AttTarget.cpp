@@ -3,22 +3,12 @@
 #include "MyProject.h"
 #include "BTTask_AttTarget.h"
 #include "SpellDataLibrary.h"
-<<<<<<< HEAD
-=======
 #include "TargetComponent.h"
->>>>>>> componentrefactor
 #include "TargetedAttackComponent.h"
 #include "WorldObjects/Unit.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIControllers/UnitController.h"
 #include "UnitMessages.h"
-<<<<<<< HEAD
-
-UBTTask_AttTarget::UBTTask_AttTarget()
-{
-   NodeName    = "Attack Target";
-   bNotifyTick = false;
-=======
 #include "EnvironmentQuery/EnvQuery.h"
 #include "EnvironmentQuery/EnvQueryManager.h"
 
@@ -26,24 +16,10 @@ UBTTask_AttTarget::UBTTask_AttTarget()
 {
    NodeName     = "Attack Target";
    bNotifyTick  = false;
->>>>>>> componentrefactor
 }
 
 EBTNodeResult::Type UBTTask_AttTarget::ExecuteTask(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory)
 {
-<<<<<<< HEAD
-   AUnitController* AICon = Cast<AUnitController>(ownerComp.GetAIOwner());
-   if(AICon) {
-      AUnit* target = Cast<AUnit>(ownerComp.GetBlackboardComponent()->GetValueAsObject("target"));
-      if(target && USpellDataLibrary::IsAttackable(target->GetAbilitySystemComponent())) {
-         AICon->FindComponentByClass<UTargetedAttackComponent>()->BeginAttack(target);
-         WaitForMessage(ownerComp, UnitMessages::AIMessage_TargetLoss);
-         WaitForMessage(ownerComp, UnitMessages::AIMessage_Stunned);
-         return EBTNodeResult::InProgress;
-      }
-   } else {
-      ownerComp.GetBlackboardComponent()->SetValueAsObject("target", nullptr);
-=======
    AUnitController* unitController = Cast<AUnitController>(ownerComp.GetAIOwner());
 
    if(unitController)
@@ -76,7 +52,6 @@ EBTNodeResult::Type UBTTask_AttTarget::ExecuteTask(UBehaviorTreeComponent& owner
             }
          }
       }
->>>>>>> componentrefactor
    }
 
    return EBTNodeResult::Failed;
@@ -84,11 +59,7 @@ EBTNodeResult::Type UBTTask_AttTarget::ExecuteTask(UBehaviorTreeComponent& owner
 
 void UBTTask_AttTarget::OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FName Message, int32 RequestID, bool bSuccess)
 {
-<<<<<<< HEAD
-   bSuccess = Message != UnitMessages::AIMessage_Stunned & Message != UnitMessages::AIMessage_TargetLoss;
-=======
    bSuccess = Message != UnitMessages::AIMessage_TargetLoss & Message != UnitMessages::AIMessage_Stunned;
->>>>>>> componentrefactor
    Super::OnMessage(OwnerComp, NodeMemory, Message, RequestID, bSuccess);
 }
 

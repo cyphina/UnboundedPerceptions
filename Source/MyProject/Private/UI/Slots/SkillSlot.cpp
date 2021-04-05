@@ -10,22 +10,16 @@
 
 #include "AbilitySystemComponent.h"
 #include "BasePlayer.h"
-<<<<<<< HEAD
-#include "ManualSpellComponent.h"
-#include "RTSAbilitySystemComponent.h"
-=======
 
 #include "PanelWidget.h"
 #include "RTSAbilitySystemComponent.h"
 #include "RTSActionBarSkillDrag.h"
 #include "RTSSpellbookDrag.h"
 #include "SpellFunctionLibrary.h"
->>>>>>> componentrefactor
 #include "ToolTipWidget.h"
 #include "UIDelegateContext.h"
 
 #include "Materials/MaterialInstanceDynamic.h"
-#include "SpellSystem/SpellDelegateStore.h"
 #include "UMG/Public/Components/Image.h"
 #include "UMG/Public/Components/TextBlock.h"
 
@@ -39,11 +33,6 @@ USkillSlot::USkillSlot(const FObjectInitializer& o) : UActionSlot(o)
    // static ConstructorHelpers::FObjectFinder<UCurveFloat> curve(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/StandardLinear"));
    // checkf(curve.Object, TEXT("Curve for ability timelines not found!"))
 
-<<<<<<< HEAD
-   const ConstructorHelpers::FObjectFinder<UMaterialInterface> loadedBaseMaterial(TEXT("/Game/RTS_Tutorial/Materials/UIMats/SkillMats/RadialMatSkill_Instance"));
-   checkf(loadedBaseMaterial.Object, TEXT("Material interface for skillslots not found!"));
-   matInstance = loadedBaseMaterial.Object;
-=======
    const ConstructorHelpers::FObjectFinder<UMaterialInterface> loadedCDMat(TEXT("/Game/RTS_Tutorial/Materials/UIMats/SkillMats/MI_RadialSkillCD"));
    checkf(loadedCDMat.Object, TEXT("Material interface for skillslots not found!"));
    cdMatInstance = loadedCDMat.Object;
@@ -51,7 +40,6 @@ USkillSlot::USkillSlot(const FObjectInitializer& o) : UActionSlot(o)
    const ConstructorHelpers::FObjectFinder<UMaterialInterface> loadedSkillMat(TEXT("/Game/RTS_Tutorial/Materials/UIMats/SkillMats/RadialMatSkill_Instance"));
    checkf(loadedSkillMat.Object, TEXT("Material interface for skillslots not found!"));
    skillMatInstance = loadedSkillMat.Object;
->>>>>>> componentrefactor
 }
 
 void USkillSlot::NativeOnInitialized()
@@ -61,22 +49,6 @@ void USkillSlot::NativeOnInitialized()
    cdDMatInst    = UMaterialInstanceDynamic::Create(cdMatInstance, this);
    actionImage->SetBrushFromMaterial(imageDMatInst);
    Image_CD->SetBrushFromMaterial(cdDMatInst);
-<<<<<<< HEAD
-}
-
-void USkillSlot::UpdateCD()
-{
-   const auto  abilityComponent = GetOwningAbilityComponent();
-   const float cdTimeRemaining =
-       abilityComponent->GetAbilities()[slotIndex].GetDefaultObject()->GetCooldownTimeRemaining(GetOwningAbilityComponent()->AbilityActorInfo.Get());
-   const float cdDuration = abilityComponent->GetAbilities()[slotIndex].GetDefaultObject()->GetCDDuration(GetOwningAbilityComponent());
-
-   if(LIKELY(cdTimeRemaining > 0)) {
-      cdDMatInst->SetScalarParameterValue("Percent", cdTimeRemaining / cdDuration);
-      Text_CDTime->SetText(FText::AsNumber(static_cast<int>(cdTimeRemaining)));
-   } else {
-      OnCDFinished();
-=======
 }
 
 void USkillSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
@@ -108,7 +80,6 @@ bool USkillSlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent&
    {
       GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedEvent.Broadcast(dragOp->slotIndex, slotIndex);
       return true;
->>>>>>> componentrefactor
    }
    if(URTSSpellbookDrag* spellbookDragOp = Cast<URTSSpellbookDrag>(InOperation))
    {
@@ -118,17 +89,6 @@ bool USkillSlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent&
    return false;
 }
 
-<<<<<<< HEAD
-void USkillSlot::OnCDFinished()
-{
-   GetWorld()->GetTimerManager().ClearTimer(cooldownProgressTimer);
-   Image_CD->SetVisibility(ESlateVisibility::Hidden);
-   Text_CDTime->SetVisibility(ESlateVisibility::Hidden);
-}
-
-void USkillSlot::ShowCooldown()
-{
-=======
 void USkillSlot::UpdateSkillSlot(TSubclassOf<UMySpell> spellClass)
 {
    if(IsValid(spellClass))
@@ -196,7 +156,6 @@ void USkillSlot::OnCDFinished()
 
 void USkillSlot::ShowCooldown()
 {
->>>>>>> componentrefactor
    GetWorld()->GetTimerManager().SetTimer(cooldownProgressTimer, this, &USkillSlot::UpdateCD, .1f, true, 0);
    ShowCDVisuals();
 }
@@ -209,17 +168,12 @@ void USkillSlot::ShowCDVisuals() const
 
 URTSAbilitySystemComponent* USkillSlot::GetOwningAbilityComponent() const
 {
-<<<<<<< HEAD
-   if(const AUnit* focusedUnit = GetOwningPlayer<AUserInput>()->GetBasePlayer()->GetFocusedUnit()) {
-      if(URTSAbilitySystemComponent* abilityComp = focusedUnit->FindComponentByClass<URTSAbilitySystemComponent>()) { return abilityComp; }
-=======
    if(const AUnit* focusedUnit = GetOwningPlayer<AUserInput>()->GetBasePlayer()->GetFocusedUnit())
    {
       if(URTSAbilitySystemComponent* abilityComp = focusedUnit->FindComponentByClass<URTSAbilitySystemComponent>())
       {
          return abilityComp;
       }
->>>>>>> componentrefactor
    }
    return nullptr;
 }
@@ -232,14 +186,9 @@ void USkillSlot::SetSlotImage(UTexture2D* image)
       SetImageFromMaterial(imageDMatInst);
       cdDMatInst->SetTextureParameterValue("RadialTexture", image); // update the cooldown image
       Image_CD->SetBrushFromMaterial(cdDMatInst);
-<<<<<<< HEAD
-      SetIsEnabled(true);
-   } else {
-=======
    }
    else
    {
->>>>>>> componentrefactor
       imageDMatInst->SetTextureParameterValue("RadialTexture", defaultSlotTexture);
       SetImageFromMaterial(imageDMatInst);
    }
@@ -247,62 +196,12 @@ void USkillSlot::SetSlotImage(UTexture2D* image)
 
 void USkillSlot::ResetSkillSlot()
 {
-<<<<<<< HEAD
-   SpellHUDEvents::OnSpellSlotReplacedEvent.Execute(slotIndex, spellClass);
-   if(IsValid(spellClass)) {
-      UMySpell* spellObject = spellClass.GetDefaultObject();
-
-      SetSlotImage(spellObject->spellDefaults.image);
-
-      if(URTSAbilitySystemComponent* ownerAbilitySystemComp = GetOwningAbilityComponent()) {
-         const bool bIsSpellOffCooldown = spellObject->GetCooldownTimeRemaining(ownerAbilitySystemComp->AbilityActorInfo.Get()) > SMALL_NUMBER;
-
-         if(bIsSpellOffCooldown) {
-            ShowCooldown();
-         } else {
-            OnCDFinished();
-         }
-      }
-   } else {
-      ResetSkillSlot();
-   }
-}
-
-void USkillSlot::ResetSkillSlot()
-{
-   if(auto ownerAbilityComp = GetOwningAbilityComponent()) {
-      SpellHUDEvents::OnSpellSlotReplacedEvent.Execute(slotIndex, nullptr);
-      SetSlotImage(nullptr);
-      OnCDFinished();
-   }
-=======
    SetSlotImage(defaultSlotTexture);
    OnCDFinished();
->>>>>>> componentrefactor
 }
 
 void USkillSlot::ShowDesc(UToolTipWidget* tooltip)
 {
-<<<<<<< HEAD
-   if(const auto ownerAbilityComp = GetOwningAbilityComponent()) {
-      if(const TSubclassOf<UMySpell> spellClass = ownerAbilityComp->GetSpellAtSlot(slotIndex)) {
-         UMySpell*     spellAtSlot       = spellClass.GetDefaultObject();
-         const FString relevantSpellInfo = "Costs " + FString::FromInt(spellAtSlot->GetCost(ownerAbilityComp)) + " mana\r\n" +
-                                           FString::FromInt(spellAtSlot->GetCDDuration(ownerAbilityComp)) + " second CD \r\n" +
-                                           FString::FromInt(spellAtSlot->GetRange(ownerAbilityComp)) + " range";
-         tooltip->SetupTTBoxText(spellAtSlot->GetName(), spellAtSlot->GetDescription(), spellAtSlot->GetElem(), FText::FromString(relevantSpellInfo), FText::GetEmpty());
-      }
-   }
-}
-
-void USkillSlot::OnBtnClick()
-{
-   // One place the UI drives gameplay logic since the extra rebindings to invert the dependency would be suboptimal
-   if(const AUnit* focusedUnit = GetOwningPlayer<AUserInput>()->GetBasePlayer()->GetFocusedUnit()) {
-      if(UManualSpellComponent* manualSpellComp = focusedUnit->FindComponentByClass<UManualSpellComponent>()) { manualSpellComp->PressedCastSpell(slotIndex); }
-   }
-}
-=======
    if(const auto ownerAbilityComp = GetOwningAbilityComponent())
    {
       if(const TSubclassOf<UMySpell> spellClass = ownerAbilityComp->GetSpellAtSlot(slotIndex))
@@ -335,4 +234,3 @@ void USkillSlot::OnBtnClick()
       }
    }
 }
->>>>>>> componentrefactor

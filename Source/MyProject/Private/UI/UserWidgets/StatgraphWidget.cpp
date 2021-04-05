@@ -210,18 +210,12 @@ void UStatgraphWidget::UpdateBaseStat(const FGameplayAttribute& attributeModifie
 
 void UStatgraphWidget::CreateAndSendStatUpdate(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected, const FString& keyName)
 {
-<<<<<<< HEAD
-   if(cpcRef->GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Character)) { // Only send an update to the browser if it is on screen
-      if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit) {
-         if(focusedUnit == unitAffected) { // Make sure the stat that is updated is one pertaining to the unit we are looking at information for
-=======
    if(cpcRef->GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Character))
    { // Only send an update to the browser if it is on screen
       if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit)
       {
          if(focusedUnit == unitAffected)
          { // Make sure the stat that is updated is one pertaining to the unit we are looking at information for
->>>>>>> componentrefactor
             FString heroInfoString;
             auto    writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&heroInfoString);
 
@@ -253,11 +247,6 @@ FReply UStatgraphWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FP
 const AUnit* UStatgraphWidget::CheckIfFocusedUnitHero() const
 {
    const auto focusedUnit = cpcRef->GetBasePlayer()->GetFocusedUnit();
-<<<<<<< HEAD
-   if(LIKELY(focusedUnit && focusedUnit->GetClass()->IsChildOf(ABaseHero::StaticClass())))
-      return focusedUnit;
-=======
    if(LIKELY(focusedUnit && focusedUnit->GetClass()->IsChildOf(ABaseHero::StaticClass()))) return focusedUnit;
->>>>>>> componentrefactor
    return nullptr;
 }

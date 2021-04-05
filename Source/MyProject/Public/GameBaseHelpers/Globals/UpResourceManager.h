@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-
-
-// Fill out your copyright notice in the Description page of Project Settings.
-=======
->>>>>>> componentrefactor
 #pragma once
 
 #include "UserInput.h"
@@ -14,42 +8,18 @@
 #   include <type_traits>
 #endif
 
-<<<<<<< HEAD
-/** Singleton class for some important variables */
-=======
 /** Singleton class for some important global variables or functions */
->>>>>>> componentrefactor
 namespace UpResourceManager
 {
    class FGameplayAttributeData;
    class ABaseCharacter;
 
-<<<<<<< HEAD
-   // Used to get bounds of some object with collision (represents the corners of a cube)
-   const FVector BoundsPointMapping[8] = {FVector(1.f, 1.f, 1.f),  FVector(1.f, 1.f, -1.f),  FVector(1.f, -1.f, 1.f),  FVector(1.f, -1.f, -1.f),
-                                          FVector(-1.f, 1.f, 1.f), FVector(-1.f, 1.f, -1.f), FVector(-1.f, -1.f, 1.f), FVector(-1.f, -1.f, -1.f)};
-
-   const FVector BoundsPointMapping2D[4] = {
-       FVector(1.f, 1.f, 0.f),
-       FVector(1.f, -1.f, 0.f),
-       FVector(-1.f, -1.f, 0.f),
-       FVector(-1.f, 1.f, -1.f),
-   };
-
-   struct StatKeyFunc : TDefaultMapHashableKeyFuncs<uint8, uint8, false> {
-=======
    struct StatKeyFunc : TDefaultMapHashableKeyFuncs<uint8, uint8, false>
    {
->>>>>>> componentrefactor
       /** Maps 0-NumAtts to 0, NumAtts-NumScalingStats to 1, and so forth */
       static FORCEINLINE uint32 GetKeyHash(uint8 Key)
       {
          checkf((unsigned)Key < (unsigned)(CombatInfo::TotalStatCount), TEXT("Don't map any values out of the number of stats %d"), Key);
-<<<<<<< HEAD
-         if(Key < CombatInfo::AttCount) { return 0; }
-         if(Key < CombatInfo::AttCount + CombatInfo::StatCount) { return 1; }
-         if(Key < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::MechanicCount) { return 2; }
-=======
          if(Key < CombatInfo::AttCount)
          {
             return 0;
@@ -62,20 +32,10 @@ namespace UpResourceManager
          {
             return 2;
          }
->>>>>>> componentrefactor
          return 3;
       }
    };
 
-<<<<<<< HEAD
-   // Maps stat num ( 0- Total Num Stats ) to enum ( 0 - Attributes, 1 - Stats, 2 - Vitals, 3 - Mechanics)
-   const TMap<uint8, uint8, FDefaultSetAllocator, StatKeyFunc> statMapper = {{0, 0},
-                                                                             {CombatInfo::AttCount, 1},
-                                                                             {CombatInfo::AttCount + CombatInfo::StatCount, 2},
-                                                                             {CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount, 3}};
-
-=======
->>>>>>> componentrefactor
    /**Returns the Simpson quadrature's coefficient*/
    static const TFunction<float(float)> SimpsonSpacing = [](const float space) {
       return 1.f / 3 * space;
@@ -111,17 +71,12 @@ namespace UpResourceManager
       static_assert(std::is_base_of<IWorldObject, T>::value, "Template parameter should derive from IWorldObject");
 #endif
 
-<<<<<<< HEAD
-      for(TActorIterator<T> actItr(worldRef); actItr; ++actItr) {
-         if((*actItr)->GetGameName().ToString() == nameToMatch) { return *actItr; }
-=======
       for(TActorIterator<T> actItr(worldRef); actItr; ++actItr)
       {
          if((*actItr)->GetGameName().ToString() == nameToMatch)
          {
             return *actItr;
          }
->>>>>>> componentrefactor
       }
 
 #if UE_EDITOR
@@ -140,22 +95,14 @@ namespace UpResourceManager
    struct GetPropertyFromType;
 
    template <>
-<<<<<<< HEAD
-   struct GetPropertyFromType<float> {
-=======
    struct GetPropertyFromType<float>
    {
->>>>>>> componentrefactor
       using value = FFloatProperty;
    };
 
    template <>
-<<<<<<< HEAD
-   struct GetPropertyFromType<int> {
-=======
    struct GetPropertyFromType<int>
    {
->>>>>>> componentrefactor
       using value = FIntProperty;
    };
 
@@ -163,19 +110,12 @@ namespace UpResourceManager
    template <typename T>
    bool GetObjectVariable(UObject* objectRef, FName propertyToRead, T& outValue, UWorld* worldRef)
    {
-<<<<<<< HEAD
-      if(objectRef) {
-         using Property = GetPropertyFromType<T>::value;
-         Property p     = FindField<Property>(objectRef->GetClass(), propertyToRead);
-         if(p) {
-=======
       if(objectRef)
       {
          using Property = GetPropertyFromType<T>::value;
          Property p     = FindUField<Property>(objectRef->GetClass(), propertyToRead);
          if(p)
          {
->>>>>>> componentrefactor
             outValue = p->GetPropertyValue_InContainer(objectRef);
             return true;
          }
@@ -186,28 +126,18 @@ namespace UpResourceManager
    template <typename T>
    bool SetObjectVariable(UObject* objectRef, FName propertyToRead, T newValue, UWorld* worldRef)
    {
-<<<<<<< HEAD
-      if(objectRef) {
-         using Property = GetPropertyFromType<T>::value;
-         Property p     = FindField<Property>(objectRef->GetClass(), propertyToRead);
-         if(p) {
-=======
       if(objectRef)
       {
          using Property = GetPropertyFromType<T>::value;
          Property p     = FindField<Property>(objectRef->GetClass(), propertyToRead);
          if(p)
          {
->>>>>>> componentrefactor
             p->SetPropertyValue_InContainer(objectRef, newValue);
             return true;
          }
       }
       return false;
    }
-<<<<<<< HEAD
-} 
-=======
 
    // Maps stat num ( 0- Total Num Stats ) to enum ( 0 - Attributes, 1 - Stats, 2 - Vitals, 3 - Mechanics)
    const TMap<uint8, uint8, FDefaultSetAllocator, StatKeyFunc> statMapper = {{0, 0},
@@ -232,4 +162,3 @@ namespace UpResourceManager
    // Use this when we have multiple effects that have their own timers, but should be treated as a single effect (called pseudo-stackable effects)
    const FGameplayTagContainer EffectPseudoStackTagFilter  = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.ShowEffectsAsStack"));
 }
->>>>>>> componentrefactor

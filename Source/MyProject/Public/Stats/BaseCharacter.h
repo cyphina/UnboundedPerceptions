@@ -2,11 +2,7 @@
 
 #include "Stats/Vital.h"
 #include "StatEnums.h"
-<<<<<<< HEAD
-#include "MyAttributeSet.h"
-=======
 #include "RTSAttributeSet.h"
->>>>>>> componentrefactor
 
 class UAbilitySystemComponent;
 
@@ -32,14 +28,6 @@ struct FBaseCharacter
    static const int BASE_MOVEMENT_SPEED = 500;
    static const int BASE_ATTACK_POWER   = 100;
 
-<<<<<<< HEAD
-   FBaseCharacter(const UMyAttributeSet& AttSet);
-   ~FBaseCharacter();
-   FBaseCharacter& operator=(const FBaseCharacter& otherChar) = default;
-   int             GetLevel() const { return level; }
-   void            SetLevel(int newLevel) { level = newLevel; }
-   void            InitializeAttributeBaseValues();
-=======
    FBaseCharacter(const URTSAttributeSet& AttSet);
    ~FBaseCharacter();
    FBaseCharacter& operator=(const FBaseCharacter& otherChar) = default;
@@ -49,7 +37,6 @@ struct FBaseCharacter
    void SetLevel(int newLevel) { level = newLevel; }
 
    void InitializeAttributeBaseValues();
->>>>>>> componentrefactor
 
    /** Recalculate base values of skills from a base attribute change
     * @param updatedStat - Attribute that was modified
@@ -77,14 +64,7 @@ struct FBaseCharacter
 
    const TArray<Vital>& GetVitals() const { return vitals; }
 
-<<<<<<< HEAD
-   const TArray<FGameplayAttribute*>& GetAttributes() const { return baseAttributes; }
-   const TArray<RTSUnitStat>&         GetSkills() const { return skills; }
-   const TArray<Vital>&               GetVitals() const { return vitals; }
-   const TArray<FGameplayAttribute*>& GetMechanics() const { return mechanics; }
-=======
    const TArray<FGameplayAttribute>& GetMechanics() const { return mechanics; }
->>>>>>> componentrefactor
 
    URTSAttributeSet* GetAttSet() const { return attSet; }
 
@@ -97,18 +77,11 @@ private:
 
    int level = 1;
 
-<<<<<<< HEAD
-   TArray<FGameplayAttribute*> baseAttributes;
-   TArray<RTSUnitStat>         skills; // called them skills here but stats and skills are interchangeable names
-   TArray<Vital>               vitals;
-   TArray<FGameplayAttribute*> mechanics;
-=======
    // TODO: One day fix so we are not storing multiple copies of these property references...
    TArray<FGameplayAttribute> baseAttributes;
    TArray<RTSUnitStat>        skills; // called them skills here but stats and skills are interchangeable names
    TArray<Vital>              vitals;
    TArray<FGameplayAttribute> mechanics;
->>>>>>> componentrefactor
 
    void SetupPrimaryAttributes();
    void InitialStatUpdate();

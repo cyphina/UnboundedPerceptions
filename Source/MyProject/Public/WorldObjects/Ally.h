@@ -22,39 +22,6 @@ class MYPROJECT_API AAlly : public AUnit
 
  public:
    AAlly(const FObjectInitializer& oI);
-<<<<<<< HEAD
-
-   /**Check to see if things are above us so we know to make the roofs transparent as we walk underneath them. Used in BPs (will try to move this to C++ soon) */
-   UFUNCTION(BlueprintCallable)
-   bool GetOverlappingObjects(TArray<FHitResult>& hits);
-
-   UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
-   AAllyAIController* GetAllyAIController() const { return allyController; }
-   
-   /** Polymorphic selection override for caching units in basePlayer */
-   void SetSelected(bool value) override;
-
-   void QueueAction(TFunction<void()> actionToQueue); // Queues an action to our action queue
-
-   /** Accessor to clear command queue. */
-   void ClearCommandQueue() { commandQueue.Empty(); }
-
-   const TSet<AUnit*>& GetSeenEnemies() const;
-
-   bool GetIsEnemy() const override final { return false; }
-
-   const TSet<AUnit*>* GetVisibleEnemies_Impl() const override;
-   const TSet<AUnit*>* GetAllies_Impl() const override;
-
-   UPROPERTY()
-   AAllyAIController* allyController;
-
-   TQueue<TFunction<void()>, EQueueMode::Spsc> commandQueue;
-
-   static inline const FText STUNNED_TEXT      = NSLOCTEXT("HelpMessages", "Stun", "Currently Stunned!");
-   static inline const FText FILLED_QUEUE_TEXT = NSLOCTEXT("HelpMessages", "Queue", "Command Queue Filled!");
-
-=======
 
    /**Check to see if things are above us so we know to make the roofs transparent as we walk underneath them. Used in BPs (will try to move this to C++ soon) */
    UFUNCTION(BlueprintCallable)
@@ -77,27 +44,18 @@ class MYPROJECT_API AAlly : public AUnit
 
    static inline const FText STUNNED_TEXT = NSLOCTEXT("HelpMessages", "Stun", "Currently Stunned!");
 
->>>>>>> componentrefactor
  protected:
    void BeginPlay() override;
    void Tick(float deltaSeconds) override;
    void EndPlay(const EEndPlayReason::Type eReason) override;
    void PossessedBy(AController* newAllyControllerRef) override;
-<<<<<<< HEAD
-   void SetEnabled(bool bEnabled) override;
-=======
->>>>>>> componentrefactor
 
  private:
    /** What enemies are in our radius determined via sphere overlap events */
    UPROPERTY()
    TSet<AUnit*> possibleEnemiesInRadius;
 
-<<<<<<< HEAD
-   int queueCount = 0;
-=======
    const TArray<AUnit*>* GetVisibleEnemies_Impl() const override;
    const TArray<AUnit*>* GetAllies_Impl() const override;
    const TArray<AUnit*>* GetEnemies_Impl() const override;
->>>>>>> componentrefactor
 };

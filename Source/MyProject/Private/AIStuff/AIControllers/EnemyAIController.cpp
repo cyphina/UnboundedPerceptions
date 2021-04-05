@@ -6,11 +6,7 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 
-<<<<<<< HEAD
-AEnemyAIController::AEnemyAIController()
-=======
 AEnemyAIController::AEnemyAIController(const FObjectInitializer& ObjectInitializer) : AUnitController(ObjectInitializer)
->>>>>>> componentrefactor
 {
 }
 

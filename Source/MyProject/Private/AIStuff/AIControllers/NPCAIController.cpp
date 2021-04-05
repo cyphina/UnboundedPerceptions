@@ -24,12 +24,6 @@ void ANPCAIController::BeginPlay()
    Super::BeginPlay();
 }
 
-<<<<<<< HEAD
-void ANPCAIController::Follow(const ABaseHero* heroToFollow)
-{
-   blackboardComp->SetValueAsObject(targetKeyName, const_cast<ABaseHero*>(heroToFollow));
-   RunBehaviorTree(followTree);
-=======
 void ANPCAIController::Follow(const AActor* actorToFollow)
 {
    followTarget = actorToFollow;
@@ -40,7 +34,6 @@ void ANPCAIController::Follow(const AActor* actorToFollow)
           MoveToLocation(followTarget->GetActorLocation() - (pawnRadius * followTarget->GetActorForwardVector()));
        },
        0.5f, true, 0.f);
->>>>>>> componentrefactor
 }
 
 void ANPCAIController::Patrol()

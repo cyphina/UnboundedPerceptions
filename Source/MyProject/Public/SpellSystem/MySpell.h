@@ -12,26 +12,7 @@
 class URTSAbilitySystemComponent;
 class AUnit;
 
-<<<<<<< HEAD
-USTRUCT(BlueprintType)
-struct FSpellDefaults {
-   GENERATED_USTRUCT_BODY()
-
- public:
-   FSpellDefaults() = default;
-   FSpellDefaults(int id, UTexture2D* image) : id(id), image(image) {}
-   
-   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
-   int id; // set id to same as in table
-
-   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
-   UTexture2D* image;
-};
-
-/* FIRST ABILITY TAG SHOULD BE CD TAG
-=======
 /* 
->>>>>>> componentrefactor
  * Abilities should start at level 1 not 0
  * Remember when creating spells in blueprints we must do a few things
  * 1. Setup the default properties
@@ -45,30 +26,6 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
 {
    GENERATED_BODY()
 
-<<<<<<< HEAD
-   AUnit* unitRef;
-
-public:
-   UMySpell();
-
-   UFUNCTION(BlueprintCallable, Category = "SpellChecks")
-   bool IsOnCD(const UAbilitySystemComponent* abilityComponent) const;
-
-   void ActivateAbility
-   (const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
-    const FGameplayEventData*        TriggerEventData) override;
-
-   bool CheckCooldown
-   (const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-    OUT FGameplayTagContainer*       OptionalRelevantTags) const override;
-
-   // ! We want to make the avatar actor the source of the spell since owner is our player controller 
-   FGameplayEffectContextHandle MakeEffectContext(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo) const override;
-
-   void CommitExecute(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
-
-   void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
-=======
  public:
    UMySpell();
 
@@ -77,33 +34,15 @@ public:
 
    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category = "SpellChecks")
    FText GetMessageDeficientResources() const;
->>>>>>> componentrefactor
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    const FSpellDefaults& GetSpellDefaults() const { return spellDefaults; }
 
-<<<<<<< HEAD
-   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
-   FSpellDefaults spellDefaults;
-
-   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
-   FGameplayTagContainer descriptionTags;
-
-   FGameplayTagContainer cooldownTags;
-
-   // TODO: Maybe have a better way to set this because we have 5 now...
-   static const int NUM_SCALING_DAMAGE_ATT = 4;
-=======
    UFUNCTION(BlueprintCallable, Category = "SpellChecks")
    bool IsOnCD(const UAbilitySystemComponent* abilityComponent) const;
->>>>>>> componentrefactor
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-<<<<<<< HEAD
-   int GetMaxLevel() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->maxLevel; }
-=======
    int GetMaxLevel() const { return spellDefaults.MaxLevel; }
->>>>>>> componentrefactor
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    float GetCDDuration(const UAbilitySystemComponent* abilityComponent) const;
@@ -112,41 +51,6 @@ public:
    int GetRange(UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
-<<<<<<< HEAD
-   int GetReqLevel(UAbilitySystemComponent* abilityComponent) const;
-
-   UFUNCTION(BlueprintCallable, Category = "Spell")
-   int GetCost(const URTSAbilitySystemComponent* abilityComponent) const;
-
-   const FUpSpellTargeting* GetTargeting() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->targeting; }
-
-   UFUNCTION(BlueprintCallable, Category = "Spell")
-   FText GetDescription() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->desc; }
-
-   UFUNCTION(BlueprintCallable, Category = "Spell")
-   FText GetName() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->name; }
-
-   /**Get the name of the primary element this spell is associated with*/
-   UFUNCTION(BlueprintCallable, Category = "Spell")
-   FText GetElem() const { return FText::FromString(USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->elem.ToString().RightChop(15)); }
-
-   /**Get the name of the primary element this spell is associated with*/
-   UFUNCTION(BlueprintCallable, Category = "Spell")
-   FGameplayTag GetElemTag() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->elem; }
-
-   UFUNCTION(BlueprintCallable, Category = "Spell")
-   TArray<int> GetPreReqs() const { return USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->preReqs; }
-
-   UFUNCTION(BlueprintCallable, Category = "Spell")
-   TArray<FText> GetPreReqNames() const
-   {
-      TArray<FText> preReqNames;
-      for(int i : USpellDataManager::GetData().GetSpellInfo(spellDefaults.id)->preReqs) {
-         preReqNames.Add(USpellDataManager::GetData().GetSpellInfo(i)->name);
-      }
-      return preReqNames;
-   }
-=======
    int GetReqLevel(const UAbilitySystemComponent* abilityComponent) const;
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
@@ -171,7 +75,6 @@ public:
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    TArray<FText> GetPreReqNames() const;
->>>>>>> componentrefactor
 
    UFUNCTION(BlueprintCallable, Category = "Spell")
    float GetSpellDuration(const UAbilitySystemComponent* abilityComponent) const;
@@ -206,14 +109,6 @@ public:
 
    UFUNCTION(BlueprintCallable)
    UEnvQuery* GetDefaultQueryForSpell(UWorld* worldRef);
-<<<<<<< HEAD
-
-#pragma endregion
-
-private:
-   UFUNCTION(BlueprintCallable, Category = "Helper")
-   UAbilitySystemComponent* GetOwnerAbilitySystemComponent() const;
-=======
 
    /**
     * Some abilities have logic that blocks the caster till the spell is active. This means the AI shouldn't do anything till EndAbility is called.
@@ -223,7 +118,6 @@ private:
    void FinishBlockingCaster();
 
    TSubclassOf<UUpSpellTargeting> GetTargeting() const;
->>>>>>> componentrefactor
 
    /** Our version of cooldown just checks for the name tag of this spell */
    bool CheckCooldown(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -394,19 +288,12 @@ private:
    template <typename T>
    T GetSpellDefaultValueChecked(const UAbilitySystemComponent* abilityComponent, T spellValue) const
    {
-<<<<<<< HEAD
-      int denom = maxLevel * currentLevel;
-      if(denom != 0)
-         return FMath::CeilToInt((float)numCategories / denom) - 1;
-      return 0;
-=======
       FGameplayAbilitySpec* abilitySpec = GetAbilitySpec(abilityComponent);
       if(abilitySpec)
       {
          return spellValue;
       }
       return T();
->>>>>>> componentrefactor
    }
 
    template <typename T>

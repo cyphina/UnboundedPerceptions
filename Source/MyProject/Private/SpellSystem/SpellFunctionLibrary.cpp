@@ -13,13 +13,6 @@
 #include "WorldObjects/Unit.h"
 #include "UserInput.h"
 #include "HUDManager.h"
-<<<<<<< HEAD
-#include "ActionbarInterface.h"
-#include "ESkillContainer.h"
-#include "RTSIngameWidget.h"
-#include "RTSProjectileStrategy.h"
-#include "SkillSlot.h"
-=======
 #include "RTSProjectileStrategy.h"
 #include "TextFormatter.h"
 #include "Engine/CompositeCurveTable.h"
@@ -27,7 +20,6 @@
 const FGameplayTag    USpellFunctionLibrary::CONFIRM_SPELL_TAG        = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Spell");
 const FGameplayTag    USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Target");
 UCompositeCurveTable* USpellFunctionLibrary::effectPowerTableRef      = nullptr;
->>>>>>> componentrefactor
 
 USpellFunctionLibrary::USpellFunctionLibrary(const FObjectInitializer& o) : Super(o)
 {
@@ -104,22 +96,13 @@ FGameplayEffectSpecHandle USpellFunctionLibrary::MakeStatChangeEffect(UGameplayA
    return effect;
 }
 
-<<<<<<< HEAD
-ARTSProjectile* USpellFunctionLibrary::SetupBulletTargetting(AUnit* casterRef, TSubclassOf<ARTSProjectile> bulletClass, URTSProjectileStrategy* projectileStrategy,
-                                                             UPARAM(ref) FGameplayEffectSpecHandle& specHandle, bool canGoThroughWalls)
-=======
 ARTSProjectile* USpellFunctionLibrary::SetupBulletTargetting(AUnit* casterRef, TSubclassOf<ARTSProjectile> bulletClass,
                                                              TSubclassOf<URTSProjectileStrategy>           projectileStrategyClass,
                                                              UPARAM(ref) TArray<FGameplayEffectSpecHandle> specHandles, bool canGoThroughWalls)
->>>>>>> componentrefactor
 {
    FTransform spawnTransform = casterRef->GetActorTransform();
    spawnTransform.SetLocation(spawnTransform.GetLocation() + casterRef->GetActorForwardVector() * 10.f);
 
-<<<<<<< HEAD
-   projectileStrategy->canGoThroughWalls = canGoThroughWalls;
-   projectileStrategy->defaultHitEffects.Append(TArray<FGameplayEffectSpecHandle>{specHandle});
-=======
    URTSProjectileStrategy* projectileStrategy = nullptr;
    if(projectileStrategyClass)
    {
@@ -132,7 +115,6 @@ ARTSProjectile* USpellFunctionLibrary::SetupBulletTargetting(AUnit* casterRef, T
    }
    projectileStrategy->defaultHitEffects = specHandles;
 
->>>>>>> componentrefactor
    ARTSProjectile* projectile =
        ARTSProjectile::MakeRTSProjectile(casterRef->GetWorld(), casterRef->GetTargetComponent(), casterRef->GetActorTransform(), bulletClass, projectileStrategy);
 
@@ -145,8 +127,6 @@ FText USpellFunctionLibrary::ParseDesc(const FText& inputText, const UAbilitySys
    descriptionPatternDef->SetArgStartChar(TEXT('['));
    descriptionPatternDef->SetArgEndChar(TEXT(']'));
 
-<<<<<<< HEAD
-=======
    const FString descriptionString = inputText.ToString();
 
    FFormatNamedArguments effectArgs;
@@ -218,7 +198,6 @@ FText USpellFunctionLibrary::ParseDesc(const FText& inputText, const UAbilitySys
    return FText::Format(FText::FromString(FTextFormatter::FormatStr(effectFormat, effectArgs, false, true)), args);
 }
 
->>>>>>> componentrefactor
 void USpellFunctionLibrary::SpellConfirmSwap(TSubclassOf<UMySpell> confirmSpell, TSubclassOf<UMySpell> originalSpell, AUnit* ownerRef, bool bSwapInConfirm)
 {
    TSubclassOf<UMySpell> spellToReplace, replacementSpell;
@@ -238,23 +217,6 @@ void USpellFunctionLibrary::SpellConfirmSwap(TSubclassOf<UMySpell> confirmSpell,
 
 void USpellFunctionLibrary::SpellSwap(TSubclassOf<UMySpell> originalSpell, TSubclassOf<UMySpell> newSpell, AUnit* ownerRef)
 {
-<<<<<<< HEAD
-   int slot = 0;
-   for(auto equippedSkills : ownerRef->GetAbilitySystemComponent()->GetAbilities()) {
-      if(equippedSkills == originalSpell) { break; }
-      ++slot;
-   }
-   if(slot != ownerRef->GetAbilitySystemComponent()->GetAbilities().Num())
-      Cast<AUserInput>(ownerRef->GetWorld()->GetGameInstance()->GetFirstLocalPlayerController())
-          ->GetWidgetProvider()
-          ->GetIngameHUD()
-          ->GetActionHUD()
-          ->GetSkillContainer()
-          ->GetSkillSlot(slot)
-          ->UpdateSkillSlot(newSpell);
-   else
-      UE_LOG(LogTemp, Warning, TEXT("Cannot find original spell to swap with"));
-=======
    const int slot = ownerRef->GetAbilitySystemComponent()->GetAbilities().Find(originalSpell);
 
    if(slot == INDEX_NONE)
@@ -264,5 +226,4 @@ void USpellFunctionLibrary::SpellSwap(TSubclassOf<UMySpell> originalSpell, TSubc
    }
 
    ownerRef->GetAbilitySystemComponent()->SetSpellAtSlot(newSpell, slot);
->>>>>>> componentrefactor
 }

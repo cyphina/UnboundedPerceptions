@@ -1,19 +1,13 @@
 ﻿// Created 7/23/20 10:40 PM
 
 #pragma once
-<<<<<<< HEAD
-=======
 #include "GameplayEffectTypes.h"
->>>>>>> componentrefactor
 #include "GameplayTagContainer.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "SpellDataLibrary.generated.h"
 
-<<<<<<< HEAD
-=======
 struct FGameplayEffectSpec;
 class UAbilitySystemComponent;
->>>>>>> componentrefactor
 class URTSAbilitySystemComponent;
 class IGameplayTagAssetInterface;
 
@@ -28,11 +22,7 @@ class MYPROJECT_API USpellDataLibrary : public UBlueprintFunctionLibrary
 {
    GENERATED_BODY()
 
-<<<<<<< HEAD
-public:
-=======
  public:
->>>>>>> componentrefactor
    UFUNCTION(BlueprintPure, meta = (BlueprintInternalUseOnly = "TRUE"))
    static bool BP_IsStunned(const URTSAbilitySystemComponent* abilityComponent);
 
@@ -76,8 +66,6 @@ public:
      * not ones already initiated before the unit becomes un-targetable. */
    static bool IsAttackable(const IGameplayTagAssetInterface* abilityComponent);
 
-<<<<<<< HEAD
-=======
    UFUNCTION(BlueprintCallable, BlueprintPure)
    static float GetSetByCallerTagMagnitude(UAbilitySystemComponent* AbilityComponent, UPARAM(meta = (Categories = "Combat.EffectName")) FGameplayTag EffectName,
                                            FGameplayTag SetByCallerTag);
@@ -97,7 +85,6 @@ public:
    UFUNCTION(BlueprintCallable, Meta = (DisplayName = "GetEffectNameTag"))
    static void RemoveEffectWtihNameTag(UAbilitySystemComponent* ASC, FGameplayTag EffectName, int StacksToRemove = -1);
 
->>>>>>> componentrefactor
    static const FGameplayTagContainer      supportTags;   // List of tags support spells will have
    static const FGameplayTagContainer      offensiveTags; // List of tags elemental spells will have
    static const TMap<FGameplayTag, int>    purgeTagMap;   // Mapping of purge tags to how many effects a purge can attempt to dispel

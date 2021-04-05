@@ -11,21 +11,6 @@ UTargetComponent::UTargetComponent()
    PrimaryComponentTick.bCanEverTick = false;
 }
 
-<<<<<<< HEAD
-void UTargetComponent::BeginPlay()
-{
-   
-}
-
-AActor* UTargetComponent::GetTargetActorOrUnit() const
-{
-   if(targetData->target.IsType<UTargetComponent*>())
-      return targetData->target.Get<AUnit*>();
-   else if(targetData->target.IsType<AActor*>())
-      return targetData->target.Get<AActor*>();
-   else
-      return nullptr;
-=======
 AActor* UTargetComponent::GetTargetActorOrUnit() const
 {
    if(targetData.target.IsType<AUnit*>())
@@ -45,7 +30,6 @@ AActor* UTargetComponent::GetTargetActorOrUnit() const
 bool UTargetComponent::IsTargetingTypeIndex(int targetTypeIndex) const
 {
    return targetData.target.GetIndex() == targetTypeIndex;
->>>>>>> componentrefactor
 }
 
 bool UTargetComponent::IsTargetingSelf() const
@@ -102,8 +86,4 @@ void UTargetComponent::SetTargetVisitor::operator()(AUnit* u) const
 void UTargetComponent::SetTargetVisitor::operator()(FGameplayAbilityTargetDataHandle h) const
 {
    targetCompRef->SetSpellTarget(h);
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> componentrefactor

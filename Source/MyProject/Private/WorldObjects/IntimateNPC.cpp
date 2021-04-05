@@ -5,7 +5,7 @@
 #include "RTSGameMode.h"
 #include "UserInput.h"
 #include "UI/HUDManager.h"
-#include "DialogSystem/NPCSocialMenu.h"
+#include "DialogSystem/DialogUI.h"
 #include "LevelSaveStructs.h"
 #include "RTSIngameWidget.h"
 

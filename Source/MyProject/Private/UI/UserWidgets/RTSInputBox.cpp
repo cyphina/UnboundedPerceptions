@@ -8,9 +8,5 @@
 void URTSInputBox::Confirm()
 {
    if(OnInputConfirmed().Execute(txtInput))
-<<<<<<< HEAD
-      hudManagerRef->ShowInputBox();
-=======
       hudManagerRef->HideHUD(EHUDs::HS_InputBox);
->>>>>>> componentrefactor
 }

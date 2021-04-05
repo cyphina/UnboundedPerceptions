@@ -18,8 +18,6 @@ UActionSlot::UActionSlot(const FObjectInitializer& o) : UUserWidget(o)
 }
 
 void UActionSlot::SetSlotImage(UTexture2D* image)
-<<<<<<< HEAD
-=======
 {
    if(image)
    {
@@ -35,7 +33,6 @@ void UActionSlot::SetSlotImage(UTexture2D* image)
 }
 
 void UActionSlot::SetSlotStyle(TSubclassOf<UActionSlotStyle> newStyle)
->>>>>>> componentrefactor
 {
    if(newStyle)
    {
@@ -94,14 +91,6 @@ void UActionSlot::SetIsEnabled(bool bInIsEnabled)
    }
 }
 
-<<<<<<< HEAD
-void UActionSlot::NativeOnInitialized()
-{
-   Super::NativeOnInitialized();
-   btnAction->OnClicked.AddDynamic(this, &UActionSlot::OnBtnClick);
-   btnAction->OnHovered.AddDynamic(this, &UActionSlot::OnBtnHover);
-   CPCRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
-=======
 UActionSlotStyle* UActionSlot::GetStyleCDO() const
 {
    return style ? style.GetDefaultObject() : nullptr;
@@ -175,16 +164,9 @@ void UActionSlot::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
    }
 
    SetToolTip(nullptr);
->>>>>>> componentrefactor
 }
 
 USlotContainer* UActionSlot::GetParentContainer() const
 {
-<<<<<<< HEAD
-   const TWeakObjectPtr<UToolTipWidget> tooltipWidgetRef = CreateWidget<UToolTipWidget>(CPCRef, toolTipWidgetClass);
-   ShowDesc(tooltipWidgetRef.Get());
-   btnAction->SetToolTip(tooltipWidgetRef.Get());
-=======
    return UUpWidgetHelperLibrary::GetUserWidgetParent<USlotContainer>(this);
->>>>>>> componentrefactor
 }

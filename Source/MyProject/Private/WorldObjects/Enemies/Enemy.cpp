@@ -18,12 +18,8 @@
 #include "DIRender.h"
 
 #include "NavArea_EnemySpot.h"
-<<<<<<< HEAD
-#include "PartyDelegateStore.h"
-=======
 #include "PartyDelegateContext.h"
 #include "RTSGlobalCVars.h"
->>>>>>> componentrefactor
 #include "TargetComponent.h"
 #include "../BaseHero.h"
 
@@ -39,11 +35,7 @@ AEnemy::AEnemy(const FObjectInitializer& oI) : AUnit(oI)
    GetCapsuleComponent()->SetCollisionProfileName("Enemy");
 
    visionComponent->SetCollisionProfileName("EnemyVision");
-<<<<<<< HEAD
-   visionComponent->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Overlap); //Friendly
-=======
    visionComponent->SetCollisionResponseToChannel(ALLY_OBJECT_CHANNEL, ECR_Overlap); //Friendly
->>>>>>> componentrefactor
    visionComponent->SetCanEverAffectNavigation(true);
    visionComponent->AreaClass = UNavArea_EnemySpot::StaticClass();
    visionComponent->SetAbsolute(false, false, true);
@@ -52,44 +44,6 @@ AEnemy::AEnemy(const FObjectInitializer& oI) : AUnit(oI)
    GetMesh()->CustomDepthStencilValue = 254;
 }
 
-<<<<<<< HEAD
-const TSet<AUnit*>* AEnemy::GetVisibleEnemies_Impl() const
-{
-   const auto& gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
-   return &gameStateRef->GetVisiblePlayerUnits();
-}
-
-const TSet<AUnit*>* AEnemy::GetAllies_Impl() const
-{
-   const auto& gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
-   return &gameStateRef->GetAllEnemyUnits();
-}
-
-void AEnemy::BeginPlay()
-{
-   Super::BeginPlay();
-   auto gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
-
-   gameStateRef->RegisterEnemyUnit(this);
-
-   // Setup status as customized in level editor
-   InitializeStats();
-   SetActorHiddenInGame(true); //Set hidden by default so won't be revealed by vision
-   OnUnitDie().AddUObject(this, &AEnemy::GiveRewardsOnDeath);
-}
-
-void AEnemy::Tick(float deltaSeconds)
-{
-   Super::Tick(deltaSeconds);
-}
-
-void AEnemy::EndPlay(const EEndPlayReason::Type e)
-{
-   Super::EndPlay(e);
-   SetEnabled(false);
-}
-
-=======
 const TArray<AUnit*>* AEnemy::GetVisibleEnemies_Impl() const
 {
    const auto& gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
@@ -122,7 +76,6 @@ void AEnemy::EndPlay(const EEndPlayReason::Type e)
    SetEnabled(false);
 }
 
->>>>>>> componentrefactor
 void AEnemy::Destroyed()
 {
    Super::Destroyed();
@@ -130,54 +83,23 @@ void AEnemy::Destroyed()
 
 void AEnemy::SetUnitSelected(bool value)
 {
-<<<<<<< HEAD
-   if(value) {
-      controllerRef->GetBasePlayer()->SetFocusedUnit(this);
-   } else {
-      if(controllerRef->GetBasePlayer()->GetFocusedUnit() == this) controllerRef->GetBasePlayer()->SetFocusedUnit(nullptr);
-   }
-   // Call on unit selected delegate(s) afterwards
-   Super::SetSelected(value);
-=======
    if(GameplayModifierCVars::bEnableEnemyControl)
    {
       Super::SetUnitSelected(value);
    }
->>>>>>> componentrefactor
 }
 
 void AEnemy::SetEnabled(bool bEnabled)
 {
    Super::SetEnabled(bEnabled);
-<<<<<<< HEAD
-   if(UPartyDelegateStore* store = Cast<ULocalPlayer>(controllerRef->Player)->GetSubsystem<UPartyDelegateStore>()) {
-      store->OnEnemyActiveChanged().Broadcast(this, bEnabled);
-   }
-
-   if(bEnabled) {
-      controllerRef->GetGameState()->RegisterEnemyUnit(this);
-   } else {
-      controllerRef->GetGameState()->UnRegisterEnemyUnit(this);
-   }
-=======
    if(UPartyDelegateContext* store = Cast<ULocalPlayer>(controllerRef->Player)->GetSubsystem<UPartyDelegateContext>())
    {
       store->OnEnemyActiveChanged().Broadcast(this, bEnabled);
    }
->>>>>>> componentrefactor
 }
 
 void AEnemy::SpawnItemDrops()
 {
-<<<<<<< HEAD
-   controllerRef->GetGameMode()->GetQuestManager()->OnEnemyDie(this);
-   controllerRef->GetBasePlayer()->UpdateEXP(expGiven);
-   controllerRef->GetBasePlayer()->UpdateGold(moneyGiven);
-
-   for(FItemDrop& itemDrop : itemDrops) {
-      const int dropRoll = FMath::FRandRange(0, 100);
-      if(itemDrop.dropPerc > dropRoll) {
-=======
    controllerRef->GetBasePlayer()->UpdateEXP(expGiven);
    controllerRef->GetBasePlayer()->UpdateGold(moneyGiven);
 
@@ -186,7 +108,6 @@ void AEnemy::SpawnItemDrops()
       const int dropRoll = FMath::FRandRange(0, 100);
       if(itemDrop.dropPerc > dropRoll)
       {
->>>>>>> componentrefactor
          APickup* itemPickup = GetWorld()->SpawnActorDeferred<APickup>(APickup::StaticClass(), GetActorTransform());
          itemPickup->item    = itemDrop.itemInfo;
          UGameplayStatics::FinishSpawningActor(itemPickup, GetActorTransform());
@@ -201,12 +122,8 @@ void AEnemy::GiveRewardsOnDeath()
    // Enemy is hidden in Unit's implementation but reveal damage numbers still
    TArray<UDIRender*> damageComponents;
    GetComponents<UDIRender>(damageComponents);
-<<<<<<< HEAD
-   for(auto x : damageComponents) {
-=======
    for(auto x : damageComponents)
    {
->>>>>>> componentrefactor
       x->SetVisibility(true);
    }
 
@@ -216,29 +133,6 @@ void AEnemy::GiveRewardsOnDeath()
 
 void AEnemy::InitializeStats()
 {
-<<<<<<< HEAD
-   int index = -1;
-   for(auto& x : initialStats.defaultAttributes) {
-      statComponent->ModifyStats<true>(x.defaultValue, x.att);
-      statComponent->ModifyStats<true>(x.defaultValue, x.att);
-   }
-
-   for(auto& x : initialStats.defaultUnitScalingStats) {
-      statComponent->ModifyStats<true>(x.defaultValue, x.stat);
-      statComponent->ModifyStats<true>(x.defaultValue, x.stat);
-   }
-
-   for(auto& x : initialStats.defaultVitals) {
-      statComponent->ModifyStats<true>(x.defaultValue, x.vit);
-      statComponent->ModifyStats<true>(x.defaultValue, x.vit);
-   }
-
-   for(auto& x : initialStats.defaultMechanics) {
-      statComponent->ModifyStats<true>(x.defaultValue, x.mech);
-      statComponent->ModifyStats<true>(x.defaultValue, x.mech);
-   }
-}
-=======
    for(auto& x : initialStats.defaultAttributes)
    {
       statComponent->ModifyStats<true>(x.defaultValue, x.att);
@@ -265,4 +159,3 @@ const TArray<AUnit*>* AEnemy::GetEnemies_Impl() const
    const auto& gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState());
    return &gameStateRef->GetAllAllyUnits();
 }
->>>>>>> componentrefactor

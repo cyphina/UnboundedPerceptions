@@ -1,17 +1,6 @@
 ﻿// Created 12/20/20 1:52 AM
 
 #pragma once
-<<<<<<< HEAD
-#include "UserWidget.h"
-#include "SlotContainer.generated.h"
-
-class UActionSlot;
-
-DECLARE_EVENT_OneParam(USlotContainer, FOnSlotSelected, int);
-
-UCLASS()
-class MYPROJECT_API USlotContainer : public UUserWidget
-=======
 #include "MyDraggableWidget.h"
 #include "SlotContainer.generated.h"
 
@@ -28,18 +17,10 @@ DECLARE_EVENT_OneParam(USlotContainer, FOnSlotSelected, int);
  */
 UCLASS()
 class MYPROJECT_API USlotContainer : public UMyDraggableWidget
->>>>>>> componentrefactor
 {
    GENERATED_BODY()
 
  public:
-<<<<<<< HEAD
-   FOnSlotSelected& OnSlotSelected() const { return OnSlotSelectedEvent; }
-
- private:
-   mutable FOnSlotSelected OnSlotSelectedEvent;
-   TArray<UActionSlot*>    actionSlots;
-=======
    /**
     * @brief Should never have to broadcast this since it is handled already in USlotContainer::NativeOnMouseButonUp()
     */
@@ -76,5 +57,4 @@ class MYPROJECT_API USlotContainer : public UMyDraggableWidget
 
    /** Index of the slot we clicked set after a mousedown event. */
    int selectedSlotIndex = INDEX_NONE;
->>>>>>> componentrefactor
 };

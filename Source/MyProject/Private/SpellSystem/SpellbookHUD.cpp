@@ -49,11 +49,7 @@ void USpellbookHUD::OnWidgetRemovedFromViewport_Implementation()
 
 void USpellbookHUD::CloseWidget()
 {
-<<<<<<< HEAD
-   hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Spellbook));
-=======
    hudManagerRef->HideHUD(EHUDs::HS_Spellbook);
->>>>>>> componentrefactor
 }
 
 void USpellbookHUD::ChangeBackgroundColorWhenLeveling()
@@ -87,16 +83,6 @@ FReply USpellbookHUD::NativeOnMouseButtonUp(const FGeometry& InGeometry, const F
    return FReply::Unhandled();
 }
 
-<<<<<<< HEAD
-   // Setup the images and display some text telling us what level we have to be below the icon
-   for(int i = 0; i < numSpellsToUpdate; ++i) {
-      if(TSubclassOf<UMySpell> spell = heroRef->GetSpellBook()->availableSpells[i]; IsValid(spell)) {
-         const auto spellDefaultObj = spell.GetDefaultObject();
-         spellbookSlots[i]->SetSlotImage(spellDefaultObj->spellDefaults.image);
-         const int spellLevel = spellDefaultObj->GetLevel(heroRef->GetAbilitySystemComponent());
-         if(spellLevel != 0)
-            spellbookSlots[i]->UpdateSlotLevelText(spellLevel);
-=======
 void USpellbookHUD::ResetHUDForNewHero()
 {
    txtPoints->SetText(FText::FromString(FString::FromInt(heroWithOpenSpellbookRef->GetSkillPoints())));
@@ -116,7 +102,6 @@ void USpellbookHUD::UpdateSpellSlotImageAndLevelText()
          const auto spellDefaultObj = spell.GetDefaultObject();
          spellbookSlots[i]->SetSlotImage(spellDefaultObj->GetSpellDefaults().image);
          spellbookSlots[i]->UpdateSlotLevelText();
->>>>>>> componentrefactor
       }
    }
    

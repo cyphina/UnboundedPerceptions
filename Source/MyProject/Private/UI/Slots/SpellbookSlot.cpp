@@ -18,13 +18,6 @@
 
 void USpellbookSlot::UpdateSlotColor()
 {
-<<<<<<< HEAD
-   if(CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->bLevelingUp) {
-      CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef()->GetSpellBook()->LearnSpell(slotIndex);
-      CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->Update();
-   } else {
-      URTSIngameWidget::NativeDisplayHelpText(GetWorld(), LOCTEXT("PressUpgradeButtonSpellLevelup", "Press the upgrade button before levling up a spell!"));
-=======
    const ABaseHero* heroRef   = GetHeroRef();
    USpellBook*      spellBook = heroRef->GetSpellBook();
 
@@ -82,7 +75,6 @@ void USpellbookSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPo
             }
          }
       }
->>>>>>> componentrefactor
    }
 }
 
@@ -105,14 +97,6 @@ void USpellbookSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPoin
 
 void USpellbookSlot::ShowDesc(UToolTipWidget* tooltip)
 {
-<<<<<<< HEAD
-   const auto heroRef              = CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef();
-   const auto abilitySystemCompRef = heroRef->GetAbilitySystemComponent();
-   if(unsigned(slotIndex) >= unsigned(heroRef->GetSpellBook()->availableSpells.Num()))
-      return; // If the person hovers over an empty slot
-   const auto spellClassRef = heroRef->GetSpellBook()->availableSpells[slotIndex];
-   const auto spellObj      = spellClassRef.GetDefaultObject();
-=======
    const ABaseHero*                  heroRef              = GetHeroRef();
    const URTSAbilitySystemComponent* abilitySystemCompRef = heroRef->GetAbilitySystemComponent();
 
@@ -120,7 +104,6 @@ void USpellbookSlot::ShowDesc(UToolTipWidget* tooltip)
    {
       return;
    }
->>>>>>> componentrefactor
 
    const auto spellClassRef = heroRef->GetSpellBook()->GetAvailableSpells()[slotIndex];
    if(!spellClassRef)

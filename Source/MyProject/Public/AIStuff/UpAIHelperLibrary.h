@@ -1,9 +1,6 @@
 #pragma once
 
-<<<<<<< HEAD
-=======
 #include "EnvironmentQuery/EnvQueryTypes.h"
->>>>>>> componentrefactor
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "UpAIHelperLibrary.generated.h"
 
@@ -21,11 +18,7 @@ class UUpAIHelperLibrary : public UBlueprintFunctionLibrary
 {
    GENERATED_BODY()
 
-<<<<<<< HEAD
-public:
-=======
  public:
->>>>>>> componentrefactor
    /**Function for checking if an actor is within a certain distance of some other point
     * @param referenceActor - Actor that we are testing
     * @param range - Distance cutoff for testing
@@ -34,8 +27,6 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Positioning")
    static bool IsTargetInRange(const AActor* referenceActor, const FVector& targetLocation, const float range);
 
-<<<<<<< HEAD
-=======
    /**Function for checking if an actor is within a certain distance of another actor. Useful since it accounts for the actor bounds when checking for range (i.e., if our target actor
     * is really big then it will check for the distance to the edge of that actor instead of its center)
     * @param referenceActor - Actor that we are testing
@@ -45,7 +36,6 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Positioning")
    static bool IsTargetInRangeOfActor(const AActor* referenceActor, const AActor* targetActor, const float range);
 
->>>>>>> componentrefactor
    /**Function to see if unit is facing towards a point
     * @param referenceActor - Actor that we are testing
     * @param targetLocation - Point we want to see if our actor is facing
@@ -58,12 +48,6 @@ public:
    static FQuat FindLookRotation(const AActor* referenceActor, const FVector& targetPoint);
 
    UFUNCTION(BlueprintCallable, Category = "Positioning")
-<<<<<<< HEAD
-   static AUnit* FindClosestUnit(const AUnit* referenceUnit, const TSet<AUnit*>& otherUnits);
-
-   UFUNCTION(BlueprintCallable, Category = "Spell Casting")
-   static void AIBeginCastSpell(UEnvQuery* targetFindingQuery, TSubclassOf<UMySpell> spellToCast, USpellCastComponent* spellCastComponent);
-=======
    static AUnit* FindClosestUnit(const FVector referenceLocation, const TSet<AUnit*>& otherUnits);
 
    /**
@@ -76,5 +60,4 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Spell Casting")
    static void AIBeginCastSpell(UEnvQuery* targetFindingQuery, const TSubclassOf<UMySpell> spellToCast, USpellCastComponent* spellCastComponent,
                                 EEnvQueryRunMode::Type queryRunMode = EEnvQueryRunMode::Type::SingleResult);
->>>>>>> componentrefactor
 };

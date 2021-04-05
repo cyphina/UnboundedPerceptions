@@ -14,10 +14,7 @@
 
 #include "UI/Healthbar/HealthbarComp.h"
 #include "UI/HUDManager.h"
-<<<<<<< HEAD
-=======
 #include "UI/UserWidgets/RTSDamageNumberContainer.h"
->>>>>>> componentrefactor
 
 #include "SpellSystem/RTSAbilitySystemComponent.h"
 #include "SpellSystem/MySpell.h"
@@ -29,18 +26,11 @@
 #include "PartyDelegateContext.h"
 #include "RTSGlobalCVars.h"
 
-<<<<<<< HEAD
-#include "BrainComponent.h"
-=======
->>>>>>> componentrefactor
 #include "RTSStateComponent.h"
 #include "RTSVisionComponent.h"
 
 #include "UpStatComponent.h"
-<<<<<<< HEAD
-=======
 #include "TargetComponent.h"
->>>>>>> componentrefactor
 
 AUnit::AUnit(const FObjectInitializer& objectInitializer) :
     Super(objectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(CharacterMovementComponentName))
@@ -49,13 +39,6 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
    AutoPossessAI                 = EAutoPossessAI::PlacedInWorldOrSpawned;
 
    RemoveArrowComponent();
-<<<<<<< HEAD
-
-   abilitySystemComponent = CreateDefaultSubobject<URTSAbilitySystemComponent>(TEXT("AbilitySystem"));
-
-   visionComponent = CreateDefaultSubobject<URTSVisionComponent>(FName("VisionRadius"));
-   visionComponent->SetupAttachment(RootComponent);
-=======
 
    abilitySystemComponent = CreateDefaultSubobject<URTSAbilitySystemComponent>(TEXT("AbilitySystem"));
 
@@ -66,7 +49,6 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
    visionComponent->SetupAttachment(RootComponent);
    visionComponent->SetRelativeLocation(FVector::ZeroVector);
    visionComponent->bUseAttachParentBound = true;
->>>>>>> componentrefactor
 
    selectionCircleDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));
    selectionCircleDecal->SetupAttachment(RootComponent);
@@ -80,26 +62,12 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
 
    SetupDamageInidicatorContainerWidget();
 
-<<<<<<< HEAD
-   SetupHealthbarComponent();
-
-   SetupCharacterCollision();
-
-   SetupMovementComponent();
-
-   combatInfo                  = MakeUnique<UpCombatInfo>();
-   combatInfo->combatStyle     = ECombatType::Melee;
-   
-   // Turn this off to make sure the unit highlights when hovered over
-   GetMesh()->SetRenderCustomDepth(false);
-=======
    combatInfo              = MakeUnique<UpCombatInfo>();
    combatInfo->combatStyle = ECombatType::Melee;
 
    // Turn this off to make sure the unit highlights when hovered over
    GetMesh()->SetRenderCustomDepth(false);
    GetMesh()->bUseAttachParentBound = true;
->>>>>>> componentrefactor
 }
 
 AUnit::~AUnit() = default;
@@ -111,11 +79,6 @@ void AUnit::SetupHealthbarComponent()
    healthBar->SetPivot(FVector2D(0.5, 1));
    healthBar->SetupAttachment(RootComponent);
    healthBar->SetDrawAtDesiredSize(true);
-<<<<<<< HEAD
-
-   ConstructorHelpers::FClassFinder<UUserWidget> healthBarWig(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/Hitpoints/HealthbarWidget"));
-   if(healthBarWig.Succeeded()) { healthBar->SetWidgetClass(healthBarWig.Class); }
-=======
    healthBar->SetCanEverAffectNavigation(false);
    healthBar->bUseAttachParentBound = true;
    ConstructorHelpers::FClassFinder<UUserWidget> healthBarWig(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/Hitpoints/Up_W_HealthbarWidget"));
@@ -123,19 +86,11 @@ void AUnit::SetupHealthbarComponent()
    {
       healthBar->SetWidgetClass(healthBarWig.Class);
    }
->>>>>>> componentrefactor
 }
 
 void AUnit::SetupCharacterCollision() const
 {
    // Mesh needs an offset because it isn't aligned with capsule component at the beginning.  Offset by the mesh size
-<<<<<<< HEAD
-   GetMesh()->SetRelativeLocation(FVector(0, 0, -GetMesh()->Bounds.BoxExtent.Z));
-   GetMesh()->SetCollisionProfileName(TEXT("NoCollision"));
-   GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECR_Block);
-}
-
-=======
    GetMesh()->SetRelativeLocation(FVector(0, 0, GetDefaultHalfHeight() * 2));
    GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 
@@ -150,42 +105,12 @@ void AUnit::SetupCharacterCollision() const
    GetCharacterMovement()->PushForceFactor           = 0;
 }
 
->>>>>>> componentrefactor
 void AUnit::SetupMovementComponent() const
 {
    // Allows units to step up stairs.  The height of the stairs they can step is set in some navmesh params
    GetCharacterMovement()->SetWalkableFloorAngle(90.f);
    GetCharacterMovement()->RotationRate              = FRotator(0, 300.f, 0);
    GetCharacterMovement()->bOrientRotationToMovement = true;
-<<<<<<< HEAD
-}
-
-void AUnit::RemoveArrowComponent() const
-{
-   // Destroy arrow component so there isn't some random arrow sticking out of our units
-   GetComponentByClass(UArrowComponent::StaticClass())->DestroyComponent();
-}
-
-void AUnit::SetupAbilitiesAndStats()
-{
-   if(GetAbilitySystemComponent()) {
-      // ! Make sure owner is player controller else the whole ability system fails to function (maybe it should be set to RTSPawn I'll have to double check)
-      GetAbilitySystemComponent()->InitAbilityActorInfo(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(), this); // setup owner and avatar
-      GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed);
-
-      for(TSubclassOf<UMySpell> ability : GetAbilitySystemComponent()->GetAbilities()) {
-         if(ability.GetDefaultObject()) // if client tries to give himself ability assert fails
-         {
-            GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(ability.GetDefaultObject(), 1));
-         }
-      }
-   }
-}
-
-void AUnit::AlignSelectionCircleWithGround() const
-{
-   if(selectionCircleDecal) {
-=======
    GetCharacterMovement()->JumpOffJumpZFactor        = 0;
 }
 
@@ -216,7 +141,6 @@ void AUnit::SetupSelectionCircle() const
 {
    if(selectionCircleDecal)
    {
->>>>>>> componentrefactor
       selectionCircleDecal->DecalSize = FVector(GetCapsuleComponent()->GetScaledCapsuleRadius());
       selectionCircleDecal->SetUsingAbsoluteScale(true);
       selectionCircleDecal->SetWorldScale3D(FVector::OneVector);
@@ -232,20 +156,6 @@ void AUnit::StoreUnitHeight()
    GetActorBounds(true, origin, extent);
    unitProperties.height = FMath::Abs(origin.Z) + extent.Z - FMath::Abs(GetActorLocation().Z);
 }
-<<<<<<< HEAD
-
-void AUnit::BeginPlay()
-{
-   if(UNLIKELY(!IsValid(controllerRef))) controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
-
-   StoreUnitHeight();
-
-   AlignSelectionCircleWithGround();
-
-   if(auto gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState())) { gameStateRef->OnGameSpeedUpdated().AddDynamic(this, &AUnit::OnUpdateGameSpeed); }
-   
-   SetupAbilitiesAndStats();
-=======
 
 void AUnit::BeginPlay()
 {
@@ -277,7 +187,6 @@ void AUnit::BeginPlay()
    }
 
    GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed);
->>>>>>> componentrefactor
 
    visionComponent->SetRelativeLocation(FVector::ZeroVector);
 
@@ -293,16 +202,6 @@ void AUnit::PossessedBy(AController* newController)
    unitController = Cast<AUnitController>(newController);
 }
 
-<<<<<<< HEAD
-void AUnit::Tick(float deltaSeconds)
-{
-   Super::Tick(deltaSeconds);
-}
-
-EUnitState AUnit::GetState() const
-{
-   return FindComponentByClass<URTSStateComponent>()->GetState();
-=======
 void AUnit::HideInvisibleUnits()
 {
    if(LIKELY(!GameplayModifierCVars::bShowEnemyPerspective))
@@ -337,7 +236,6 @@ void AUnit::HideInvisibleUnits()
          }
       }
    }
->>>>>>> componentrefactor
 }
 
 void AUnit::Tick(float deltaSeconds)
@@ -348,28 +246,17 @@ void AUnit::Tick(float deltaSeconds)
 
 void AUnit::SetEnabled(bool bEnabled)
 {
-<<<<<<< HEAD
-   if(bEnabled) {
-      SetSelected(false);
-=======
    if(bEnabled)
    {
       if(GetUnitSelected())
       {
          SetUnitSelected(false);
       }
->>>>>>> componentrefactor
       GetCapsuleComponent()->SetVisibility(true, true);
       SetActorEnableCollision(true);
       SetActorTickEnabled(true);
       GetCapsuleComponent()->SetEnableGravity(true);
       GetCharacterMovement()->GravityScale = 1;
-<<<<<<< HEAD
-      GetCapsuleComponent()->SetSimulatePhysics(false); // can't move w/o physics
-      bCanAffectNavigationGeneration = true;
-   } else {
-      GetUnitController()->Stop();
-=======
       // bCanAffectNavigationGeneration       = true;
       unitProperties.bIsEnabled = true;
       damageIndicatorWidget->SetActive(true);
@@ -377,7 +264,6 @@ void AUnit::SetEnabled(bool bEnabled)
    else
    {
       GetUnitController()->StopCurrentAction();
->>>>>>> componentrefactor
       GetCapsuleComponent()->SetVisibility(false, true);
       SetActorEnableCollision(false);
       SetActorTickEnabled(false);
@@ -395,8 +281,6 @@ void AUnit::OnUpdateGameSpeed(float speedMultiplier)
    GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed) * speedMultiplier;
 }
 
-<<<<<<< HEAD
-=======
 void AUnit::SetUnitSelected(bool value)
 {
    unitProperties.isSelected = value;
@@ -415,7 +299,6 @@ void AUnit::SetUnitSelected(bool value)
    }
 }
 
->>>>>>> componentrefactor
 bool AUnit::GetIsDead() const
 {
    return combatInfo->isDead;
@@ -427,13 +310,8 @@ FBox2D AUnit::FindBoundary() const
    FBox2D  boundary = FBox2D(ForceInit);
    FVector origin, extent;
    GetActorBounds(true, origin, extent);
-<<<<<<< HEAD
-
-   FVector2D                                        screenLocation;
-=======
    int sizeX, sizeY;
    controllerRef->GetViewportSize(sizeX, sizeY);
->>>>>>> componentrefactor
    static const int                                 CORNER_COUNT = 8;
    TArray<FVector2D, TFixedAllocator<CORNER_COUNT>> corners; // Get 8 corners of box
 

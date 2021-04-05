@@ -22,11 +22,7 @@ class MYPROJECT_API AHeroAIController : public AAllyAIController
    UFUNCTION(BlueprintCallable, Category = "Items")
    void BeginUseItem(int itemToUseID, int slotIndex);
 
-<<<<<<< HEAD
-   void Stop() override final;
-=======
    void StopCurrentAction() override final;
->>>>>>> componentrefactor
 
  protected:
    virtual void OnPossess(APawn* InPawn) override final;

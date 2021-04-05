@@ -13,12 +13,6 @@ class AUnit;
 class AUserInput;
 class UEnvQuery;
 class UMySpell;
-<<<<<<< HEAD
-class URTSAttackExecution;
-class URTSDeathExecution;
-class URTSMoveExecution;
-=======
->>>>>>> componentrefactor
 struct FUpDamage;
 
 using FAIMessageObserverHandle = TSharedPtr<struct FAIMessageObserver, ESPMode::Fast>;
@@ -35,20 +29,12 @@ class MYPROJECT_API AUnitController : public AAIController
    GENERATED_BODY()
 
  public:
-<<<<<<< HEAD
-   AUnitController();
-=======
    AUnitController(const FObjectInitializer& ObjectInitializer);
->>>>>>> componentrefactor
 
    UFUNCTION(BlueprintCallable, BlueprintPure)
    FORCEINLINE AUnit* GetUnitOwner() const { return ownerRef; }
 
    /**
-<<<<<<< HEAD
-    * @brief Used when the player moves units to a certain location (only on right click move)
-    * @param newLocation Location we want to move the selected units to.
-=======
     * @brief Gets current state in state machine
     * @return Returns enum identifier corresponding to current state the state machine is in.
     */
@@ -59,7 +45,6 @@ class MYPROJECT_API AUnitController : public AAIController
     * @brief Used when the player moves units to a certain location (only on right click move)
     * @param newLocation Location we want to move the selected units to.
     * @param stopRange - How far from the target location we can stop
->>>>>>> componentrefactor
     * @return Returns a enum that denotes if the move was successful or why it failed.
     */
    UFUNCTION(BlueprintCallable, Category = "Action")
@@ -67,11 +52,7 @@ class MYPROJECT_API AUnitController : public AAIController
 
    /** Similar to Move function but moves towards a target  actor */
    UFUNCTION(BlueprintCallable, Category = "Action")
-<<<<<<< HEAD
-   virtual EPathFollowingRequestResult::Type MoveActor(AActor* targetActor);
-=======
    EPathFollowingRequestResult::Type MoveActor(AActor* targetActor, float stopRange);
->>>>>>> componentrefactor
 
    /** Function to turn self towards a direction*/
    UFUNCTION(BlueprintCallable, Category = "Movement")
@@ -94,110 +75,6 @@ class MYPROJECT_API AUnitController : public AAIController
    UFUNCTION(BlueprintCallable, Category = "Action")
    void StopAutomation() const;
 
-<<<<<<< HEAD
-   UFUNCTION(BlueprintCallable, Category = "Action")
-   void Die();
-
-   /** Calls execute within the functor object and handles some logic common to all attacking methods */
-   UFUNCTION(BlueprintCallable, Category = "Action")
-   void Attack();
-
-   /**
-    * Function to move to appropriate distance from target and face direction*
-    * This variant is used when initiating some kind of BeginAction() operation we have to move to a closer location before we can start our action
-    * @param range - Distance away from target we can be to stop moving closer
-    * @param targetLocation - Actual location of target point we're attempting to move closer to
-    * @param finishedTurnAction - What should we tell this unit to do after we finished moving and turn towards our target?
-    */
-   bool AdjustPosition(float range, FVector targetLocation, TFunction<void()> finishedTurnAction);
-
-   bool AdjustPosition(float range, AActor* targetActor, TFunction<void()> finishedTurnAction);
-
-   FOnUnitStopped& OnUnitStopped() { return OnUnitStoppedEvent; }
-
-   static const int CHASE_RANGE = 100;
-
- protected:
-   void BeginPlay() override;
-   void Tick(float deltaSeconds) override final;
-
-   /**Make sure to call UseBlackboard/InitializeBlackboard in the children classes depending
-    * on how they use their blackboards as well as starting the tree*/
-   void OnPossess(APawn* InPawn) override;
-
-   /**
-    * Holds logic for basic auto attacks. By default this requires a targeted attack component but some units have custom attacks which may not require them to undergo
-    * the targeting procedure.
-    */
-   UPROPERTY(EditDefaultsOnly)
-   TSubclassOf<URTSAttackExecution> customAttackLogic;
-
-   /** Holds logic for death */
-   UPROPERTY(EditDefaultsOnly)
-   TSubclassOf<URTSDeathExecution> customDeathLogic;
-
-   /** Holds custom move logic so that we add some logic for the AI to move in certain ways instead of just walking everywhere.
-    * For instance, if we want our character to teleport towards its target -
-    * we can cast a teleport spell if its off CD and if the target is far or something. 
-    */
-   UPROPERTY(EditDefaultsOnly)
-   TSubclassOf<URTSMoveExecution> customMoveLogic;
-
-   /** Either Idle, Follow, Patrol, Search, or Roam*/
-   UPROPERTY(EditDefaultsOnly)
-   UBehaviorTree* idleMoveLogic;
-
- private:
-   UFUNCTION()
-   void OnActorTurnFinished();
-
-   UFUNCTION()
-   void OnPointTurnFinished();
-
-   UFUNCTION()
-   void Turn(float turnValue);
-
-   UFUNCTION()
-   void TurnActor(float turnValue);
-
-   void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
-
-   void OnDamageReceived(const FUpDamage& d);
-
-   /** This timeline is for when we have to turn towards a point (FVector)*/
-   void SetupTurnPointTimeline();
-
-   /** This timeline is for when we have to turn towards an actor (AActor*). It may take several attempts to reach the actor's location
-    * because the actor may be moving around.
-    */
-   void SetupTurnActorTimeline();
-
-   /**
-    * Function to move to appropriate distance from target and face direction
-    * It does two checks. First it checks to see if we're out of range and then moves the unit to the position.
-    * Else if the unit is not facing the target it rotates the unit towards the target.
-    * If the unit needs both adjusted, then the unit will turn towards the target after the move finishes as setup by a callback that triggers after a move.
-    */
-   bool AdjustPosition(const float range, FVector targetLocation);
-
-   /**
-    * Function to move to appropriate distance from target and face the target
-    */
-   bool AdjustPosition(const float range, AActor* targetActor);
-
-   /**
-    * @brief Used in adjust position to setup turning after we finished moving, else we trigger the finish move action.
-    * @param targetLoc Location to turn to.
-    */
-   void QueueTurnAfterMovement(FVector targetLoc);
-
-   /**
-    * @brief Used in adjust position to setup turning after we finished moving, else we trigger the finish move action.
-    * @param targetActor Actor to turn to.
-    */
-   void QueueTurnAfterMovement(AActor* targetActor);
-
-=======
    /** Stops a unit completely - Cancels any ongoing AI and clears the command queue. Probably only useful for manually controlled units (allies) and testing */
    UFUNCTION(BlueprintCallable, Category = "Action")
    void HaltUnit();
@@ -320,7 +197,6 @@ class MYPROJECT_API AUnitController : public AAIController
     */
    void QueueTurnAfterMovement(AActor* targetActor);
 
->>>>>>> componentrefactor
    UPROPERTY(EditAnywhere, Category = "Movement", Meta = (AllowPrivateAccess = true))
    float rotationRate = 0.03f;
 
@@ -330,11 +206,7 @@ class MYPROJECT_API AUnitController : public AAIController
    UPROPERTY()
    TSet<AUnit*> groupRef; // Denotes is unit is part of a group (group AI)
 
-<<<<<<< HEAD
-   /** Turn action that is set after movement because we either turn towards a point or an actor (which is set by the corresponding AdjustPosition functino).
-=======
    /** Turn action that is set after movement because we either turn towards a point or an actor (which is set by the corresponding AdjustPosition function).
->>>>>>> componentrefactor
     *  If the unit is already already facing its target, executes onPosAdjDoneAct
     *  We use TFunctions over corresponding delegates because this functionality is only supposed
     *  to be set through very specific interfaces.
@@ -361,21 +233,15 @@ class MYPROJECT_API AUnitController : public AAIController
     */
    FAIMessageObserverHandle protectListener;
 
-<<<<<<< HEAD
-=======
    static inline const FText                   FILLED_QUEUE_TEXT = NSLOCTEXT("HelpMessages", "Queue", "Command Queue Filled!");
    TQueue<TFunction<void()>, EQueueMode::Spsc> commandQueue;
    int                                         queueCount = 0;
 
->>>>>>> componentrefactor
    class MoveCompletedVisitor
    {
     public:
       MoveCompletedVisitor(AUnitController* controllerRef) : finishedMovingUnitController(controllerRef) {}
-<<<<<<< HEAD
-=======
 
->>>>>>> componentrefactor
       void operator()(FEmptyVariantState);
       void operator()(FVector targetVector);
       void operator()(AActor* targetActor);

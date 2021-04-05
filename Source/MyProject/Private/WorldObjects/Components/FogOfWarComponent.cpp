@@ -8,11 +8,7 @@ DECLARE_CYCLE_STAT(TEXT("FOW Polygon Calculation"), STAT_VisionPoly, STATGROUP_R
 
 UFogOfWarComponent::UFogOfWarComponent()
 {
-<<<<<<< HEAD
-   SetSphereRadius(1000.f);
-=======
  
->>>>>>> componentrefactor
 }
 
 void UFogOfWarComponent::BeginPlay()

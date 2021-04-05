@@ -11,11 +11,7 @@
  * If the animation represents a swing of the sword, the hit notify represents when the sword touches the enemy.
  */
 UCLASS()
-<<<<<<< HEAD
-class MYPROJECT_API UNullAttackAnim : public UAnimInstance, public IAttackAnim
-=======
 class MYPROJECT_API UNullAttackAnim : public UObject, public IAttackAnim
->>>>>>> componentrefactor
 {
    GENERATED_BODY()
 
@@ -23,18 +19,6 @@ class MYPROJECT_API UNullAttackAnim : public UObject, public IAttackAnim
    /** By default the parent class looks for a mesh if we don't have one so we should be fine to set this */
    UNullAttackAnim();
 
-<<<<<<< HEAD
-   void          PlayAttackAnimation(float playRate) override;
-   void          StopAttackAnimation() override;
-   FOnHitNotify& OnAttackNotify() override { return OnAttackNotifyEvent; }
-
-   float GetMockAnimationLength() const;
-	
-   void  SetMockAnimationLength(float newLength);
-	
-   void  SetupNotifyEvent(float notifyTime);
-	
-=======
    void PlayAttackAnimation(ACharacter* characterToPlayMontageOn, float playRate) override;
    void StopAttackAnimation(ACharacter* characterToStopMontageOn) override;
 
@@ -45,7 +29,6 @@ class MYPROJECT_API UNullAttackAnim : public UObject, public IAttackAnim
 
    void SetMockAnimationLength(float newLength);
 
->>>>>>> componentrefactor
    /** Requires us to create a new timeline since there's nothing in FTimeline's API to delete an event*/
    void SetAttackEventTime(float newTime);
 
@@ -56,13 +39,6 @@ class MYPROJECT_API UNullAttackAnim : public UObject, public IAttackAnim
    UFUNCTION()
    void AttackNotify() override;
 
-<<<<<<< HEAD
-   void NativeUpdateAnimation(float DeltaSeconds) override;
-
- private:
-   FOnHitNotify OnAttackNotifyEvent;
-   FTimeline    mockAnimationTimeline;
-=======
    void SetupHitTimer();
 
  private:
@@ -76,5 +52,4 @@ class MYPROJECT_API UNullAttackAnim : public UObject, public IAttackAnim
 
    float hitNotifyTime;
    float timelineLength;
->>>>>>> componentrefactor
 };

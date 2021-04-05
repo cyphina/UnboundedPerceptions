@@ -1,13 +1,5 @@
 #include "MyProject.h"
 #include "EquipmentMenu.h"
-<<<<<<< HEAD
-#include "Items/ItemDelegateStore.h"
-#include "UI/HUDManager.h"
-
-void UEquipmentMenu::NativeOnInitialized()
-{
-   ItemChangeEvents::OnEquipmentChangedEvent.AddUObject(this, &UEquipmentMenu::OnEquipmentChanged);
-=======
 
 #include "BaseHero.h"
 #include "BasePlayer.h"
@@ -63,19 +55,11 @@ void UEquipmentMenu::SetupEquipImages()
          ++index;
       }
    }
->>>>>>> componentrefactor
 }
 
 void UEquipmentMenu::OnEquipmentChanged(const ABaseHero* heroThatChanged, TArray<int> updatedInventorySlots)
 {
    if(GetVisibility() != ESlateVisibility::Collapsed) {
       if(GetEquippedHero() == heroThatChanged) SetupEquipImages();
-   }
-}
-
-void UEquipmentMenu::OnEquipmentChanged(const ABaseHero* heroThatChanged, const FMyItem& changedEquip)
-{
-   if(GetVisibility() != ESlateVisibility::Collapsed) {
-      if(GetEquippedHero() == heroThatChanged) Update();
    }
 }

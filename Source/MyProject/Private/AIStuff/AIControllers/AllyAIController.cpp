@@ -22,9 +22,6 @@
 #include "TargetComponent.h"
 #include "PatrolComponent.h"
 
-<<<<<<< HEAD
-AAllyAIController::AAllyAIController()
-=======
 #include "ManualSpellComponent.h"
 #include "TargetedAttackComponent.h"
 #include "SpellCastComponent.h"
@@ -32,21 +29,17 @@ AAllyAIController::AAllyAIController()
 #include "AIModule/Classes/BehaviorTree/BehaviorTreeComponent.h"
 
 AAllyAIController::AAllyAIController(const FObjectInitializer& ObjectInitializer) : AUnitController(ObjectInitializer)
->>>>>>> componentrefactor
 {
    SetActorTickInterval(0.2f);
    behaviorTrees.SetNum(NUM_BEHAVIORAL_MODES);
 
    patrolComp = CreateDefaultSubobject<UPatrolComponent>("PatrolComponent");
    stateComp  = CreateDefaultSubobject<URTSStateComponent>("StateComponent");
-<<<<<<< HEAD
-=======
    spellCastComponent  = CreateDefaultSubobject<USpellCastComponent>("SpellComponent");
    manualSpellCastComponent  = CreateDefaultSubobject<UManualSpellComponent>("ManualSpellComponent");
    targetedAttackComponent = CreateDefaultSubobject<UTargetedAttackComponent>("TargetedAttackComponent");
    blackboardComp = CreateDefaultSubobject<UBlackboardComponent>("BlackboardComponent");
    behaviorTreeComp = CreateDefaultSubobject<UBehaviorTreeComponent>("BehaviorTreeComponent");
->>>>>>> componentrefactor
 }
 
 void AAllyAIController::OnPossess(APawn* InPawn)
@@ -58,20 +51,13 @@ void AAllyAIController::OnPossess(APawn* InPawn)
 
 void AAllyAIController::OnUnPossess()
 {
-<<<<<<< HEAD
-=======
    Super::OnUnPossess();
->>>>>>> componentrefactor
    spellCastComponent->OnSpellCasted().RemoveAll(this);
 }
 
 void AAllyAIController::SwitchAIModes(EAllyBehavioralMode newMode)
 {
-<<<<<<< HEAD
-   if(currentAllyBehavior != AllyBehavioralMode::ABM_Neutral) behaviorTreeComp->StopTree();
-=======
    if(currentAllyBehavior != EAllyBehavioralMode::ABM_Neutral) behaviorTreeComp->StopTree();
->>>>>>> componentrefactor
    // if we choose neutral there's no behavior tree since it's element in the tree array is empty
    if(behaviorTrees[static_cast<uint8>(newMode)]) {
       UseBlackboard(behaviorTrees[static_cast<uint8>(newMode)]->BlackboardAsset, blackboardComp);

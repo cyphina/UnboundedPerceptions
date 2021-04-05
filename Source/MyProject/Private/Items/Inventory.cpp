@@ -19,15 +19,11 @@ bool UInventory::OnWidgetAddToViewport_Implementation()
 {
    Super::OnWidgetAddToViewport_Implementation();
 
-<<<<<<< HEAD
-   if(!backpack) return false;
-=======
    if(!backpack)
    {
       return false;
    }
 
->>>>>>> componentrefactor
    LoadItems();
    return true;
 }

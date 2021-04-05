@@ -2,37 +2,14 @@
 
 #include "MyProject.h"
 #include "MontageAttackAnim.h"
-<<<<<<< HEAD
-=======
 
 #include "RTSUnitAnim.h"
->>>>>>> componentrefactor
 #include "GameFramework/Character.h"
 
 UMontageAttackAnim::UMontageAttackAnim()
 {
 }
 
-<<<<<<< HEAD
-void UMontageAttackAnim::AttackNotify()
-{
-   OnAttackNotify().Broadcast();
-}
-
-void UMontageAttackAnim::PlayAttackAnimation(float playRate)
-{
-   Cast<ACharacter>(GetOuter())->PlayAnimMontage(attackMontage, playRate);
-}
-
-void UMontageAttackAnim::StopAttackAnimation()
-{
-   Cast<ACharacter>(GetOuter())->StopAnimMontage(attackMontage);
-}
-
-FOnHitNotify& UMontageAttackAnim::OnAttackNotify()
-{
-   return OnAttackNotifyEvent;
-=======
 void UMontageAttackAnim::PlayAttackAnimation(ACharacter* characterToPlayMontageOn, float playRate)
 {
    if(characterToPlayMontageOn)
@@ -91,5 +68,4 @@ UAnimMontage* UMontageAttackAnim::GetAttackMontage(ACharacter* characterWithMont
       }
    }
    return nullptr;
->>>>>>> componentrefactor
 }

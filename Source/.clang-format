@@ -7,19 +7,11 @@ AlignEscapedNewlines: Left
 AlignOperands: 'true'
 AlignTrailingComments: 'true'
 AllowAllParametersOfDeclarationOnNextLine: 'false'
-<<<<<<< HEAD
-AllowShortBlocksOnASingleLine: Always
-AllowShortCaseLabelsOnASingleLine: 'true'
-AllowShortFunctionsOnASingleLine: InlineOnly
-AllowShortIfStatementsOnASingleLine: WithoutElse
-AllowShortLambdasOnASingleLine: Inline
-=======
 AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: 'true'
 AllowShortFunctionsOnASingleLine: InlineOnly
 AllowShortIfStatementsOnASingleLine: WithoutElse
 AllowShortLambdasOnASingleLine: None    
->>>>>>> componentrefactor
 AllowShortLoopsOnASingleLine: 'false'
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: 'false'

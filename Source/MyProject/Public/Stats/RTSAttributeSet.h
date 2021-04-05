@@ -25,11 +25,7 @@ DECLARE_EVENT_ThreeParams(URTSAttributeSet, FOnStatsUpdated, const FGameplayAttr
 * Attribute set corresponding to the information held within our units
 */
 UCLASS()
-<<<<<<< HEAD:Source/MyProject/Public/Stats/MyAttributeSet.h
-class MYPROJECT_API UMyAttributeSet : public UAttributeSet
-=======
 class MYPROJECT_API URTSAttributeSet : public UAttributeSet
->>>>>>> componentrefactor:Source/MyProject/Public/Stats/RTSAttributeSet.h
 {
    GENERATED_BODY()
 
@@ -37,12 +33,7 @@ class MYPROJECT_API URTSAttributeSet : public UAttributeSet
    class AUserInput*               cpcRef;
 
  public:
-<<<<<<< HEAD:Source/MyProject/Public/Stats/MyAttributeSet.h
-   UMyAttributeSet();
-   static const float MAX_HEALTH;
-=======
    URTSAttributeSet();
->>>>>>> componentrefactor:Source/MyProject/Public/Stats/RTSAttributeSet.h
 
    ///--Attributes--
    UPROPERTY(Category = "Attributes", EditAnywhere, BlueprintReadWrite)
@@ -227,18 +218,6 @@ class MYPROJECT_API URTSAttributeSet : public UAttributeSet
     * @param NewValue 
     */
    void PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const override final;
-<<<<<<< HEAD:Source/MyProject/Public/Stats/MyAttributeSet.h
-
-   /**
-    * @brief Called before any stat changes. Can be used to clamp attributes, or even to have event driven UI modifications.
-    * @param Attribute 
-    * @param NewValue 
-    */
-   void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override final;
-
-   FOnStatsUpdated statUpdatedEvent;
-   FOnStatsUpdated baseStatUpdatedEvent;
-=======
 
    /**
     * @brief Called before any stat changes. Can be used to clamp attributes, or even to have event driven UI modifications.
@@ -249,5 +228,4 @@ class MYPROJECT_API URTSAttributeSet : public UAttributeSet
 
    mutable FOnStatsUpdated statUpdatedEvent;
    mutable FOnStatsUpdated baseStatUpdatedEvent;
->>>>>>> componentrefactor:Source/MyProject/Public/Stats/RTSAttributeSet.h
 };

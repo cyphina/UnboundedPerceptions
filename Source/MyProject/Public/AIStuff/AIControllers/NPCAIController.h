@@ -18,11 +18,7 @@ class MYPROJECT_API ANPCAIController : public AAIController
    ANPCAIController();
 
    UFUNCTION(BlueprintCallable, Category = "NPCActions")
-<<<<<<< HEAD
-   void Follow(const ABaseHero* heroToFollow);
-=======
    void Follow(const AActor* actorToFollow);
->>>>>>> componentrefactor
 
    UFUNCTION(BlueprintCallable, Category = "NPCActions")
    void Patrol();
@@ -35,23 +31,8 @@ class MYPROJECT_API ANPCAIController : public AAIController
    void BeginPlay() override;
 
  private:
-<<<<<<< HEAD
-   UPROPERTY(EditDefaultsOnly, Category = "AIData")
-   UBehaviorTree* followTree;
-
-   UPROPERTY(EditDefaultsOnly, Category = "AIData")
-   UBehaviorTree* patrolTree;
-
-   UPROPERTY(VisibleAnywhere, Category = "AIData")
-   UBlackboardComponent* blackboardComp;
-
-   UPROPERTY(EditDefaultsOnly, Category = "AIData")
-   UBlackboardData* npcBB;
-
-=======
    const AActor* followTarget;
    FTimerHandle followLoopTimer;
 
->>>>>>> componentrefactor
    static const FName targetKeyName;
 };

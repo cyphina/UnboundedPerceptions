@@ -21,11 +21,6 @@
 #include "RTSGameMode.h"
 #include "MyGameInstance.h"
 #include "UpStatComponent.h"
-<<<<<<< HEAD
-
-CSV_DEFINE_CATEGORY(UpLevelLoading, false);
-=======
->>>>>>> componentrefactor
 
 USaveLoadClass::~USaveLoadClass()
 {
@@ -132,11 +127,7 @@ void USaveLoadClass::SetupSaveHeroData()
          for(TSubclassOf<UMySpell> spell : heroRef->GetAbilitySystemComponent()->GetAbilities()) {
             // TODO: Properly setup namespace and keys for each spell in table
             if(spell.GetDefaultObject())
-<<<<<<< HEAD
-               heroesSaveData[i].spellIDs.Add(spell.GetDefaultObject()->spellDefaults.id);
-=======
                heroesSaveData[i].nameTags.Add(spell.GetDefaultObject()->GetSpellDefaults().nameTag);
->>>>>>> componentrefactor
          }
 
          heroRef->GetBackpack().SaveBackpack(heroesSaveData[i].backpackInfo);
@@ -221,13 +212,8 @@ void USaveLoadClass::SetupAlliedUnits()
       if(ABaseHero* spawnedHero = UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(*heroSaveData.allyInfo.name.ToString(), controllerRef->GetWorld())) {
          spawnedHero->SetActorTransform(heroSaveData.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedHero, heroSaveData.allyInfo.baseCSaveInfo);
-<<<<<<< HEAD
-         for(int i = 0; i < heroSaveData.spellIDs.Num(); ++i) {
-            spawnedHero->GetAbilitySystemComponent()->SetSpellAtSlot(USpellDataManager::GetData().GetSpellClass(heroSaveData.spellIDs[i]), i);
-=======
          for(int i = 0; i < heroSaveData.nameTags.Num(); ++i) {
             spawnedHero->GetAbilitySystemComponent()->SetSpellAtSlot(USpellDataManager::GetData().GetSpellClass(heroSaveData.nameTags[i]), i);
->>>>>>> componentrefactor
          }
          spawnedHero->attPoints = heroSaveData.attPoints;
          spawnedHero->SetCurrentExp(heroSaveData.currentExp);
@@ -242,13 +228,8 @@ void USaveLoadClass::SetupAlliedUnits()
              assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/Allies") + heroSaveData.allyInfo.name.ToString()));
          spawnedHero = controllerRef->GetWorld()->SpawnActorDeferred<ABaseHero>(heroAsset.GetAsset()->GetClass(), heroSaveData.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedHero, heroSaveData.allyInfo.baseCSaveInfo);
-<<<<<<< HEAD
-         for(int i = 0; i < heroSaveData.spellIDs.Num(); ++i) {
-            spawnedHero->GetAbilitySystemComponent()->SetSpellAtSlot(USpellDataManager::GetData().GetSpellClass(heroSaveData.spellIDs[i]), i);
-=======
          for(int i = 0; i < heroSaveData.nameTags.Num(); ++i) {
             spawnedHero->GetAbilitySystemComponent()->SetSpellAtSlot(USpellDataManager::GetData().GetSpellClass(heroSaveData.nameTags[i]), i);
->>>>>>> componentrefactor
          }
          spawnedHero->attPoints = heroSaveData.attPoints;
          spawnedHero->SetCurrentExp(heroSaveData.currentExp);

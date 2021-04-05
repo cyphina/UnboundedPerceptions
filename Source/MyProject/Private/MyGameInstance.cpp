@@ -22,14 +22,9 @@ void UMyGameInstance::SaveLevelData(FName levelName)
    DECLARE_SCOPE_CYCLE_COUNTER(TEXT("Up Level Saving"), STAT_StatsUpLevelSaving, STATGROUP_SaveAndLoading);
    DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Item Save Count"), STAT_StatsItemSaveCount, STATGROUP_SaveAndLoading);
 
-<<<<<<< HEAD
-   if (GetWorld()) {
-      if (mapInfo.Contains(levelName)) // if we've already been here
-=======
    if(GetWorld())
    {
       if(mapInfo.Contains(levelName)) // if we've already been here
->>>>>>> componentrefactor
       {
          FMapSaveInfo& mapData = mapInfo[levelName];
          mapData.pickupList.Empty();

@@ -16,16 +16,11 @@ UBTDecorator_IsReadyToAttack::UBTDecorator_IsReadyToAttack()
 
 bool UBTDecorator_IsReadyToAttack::CalculateRawConditionValue(UBehaviorTreeComponent& ownerComp, uint8* nodeMemory) const
 {
-<<<<<<< HEAD
-   // TODO: Fix this
-   // return Cast<AUnitController>(ownerComp.GetAIOwner())->GetUnitOwner()->GetIsReadyToAttack();
-=======
    if(UTargetedAttackComponent* targetedAttackComp = ownerComp.GetAIOwner()->FindComponentByClass<UTargetedAttackComponent>())
    {
       return targetedAttackComp->GetIsReadyToAttack();
    }
 
    // Units without a targeted attack component should control their attack timings in the behavior tree.
->>>>>>> componentrefactor
    return true;
 }

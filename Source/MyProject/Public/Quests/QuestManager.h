@@ -33,37 +33,12 @@ class MYPROJECT_API UQuestManager : public UObject
 {
    GENERATED_BODY()
 
-<<<<<<< HEAD
- public:
- #if WITH_EDITOR
-   void PostEditChangeProperty( struct FPropertyChangedEvent& PropertyChangedEvent) override;
- #endif
-
-   /** Updates map that maps quest classes to quest gameplaytags whenever we recompile the blueprint */
-   void UpdateQuestClassList();
-
-   UPROPERTY(BlueprintReadWrite, Category = "References")
-   AUserInput* controllerRef;
-
-   UPROPERTY()
-   class AHUDManager* hudManagerRef;
-
-   /**
-    * UI element that lists all the quests in a sidebar
-    */
-   UPROPERTY(BlueprintReadWrite, Category = "References")
-   UQuestList* questListRef;
-
-   UPROPERTY(BlueprintReadWrite, Category = "References")
-   UQuestJournal* questJournalRef;
-=======
 public:
    /**Add a new current quest.  Returns true on success, false on failure
    * @param questClassToSpawn - Class of quest actor to spawn
    */
    UFUNCTION(BlueprintCallable, Category = "Quest Managing")
    bool AddNewQuest(TSubclassOf<AQuest> questClassToSpawn);
->>>>>>> componentrefactor
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Quest Managing")
    AGoalActor* GetGoalActor() const { return currentGoalActor; }
@@ -145,29 +120,12 @@ private:
    void OnItemPurchased
    (const ABaseHero* purchasingHero, const FBackpackUpdateResult& addPurchasedItemResult, const TArray<FBackpackUpdateResult>& removePaymentItemsResults);
 
-<<<<<<< HEAD
-   /**Callback when enemy dies to check to see if this quest condition is fulfilled
-    * Need callbacks here since we specifically need that parameter
-=======
    /**
     *Callback when Interactable is successfully interacted with
     * @param decoratorName - Name of the interactable with a "Named Decorator"
->>>>>>> componentrefactor
     */
    void OnInteracted(TSubclassOf<AInteractableBase> interactableClass, const FText& decoratorName);
 
-<<<<<<< HEAD
-   
-   /**
-    * @brief Callback when we talk to an NPC
-    * @param talkedToNPC - NPC we talked to.
-    * @param conversationTopic - If this is the default tag, then it means there was no conversation topic.
-    */
-   UFUNCTION(BlueprintCallable, Category = "Callbacks")
-   void OnTalkNPC(ANPC* talkedToNPC, const FGameplayTag& conversationTopic);
-
-   void OnItemPickedUp(const ABaseHero* heroPickingItem, const FMyItem& newItem);
-=======
    void RecalculateItemCountsForGoals(const FMyItem item);
 
    bool TurnInItemsFromGatherGoal(int gatherItemId, int numItemsToGather);
@@ -175,7 +133,6 @@ private:
    void SetupWidgetReferences();
 
    void CompleteSubgoal(AQuest* quest, int goalIndex);
->>>>>>> componentrefactor
 
    void OnSubgoalSwitched(AQuest* quest, int goalIndex);
    
