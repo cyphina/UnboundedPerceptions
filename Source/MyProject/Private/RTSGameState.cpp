@@ -59,9 +59,52 @@ void ARTSGameState::CleanupUnitLists()
    Cast<ARTSGameState>(GetWorld()->GetGameState())->allyList.Shrink();
 }
 
-void ARTSGameState::ShowEnemyPerspective()
+void ARTSGameState::Up_PrintOutVisibleUnits()
 {
-   visionManager->ToggleEnemyPerspective();
+   static FTimerHandle debugHandle;
+   static bool         isPrinting = false;
+
+   if(!isPrinting)
+   {
+      GetWorld()->GetTimerManager().SetTimer(
+          debugHandle,
+          [this]() {
+             FString visibleAllyNames = "Allies: \n";
+             for(AUnit* visibleAlly : visiblePlayerUnits)
+             {
+                if(!visibleAlly->GetGameName().IsEmpty())
+                {
+                   visibleAllyNames += visibleAlly->GetGameName().ToString() + "\n";
+                }
+                else
+                {
+                   visibleAllyNames += visibleAlly->GetName();
+                }
+             }
+
+             FString visibleEnemyNames = "Enemies: \n";
+             for(AUnit* visibleEnemy : visibleEnemies)
+             {
+                if(!visibleEnemy->GetGameName().IsEmpty())
+                {
+                   visibleEnemyNames += visibleEnemy->GetGameName().ToString() + "\n";
+                }
+                else
+                {
+                   visibleEnemyNames += visibleEnemy->GetName();
+                }
+             }
+             GEngine->AddOnScreenDebugMessage(-1, 0.2f, FColor::White, visibleAllyNames + visibleEnemyNames);
+          },
+          0.2f, true, 0.f);
+
+      isPrinting = true;
+   }
+   else
+   {
+      GetWorld()->GetTimerManager().ClearTimer(debugHandle);
+      isPrinting = false;
+   }
 }
 
 const TArray<AUnit*>& ARTSGameState::GetVisibleEnemies() const

@@ -1,6 +1,3 @@
-
-
-// Fill out your copyright notice in the Description page of Project Settings.
 #pragma once
 
 #include "UserInput.h"
@@ -11,40 +8,33 @@
 #   include <type_traits>
 #endif
 
-/** Singleton class for some important variables */
+/** Singleton class for some important global variables or functions */
 namespace UpResourceManager
 {
    class FGameplayAttributeData;
    class ABaseCharacter;
 
-   // Used to get bounds of some object with collision (represents the corners of a cube)
-   const FVector BoundsPointMapping[8] = {FVector(1.f, 1.f, 1.f),  FVector(1.f, 1.f, -1.f),  FVector(1.f, -1.f, 1.f),  FVector(1.f, -1.f, -1.f),
-                                          FVector(-1.f, 1.f, 1.f), FVector(-1.f, 1.f, -1.f), FVector(-1.f, -1.f, 1.f), FVector(-1.f, -1.f, -1.f)};
-
-   const FVector BoundsPointMapping2D[4] = {
-       FVector(1.f, 1.f, 0.f),
-       FVector(1.f, -1.f, 0.f),
-       FVector(-1.f, -1.f, 0.f),
-       FVector(-1.f, 1.f, -1.f),
-   };
-
-   struct StatKeyFunc : TDefaultMapHashableKeyFuncs<uint8, uint8, false> {
+   struct StatKeyFunc : TDefaultMapHashableKeyFuncs<uint8, uint8, false>
+   {
       /** Maps 0-NumAtts to 0, NumAtts-NumScalingStats to 1, and so forth */
       static FORCEINLINE uint32 GetKeyHash(uint8 Key)
       {
          checkf((unsigned)Key < (unsigned)(CombatInfo::TotalStatCount), TEXT("Don't map any values out of the number of stats %d"), Key);
-         if(Key < CombatInfo::AttCount) { return 0; }
-         if(Key < CombatInfo::AttCount + CombatInfo::StatCount) { return 1; }
-         if(Key < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::MechanicCount) { return 2; }
+         if(Key < CombatInfo::AttCount)
+         {
+            return 0;
+         }
+         if(Key < CombatInfo::AttCount + CombatInfo::StatCount)
+         {
+            return 1;
+         }
+         if(Key < CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::MechanicCount)
+         {
+            return 2;
+         }
          return 3;
       }
    };
-
-   // Maps stat num ( 0- Total Num Stats ) to enum ( 0 - Attributes, 1 - Stats, 2 - Vitals, 3 - Mechanics)
-   const TMap<uint8, uint8, FDefaultSetAllocator, StatKeyFunc> statMapper = {{0, 0},
-                                                                             {CombatInfo::AttCount, 1},
-                                                                             {CombatInfo::AttCount + CombatInfo::StatCount, 2},
-                                                                             {CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount, 3}};
 
    /**Returns the Simpson quadrature's coefficient*/
    static const TFunction<float(float)> SimpsonSpacing = [](const float space) {
@@ -81,8 +71,12 @@ namespace UpResourceManager
       static_assert(std::is_base_of<IWorldObject, T>::value, "Template parameter should derive from IWorldObject");
 #endif
 
-      for(TActorIterator<T> actItr(worldRef); actItr; ++actItr) {
-         if((*actItr)->GetGameName().ToString() == nameToMatch) { return *actItr; }
+      for(TActorIterator<T> actItr(worldRef); actItr; ++actItr)
+      {
+         if((*actItr)->GetGameName().ToString() == nameToMatch)
+         {
+            return *actItr;
+         }
       }
 
 #if UE_EDITOR
@@ -101,12 +95,14 @@ namespace UpResourceManager
    struct GetPropertyFromType;
 
    template <>
-   struct GetPropertyFromType<float> {
+   struct GetPropertyFromType<float>
+   {
       using value = FFloatProperty;
    };
 
    template <>
-   struct GetPropertyFromType<int> {
+   struct GetPropertyFromType<int>
+   {
       using value = FIntProperty;
    };
 
@@ -114,10 +110,12 @@ namespace UpResourceManager
    template <typename T>
    bool GetObjectVariable(UObject* objectRef, FName propertyToRead, T& outValue, UWorld* worldRef)
    {
-      if(objectRef) {
+      if(objectRef)
+      {
          using Property = GetPropertyFromType<T>::value;
-         Property p     = FindField<Property>(objectRef->GetClass(), propertyToRead);
-         if(p) {
+         Property p     = FindUField<Property>(objectRef->GetClass(), propertyToRead);
+         if(p)
+         {
             outValue = p->GetPropertyValue_InContainer(objectRef);
             return true;
          }
@@ -128,14 +126,39 @@ namespace UpResourceManager
    template <typename T>
    bool SetObjectVariable(UObject* objectRef, FName propertyToRead, T newValue, UWorld* worldRef)
    {
-      if(objectRef) {
+      if(objectRef)
+      {
          using Property = GetPropertyFromType<T>::value;
          Property p     = FindField<Property>(objectRef->GetClass(), propertyToRead);
-         if(p) {
+         if(p)
+         {
             p->SetPropertyValue_InContainer(objectRef, newValue);
             return true;
          }
       }
       return false;
    }
-} 
+
+   // Maps stat num ( 0- Total Num Stats ) to enum ( 0 - Attributes, 1 - Stats, 2 - Vitals, 3 - Mechanics)
+   const TMap<uint8, uint8, FDefaultSetAllocator, StatKeyFunc> statMapper = {{0, 0},
+                                                                             {CombatInfo::AttCount, 1},
+                                                                             {CombatInfo::AttCount + CombatInfo::StatCount, 2},
+                                                                             {CombatInfo::AttCount + CombatInfo::StatCount + CombatInfo::VitalCount, 3}};
+
+   // Used to get bounds of some object with collision (represents the corners of a cube)
+   const FVector BoundsPointMapping[8] = {FVector(1.f, 1.f, 1.f),  FVector(1.f, 1.f, -1.f),  FVector(1.f, -1.f, 1.f),  FVector(1.f, -1.f, -1.f),
+                                          FVector(-1.f, 1.f, 1.f), FVector(-1.f, 1.f, -1.f), FVector(-1.f, -1.f, 1.f), FVector(-1.f, -1.f, -1.f)};
+
+   const FVector BoundsPointMapping2D[4] = {
+       FVector(1.f, 1.f, 0.f),
+       FVector(1.f, -1.f, 0.f),
+       FVector(-1.f, -1.f, 0.f),
+       FVector(-1.f, 1.f, -1.f),
+   };
+
+   const FGameplayTagContainer EffectNameTagFilter       = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.EffectName"));
+   const FGameplayTagContainer EffectElemTagFilter       = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Element"));
+   const FGameplayTagContainer EffectRemoveableTagFilter = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Removable"));
+   // Use this when we have multiple effects that have their own timers, but should be treated as a single effect (called pseudo-stackable effects)
+   const FGameplayTagContainer EffectPseudoStackTagFilter  = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.ShowEffectsAsStack"));
+}

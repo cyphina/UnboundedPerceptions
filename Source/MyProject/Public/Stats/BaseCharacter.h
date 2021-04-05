@@ -2,7 +2,7 @@
 
 #include "Stats/Vital.h"
 #include "StatEnums.h"
-#include "MyAttributeSet.h"
+#include "RTSAttributeSet.h"
 
 class UAbilitySystemComponent;
 
@@ -28,7 +28,7 @@ struct FBaseCharacter
    static const int BASE_MOVEMENT_SPEED = 500;
    static const int BASE_ATTACK_POWER   = 100;
 
-   FBaseCharacter(const UMyAttributeSet& AttSet);
+   FBaseCharacter(const URTSAttributeSet& AttSet);
    ~FBaseCharacter();
    FBaseCharacter& operator=(const FBaseCharacter& otherChar) = default;
 
@@ -66,10 +66,10 @@ struct FBaseCharacter
 
    const TArray<FGameplayAttribute>& GetMechanics() const { return mechanics; }
 
-   UMyAttributeSet* GetAttSet() const { return attSet; }
+   URTSAttributeSet* GetAttSet() const { return attSet; }
 
 private:
-   UMyAttributeSet* attSet;
+   URTSAttributeSet* attSet;
    using atts = EAttributes;
    using sks = EUnitScalingStats;
    using vits = EVitals;

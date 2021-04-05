@@ -64,7 +64,7 @@ void USpellbookSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPo
          {
             if(spellBook->HasLearnedSpell(slotIndex))
             {
-               UDraggedActionWidget* dragVisual = CreateWidget<UDraggedActionWidget>(this, draggedActionWidgetClass);
+               UDraggedActionWidget* dragVisual = CreateDragIndicator();
                dragVisual->SetDraggedImage(spellClass.GetDefaultObject()->GetSpellDefaults().image);
 
                URTSSpellbookDrag* dragOp = NewObject<URTSSpellbookDrag>(this);
@@ -76,6 +76,23 @@ void USpellbookSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPo
          }
       }
    }
+}
+
+void USpellbookSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+   const ABaseHero* heroRef = GetHeroRef();
+   if(static_cast<unsigned>(slotIndex) >= static_cast<unsigned>(heroRef->GetSpellBook()->GetAvailableSpells().Num()))
+   {
+      return;
+   }
+
+   const auto spellClassRef = heroRef->GetSpellBook()->GetAvailableSpells()[slotIndex];
+   if(!spellClassRef)
+   {
+      return;
+   }
+
+   Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
 }
 
 void USpellbookSlot::ShowDesc(UToolTipWidget* tooltip)
@@ -110,10 +127,8 @@ void USpellbookSlot::ShowDesc(UToolTipWidget* tooltip)
    {
       if(AUserInput* CPCRef = Cast<AUserInput>(GetOwningPlayer<AUserInput>()))
       {
-         tooltip->SetupTTBoxText(
-             spellObj->GetSpellName(), levelRequirementString, preReqNamesDesc,
-             USpellFunctionLibrary::ParseDesc(spellObj->GetDescription(), abilitySystemCompRef, spellObj, CPCRef->GetHUDManager()->effectPowerTableRef),
-             costAndManaDesc);
+         tooltip->SetupTTBoxText(spellObj->GetSpellName(), levelRequirementString, preReqNamesDesc,
+                                 USpellFunctionLibrary::ParseDesc(spellObj->GetDescription(), abilitySystemCompRef, spellObj), costAndManaDesc);
       }
    }
 }

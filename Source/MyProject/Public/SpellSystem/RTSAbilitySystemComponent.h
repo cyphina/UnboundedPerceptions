@@ -1,6 +1,8 @@
 #pragma once
 
 #include "AbilitySystemComponent.h"
+#include "DEPRECATED_RTSRangeDiminishCalc.h"
+
 #include "RTSAbilitySystemComponent.generated.h"
 
 struct FDamageScalarStruct;
@@ -29,7 +31,7 @@ UCLASS()
 class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
 {
    GENERATED_BODY()
-
+	
    URTSAbilitySystemComponent();
 
  public:
@@ -84,9 +86,10 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
     * Abilities that this unit should start out with. Used to give enemies a set of abilities to work with,
     * although enemies could gain or lose abilities in certain scenarios in which that would refelct in the abilities property.
     */
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Unit Defaults")
    TArray<FDefaultLearnedAbility> defaultAbilities;
 
  private:
    class AUnit* unitOwnerRef;
+
 };

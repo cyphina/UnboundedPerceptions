@@ -16,21 +16,33 @@ void URTSDamageNumberWidget::NativeOnInitialized()
    BindToAnimationFinished(floatAndDissapearAnimation, OnWidgetFinishedAnim);
 }
 
-void URTSDamageNumberWidget::SetDamageTextProps(const FUpDamage& damageInfo)
+void URTSDamageNumberWidget::SetDamageTextProps(const FUpDamage& damageInfo, bool bIsHealing)
 {
+   FString damageString = FString::FromInt(damageInfo.damage);
    if(damageText)
    {
-      if(damageInfo.accuracy > 100)
+      if(damageInfo.DidMiss())
       {
          damageText->SetText(NSLOCTEXT("DamageNumbers", "Dodge", "Dodged!"));
       }
       else
       {
-         if(damageInfo.crit) {
-            damageText->SetRenderScale(FVector2D(1.5f));
+         damageText->SetColorAndOpacity(FSlateColor(USpellDataLibrary::elementalMap[damageInfo.element]));
+
+         if(damageInfo.crit)
+         {
+            damageString += "!";
          }
 
-         damageText->SetText(FText::AsNumber(damageInfo.damage));
+         if(bIsHealing)
+         {
+            damageString = "+" + damageString;
+         }
+
+         damageText->SetRenderScale(FVector2D(1.5f));
+
+         damageText->SetText(FText::Format(NSLOCTEXT("DamageNumbers", "DamageFormat", "{0}"), FText::FromString(damageString)));
+
          damageText->SetColorAndOpacity(FSlateColor(USpellDataLibrary::elementalMap[damageInfo.element]));
       }
       PlayAnimation(floatAndDissapearAnimation);

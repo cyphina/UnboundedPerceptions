@@ -59,30 +59,25 @@ uint32 UVisionSubsystem::Run()
    {
       SCOPE_CYCLE_COUNTER(STAT_UnitVision)
       {
-         TSet<AUnit*>  unitsEligibleForHidingVisibleLastCheck;
-         TSet<AUnit*>* unitsEligibleForHiding;
+         TSet<AUnit*> lastVisiblePlayerUnits;
+         TSet<AUnit*> lastVisibleEnemies;
 
-         if(bShowEnemyPerspective)
-         {
-            unitsEligibleForHiding = &visiblePlayerUnits;
-            visibleEnemies.Empty(visibleEnemies.Num());
-         }
-         else
-         {
-            unitsEligibleForHiding = &visibleEnemies;
-            visiblePlayerUnits.Empty(visiblePlayerUnits.Num());
-         }
+         StoreUnitsToHideThatWereVisibleLastCall(lastVisiblePlayerUnits, visiblePlayerUnits);
+         StoreUnitsToHideThatWereVisibleLastCall(lastVisibleEnemies, visibleEnemies);
 
-         StoreUnitsToHideThatWereVisibleLastCall(unitsEligibleForHidingVisibleLastCheck, *unitsEligibleForHiding);
+         visiblePlayerUnits.Empty(visiblePlayerUnits.Num());
+         visibleEnemies.Empty(visibleEnemies.Num());
 
          UpdateVisibleEnemies();
          UpdateVisiblePlayerUnits();
 
-         // TODO: Set friendly units to also be invisible in the model but do not change that in the view unless debugging options to test enemy vision is active.
-         MakeUnitsInVisionVisible(unitsEligibleForHidingVisibleLastCheck);
-         MakeUnitsOutOfVisionInvisible(unitsEligibleForHidingVisibleLastCheck, *unitsEligibleForHiding);
+         MakeUnitsInVisionVisible(visibleEnemies);
+         MakeUnitsOutOfVisionInvisible(lastVisibleEnemies, visibleEnemies);
 
-         FPlatformProcess::SleepNoStats(0.1f);
+         MakeUnitsInVisionVisible(visiblePlayerUnits);
+         MakeUnitsOutOfVisionInvisible(lastVisiblePlayerUnits, visiblePlayerUnits);
+
+         FPlatformProcess::SleepNoStats(VisionCVars::VisionUpdateLoopTime);
       }
    }
    return 0;
@@ -238,33 +233,6 @@ void UVisionSubsystem::MakeUnitsOutOfVisionInvisible(TSet<AUnit*>& unitsEligible
          {
             visibleUnit->SetIsUnitHidden(true);
          }
-      }
-   }
-}
-
-void UVisionSubsystem::ToggleEnemyPerspective()
-{
-   bShowEnemyPerspective = !bShowEnemyPerspective;
-   if(bShowEnemyPerspective)
-   {
-      for(AUnit* alliedUnit : gameStateRef->GetAllAllyUnits())
-      {
-         alliedUnit->SetIsUnitHidden(true);
-      }
-      for(AUnit* enemyUnit : gameStateRef->GetAllEnemyUnits())
-      {
-         enemyUnit->SetIsUnitHidden(false);
-      }
-   }
-   else
-   {
-      for(AUnit* alliedUnit : gameStateRef->GetAllAllyUnits())
-      {
-         alliedUnit->SetIsUnitHidden(false);
-      }
-      for(AUnit* enemyUnit : gameStateRef->GetAllEnemyUnits())
-      {
-         enemyUnit->SetIsUnitHidden(true);
       }
    }
 }

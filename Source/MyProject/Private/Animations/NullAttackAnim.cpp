@@ -18,6 +18,9 @@ void UNullAttackAnim::PlayAttackAnimation(ACharacter* characterToPlayMontageOn, 
       GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, "Attack Animation Started!");
    }
 
+   SetMockAnimationLength(2.f / playRate);
+   SetAttackEventTime(1.f / playRate);
+
    SetupHitTimer();
    GetWorld()->GetTimerManager().SetTimer(
        mockAnimationTimer,

@@ -4,7 +4,7 @@
 #include "Stats/Attribute.h"
 #include "GameplayEffectTypes.h"
 
-class UMyAttributeSet;
+class URTSAttributeSet;
 
 namespace CombatInfo
 {
@@ -36,20 +36,20 @@ namespace CombatInfo
       /// <param name="attData"> Link to AttSet  </param>
       /// <param name="baseV"> Initial Base Value </param>
       /// <param name="mod"> Mod Value </param>
-      RTSUnitStat(FGameplayAttribute att, int baseV, ModifyingAttribute mod, UMyAttributeSet* attSet);
+      RTSUnitStat(FGameplayAttribute att, int baseV, ModifyingAttribute mod, URTSAttributeSet* attSet);
       ~RTSUnitStat();
 
       void ChangeModifier(ModifyingAttribute arr);
-      void CalculateModValue(UMyAttributeSet* attSet); // Sets up base value for this stat
+      void CalculateModValue(URTSAttributeSet* attSet); // Sets up base value for this stat
 
-      float GetBaseValue(UMyAttributeSet* attSet) const;
-      void  SetBaseValue(float value, UMyAttributeSet* attSet);
+      float GetBaseValue(URTSAttributeSet* attSet) const;
+      void  SetBaseValue(float value, URTSAttributeSet* attSet);
 
-      float GetBuffValue(UMyAttributeSet* attSet) const; // Can be negative if we're debuffed
+      float GetBuffValue(URTSAttributeSet* attSet) const; // Can be negative if we're debuffed
 
-      void  SetAdjustedValue(float value, UMyAttributeSet* attSet);
-      float GetAdjustedValue(UMyAttributeSet* attSet) const;
+      void  SetAdjustedValue(float value, URTSAttributeSet* attSet);
+      float GetAdjustedValue(URTSAttributeSet* attSet) const;
 
-      void Update(UMyAttributeSet* attSet);
+      void Update(URTSAttributeSet* attSet);
    };
 } // namespace CombatInfo

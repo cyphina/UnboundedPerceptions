@@ -31,7 +31,8 @@ class MYPROJECT_API UActionbarInterface : public UMyUserWidget
    UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "View")
    void DeadUnitView();
 
-   FOnSlotSelected& OnSlotSelected();
+   FOnSlotSelected& OnSkillSlotSelected();
+   FOnSlotSelected& OnEffectSlotSelected();
    
  protected:
    UPROPERTY(meta=(BindWidget))

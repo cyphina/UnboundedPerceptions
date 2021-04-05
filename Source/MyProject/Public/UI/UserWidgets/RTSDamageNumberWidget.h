@@ -15,7 +15,7 @@ class MYPROJECT_API URTSDamageNumberWidget : public UUserWidget
 
 public:
    void NativeOnInitialized() override;
-   void SetDamageTextProps(const FUpDamage& damageInfo);
+   void SetDamageTextProps(const FUpDamage& damageInfo, bool bIsHealing = false);
    
 protected:
    UPROPERTY(Meta=(BindWidget))

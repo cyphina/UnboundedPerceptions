@@ -3,7 +3,7 @@
 #include "MyProject.h"
 #include "StatChangeCalc.h"
 #include "AbilitySystemComponent.h"
-#include "Stats/MyAttributeSet.h"
+#include "Stats/RTSAttributeSet.h"
 #include "SpellDataManager.h"
 #include "WorldObjects/Unit.h"
 

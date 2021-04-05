@@ -1,8 +1,8 @@
 #pragma once
 
 /**
+ * ! Deprecated - Relic of the past before I used the gameplay ability system
  * Attribute are the fundamental stats which are modifyable by leveling up and affect other useful combat properties of a unit
- * Relic of the past before I used the gameplay ability system
  */
 
 namespace CombatInfo

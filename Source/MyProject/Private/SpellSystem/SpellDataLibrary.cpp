@@ -1,12 +1,14 @@
 ﻿#include "SpellDataLibrary.h"
 #include "GameplayTagAssetInterface.h"
 #include "RTSAbilitySystemComponent.h"
+#include "UpResourceManager.h"
 
 const TMap<FGameplayTag, FColor> USpellDataLibrary::elementalMap = {{FGameplayTag::RequestGameplayTag("Combat.Element.None"), FColor::White},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Arcane"), FColor::Cyan},
+                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Arcane"), FColor(0, 0x66, 0xBB)},
                                                                     {FGameplayTag::RequestGameplayTag("Combat.Element.Blood"), FColor(255, 51, 51)},
                                                                     {FGameplayTag::RequestGameplayTag("Combat.Element.Chaos"), FColor::Purple},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Dark"), FColor::Black},
+                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Cosmic"), FColor(213, 127, 209)},
+                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Dark"), FColor(0, 0, 0x33)},
                                                                     {FGameplayTag::RequestGameplayTag("Combat.Element.Earth"), FColor(210, 180, 140)},
                                                                     {FGameplayTag::RequestGameplayTag("Combat.Element.Electric"), FColor::Yellow},
                                                                     {FGameplayTag::RequestGameplayTag("Combat.Element.Ethereal"), FColor::Emerald},
@@ -97,4 +99,44 @@ bool USpellDataLibrary::IsAttackable(const IGameplayTagAssetInterface* abilityCo
 {
    return !(abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Phased")) ||
             abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Ghost")));
+}
+
+float USpellDataLibrary::GetSetByCallerTagMagnitude(UAbilitySystemComponent* AbilityComponent, FGameplayTag EffectName, FGameplayTag SetByCallerTag)
+{
+   if(AbilityComponent)
+   {
+      TArray<FActiveGameplayEffectHandle> effects = AbilityComponent->GetActiveEffectsWithAllTags(EffectName.GetSingleTagContainer());
+      if(effects.Num() > 0)
+      {
+         const FActiveGameplayEffectHandle effect = effects[0];
+         if(effect.IsValid())
+         {
+            return AbilityComponent->GetActiveGameplayEffect(effect)->Spec.GetSetByCallerMagnitude(SetByCallerTag);
+         }
+      }
+   }
+   return 0;
+}
+
+FGameplayTag USpellDataLibrary::GetEffectNameTagFromSpec(UAbilitySystemComponent* ASC, const FGameplayEffectSpecHandle& EffectSpecHandle)
+{
+   FGameplayTagContainer assetTags;
+   EffectSpecHandle.Data->GetAllAssetTags(assetTags);
+   return assetTags.Filter(UpResourceManager::EffectNameTagFilter).First();
+}
+
+FGameplayTag USpellDataLibrary::GetEffectNameTagFromActiveHandle(UAbilitySystemComponent* ASC, FActiveGameplayEffectHandle EffectHandle)
+{
+   FGameplayTagContainer assetTags;
+   ASC->GetActiveGameplayEffect(EffectHandle)->Spec.GetAllAssetTags(assetTags);
+   return assetTags.Filter(UpResourceManager::EffectNameTagFilter).First();
+}
+
+void USpellDataLibrary::RemoveEffectWtihNameTag(UAbilitySystemComponent* ASC, FGameplayTag EffectName, int StacksToRemove)
+{
+   const auto effectsWithTag = ASC->GetActiveEffectsWithAllTags(EffectName.GetSingleTagContainer());
+   if(effectsWithTag.Num() > 0)
+   {
+      ASC->RemoveActiveGameplayEffect(effectsWithTag[0], StacksToRemove);
+   }
 }

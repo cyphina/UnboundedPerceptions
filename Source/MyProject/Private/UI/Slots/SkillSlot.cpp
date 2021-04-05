@@ -55,7 +55,7 @@ void USkillSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointe
 {
    if(const TSubclassOf<UMySpell> spellCorrespondingToSlot = GetOwningAbilityComponent()->GetSpellAtSlot(slotIndex))
    {
-      UDraggedActionWidget* dragVisual = CreateWidget<UDraggedActionWidget>(this, draggedActionWidgetClass);
+      UDraggedActionWidget* dragVisual = CreateDragIndicator();
       dragVisual->SetDraggedImage(spellCorrespondingToSlot.GetDefaultObject()->GetSpellDefaults().image);
 
       URTSActionBarSkillDrag* dragOp = NewObject<URTSActionBarSkillDrag>(this);
@@ -63,6 +63,14 @@ void USkillSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointe
       dragOp->DefaultDragVisual      = dragVisual;
       dragOp->slotIndex              = slotIndex;
       OutOperation                   = MoveTemp(dragOp);
+   }
+}
+
+void USkillSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+   if(GetOwningAbilityComponent()->GetSpellAtSlot(slotIndex))
+   {
+      Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
    }
 }
 
@@ -113,7 +121,8 @@ void USkillSlot::UpdateCD()
 {
    if(const URTSAbilitySystemComponent* abilityComponent = GetOwningAbilityComponent())
    {
-      if(abilityComponent->GetAbilities().Num() < slotIndex || abilityComponent->GetSpellAtSlot(slotIndex) == nullptr) {
+      if(abilityComponent->GetAbilities().Num() < slotIndex || abilityComponent->GetSpellAtSlot(slotIndex) == nullptr)
+      {
          OnCDFinished();
          return;
       }
@@ -197,16 +206,30 @@ void USkillSlot::ShowDesc(UToolTipWidget* tooltip)
    {
       if(const TSubclassOf<UMySpell> spellClass = ownerAbilityComp->GetSpellAtSlot(slotIndex))
       {
-         UMySpell*     spellAtSlot       = spellClass.GetDefaultObject();
-         const FString relevantSpellInfo = "Costs " + FString::FromInt(spellAtSlot->GetCost(ownerAbilityComp)) + " mana\r\n" +
-                                           FString::FromInt(spellAtSlot->GetCDDuration(ownerAbilityComp)) + " second CD \r\n" +
-                                           FString::FromInt(spellAtSlot->GetRange(ownerAbilityComp)) + " range";
+         UMySpell* spellAtSlot = spellClass.GetDefaultObject();
+         FString   relevantSpellInfo;
+
+         if(spellAtSlot->GetSpellDefaults().Cost.Num() > 0)
+         {
+            relevantSpellInfo += "Costs " + FString::FromInt(spellAtSlot->GetCost(ownerAbilityComp)) + " mana";
+         }
+
+         if(spellAtSlot->GetSpellDefaults().Cooldown.Num() > 0)
+         {
+            relevantSpellInfo += "\r\n" + FString::FromInt(spellAtSlot->GetCDDuration(ownerAbilityComp)) + " second CD";
+         }
+
+         if(spellAtSlot->GetSpellDefaults().Range.Num() > 0)
+         {
+            relevantSpellInfo += "\r\n" + FString::FromInt(spellAtSlot->GetRange(ownerAbilityComp)) + " range";
+         }
+
          if(AUserInput* CPCRef = Cast<AUserInput>(GetOwningPlayer<AUserInput>()))
          {
             tooltip->SetupTTBoxText(
-                spellAtSlot->GetSpellName(),
-                USpellFunctionLibrary::ParseDesc(spellAtSlot->GetDescription(), ownerAbilityComp, spellAtSlot, CPCRef->GetHUDManager()->effectPowerTableRef),
-                spellAtSlot->GetElem(), FText::FromString(relevantSpellInfo), FText::GetEmpty());
+                FText::Format(NSLOCTEXT("SkillSlotDesc", "SpellNameAndLevel", "{0} ({1})"), spellAtSlot->GetSpellName(), spellAtSlot->GetLevel(ownerAbilityComp)),
+                USpellFunctionLibrary::ParseDesc(spellAtSlot->GetDescription(), ownerAbilityComp, spellAtSlot), spellAtSlot->GetElem(),
+                FText::FromString(relevantSpellInfo), FText::GetEmpty());
          }
       }
    }

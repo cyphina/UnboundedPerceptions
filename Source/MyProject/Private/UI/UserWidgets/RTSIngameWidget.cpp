@@ -1,7 +1,6 @@
 #include "MyProject.h"
 #include "RTSIngameWidget.h"
 
-
 #include "HUDManager.h"
 #include "HUDProvider.h"
 #include "RTSGameState.h"
@@ -15,7 +14,10 @@ URTSIngameWidget::URTSIngameWidget()
 
 void URTSIngameWidget::NativeDisplayHelpText(UWorld* worldRef, const FText& hText)
 {
-   if(worldRef) { Cast<AUserInput>(worldRef->GetFirstPlayerController())->GetWidgetProvider()->GetIngameHUD()->DisplayHelpText(hText); }
+   if(worldRef)
+   {
+      Cast<AUserInput>(worldRef->GetFirstPlayerController())->GetWidgetProvider()->GetIngameHUD()->DisplayHelpText(hText);
+   }
 }
 
 void URTSIngameWidget::NativeOnInitialized()
@@ -23,4 +25,3 @@ void URTSIngameWidget::NativeOnInitialized()
    Super::NativeOnInitialized();
    StaticClass();
 }
-

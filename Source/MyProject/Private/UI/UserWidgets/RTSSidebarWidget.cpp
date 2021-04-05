@@ -38,7 +38,7 @@ void URTSSidebarWidget::UpdatePartyInformation()
       {
          if(handles.Key.IsValid() && handles.Value.IsValid())
          {
-            UMyAttributeSet* attributeSet = const_cast<UMyAttributeSet*>(cpcRef->GetBasePlayer()->GetHeroes()[index]->GetAbilitySystemComponent()->GetSet<UMyAttributeSet
+            URTSAttributeSet* attributeSet = const_cast<URTSAttributeSet*>(cpcRef->GetBasePlayer()->GetHeroes()[index]->GetAbilitySystemComponent()->GetSet<URTSAttributeSet
             >());
             attributeSet->statUpdatedEvent.Remove(handles.Key);
             attributeSet->baseStatUpdatedEvent.Remove(handles.Value);
@@ -48,6 +48,7 @@ void URTSSidebarWidget::UpdatePartyInformation()
          }
          ++index;
       }
+      subscribedAttributeSetDelegateHandles.Empty();
 
       // Create the string to send to the browser
       FString heroInfoString;
@@ -66,7 +67,7 @@ void URTSSidebarWidget::UpdatePartyInformation()
          heroObj->SetBoolField("bSelected", hero->GetUnitSelected());
 
          // Start listening to the health values
-         UMyAttributeSet* attSet = const_cast<UMyAttributeSet*>(hero->GetAbilitySystemComponent()->GetSet<UMyAttributeSet>());
+         URTSAttributeSet* attSet = const_cast<URTSAttributeSet*>(hero->GetAbilitySystemComponent()->GetSet<URTSAttributeSet>());
          subscribedAttributeSetDelegateHandles.Emplace(MakeTuple(attSet->statUpdatedEvent.AddUObject(this, &URTSSidebarWidget::UpdateHeroVitals),
                                                                  attSet->baseStatUpdatedEvent.AddUObject(this, &URTSSidebarWidget::UpdateHeroMaxVitals)));
          // Serialize our object (write the object to the string)

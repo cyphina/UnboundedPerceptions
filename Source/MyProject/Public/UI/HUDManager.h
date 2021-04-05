@@ -73,9 +73,6 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    */
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<UDIRender> damageIndicatorClass;
-
-   UPROPERTY(EditDefaultsOnly)
-   UCompositeCurveTable* effectPowerTableRef;
 	
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<URTSDamageNumberContainer> damageIndicatorContainerClass;

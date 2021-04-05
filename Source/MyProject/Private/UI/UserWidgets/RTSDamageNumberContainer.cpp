@@ -23,6 +23,7 @@ void URTSDamageNumberContainer::SetOwningUnit(AUnit* newOwningUnit)
    if(owningUnit)
    {
       owningUnit->OnUnitDamageReceived().AddUObject(this, &URTSDamageNumberContainer::OnDamageDealt);
+      owningUnit->OnUnitHealingReceived().AddUObject(this, &URTSDamageNumberContainer::OnHealingReceived);
    }
 }
 
@@ -43,6 +44,18 @@ void URTSDamageNumberContainer::OnDamageDealt(const FUpDamage& damageReceived)
    {
       URTSDamageNumberWidget* damageNumber = widgetPool.GetOrCreateInstance(damageNumberWidgetClass);
       damageNumber->SetDamageTextProps(damageReceived);
+      UOverlaySlot* damageNumberSlot = damageNumberContainerWidget->AddChildToOverlay(damageNumber);
+      damageNumberSlot->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Center);
+      damageNumberSlot->SetVerticalAlignment(EVerticalAlignment::VAlign_Center);
+   }
+}
+
+void URTSDamageNumberContainer::OnHealingReceived(const FUpDamage& damageReceived)
+{
+   if(!AttackCVars::bUseOldDamageNumbers)
+   {
+      URTSDamageNumberWidget* damageNumber = widgetPool.GetOrCreateInstance(damageNumberWidgetClass);
+      damageNumber->SetDamageTextProps(damageReceived, true);
       UOverlaySlot* damageNumberSlot = damageNumberContainerWidget->AddChildToOverlay(damageNumber);
       damageNumberSlot->SetHorizontalAlignment(EHorizontalAlignment::HAlign_Center);
       damageNumberSlot->SetVerticalAlignment(EVerticalAlignment::VAlign_Center);

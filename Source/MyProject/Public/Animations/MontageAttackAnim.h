@@ -7,7 +7,6 @@
 class AUnit;
 
 /**
-  * ! CALL SETUP BEFORE USING !
   * To have a notification event trigger, ensure we have an event named
   * AnimNotify_<EVENTNAME> in our animation BP. We can do this in C++ too - just add
   * it to the UAnimInstance derived type. Ensure our event is a UFUNCTION.

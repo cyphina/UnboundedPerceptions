@@ -22,8 +22,9 @@ class MYPROJECT_API AEnemyAIController : public AUnitController
    GENERATED_BODY()
 
  public:
+   AEnemyAIController(const FObjectInitializer& ObjectInitializer);
+
  protected:
-   AEnemyAIController();
    void BeginPlay() override;
    void OnPossess(APawn* InPawn) override;
 

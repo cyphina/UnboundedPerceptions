@@ -7,7 +7,7 @@
 #include "UpStatComponent.generated.h"
 
 struct FUpDamage;
-class UMyAttributeSet;
+class URTSAttributeSet;
 
 /** A component used for anything that has stats. Can be used on units, or maybe towers.
  * Doesn't handle any logic with the stats, only provides means to access them and properly modify them.
@@ -54,7 +54,7 @@ class MYPROJECT_API UUpStatComponent : public UActorComponent
    void SetUnitLevel(int newLevel) const { return baseC->SetLevel(newLevel); }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "StatAccessors")
-   FORCEINLINE UMyAttributeSet* GetAttSet() const { return baseC->GetAttSet(); }
+   FORCEINLINE URTSAttributeSet* GetAttSet() const { return baseC->GetAttSet(); }
 
    /**
    * Call whenever we want stats to get recalculated. Typically done after a stat change
@@ -88,7 +88,7 @@ class MYPROJECT_API UUpStatComponent : public UActorComponent
          {
             baseC->SetAttributeBase(specificStatTypeVal, value);
          }
-         UpdateStats(UMyAttributeSet::IndexAtts(static_cast<int>(specificStatTypeVal)));
+         UpdateStats(URTSAttributeSet::IndexAtts(static_cast<int>(specificStatTypeVal)));
       }
       else if constexpr(std::is_same<StatType, EUnitScalingStats>::value)
       {

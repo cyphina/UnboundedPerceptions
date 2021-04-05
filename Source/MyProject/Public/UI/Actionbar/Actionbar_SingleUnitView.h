@@ -25,7 +25,8 @@ class MYPROJECT_API UActionbar_SingleUnitView : public UUserWidget
 public:
    void OnWidgetShown(AUnit* focusedUnit);
 
-   FOnSlotSelected& OnSlotSelected();
+   FOnSlotSelected& OnSkillSlotSelected();
+   FOnSlotSelected& OnEffectSlotSelected();
 
 protected:
    void NativeOnInitialized() override;

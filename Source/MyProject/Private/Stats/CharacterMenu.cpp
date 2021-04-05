@@ -154,7 +154,7 @@ void UCharacterMenu::OnStatsUpdated(const FGameplayAttribute& updatedAttribute, 
       for(UWidget* widget : Pan_Attributes->GetAllChildren())
       {
          UAttributePointSpenderWidget* attWidget = Cast<UAttributePointSpenderWidget>(widget);
-         if(attWidget->GetAttCategory() == static_cast<EAttributes>(UMyAttributeSet::GetAtts().Find(updatedAttribute)))
+         if(attWidget->GetAttCategory() == static_cast<EAttributes>(URTSAttributeSet::GetAtts().Find(updatedAttribute)))
          {
             // TODO: Maybe play some kind of visual effect
          }

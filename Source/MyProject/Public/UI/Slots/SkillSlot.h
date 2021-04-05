@@ -28,6 +28,7 @@ class MYPROJECT_API USkillSlot : public UActionSlot
  protected:
    void NativeOnInitialized() override;
    void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
+   void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
    bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 
    // Cooldown radial coloring

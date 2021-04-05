@@ -46,8 +46,11 @@ class MYPROJECT_API URTSProjectileStrategy : public UDataAsset
    bool isHoming = false;
 
    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+   bool bIgnoreSelf = true;
+
+   UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
    float bulletHomingAcceleration = 25.f;
-	
+
    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
    float bulletSphereRadius = 50.f;
 

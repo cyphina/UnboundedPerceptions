@@ -3,6 +3,7 @@
 #include "Unit.h"
 #include "RTSGameState.h"
 #include "RTSVisionComponent.h"
+#include "SpellDataLibrary.h"
 #include "UnitController.h"
 
 UBTDecorator_AnyVisibleEnemiesInRange::UBTDecorator_AnyVisibleEnemiesInRange()
@@ -21,8 +22,21 @@ bool UBTDecorator_AnyVisibleEnemiesInRange::CalculateRawConditionValue(UBehavior
       return unitController->GetUnitOwner()->GetVisibleEnemies().Num() > 0;
    }
 
-   const TArray<AUnit*>& enemies = unitController->GetUnitOwner()->GetEnemies();
-   for(const AUnit* enemy : enemies)
+   const TArray<AUnit*>& visibleEnemies = unitController->GetUnitOwner()->GetVisibleEnemies();
+
+   if(!visibleEnemies.Num())
+   {
+      if(IsInversed())
+      {
+         return true;
+      }
+      else
+      {
+         return false;
+      }
+   }
+
+   for(const AUnit* enemy : visibleEnemies)
    {
       if(FVector::DistSquared2D(enemy->GetActorLocation(), OwnerComp.GetAIOwner()->GetPawn()->GetActorLocation()) < rangeCutoff * rangeCutoff)
       {

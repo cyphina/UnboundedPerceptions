@@ -38,6 +38,7 @@
 #include "StoreInventory.h"
 
 #include "UIDelegateContext.h"
+#include "UpResourceManager.h"
 
 #include "Algo/Transform.h"
 #include "GameBaseHelpers/DefaultCursorClickFunctionality.h"
@@ -203,7 +204,8 @@ void ARTSPawn::PossessedBy(AController* newController)
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnEnemySkillSlotClicked().AddUObject(this, &ARTSPawn::OnSkillSlotSelected);
 
       GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
-         controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnSkillSlotSelected);
+         controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnSkillSlotSelected().AddUObject(this, &ARTSPawn::OnSkillSlotSelected);
+         controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnEffectSlotSelected().AddUObject(this, &ARTSPawn::OnEffectSlotSelected);
          controllerRef->GetHUDManager()->GetIngameHUD()->GetEquipHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnEquipmentSlotSelected);
          controllerRef->GetHUDManager()->GetIngameHUD()->GetShopHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnShopSlotSelected);
          controllerRef->GetHUDManager()->GetIngameHUD()->GetStorageHUD()->OnStorageInventoryClosed().AddUObject(this, &ARTSPawn::OnStorageInventoryClosed);
@@ -1077,6 +1079,32 @@ void ARTSPawn::OnShopSlotSelected(int slotIndex)
    Cast<AShopNPC>(controllerRef->GetBasePlayer()->heroInBlockingInteraction->GetCurrentInteractable())->OnAskToPurchaseItem(slotIndex);
 }
 
+void ARTSPawn::OnEffectSlotSelected(int slotIndex)
+{
+   if(AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit())
+   {
+      UAbilitySystemComponent* focusedASC = focusedUnit->GetAbilitySystemComponent();
+      if(focusedUnit->GetIsEnemy())
+      {
+         if(!GameplayModifierCVars::bEnableEnemyControl)
+         {
+            return;
+         }
+      }
+
+      const FActiveGameplayEffectHandle effectToRemoveHandle =
+          focusedASC->GetActiveEffects(FGameplayEffectQuery::MakeQuery_MatchAnyEffectTags(UpResourceManager::EffectNameTagFilter))[slotIndex];
+
+      FGameplayTagContainer effectToRemoveAssetTags;
+      focusedASC->GetActiveGameplayEffect(effectToRemoveHandle)->Spec.GetAllAssetTags(effectToRemoveAssetTags);
+
+      if(effectToRemoveAssetTags.HasAnyExact(UpResourceManager::EffectRemoveableTagFilter))
+      {
+         focusedASC->RemoveActiveGameplayEffect(effectToRemoveHandle);
+      }
+   }
+}
+
 void ARTSPawn::OnStorageInventoryClosed()
 {
    controllerRef->GetBasePlayer()->heroInBlockingInteraction = nullptr;
@@ -1103,10 +1131,12 @@ void ARTSPawn::OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex)
          if(AUnit* focusedUnit = basePlayer->GetFocusedUnit())
          {
             URTSAbilitySystemComponent* focusedABComp = focusedUnit->GetAbilitySystemComponent();
-            const TSubclassOf<UMySpell> droppedSpell  = focusedABComp->GetSpellAtSlot(dropSlotIndex);
 
-            focusedABComp->SetSpellAtSlot(focusedABComp->GetSpellAtSlot(dragSlotIndex), dropSlotIndex);
-            focusedABComp->SetSpellAtSlot(droppedSpell, dragSlotIndex);
+            const TSubclassOf<UMySpell> spellAtDraggedSlot = focusedABComp->GetSpellAtSlot(dragSlotIndex);
+            const TSubclassOf<UMySpell> spellAtDroppedSlot = focusedABComp->GetSpellAtSlot(dropSlotIndex);
+
+            focusedABComp->SetSpellAtSlot(spellAtDroppedSlot, dragSlotIndex);
+            focusedABComp->SetSpellAtSlot(spellAtDraggedSlot, dropSlotIndex);
          }
       }
    }

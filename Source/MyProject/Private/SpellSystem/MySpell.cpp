@@ -11,6 +11,7 @@
 #include "UpStatComponent.h"
 #include "DA_DefaultTargetingScheme.h"
 #include "GlobalDataAssetsSS.h"
+#include "SpellDataLibrary.h"
 #include "SpellFunctionLibrary.h"
 #include "TargetComponent.h"
 #include "SpellTargetingTypes.h"
@@ -20,6 +21,16 @@ UMySpell::UMySpell() : UGameplayAbility()
 {
    CooldownGameplayEffectClass = UCoolDownEffect::StaticClass();
    InstancingPolicy            = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+}
+
+bool UMySpell::HasSpellSpecificResources_Implementation(UAbilitySystemComponent* ASC) const
+{
+   return true;
+}
+
+FText UMySpell::GetMessageDeficientResources_Implementation() const
+{
+   return FText::GetEmpty();
 }
 
 TSubclassOf<UUpSpellTargeting> UMySpell::GetTargeting() const
@@ -103,6 +114,23 @@ void UMySpell::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGamepl
       FAIMessage::Send(GetAvatarUnit()->GetUnitController(), msg);
    }
    bCasterDone = false;
+}
+
+void UMySpell::AddCallbackToEffectRemoval(UAbilitySystemComponent* ASC, FGameplayTag EffectName, FName FunctionToCallName)
+{
+   TArray<FActiveGameplayEffectHandle> effectsToListenTo = ASC->GetActiveEffectsWithAllTags(EffectName.GetSingleTagContainer());
+   for(const FActiveGameplayEffectHandle effectToListenToHandle : effectsToListenTo)
+   {
+      ASC->OnGameplayEffectRemoved_InfoDelegate(effectToListenToHandle)->AddUFunction(this, FunctionToCallName);
+   }
+}
+
+void UMySpell::RemoveEffectWtihNameTagFromAvatar(FGameplayTag EffectName, int StacksToRemove, int NumEffectsToRemove)
+{
+   for(int i = 0; i < NumEffectsToRemove; ++i)
+   {
+      USpellDataLibrary::RemoveEffectWtihNameTag(GetAvatarAbilitySystemComponent(), EffectName, StacksToRemove);
+   }
 }
 
 void UMySpell::FinishBlockingCaster()
@@ -205,6 +233,8 @@ FGameplayEffectSpecHandle UMySpell::SetScaling(FGameplayEffectSpecHandle specHan
        UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(specHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), damageScalings.agility);
    specHandle = UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(specHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Understanding"),
                                                                               damageScalings.understanding);
+   specHandle =
+       UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(specHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Health"), damageScalings.hitpoints);
    return specHandle;
 }
 
@@ -307,6 +337,11 @@ FGameplayAbilityTargetDataHandle UMySpell::GetAvatarTargetData() const
    return GetAvatarUnit()->GetTargetComponent()->GetTargetData();
 }
 
+FGameplayAbilityTargetDataHandle UMySpell::GetTargetDataFromAvatarLoc() const
+{
+   return UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(GetAvatarActorFromActorInfo());
+}
+
 AUnit* UMySpell::GetAvatarTargetUnit() const
 {
    return GetAvatarUnit()->GetTargetComponent()->GetTargetUnit();
@@ -399,6 +434,12 @@ void UMySpell::ApplyEffectsTargetIfNoMiss(const FGameplayAbilityTargetDataHandle
    }
 }
 
+void UMySpell::AddSetByCallerTag(UAbilitySystemComponent* ASC, FActiveGameplayEffectHandle activeEffectHandle, FGameplayTag callerTag, float magnitude)
+{
+   FActiveGameplayEffect* activeGE = const_cast<FActiveGameplayEffect*>(ASC->GetActiveGameplayEffect(activeEffectHandle));
+   activeGE->Spec.SetSetByCallerMagnitude(callerTag, magnitude);
+}
+
 bool UMySpell::IsLastHitAMiss()
 {
    return GetAvatarUnit()->GetCombatInfo()->bMissLastHit;
@@ -417,6 +458,13 @@ TArray<TEnumAsByte<ECollisionChannel>> UMySpell::GetObjectChannelForFriendly() c
    }
 }
 
+FVector UMySpell::GetCenterOfTargetCapsuleLocation() const
+{
+   const AUnit* targetUnit     = GetAvatarTargetUnit();
+   const float  unitHalfHeight = targetUnit->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+   return targetUnit->GetActorLocation() + FVector(0, 0, unitHalfHeight);
+}
+
 FGameplayAbilitySpec* UMySpell::GetAbilitySpec(const UAbilitySystemComponent* abilityComponent) const
 {
    FGameplayAbilitySpec* abilitySpec = const_cast<UAbilitySystemComponent*>(abilityComponent)->FindAbilitySpecFromClass(GetClass());
@@ -426,11 +474,7 @@ FGameplayAbilitySpec* UMySpell::GetAbilitySpec(const UAbilitySystemComponent* ab
 
 int UMySpell::GetIndex(int currentLevel, int numCategories, int maxLevel)
 {
-   if(numCategories <= 0)
-   {
-      UE_LOG(LogTemp, Error, TEXT("%s read some out of bounds spell property!"), ANSI_TO_TCHAR(__FUNCTION__));
-   }
-   if(maxLevel != 0)
+   if(currentLevel >= 0 && maxLevel >= 0 && numCategories >= 0)
    {
       const int index = FMath::CeilToInt(static_cast<float>(numCategories) * currentLevel / maxLevel) - 1;
       return index;

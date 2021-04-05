@@ -27,8 +27,16 @@ void URTSStateComponent::ChangeState(EUnitState newState) const
 void URTSStateComponent::BeginPlay()
 {
    Super::BeginPlay();
-   if(AUnitController* ownerController = Cast<AUnitController>(GetOwner())) { stateMachine = StateMachineFactory::BuildStateMachine(ownerController->GetUnitOwner()); }
-   Cast<AUnitController>(GetOwner())->OnUnitStopped().AddUObject(this, &URTSStateComponent::OnUnitStopped);
+   GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+      if(AUnitController* ownerController = Cast<AUnitController>(GetOwner()))
+      {
+         stateMachine = StateMachineFactory::BuildStateMachine(Cast<AUnit>(ownerController->GetPawn()));
+         if(stateMachine)
+         {
+            ownerController->OnUnitStopped().AddUObject(this, &URTSStateComponent::OnUnitStopped);
+         }
+      }
+   });
 }
 
 void URTSStateComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

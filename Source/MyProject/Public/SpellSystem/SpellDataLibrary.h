@@ -1,10 +1,13 @@
 ﻿// Created 7/23/20 10:40 PM
 
 #pragma once
+#include "GameplayEffectTypes.h"
 #include "GameplayTagContainer.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "SpellDataLibrary.generated.h"
 
+struct FGameplayEffectSpec;
+class UAbilitySystemComponent;
 class URTSAbilitySystemComponent;
 class IGameplayTagAssetInterface;
 
@@ -19,7 +22,7 @@ class MYPROJECT_API USpellDataLibrary : public UBlueprintFunctionLibrary
 {
    GENERATED_BODY()
 
-public:
+ public:
    UFUNCTION(BlueprintPure, meta = (BlueprintInternalUseOnly = "TRUE"))
    static bool BP_IsStunned(const URTSAbilitySystemComponent* abilityComponent);
 
@@ -62,6 +65,25 @@ public:
    /** Check to see if this unit is still targetable by attacks? Will only stop new attacks from being casted on this unit,
      * not ones already initiated before the unit becomes un-targetable. */
    static bool IsAttackable(const IGameplayTagAssetInterface* abilityComponent);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   static float GetSetByCallerTagMagnitude(UAbilitySystemComponent* AbilityComponent, UPARAM(meta = (Categories = "Combat.EffectName")) FGameplayTag EffectName,
+                                           FGameplayTag SetByCallerTag);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Meta = (DisplayName = "GetEffectNameTag"))
+   static FGameplayTag GetEffectNameTagFromSpec(UAbilitySystemComponent* ASC, const FGameplayEffectSpecHandle& EffectSpecHandle);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Meta = (DisplayName = "GetEffectNameTag"))
+   static FGameplayTag GetEffectNameTagFromActiveHandle(UAbilitySystemComponent* ASC, FActiveGameplayEffectHandle EffectHandle);
+
+   /**
+    * @brief Removes one instance of a gameplay effect given a name tag to identify the effect.
+    * @param ASC - Reference to ASC we want to remove effect from.
+    * @param EffectName - Name tag to identify the effect.
+    * @param StacksToRemove - If -1, removes all stacks.
+    */
+   UFUNCTION(BlueprintCallable, Meta = (DisplayName = "GetEffectNameTag"))
+   static void RemoveEffectWtihNameTag(UAbilitySystemComponent* ASC, FGameplayTag EffectName, int StacksToRemove = -1);
 
    static const FGameplayTagContainer      supportTags;   // List of tags support spells will have
    static const FGameplayTagContainer      offensiveTags; // List of tags elemental spells will have

@@ -1,6 +1,7 @@
 #include "MyProject.h"
 #include "UpResourceManager.h"
 #include "BaseCharacter.h"
+#include "BasePlayer.h"
 
 float UpResourceManager::FindOrientation(const FVector& v)
 {
@@ -12,9 +13,11 @@ float UpResourceManager::FindOrientation(const FVector& v)
 
 void UpResourceManager::ExecuteFunctionFromWorldObject(UObject* objectRef, FName functionToExecute)
 {
-   if(objectRef) {
+   if(objectRef)
+   {
       UFunction* function = objectRef->FindFunction(functionToExecute);
-      if(function) {
+      if(function)
+      {
          // pointer to memory of local variables in stack
          void* locals = nullptr;
          // creates the stack frame for the function
@@ -30,8 +33,12 @@ template <>
 ABaseHero* UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(FStringView nameToMatch, UWorld* worldRef)
 {
    AUserInput* cpcRef = Cast<AUserInput>(worldRef->GetFirstPlayerController());
-   for(ABaseHero* hero : cpcRef->GetBasePlayer()->allHeroes) {
-      if(hero->GetGameName().ToString() == nameToMatch) { return Cast<ABaseHero>(hero); }
+   for(ABaseHero* hero : cpcRef->GetBasePlayer()->allHeroes)
+   {
+      if(hero->GetGameName().ToString() == nameToMatch)
+      {
+         return Cast<ABaseHero>(hero);
+      }
    }
    return nullptr;
 }

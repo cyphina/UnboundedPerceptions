@@ -1,10 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
-#include "CoreMinimal.h"
 #include "GameplayEffectExecutionCalculation.h"
-#include "Stats/MyAttributeSet.h"
+#include "Stats/RTSAttributeSet.h"
 #include "StatChangeCalc.generated.h"
 
 /**
@@ -40,27 +37,29 @@ struct AttStruct
    DECLARE_ATTRIBUTE_CAPTUREDEF(AttackRange);
    DECLARE_ATTRIBUTE_CAPTUREDEF(WeaponPower);
    DECLARE_ATTRIBUTE_CAPTUREDEF(GlobalDamageModifier);
+   DECLARE_ATTRIBUTE_CAPTUREDEF(HealthRegenModifier);
 
    AttStruct()
    {
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Health, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Mana, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Strength, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Understanding, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Intelligence, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Explosiveness, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Endurance, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Agility, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Luck, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Critical_Chance, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Critical_Damage, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Accuracy, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Dodge, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Attack_Speed, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, Cast_Speed, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, MovementSpeed, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, AttackRange, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, WeaponPower, Source, false);
-      DEFINE_ATTRIBUTE_CAPTUREDEF(UMyAttributeSet, GlobalDamageModifier, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Health, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Mana, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Strength, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Understanding, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Intelligence, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Explosiveness, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Endurance, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Agility, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Luck, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Critical_Chance, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Critical_Damage, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Accuracy, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Dodge, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Attack_Speed, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, Cast_Speed, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, MovementSpeed, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, AttackRange, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, WeaponPower, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, GlobalDamageModifier, Source, false);
+      DEFINE_ATTRIBUTE_CAPTUREDEF(URTSAttributeSet, HealthRegenModifier, Target, false);
    }
 };

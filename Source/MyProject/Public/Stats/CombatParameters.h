@@ -10,7 +10,8 @@ enum class ECombatType : uint8
 
 struct UpCombatInfo
 {
-   bool        isDead       = false;
-   bool        bMissLastHit = false;
-   ECombatType combatStyle  = ECombatType::Magic;
+   bool            isDead       = false;
+   bool            bMissLastHit = false;
+   FThreadSafeBool isUnitHidden = false;
+   ECombatType combatStyle = ECombatType::Magic;
 };

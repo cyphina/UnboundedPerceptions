@@ -1,6 +1,6 @@
 #include "MyProject.h"
 #include "UnitMoveComponent.h"
-#include "MyAttributeSet.h"
+#include "RTSAttributeSet.h"
 #include "Unit.h"
 #include "UpStatComponent.h"
 
@@ -11,7 +11,7 @@ void UUnitMoveComponent::BeginPlay()
 
 void UUnitMoveComponent::OnMoveSpeedChanged(const FGameplayAttribute& att, float newVal, AUnit* unitRef)
 {
-   if(att == UMyAttributeSet::GetMovementSpeedAttribute()) { 
+   if(att == URTSAttributeSet::GetMovementSpeedAttribute()) { 
       MaxWalkSpeed = newVal;
    }
 }

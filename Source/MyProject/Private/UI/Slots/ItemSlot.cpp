@@ -17,16 +17,16 @@ void UItemSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointer
 {
    if(inventoryRef->GetBackpackItemAtSlot(slotIndex))
    {
-      UDraggedActionWidget* dragVisual = CreateWidget<UDraggedActionWidget>(this, draggedActionWidgetClass);
+      UDraggedActionWidget* dragVisual = CreateDragIndicator();
       dragVisual->SetDraggedImage(UItemFunctionLibrary::GetItemInfo(inventoryRef->GetBackpackItemAtSlot(slotIndex).id).image);
 
-      URTSItemDrag*         dragOp     = NewObject<URTSItemDrag>(this);
-      dragOp->Pivot                    = EDragPivot::CenterCenter;
-      dragOp->DefaultDragVisual        = dragVisual;
-      dragOp->slotToBackpackIndex      = inventoryRef->GetCorrespondingBackpackIndex(slotIndex);
-      dragOp->backpack                 = inventoryRef->GetBackpack();
-      dragOp->dragWidget               = inventoryRef;
-      OutOperation                     = MoveTemp(dragOp);
+      URTSItemDrag* dragOp        = NewObject<URTSItemDrag>(this);
+      dragOp->Pivot               = EDragPivot::CenterCenter;
+      dragOp->DefaultDragVisual   = dragVisual;
+      dragOp->slotToBackpackIndex = inventoryRef->GetCorrespondingBackpackIndex(slotIndex);
+      dragOp->backpack            = inventoryRef->GetBackpack();
+      dragOp->dragWidget          = inventoryRef;
+      OutOperation                = MoveTemp(dragOp);
    }
 }
 
@@ -36,19 +36,29 @@ bool UItemSlot::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& 
    {
       if(UHeroInventory* heroInventory = Cast<UHeroInventory>(itemDrag->dragWidget))
       {
-         GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnItemSlotDroppedInventoryEvent.Broadcast(
-         itemDrag->slotToBackpackIndex, slotIndex, itemDrag->backpack, inventoryRef->GetBackpack());
-      } else if(UStorageInventory* storageInventory = Cast<UStorageInventory>(itemDrag->dragWidget))
+         GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnItemSlotDroppedInventoryEvent.Broadcast(itemDrag->slotToBackpackIndex, slotIndex,
+                                                                                                               itemDrag->backpack, inventoryRef->GetBackpack());
+      }
+      else if(UStorageInventory* storageInventory = Cast<UStorageInventory>(itemDrag->dragWidget))
       {
-         GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnItemSlotDroppedStorageEvent.Broadcast(
-         itemDrag->slotToBackpackIndex, slotIndex, itemDrag->backpack, inventoryRef->GetBackpack());
-      } else
+         GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnItemSlotDroppedStorageEvent.Broadcast(itemDrag->slotToBackpackIndex, slotIndex, itemDrag->backpack,
+                                                                                                             inventoryRef->GetBackpack());
+      }
+      else
       {
          UE_LOG(LogTemp, Error, TEXT("Item drag's 'dragged widget' reference does not have a valid base class!"));
       }
       return true;
    }
    return false;
+}
+
+void UItemSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+   if(inventoryRef->GetBackpackItemAtSlot(slotIndex))
+   {
+      Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
+   }
 }
 
 void UItemSlot::ShowDesc(UToolTipWidget* tooltip)
@@ -63,7 +73,7 @@ void UItemSlot::ShowDesc(UToolTipWidget* tooltip)
          const FText bonusDesc  = UItemFunctionLibrary::GetBonusDescription(item.id);
          tooltip->SetupTTBoxText(itemInfo->name, rarityName, itemInfo->description, bonusDesc, FText::GetEmpty());
       }
-         // Else we don't have a piece of equipment
+      // Else we don't have a piece of equipment
       else
       {
          const FText rarityName = UItemFunctionLibrary::GetRarityText(itemInfo->rarity);

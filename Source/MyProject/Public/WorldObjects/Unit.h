@@ -26,6 +26,10 @@ DECLARE_STATS_GROUP(TEXT("RTSUnits"), STATGROUP_RTSUnits, STATCAT_Advanced);
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDamageReceived, const FUpDamage&);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDamageDealt, const FUpDamage&);
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitHealingReceived, const FUpDamage&);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitHealingDealt, const FUpDamage&);
+
 DECLARE_EVENT(AUnitController, FOnUnitDie);
 
 DECLARE_EVENT(URTSUnitAnimController, FOnUnitAttackSwingHit); // When a unit initiates an attack (animation begins)
@@ -83,8 +87,8 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
    bool GetIsDead() const;
 
-   bool GetIsUnitHidden() const { return unitProperties.isUnitHidden; }
-   void SetIsUnitHidden(bool isHidden) { unitProperties.isUnitHidden.AtomicSet(isHidden); }
+   bool GetIsUnitHidden() const { return combatInfo->isUnitHidden; }
+   void SetIsUnitHidden(bool isHidden) { combatInfo->isUnitHidden.AtomicSet(isHidden); }
 
    /**
     * Function to find the bounds of a unit (screen space points)
@@ -127,6 +131,10 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
 
    FOnUnitDamageDealt& OnUnitDamageDealt() const { return OnUnitDamageDealtEvent; }
 
+   FOnUnitHealingReceived& OnUnitHealingReceived() const { return OnUnitHealingReceivedEvent; }
+
+   FOnUnitHealingDealt& OnUnitHealingDealt() const { return OnUnitHealingDealtEvent; }
+
    FOnUnitAttackSwingHit& OnUnitAttackSwingHit() const { return OnUnitAttackSwingHitEvent; }
 
    TSubclassOf<URTSAttackExecution> GetCustomAttackLogic() const { return customAttackLogic; }
@@ -140,27 +148,27 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    void Tick(float deltaSeconds) override;
    void PossessedBy(AController* newController) override;
 
-   UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+   UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
    class UHealthbarComp* healthBar;
 
    /** A little circle underneath the unit showing the radius of its collider */
-   UPROPERTY(VisibleAnywhere)
+   UPROPERTY(VisibleDefaultsOnly)
    UDecalComponent* selectionCircleDecal;
 
    /** Units that don't have any vision can disable this or eventually we can refactor this to be optional*/
-   UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+   UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
    URTSVisionComponent* visionComponent;
 
-   UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+   UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
    UUpStatComponent* statComponent;
 
-   UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+   UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
    UTargetComponent* targetComponent;
 
-   UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+   UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
    UWidgetComponent* damageIndicatorWidget;
 
-   UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+   UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
    URTSAbilitySystemComponent* abilitySystemComponent;
 
    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
@@ -187,7 +195,7 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    /**
    * @brief Material reference to unit's base material so that if it changes (due to effects) we can revert it back
    */
-   UPROPERTY(EditAnywhere)
+   UPROPERTY(EditDefaultsOnly)
    UMaterialInterface* originalMaterial;
 
    class AUserInput* controllerRef;
@@ -206,6 +214,8 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    void SetupSelectionCircle() const;
    void StoreUnitHeight();
 
+   void HideInvisibleUnits();
+
    virtual const TArray<AUnit*>* GetVisibleEnemies_Impl() const PURE_VIRTUAL(AUnit::GetVisibleEnemies, return nullptr;);
 
    virtual const TArray<AUnit*>* GetAllies_Impl() const PURE_VIRTUAL(AUnit::GetAllies, return nullptr;);
@@ -217,8 +227,10 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    // Reference to combat parameters kept in pointer since these values are barely used much (cold splitting)
    TUniquePtr<UpCombatInfo> combatInfo;
 
-   mutable FOnUnitDie            OnUnitDieEvent;
-   mutable FOnUnitDamageReceived OnUnitDamageReceivedEvent;
-   mutable FOnUnitDamageDealt    OnUnitDamageDealtEvent;
-   mutable FOnUnitAttackSwingHit OnUnitAttackSwingHitEvent;
+   mutable FOnUnitDie             OnUnitDieEvent;
+   mutable FOnUnitDamageReceived  OnUnitDamageReceivedEvent;
+   mutable FOnUnitDamageDealt     OnUnitDamageDealtEvent;
+   mutable FOnUnitHealingReceived OnUnitHealingReceivedEvent;
+   mutable FOnUnitHealingDealt    OnUnitHealingDealtEvent;
+   mutable FOnUnitAttackSwingHit  OnUnitAttackSwingHitEvent;
 };

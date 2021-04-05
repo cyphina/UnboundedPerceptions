@@ -29,7 +29,7 @@ class MYPROJECT_API AUnitController : public AAIController
    GENERATED_BODY()
 
  public:
-   AUnitController();
+   AUnitController(const FObjectInitializer& ObjectInitializer);
 
    UFUNCTION(BlueprintCallable, BlueprintPure)
    FORCEINLINE AUnit* GetUnitOwner() const { return ownerRef; }
@@ -105,7 +105,8 @@ class MYPROJECT_API AUnitController : public AAIController
    FOnUnitStopped& OnUnitStopped() { return OnUnitStoppedEvent; }
 
    /**
-    * Flow Control - Call to notify the system that we're done performing whatever action (casting, using item, interacting, attacking, attack move, etc.)
+    * Flow Control - Call to notify the system that we're done performing the blocking aspects of a certain action (casting, using item, interacting, attacking, attack move, etc.)
+    * Unlike StopCurrentAction() this represents the end of our current action as opposed to initiating a new action or stopping.
     * This may take some time to complete since the aforementioned tasks can take variable time (imagine your character is slowed to a boat) or maybe you're talking
     * to an NPC or something.
     */
@@ -158,6 +159,8 @@ class MYPROJECT_API AUnitController : public AAIController
    void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 
    void OnDamageReceived(const FUpDamage& d);
+
+   void OnHealingReceived(const FUpDamage& d);
 
    /** This timeline is for when we have to turn towards a point (FVector)*/
    void SetupTurnPointTimeline();

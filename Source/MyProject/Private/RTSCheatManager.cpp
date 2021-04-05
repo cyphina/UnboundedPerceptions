@@ -92,9 +92,13 @@ void URTSCheatManager::Up_GodMode(FString objectID, int toggleGodMode)
    if(AUnit* unitRef = UpResourceManager::FindTriggerObjectInWorld<AUnit>(objectID, userInputRef->GetWorld()))
    {
       if(toggleGodMode)
+      {
          unitRef->GetAbilitySystemComponent()->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.GodMode"));
+      }
       else
+      {
          unitRef->GetAbilitySystemComponent()->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.GodMode"));
+      }
    }
 #endif
 }
@@ -302,7 +306,7 @@ void URTSCheatManager::Up_ShowDebugCapsules(bool bShouldShow)
 
 void URTSCheatManager::Up_ShowVisionSpheres(bool bShouldShow)
 {
-   if(!bShouldShow)
+   if(bShouldShow)
    {
       for(AUnit* unit : gameStateRef->GetAllEnemyUnits())
       {
@@ -324,6 +328,24 @@ void URTSCheatManager::Up_ShowVisionSpheres(bool bShouldShow)
       for(AUnit* unit : gameStateRef->GetAllAllyUnits())
       {
          unit->GetVisionComponent()->SetHiddenInGame(true);
+      }
+   }
+}
+
+void URTSCheatManager::Up_DrawSphere(FString unitName, float sphereRadius, float duration)
+{
+   if(!unitName.IsEmpty())
+   {
+      if(AUnit* unit = UpResourceManager::FindTriggerObjectInWorld<AUnit>(unitName, GetWorld()))
+      {
+         DrawDebugSphere(GetWorld(), unit->GetActorLocation(), sphereRadius, 25, FColor::Magenta, false, duration, 0, 2);
+      }
+   }
+   else
+   {
+      if(AUnit* unit = userInputRef->GetBasePlayer()->GetFocusedUnit())
+      {
+         DrawDebugSphere(GetWorld(), unit->GetActorLocation(), sphereRadius, 25, FColor::Magenta, false, duration, 0, 2);
       }
    }
 }

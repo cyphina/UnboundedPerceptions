@@ -2,7 +2,8 @@
 
 // Quantities used for determining skill power and stats
 UENUM(BlueprintType)
-enum class EAttributes : uint8 {
+enum class EAttributes : uint8
+{
    // Skill Damage
    Strength = 0,
    // Elemental Affinity, Elemental Resistance, PPC Shield
@@ -23,7 +24,8 @@ enum class EAttributes : uint8 {
 
 // Impactful qualities
 UENUM(BlueprintType)
-enum class EUnitScalingStats : uint8 {
+enum class EUnitScalingStats : uint8
+{
    Critical_Chance,
    Critical_Damage,
    Accuracy,
@@ -45,6 +47,7 @@ enum class EUnitScalingStats : uint8 {
    Poison_Aff,
    Blood_Aff,
    Ethereal_Aff,
+   Cosmic_Aff,
 
    // Resistances (these suffixes are used in statgraph so be weary of changing them)
    Physical_Resist,
@@ -60,13 +63,15 @@ enum class EUnitScalingStats : uint8 {
    Poison_Resist,
    Blood_Resist,
    Ethereal_Resist,
+   Cosmic_Resist,
 
    Count UMETA(Hidden)
 };
 
 // Battle resources
 UENUM(BlueprintType)
-enum class EVitals : uint8 {
+enum class EVitals : uint8
+{
    Health,
    Mana,
    Psyche,
@@ -79,12 +84,13 @@ enum class EVitals : uint8 {
 
 // Useful game mechanics
 UENUM(BlueprintType)
-enum class EMechanics : uint8 {
+enum class EMechanics : uint8
+{
    MovementSpeed, // max walking speed in ue4 is based off of centimeters per second.  Average person walks 5km in an hour, which is around 138 cm/s which is how max speed is measured
    AttackRange,
    WeaponPower,
-   GlobalDamageModifier, // damage reduction modifier, 0 = no damage reduction, 100 = no damage received
-
+   GlobalDamageModifier, // damage reduction modifier, 0 = no damage reduction, -100 = no damage received, 100 = double damage taken
+   HealthRegenModifier, // Amplifes how much healing received. Positive means more healing received, negative means less.
    Count UMETA(Hidden)
 };
 

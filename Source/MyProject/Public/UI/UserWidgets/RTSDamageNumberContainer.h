@@ -38,6 +38,7 @@ protected:
 
 private:
    void OnDamageDealt(const FUpDamage& damageReceived);
+   void OnHealingReceived(const FUpDamage& damageReceived);
 
    UPROPERTY(Transient)
    FUserWidgetPool widgetPool;

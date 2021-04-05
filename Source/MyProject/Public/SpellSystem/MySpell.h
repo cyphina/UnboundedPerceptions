@@ -29,6 +29,12 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
  public:
    UMySpell();
 
+   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category = "SpellChecks")
+   bool HasSpellSpecificResources(UAbilitySystemComponent* ASC) const;
+
+   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category = "SpellChecks")
+   FText GetMessageDeficientResources() const;
+
    UFUNCTION(BlueprintCallable, Category = "Spell")
    const FSpellDefaults& GetSpellDefaults() const { return spellDefaults; }
 
@@ -134,8 +140,8 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
                    bool bReplicateEndAbility, bool bWasCancelled) override;
 
    /**
-    * Used to get the 0'based index from some spell information array based on current spell level
-    * ! Invariant - AbilityLevels start at 1
+    * Used to get the 0 based index from some spell information array based on current spell level.\n
+    * !Invariant - AbilityLevels start at 1
     * @param currentLevel : Current level of spell property (ex. Fireball has had 2 points put into it so it's level 2)
     * @param numCategories : Number of levels in spell property (ex. there may be 3 range upgrades for a spell)
     * @param maxLevel : Number of times this spell can be leveled up (ex. there may 5 total level upgrades for a spell, only 3 upgrades increase range)
@@ -181,6 +187,10 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
    /** Only use this inside ActivateAbility in a blueprint derived from UMySpell */
    UFUNCTION(BlueprintCallable, Category = "Spell Helper")
    FGameplayAbilityTargetDataHandle GetAvatarTargetData() const;
+
+   /** Gets a target data handle at the avatar actor's location */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   FGameplayAbilityTargetDataHandle GetTargetDataFromAvatarLoc() const;
 
    /** Only use this inside ActivateAbility in a blueprint derived from UMySpell.
     * (Will crash if the current target is not a unit i.e. you cast an AOE spell) */
@@ -244,6 +254,15 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
    UFUNCTION(BlueprintCallable, Category = "Spell Helper")
    void ApplyEffectsTargetIfNoMiss(const FGameplayAbilityTargetDataHandle& targetData, const TArray<FGameplayEffectSpecHandle>& effects);
 
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   void AddSetByCallerTag(UAbilitySystemComponent* ASC, FActiveGameplayEffectHandle activeEffectHandle, FGameplayTag callerTag, float magnitude);
+
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   void AddCallbackToEffectRemoval(UAbilitySystemComponent* ASC, UPARAM(meta = (Categories = "Combat.EffectName")) FGameplayTag EffectName, FName FunctionToCallName);
+
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   void RemoveEffectWtihNameTagFromAvatar(UPARAM(meta = (Categories = "Combat.EffectName")) FGameplayTag EffectName, int StacksToRemove = -1, int NumEffectsToRemove = 1);
+
    /**
     * Call this to check if the last hit was a miss or not.
     * Call this after enacting a damage effect to quickly determine if other effects should apply.
@@ -257,6 +276,12 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
    */
    UFUNCTION(BlueprintCallable, Category = "Spell Helper")
    TArray<TEnumAsByte<ECollisionChannel>> GetObjectChannelForFriendly() const;
+
+   /**
+    * Requires us to be targeting a unit
+    */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   FVector GetCenterOfTargetCapsuleLocation() const;
 
    FGameplayAbilitySpec* GetAbilitySpec(const UAbilitySystemComponent* abilityComponent) const;
 

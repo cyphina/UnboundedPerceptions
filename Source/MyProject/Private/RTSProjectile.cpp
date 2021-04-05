@@ -50,6 +50,11 @@ ARTSProjectile* ARTSProjectile::MakeRTSProjectile(UWorld* worldToSpawnIn, UTarge
          projectileStrategy = URTSProjectileStrategy::StaticClass()->GetDefaultObject<URTSProjectileStrategy>();
       }
 
+      if(projectileStrategy->bIgnoreSelf)
+      {
+         projectile->collisionComponent->IgnoreActorWhenMoving(unitShooter, true);
+      }
+
       projectile->projectileMovementComponent->InitialSpeed                = projectileStrategy->bulletInitSpeed;
       projectile->projectileMovementComponent->MaxSpeed                    = projectileStrategy->bulletMaxSpeed;
       projectile->projectileMovementComponent->HomingAccelerationMagnitude = projectileStrategy->bulletHomingAcceleration;

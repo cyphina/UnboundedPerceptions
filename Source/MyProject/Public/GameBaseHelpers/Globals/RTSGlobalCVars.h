@@ -9,6 +9,7 @@ namespace AttackCVars
 namespace GameplayModifierCVars
 {
    extern bool bEnableEnemyControl;
+   inline bool bShowEnemyPerspective = false;
 }
 
 

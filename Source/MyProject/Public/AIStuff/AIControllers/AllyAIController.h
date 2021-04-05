@@ -56,7 +56,7 @@ class MYPROJECT_API AAllyAIController : public AUnitController
    GENERATED_BODY()
 
  public:
-   AAllyAIController();
+   AAllyAIController(const FObjectInitializer& ObjectInitializer);
 
    /** Players who are tired of microing can switch to one of the various AI modes which vary in their offensive and defensive play. */
    UFUNCTION(BlueprintCallable, Category = "AI Mode")

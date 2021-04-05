@@ -1,5 +1,6 @@
 #include "AIControllers/Components/SpellCastComponent.h"
 #include "BrainComponent.h"
+#include "RTSIngameWidget.h"
 #include "SpellDataLibrary.h"
 #include "StatEnums.h"
 #include "AIControllers/Components/RTSStateComponent.h"
@@ -35,7 +36,8 @@ bool USpellCastComponent::CheckSpellCastBreakInvis(TSubclassOf<UMySpell> spellTo
 void USpellCastComponent::OnUnitStopped()
 {
    CancelIncantation();
-   if(GetCurrentChannelingTime() > 0) {
+   if(GetCurrentChannelingTime() > 0)
+   {
       unitOwnerRef->GetAbilitySystemComponent()->CancelAbilities();
    }
    CancelChanneling();
@@ -164,7 +166,13 @@ bool USpellCastComponent::CanCast(TSubclassOf<UMySpell> spellToCheck) const
             {
                if(!spell->IsOnCD(ASC) && !USpellDataLibrary::IsStunned(ASC) && !USpellDataLibrary::IsSilenced(ASC))
                {
-                  return true;
+                  if(spell->HasSpellSpecificResources(ASC))
+                  {
+                     return true;
+                  }
+                  else {
+                     URTSIngameWidget::NativeDisplayHelpText(GetWorld(), spell->GetMessageDeficientResources());
+                  }
                }
             }
          }

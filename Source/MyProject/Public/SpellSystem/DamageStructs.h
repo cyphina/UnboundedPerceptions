@@ -6,7 +6,8 @@ class AUnit;
 
 /** Damage struct contains relevant information when calculating the amount of damage dealt*/
 USTRUCT(BlueprintType, NoExport)
-struct FUpDamage {
+struct FUpDamage
+{
    FUpDamage() {}
    FUpDamage(AUnit* sourceUnit, AUnit* targetUnit, int p, int d, int a, FGameplayTag e, FGameplayTag t, bool c) :
        sourceUnit{sourceUnit}, targetUnit{targetUnit}, piercing(p), damage(d), accuracy(a), element{e}, type{t}, crit(c)
@@ -18,11 +19,11 @@ struct FUpDamage {
    UPROPERTY(BlueprintReadWrite)
    AUnit* targetUnit = nullptr;
    UPROPERTY(BlueprintReadWrite)
-   int piercing = 0;
+   float piercing = 0;
    UPROPERTY(BlueprintReadWrite)
-   int damage = 0; // how much damage dealt
+   int damage = 0;
    UPROPERTY(BlueprintReadWrite)
-   int accuracy = 0;
+   float accuracy = 0;
    UPROPERTY(BlueprintReadWrite)
    FGameplayTag element = FGameplayTag(); // element of damage
    UPROPERTY(BlueprintReadWrite)
@@ -31,13 +32,16 @@ struct FUpDamage {
    bool crit = false;
    UPROPERTY(BlueprintReadOnly)
    FGameplayTagContainer effects;
+
+   bool DidMiss() const { return accuracy > 100; }
 };
 
 /** Most skills derive damage from a combination of these stats. */
 USTRUCT(BlueprintType)
-struct FDamageScalarStruct {
+struct FDamageScalarStruct
+{
    GENERATED_BODY()
-   
+
    FDamageScalarStruct(int hits = 0, int str = 0, int intel = 0, int agi = 0, int und = 0) :
        hitpoints(hits), strength(str), intelligence(intel), agility(agi), understanding(und)
    {

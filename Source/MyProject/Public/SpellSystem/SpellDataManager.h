@@ -4,7 +4,6 @@
 #include "SpellDataManager.generated.h"
 
 class UMySpell;
-class UMyGameplayEffect;
 
 /**
  * Singleton class for a spell manager that lets us get our spell data table whenever we need information about a spell (aka our SpellInfo)

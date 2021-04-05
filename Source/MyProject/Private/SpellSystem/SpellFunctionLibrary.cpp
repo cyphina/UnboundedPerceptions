@@ -17,39 +17,56 @@
 #include "TextFormatter.h"
 #include "Engine/CompositeCurveTable.h"
 
-const FGameplayTag USpellFunctionLibrary::CONFIRM_SPELL_TAG        = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Spell");
-const FGameplayTag USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Target");
+const FGameplayTag    USpellFunctionLibrary::CONFIRM_SPELL_TAG        = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Spell");
+const FGameplayTag    USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Target");
+UCompositeCurveTable* USpellFunctionLibrary::effectPowerTableRef      = nullptr;
 
 USpellFunctionLibrary::USpellFunctionLibrary(const FObjectInitializer& o) : Super(o)
 {
+   const ConstructorHelpers::FObjectFinder<UCompositeCurveTable> skillTable(TEXT("/Game/RTS_Tutorial/Blueprints/SpellSystem/SpellEffect/CurveTables/Up_CT_AllSkills"));
+   if(skillTable.Succeeded())
+   {
+      effectPowerTableRef = skillTable.Object;
+      effectPowerTableRef->AddToRoot();
+   }
 }
 
 FGameplayEffectSpecHandle USpellFunctionLibrary::MakeGameplayEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
                                                                     float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags)
 {
-   FGameplayEffectSpecHandle effect = AbilityRef->MakeOutgoingGameplayEffectSpec(EffectClass, Level);
+   FGameplayEffectSpecHandle effect           = AbilityRef->MakeOutgoingGameplayEffectSpec(EffectClass, Level);
+   const UGameplayEffect*    effectDefinition = effect.Data->Def;
+
    effect.Data->DynamicAssetTags.AddTag(Elem); // Use add tag to check if tag is valid and prevents duplicate tags.
    effect.Data->DynamicAssetTags.AddTag(Name);
    effect.Data->DynamicAssetTags.AppendTags(assetTags);
-   if(effect.Data->Def->DurationPolicy != EGameplayEffectDurationType::Instant) // Do this check since some instant effects rely on this procedure too
+   if(effectDefinition->DurationPolicy != EGameplayEffectDurationType::Instant && effectDefinition->DurationPolicy != EGameplayEffectDurationType::Infinite)
    {
-      if(EffectClass.GetDefaultObject()->Executions.Num())
+      if(effectDefinition->Executions.Num())
       {
          // Spells that have executions and durations need to be periodic but we don't want the period to do anything so set it to something really large.
-         if(Period == 0)
+         if(effectDefinition->Period.Value <= 0 && Period <= 0)
          {
             Period = 999;
          }
       }
-      effect.Data->Period = Period;
-      effect.Data->SetDuration(Duration, true); // if we don't lock the duration, the duration will be recalcuated somewhere in active effect creation ...
+
+      if(Period > 0)
+      {
+         effect.Data->Period = Period;
+      }
+
+      if(Duration > 0)
+      {
+         effect.Data->SetDuration(Duration, true); // if we don't lock the duration, the duration will be recalcuated somewhere in active effect creation ...
+      }
    }
    return effect;
 }
 
-FGameplayEffectSpecHandle USpellFunctionLibrary::MakeDamageEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
-                                                                  float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
-                                                                  FDamageScalarStruct damageVals)
+FGameplayEffectSpecHandle USpellFunctionLibrary::MakeDamageOrHealingEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level,
+                                                                           float Duration, float Period, FGameplayTag Elem, FGameplayTag Name,
+                                                                           FGameplayTagContainer assetTags, FDamageScalarStruct damageVals)
 {
    FGameplayEffectSpecHandle effect = MakeGameplayEffect(AbilityRef, EffectClass, Level, Duration, Period, Elem, Name, assetTags);
    effect.Data->DynamicAssetTags.AddTag(Elem); // Use add tag to check if tag is valid and prevents duplicate tags.
@@ -104,7 +121,7 @@ ARTSProjectile* USpellFunctionLibrary::SetupBulletTargetting(AUnit* casterRef, T
    return projectile;
 }
 
-FText USpellFunctionLibrary::ParseDesc(const FText& inputText, const UAbilitySystemComponent* compRef, UMySpell* spell, UCompositeCurveTable* effectPowerTableRef)
+FText USpellFunctionLibrary::ParseDesc(const FText& inputText, const UAbilitySystemComponent* compRef, const UMySpell* spell)
 {
    FTextFormatPatternDefinitionRef descriptionPatternDef = MakeShared<FTextFormatPatternDefinition, ESPMode::ThreadSafe>();
    descriptionPatternDef->SetArgStartChar(TEXT('['));
@@ -127,12 +144,32 @@ FText USpellFunctionLibrary::ParseDesc(const FText& inputText, const UAbilitySys
          {
             if(effectPowerTableRef->GetRowMap().Contains(*token))
             {
+               // The field might have less entries than the max level of the ability.
                FRealCurve* effectPowerCurve = effectPowerTableRef->GetRowMap()[*token];
                float       minTime, maxTime;
                effectPowerCurve->GetTimeRange(minTime, maxTime);
-               const int   index               = UMySpell::GetIndex(spell->GetLevel(compRef), maxTime, spell->GetMaxLevel());
-               const float effectTokenArgValue = effectPowerCurve->Eval(index + 1);
-               effectArgs.Add(*token, effectTokenArgValue);
+
+               int trueMaxTimeIndex = maxTime;
+               for(int i = minTime; i < maxTime; ++i)
+               {
+                  if(FKeyHandle keyHandle = effectPowerCurve->FindKey(i); keyHandle != FKeyHandle::Invalid())
+                  {
+                     const float keyValue = effectPowerCurve->GetKeyValue(keyHandle);
+                     if(keyValue == 0)
+                     {
+                        trueMaxTimeIndex = i - 1;
+                        break;
+                     }
+                  }
+               }
+
+               const int index = UMySpell::GetIndex(spell->GetLevel(compRef), trueMaxTimeIndex, spell->GetMaxLevel());
+
+               if(index > -1)
+               {
+                  const float effectTokenArgValue = effectPowerCurve->Eval(index + 1);
+                  effectArgs.Add(*token, effectTokenArgValue);
+               }
             }
          }
       }

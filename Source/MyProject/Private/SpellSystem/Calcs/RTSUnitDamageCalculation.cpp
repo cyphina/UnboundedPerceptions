@@ -16,9 +16,8 @@ namespace AttackCVars
                                                           TEXT("Uses text render component instead of widgets to show damage numbers."));
 }
 
-void URTSUnitDamageCalculation::Execute_Implementation
-(const FGameplayEffectCustomExecutionParameters& executionParams,
- FGameplayEffectCustomExecutionOutput&           outExecutionOutput) const
+void URTSUnitDamageCalculation::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& executionParams,
+                                                       FGameplayEffectCustomExecutionOutput&           outExecutionOutput) const
 {
    FUpDamage damage;
 
@@ -34,7 +33,7 @@ void URTSUnitDamageCalculation::Execute_Implementation
    }
    if(targetComponent)
    {
-      targetUnit = Cast<AUnit>(targetComponent->AvatarActor); 
+      targetUnit = Cast<AUnit>(targetComponent->AvatarActor);
    }
 
    if(sourceUnit && targetUnit)
@@ -83,18 +82,8 @@ void URTSUnitDamageCalculation::DamageTarget(FUpDamage& d, FGameplayTagContainer
       d.damage = 1;
    }
 
-   // Add lifesteal effects as healing here (since we have to calculate damage reduction first)
-   // TODO: Maybe add a stat for lifesteal %
-   if(effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Lifesteal")))
-   {
-      d.sourceUnit->GetStatComponent()->ModifyStats<false>(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) + d.damage, EVitals::Health);
-   }
-
-   // Record some statistics about our units which AI can use
-   const float worldTime = d.sourceUnit->GetStatComponent()->GetWorld()->GetTimeSeconds();
-
    // Drain or add health depending on healing or damage
-   if(UNLIKELY(d.effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Healing"))))
+   if(d.effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Healing")))
    {
       d.damage *= -1;
    }

@@ -337,6 +337,7 @@ class MYPROJECT_API ARTSPawn : public APawn
    void OnStorageSlotSelected(int slotIndex);
    void OnEquipmentSlotSelected(int slotIndex);
    void OnShopSlotSelected(int slotIndex);
+   void OnEffectSlotSelected(int slotIndex);
    void OnStorageInventoryClosed();
 
    UFUNCTION()

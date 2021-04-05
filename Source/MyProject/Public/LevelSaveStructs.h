@@ -157,11 +157,11 @@ struct InteractableSaveKeyFuncs : DefaultKeyFuncs<ElementType, true> {
    /** Calculates a hash index for a key. */
    static FORCEINLINE uint32 GetKeyHash(KeyInitType& Key) { return GetTypeHash(Key.interactableInfo.transform.GetLocation()); }
 
-   /** Used when trying to ensure bucket has correct value in hashtable.  Matches the interactable actor with the struct holding its data.*/
+   /** Allows us to check if an interactable is in this map. This map stores interactable info structs, so we need to show a way to compare between the two types */
    template <typename ComparableKey>
    static FORCEINLINE bool Matches(KeyInitType& A, ComparableKey& B) { return A.interactableInfo.transform.GetLocation() == B->GetActorLocation(); }
 
-   /** Overload used when adding values */
+   /** I assume this is the overload used when adding values to check elements in the same bucket to ensure uniqueness */
    static FORCEINLINE bool Matches(KeyInitType& A, KeyInitType& B) { return A.interactableInfo.transform.GetLocation() == B.interactableInfo.transform.GetLocation(); }
 };
 

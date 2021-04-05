@@ -28,7 +28,7 @@
 #include "AIModule/Classes/BehaviorTree/BlackboardComponent.h"
 #include "AIModule/Classes/BehaviorTree/BehaviorTreeComponent.h"
 
-AAllyAIController::AAllyAIController() : AUnitController()
+AAllyAIController::AAllyAIController(const FObjectInitializer& ObjectInitializer) : AUnitController(ObjectInitializer)
 {
    SetActorTickInterval(0.2f);
    behaviorTrees.SetNum(NUM_BEHAVIORAL_MODES);

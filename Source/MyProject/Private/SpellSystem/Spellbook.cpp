@@ -51,10 +51,14 @@ bool USpellBook::IsSpellLearnable(TSubclassOf<UMySpell> spellClass)
 
 USpellBook* USpellBook::CreateSpellBook(ABaseHero* heroRef, TSubclassOf<USpellBook> spellBookClass)
 {
-   USpellBook* spellbook = NewObject<USpellBook>(heroRef, spellBookClass);
-   spellbook->heroRef    = heroRef;
-   spellbook->Init();
-   return spellbook;
+   if(spellBookClass)
+   {
+      USpellBook* spellbook = NewObject<USpellBook>(heroRef, spellBookClass);
+      spellbook->heroRef    = heroRef;
+      spellbook->Init();
+      return spellbook;
+   }
+   return nullptr;
 }
 
 TArray<int> USpellBook::GetLearnableSpellsIndices() const

@@ -126,6 +126,9 @@ class MYPROJECT_API URTSCheatManager : public UCheatManager
    UFUNCTION(exec, Category = "Cheats")
    virtual void Up_ShowVisionSpheres(bool bShouldShow);
 
+   UFUNCTION(exec, Category = "Cheats")
+   virtual void Up_DrawSphere(FString unitName, float sphereRadius, float duration);
+
    /**
     * @brief Used to debug the damage indicator
     * @param unitName 

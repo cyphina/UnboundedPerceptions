@@ -22,7 +22,8 @@ public:
 
 protected:
    void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
-   
+   void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+
 private:
    void ShowDesc(UToolTipWidget* tooltip) override;
    ABaseHero* GetHeroRef() const;

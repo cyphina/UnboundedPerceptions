@@ -76,7 +76,12 @@ void UActionbarInterface::OnSelectLockToggled(bool bToggleOn)
    GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSelectionLockToggled().Broadcast();
 }
 
-FOnSlotSelected& UActionbarInterface::OnSlotSelected()
+FOnSlotSelected& UActionbarInterface::OnSkillSlotSelected()
 {
-   return singleUnitView->OnSlotSelected();
+   return singleUnitView->OnSkillSlotSelected();
+}
+
+FOnSlotSelected& UActionbarInterface::OnEffectSlotSelected()
+{
+   return singleUnitView->OnEffectSlotSelected();
 }

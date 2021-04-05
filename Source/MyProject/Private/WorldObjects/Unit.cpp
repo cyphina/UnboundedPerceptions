@@ -24,6 +24,7 @@
 
 #include "MyCharacterMovementComponent.h"
 #include "PartyDelegateContext.h"
+#include "RTSGlobalCVars.h"
 
 #include "RTSStateComponent.h"
 #include "RTSVisionComponent.h"
@@ -47,9 +48,11 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
    visionComponent = CreateDefaultSubobject<URTSVisionComponent>(TEXT("VisionRadius"));
    visionComponent->SetupAttachment(RootComponent);
    visionComponent->SetRelativeLocation(FVector::ZeroVector);
+   visionComponent->bUseAttachParentBound = true;
 
    selectionCircleDecal = CreateDefaultSubobject<UDecalComponent>(TEXT("CircleShadowBounds"));
    selectionCircleDecal->SetupAttachment(RootComponent);
+   selectionCircleDecal->bUseAttachParentBound = true;
 
    SetupHealthbarComponent();
 
@@ -64,6 +67,7 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
 
    // Turn this off to make sure the unit highlights when hovered over
    GetMesh()->SetRenderCustomDepth(false);
+   GetMesh()->bUseAttachParentBound = true;
 }
 
 AUnit::~AUnit() = default;
@@ -75,7 +79,8 @@ void AUnit::SetupHealthbarComponent()
    healthBar->SetPivot(FVector2D(0.5, 1));
    healthBar->SetupAttachment(RootComponent);
    healthBar->SetDrawAtDesiredSize(true);
-
+   healthBar->SetCanEverAffectNavigation(false);
+   healthBar->bUseAttachParentBound = true;
    ConstructorHelpers::FClassFinder<UUserWidget> healthBarWig(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/Hitpoints/Up_W_HealthbarWidget"));
    if(healthBarWig.Succeeded())
    {
@@ -86,13 +91,14 @@ void AUnit::SetupHealthbarComponent()
 void AUnit::SetupCharacterCollision() const
 {
    // Mesh needs an offset because it isn't aligned with capsule component at the beginning.  Offset by the mesh size
-   GetMesh()->SetRelativeLocation(FVector(0, 0, -GetMesh()->Bounds.BoxExtent.Z));
+   GetMesh()->SetRelativeLocation(FVector(0, 0, GetDefaultHalfHeight() * 2));
    GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 
    GetCapsuleComponent()->SetCollisionProfileName(TEXT("Pawn"));
    GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
    GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECR_Block);
    GetCapsuleComponent()->SetSimulatePhysics(false); // can't move w/o physics
+   // GetCapsuleComponent()->SetCanEverAffectNavigation(true);
 
    GetCharacterMovement()->bEnablePhysicsInteraction = false;
    GetCharacterMovement()->bPushForceScaledToMass    = false;
@@ -105,6 +111,7 @@ void AUnit::SetupMovementComponent() const
    GetCharacterMovement()->SetWalkableFloorAngle(90.f);
    GetCharacterMovement()->RotationRate              = FRotator(0, 300.f, 0);
    GetCharacterMovement()->bOrientRotationToMovement = true;
+   GetCharacterMovement()->JumpOffJumpZFactor        = 0;
 }
 
 void AUnit::SetupDamageInidicatorContainerWidget()
@@ -118,6 +125,7 @@ void AUnit::SetupDamageInidicatorContainerWidget()
    damageIndicatorWidget->SetInitialSharedLayerName("DamageIndicatorLayer");
    damageIndicatorWidget->SetInitialLayerZOrder(1);
    damageIndicatorWidget->bUseAttachParentBound = true;
+   damageIndicatorWidget->SetCanEverAffectNavigation(false);
 }
 
 void AUnit::RemoveArrowComponent() const
@@ -138,6 +146,7 @@ void AUnit::SetupSelectionCircle() const
       selectionCircleDecal->SetWorldScale3D(FVector::OneVector);
       selectionCircleDecal->SetRelativeRotation(FRotator(90, 0, 0));
       selectionCircleDecal->SetRelativeLocation(FVector(0, 0, -90));
+      selectionCircleDecal->bUseAttachParentBound = true;
    }
 }
 
@@ -151,6 +160,7 @@ void AUnit::StoreUnitHeight()
 void AUnit::BeginPlay()
 {
    Super::BeginPlay();
+   // GetCapsuleComponent()->SetCanEverAffectNavigation(true);
 
    if(UNLIKELY(!IsValid(controllerRef)))
    {
@@ -159,7 +169,13 @@ void AUnit::BeginPlay()
 
    GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
       damageIndicatorWidget->SetWidgetClass(controllerRef->GetHUDManager()->damageIndicatorContainerClass);
-      Cast<URTSDamageNumberContainer>(damageIndicatorWidget->GetUserWidgetObject())->SetOwningUnit(this);
+      URTSDamageNumberContainer* damageNumberContainerWidget = Cast<URTSDamageNumberContainer>(damageIndicatorWidget->GetUserWidgetObject());
+      damageIndicatorWidget->SetOwnerPlayer(controllerRef->GetLocalPlayer());
+      if(damageNumberContainerWidget)
+      {
+         damageNumberContainerWidget->SetOwningUnit(this);
+      }
+      damageIndicatorWidget->SetRelativeLocation(FVector::ZeroVector);
    });
 
    StoreUnitHeight();
@@ -173,7 +189,11 @@ void AUnit::BeginPlay()
    GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed);
 
    visionComponent->SetRelativeLocation(FVector::ZeroVector);
-   damageIndicatorWidget->SetRelativeLocation(FVector::ZeroVector);
+
+   if(!IsEnabled())
+   {
+      SetEnabled(false);
+   }
 }
 
 void AUnit::PossessedBy(AController* newController)
@@ -182,34 +202,64 @@ void AUnit::PossessedBy(AController* newController)
    unitController = Cast<AUnitController>(newController);
 }
 
-void AUnit::Tick(float deltaSeconds)
+void AUnit::HideInvisibleUnits()
 {
-   Super::Tick(deltaSeconds);
-   if(GetIsUnitHidden())
+   if(LIKELY(!GameplayModifierCVars::bShowEnemyPerspective))
    {
-      SetActorHiddenInGame(true);
-      GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECR_Ignore);
+      if(GetIsEnemy())
+      {
+         if(GetIsUnitHidden())
+         {
+            SetActorHiddenInGame(true);
+            GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECR_Ignore);
+         }
+         else
+         {
+            SetActorHiddenInGame(false);
+            GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECR_Block);
+         }
+      }
    }
    else
    {
-      SetActorHiddenInGame(false);
-      GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECR_Block);
+      if(!GetIsEnemy())
+      {
+         if(GetIsUnitHidden())
+         {
+            SetActorHiddenInGame(true);
+            GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECR_Ignore);
+         }
+         else
+         {
+            SetActorHiddenInGame(false);
+            GetCapsuleComponent()->SetCollisionResponseToChannel(SELECTABLE_BY_CLICK_CHANNEL, ECR_Block);
+         }
+      }
    }
+}
+
+void AUnit::Tick(float deltaSeconds)
+{
+   Super::Tick(deltaSeconds);
+   HideInvisibleUnits();
 }
 
 void AUnit::SetEnabled(bool bEnabled)
 {
    if(bEnabled)
    {
-      SetUnitSelected(false);
+      if(GetUnitSelected())
+      {
+         SetUnitSelected(false);
+      }
       GetCapsuleComponent()->SetVisibility(true, true);
       SetActorEnableCollision(true);
       SetActorTickEnabled(true);
       GetCapsuleComponent()->SetEnableGravity(true);
       GetCharacterMovement()->GravityScale = 1;
-      bCanAffectNavigationGeneration       = true;
-      unitProperties.bIsEnabled            = true;
-      damageIndicatorWidget->RegisterComponent();
+      // bCanAffectNavigationGeneration       = true;
+      unitProperties.bIsEnabled = true;
+      damageIndicatorWidget->SetActive(true);
    }
    else
    {
@@ -222,7 +272,7 @@ void AUnit::SetEnabled(bool bEnabled)
       GetCapsuleComponent()->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
       bCanAffectNavigationGeneration = false;
       unitProperties.bIsEnabled      = false;
-      damageIndicatorWidget->UnregisterComponent();
+      damageIndicatorWidget->SetActive(false);
    }
 }
 

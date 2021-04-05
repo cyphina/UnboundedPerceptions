@@ -96,6 +96,15 @@ UActionSlotStyle* UActionSlot::GetStyleCDO() const
    return style ? style.GetDefaultObject() : nullptr;
 }
 
+UDraggedActionWidget* UActionSlot::CreateDragIndicator()
+{
+   if(draggedActionWidgetClass)
+   {
+      return CreateWidget<UDraggedActionWidget>(this, draggedActionWidgetClass);
+   }
+   return nullptr;
+}
+
 FReply UActionSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
    if(GetStyleCDO())
@@ -105,7 +114,10 @@ FReply UActionSlot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const F
 
    if(InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
    {
-      return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply;
+      if(draggedActionWidgetClass)
+      {
+         return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply;
+      }
    }
 
    return FReply::Handled();
@@ -150,6 +162,8 @@ void UActionSlot::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
    {
       actionBorder->SetBrush(GetStyleCDO()->GetDefaultBrush());
    }
+
+   SetToolTip(nullptr);
 }
 
 USlotContainer* UActionSlot::GetParentContainer() const

@@ -24,7 +24,7 @@ void UUpStatComponent::BeginPlay()
    Super::BeginPlay();
    AUnit* unitOwnerRef = Cast<AUnit>(GetOwner());
 
-   baseC = MakeUnique<FBaseCharacter>(*const_cast<UMyAttributeSet*>(unitOwnerRef->GetAbilitySystemComponent()->AddSet<UMyAttributeSet>()));
+   baseC = MakeUnique<FBaseCharacter>(*const_cast<URTSAttributeSet*>(unitOwnerRef->GetAbilitySystemComponent()->AddSet<URTSAttributeSet>()));
 }
 
 void UUpStatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -52,6 +52,7 @@ float UUpStatComponent::GetElementalStatValueFromElemTag(const FGameplayTag& ele
                                                                       {FGameplayTag::RequestGameplayTag("Combat.Element.Earth"), EUnitScalingStats::Earth_Aff},
                                                                       {FGameplayTag::RequestGameplayTag("Combat.Element.Electric"), EUnitScalingStats::Electric_Aff},
                                                                       {FGameplayTag::RequestGameplayTag("Combat.Element.Ethereal"), EUnitScalingStats::Ethereal_Aff},
+                                                                      {FGameplayTag::RequestGameplayTag("Combat.Element.Cosmic"), EUnitScalingStats::Cosmic_Aff},
                                                                       {FGameplayTag::RequestGameplayTag("Combat.Element.Fire"), EUnitScalingStats::Fire_Aff},
                                                                       {FGameplayTag::RequestGameplayTag("Combat.Element.Force"), EUnitScalingStats::Physical_Aff},
                                                                       {FGameplayTag::RequestGameplayTag("Combat.Element.Light"), EUnitScalingStats::Light_Aff},
@@ -72,7 +73,8 @@ float UUpStatComponent::GetElementalStatValueFromElemTag(const FGameplayTag& ele
                                                                       {FGameplayTag::RequestGameplayTag("Combat.Element.Light"), EUnitScalingStats::Light_Resist},
                                                                       {FGameplayTag::RequestGameplayTag("Combat.Element.Poison"), EUnitScalingStats::Poison_Resist},
                                                                       {FGameplayTag::RequestGameplayTag("Combat.Element.Water"), EUnitScalingStats::Water_Resist},
-                                                                      {FGameplayTag::RequestGameplayTag("Combat.Element.Wind"), EUnitScalingStats::Wind_Resist}};
+                                                                      {FGameplayTag::RequestGameplayTag("Combat.Element.Wind"), EUnitScalingStats::Wind_Resist},
+                                                                      {FGameplayTag::RequestGameplayTag("Combat.Element.Cosmic"), EUnitScalingStats::Cosmic_Resist}};
 
    const auto& map = bGetAff ? elemToAffMap : elemToDefMap;
 

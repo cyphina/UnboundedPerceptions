@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UI/UserWidgetExtensions/RTSBrowserWidgetBase.h"
-#include "MyAttributeSet.h"
+#include "RTSAttributeSet.h"
 #include "RTSSidebarWidget.generated.h"
 
 /**

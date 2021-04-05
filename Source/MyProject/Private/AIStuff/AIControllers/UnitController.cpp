@@ -26,8 +26,9 @@
 #include "SpellDataLibrary.h"
 #include "UnitMessages.h"
 #include "UserInput.h"
+#include "Navigation/CrowdFollowingComponent.h"
 
-AUnitController::AUnitController()
+AUnitController::AUnitController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
    SetActorTickInterval(0.f);
    ConstructorHelpers::FObjectFinder<UCurveFloat> loadedCurve(TEXT("/Game/RTS_Tutorial/HUDs/ActionUI/StandardLinear"));
@@ -39,6 +40,7 @@ void AUnitController::OnPossess(APawn* InPawn)
    Super::OnPossess(InPawn);
    ownerRef = Cast<AUnit>(GetPawn());
    GetUnitOwner()->OnUnitDamageReceived().AddUObject(this, &AUnitController::OnDamageReceived);
+   GetUnitOwner()->OnUnitHealingReceived().AddUObject(this, &AUnitController::OnHealingReceived);
 }
 
 void AUnitController::SetupTurnPointTimeline()
@@ -142,30 +144,30 @@ void AUnitController::Attack()
 
 void AUnitController::OnDamageReceived(const FUpDamage& d)
 {
-   if(d.accuracy <= 100)
+   if(!d.DidMiss())
    {
       d.sourceUnit->GetCombatInfo()->bMissLastHit = false;
       GetUnitOwner()->GetStatComponent()->ModifyStats<false>(GetUnitOwner()->GetStatComponent()->GetVitalCurValue(EVitals::Health) - d.damage, EVitals::Health);
 
-      if(d.sourceUnit->GetAbilitySystemComponent()->HasAnyMatchingGameplayTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Lifesteal"))))
+      if(d.effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Lifesteal")))
       {
-         d.sourceUnit->GetStatComponent()->ModifyStats(d.sourceUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) + d.damage, EVitals::Health);
+         d.sourceUnit->GetStatComponent()->ModifyStats<false>(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) + d.damage, EVitals::Health);
+      }
+
+      if(GetUnitOwner()->GetStatComponent()->GetVitalAdjValue(EVitals::Health) <= 0)
+      {
+         Die();
       }
    }
    else
    {
       d.sourceUnit->GetCombatInfo()->bMissLastHit = true;
    }
+}
 
-   if(GetUnitOwner()->GetStatComponent()->GetVitalAdjValue(EVitals::Health) <= 0)
-   {
-      Die();
-   }
-
-   else if(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) >= d.targetUnit->GetStatComponent()->GetVitalBaseValue(EVitals::Health))
-   {
-      d.sourceUnit->GetStatComponent()->ModifyStats<false>(d.sourceUnit->GetStatComponent()->GetVitalBaseValue(EVitals::Health), EVitals::Health);
-   }
+void AUnitController::OnHealingReceived(const FUpDamage& d)
+{
+   GetUnitOwner()->GetStatComponent()->ModifyStats<false>(GetUnitOwner()->GetStatComponent()->GetVitalCurValue(EVitals::Health) + d.damage, EVitals::Health);
 }
 
 void AUnitController::Die()
@@ -201,8 +203,6 @@ EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation, flo
 
    if(!USpellDataLibrary::IsStunned(GetUnitOwner()->GetAbilitySystemComponent()))
    {
-      //StopCurrentAction();
-
       if(ABasePlayer* basePlayer = GetWorld()->GetFirstPlayerController()->GetPlayerState<ABasePlayer>())
       {
          FVector shiftedLocation = newLocation; // Shift location a little bit if we're moving multiple units so they can group together ok

@@ -4,6 +4,7 @@
 #include "UnrealEd.h"
 #include "Editor/PropertyEditor/Public/PropertyEditorModule.h"
 #include "FCustomTriggerDetailPanel.h"
+#include "FUnitDetails.h"
 
 /**Access appropriate module via module manager and call a registration function*/
 
@@ -16,13 +17,15 @@ void FMyProjectEditorModule::StartupModule()
    UE_LOG(MyProjectEditor, Warning, TEXT("MyProjectEditor: Log Started"));
    FPropertyEditorModule& propertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
    propertyModule.RegisterCustomPropertyTypeLayout("TriggerData", FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FTriggerDataCustomization::MakeInstance));
+   propertyModule.RegisterCustomClassLayout("Unit", FOnGetDetailCustomizationInstance::CreateStatic(&FUnitDetails::MakeInstance));
    propertyModule.NotifyCustomizationModuleChanged();
 }
 
 void FMyProjectEditorModule::ShutdownModule()
 {
    UE_LOG(MyProjectEditor, Warning, TEXT("MyProjectEditor: Log Ended"));
-   if(FModuleManager::Get().IsModuleLoaded("PropetyEditor")) {
+   if(FModuleManager::Get().IsModuleLoaded("PropetyEditor"))
+   {
       FPropertyEditorModule* propertyModule = FModuleManager::GetModulePtr<FPropertyEditorModule>("PropertyEditor");
       propertyModule->UnregisterCustomClassLayout("FTriggerData");
    }

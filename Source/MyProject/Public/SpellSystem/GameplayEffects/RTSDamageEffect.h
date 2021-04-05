@@ -2,7 +2,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "GameplayEffect.h"
 #include "DamageStructs.h"
 #include "RTSDamageEffect.generated.h"

@@ -16,16 +16,20 @@
 
 DECLARE_LOG_CATEGORY_CLASS(UpDamageSystem, Verbose, All);
 
-static TAutoConsoleVariable<bool> CVARDamageDebugging(TEXT("RTSDebug.DamageDebugging"), false, TEXT("Used to toggle on or off logging for damage system."), ECVF_Cheat);
+UCurveFloat*                      URTSDamageCalculation::piercingBonusCurve = nullptr;
+static TAutoConsoleVariable<bool> CVARDamageDebugging(TEXT("Up.Debug.DamageValues"), false, TEXT("Used to toggle on or off logging for damage system."), ECVF_Cheat);
 
 URTSDamageCalculation::URTSDamageCalculation(const FObjectInitializer& objectInitializer) : Super(objectInitializer)
 {
    AttStruct attributes;
-   RelevantAttributesToCapture.Add(attributes.HealthDef); 
+   RelevantAttributesToCapture.Add(attributes.HealthDef);
    RelevantAttributesToCapture.Add(attributes.StrengthDef);
    RelevantAttributesToCapture.Add(attributes.UnderstandingDef);
    RelevantAttributesToCapture.Add(attributes.IntelligenceDef);
    RelevantAttributesToCapture.Add(attributes.AgilityDef);
+
+   static ConstructorHelpers::FObjectFinder<UCurveFloat> PierceCurveRef(TEXT("/Game/RTS_Tutorial/Blueprints/Curves/Up_Curve_PiercingDamageMultiplier"));
+   piercingBonusCurve = PierceCurveRef.Object;
 }
 
 void URTSDamageCalculation::BroadcastDamageEvents(FUpDamage& d) const
@@ -43,11 +47,7 @@ void URTSDamageCalculation::CalculateDamage(FUpDamage& d, FGameplayTagContainer&
    d.damage              = d.damage * (damageRange / 100.f);
 
    PrintDamageCalcsBeforeProcessing(d, damageRange);
-
-   d.piercing = 0;
-
    ApplyEffects(d, effects);
-   CalculatePiercing(d.sourceUnit, d, true); // Calculate offensive piercing
 }
 
 void URTSDamageCalculation::ApplyEffects(FUpDamage& d, FGameplayTagContainer& effects) const
@@ -60,7 +60,7 @@ void URTSDamageCalculation::ReceiveEffects(FUpDamage& d, FGameplayTagContainer& 
    // --This tag means this damage is pure, that is it doesn't get reduced by the global damage modifier--  Ex: Iron Maiden
    if(!effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Absolute")))
    {
-      d.damage = d.damage * (100 + d.targetUnit->GetStatComponent()->GetMechanicAdjValue(EMechanics::GlobalDamageModifier)) / 100;
+      d.damage = d.damage * (100 - d.targetUnit->GetStatComponent()->GetMechanicAdjValue(EMechanics::GlobalDamageModifier)) / 100;
    }
 
    if(effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.ElementalNuke")))
@@ -79,10 +79,11 @@ void URTSDamageCalculation::ReceiveEffects(FUpDamage& d, FGameplayTagContainer& 
       d.damage = -1;
    }
 
-   // This tag means that
+   // This tag means that we'll dodge everything
    if(USpellDataLibrary::IsGodMode(d.targetUnit->GetAbilitySystemComponent()))
    {
-      d.damage = 0;
+      d.damage   = 0;
+      d.accuracy = 101;
    }
 }
 
@@ -91,18 +92,18 @@ void URTSDamageCalculation::PrintDamageCalcsBeforeProcessing(const FUpDamage& d,
    if(CVARDamageDebugging.GetValueOnGameThread())
    {
       const auto& debugFormat = TEXT(R"-(-- %s Damage Values b4 Calculations ---
-      %t Damage Roll %d
-      %t Damage before Calculations: %d)-");
+      %t Damage Roll: %d
+      %t Damage before effects and amp: %d)-");
 
       GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, FString::Printf(debugFormat, *d.sourceUnit->GetGameName().ToString(), damageRange, d.damage));
    }
 }
 
-void URTSDamageCalculation::PrintPreDamageReductionValues(const FUpDamage& d)
+void URTSDamageCalculation::PrintAffinityAndDefense(const float affinity, const float defense)
 {
    if(CVARDamageDebugging.GetValueOnGameThread())
    {
-      GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Turquoise, FString::Printf(TEXT("Piercing value before enemy defense reduction: %d \n"), d.piercing));
+      GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Turquoise, FString::Printf(TEXT("Attacker Affinity: %f - Defender Defense: %f\n"), affinity, defense));
    }
 }
 
@@ -121,8 +122,8 @@ void URTSDamageCalculation::PrintFinalCalculatedDamageValues(const FUpDamage& d)
       const auto& debugFormat = TEXT(
           R"-(-- %s FinalDamage Information ---
       %t Damage: %d
-      %t Piercing: %d
-      %t Accuracy: %d
+      %t Piercing Multiplier: %f
+      %t Accuracy Roll: %f
       %t Crit: %d
       %t Element: %s
       %t Effects: %s)-");
@@ -133,49 +134,45 @@ void URTSDamageCalculation::PrintFinalCalculatedDamageValues(const FUpDamage& d)
    }
 }
 
-void URTSDamageCalculation::PrintCritRollInfo(const FUpDamage& d, const float percentageConversion, const float critRoll)
+void URTSDamageCalculation::PrintCritRollInfo(const FUpDamage& d, const float critRoll)
 {
    if(CVARDamageDebugging.GetValueOnGameThread())
    {
       const float criticalChance = d.sourceUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Critical_Chance);
       GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange,
-                                       FString("Piercing Bonus: ") + FString::SanitizeFloat(percentageConversion) + FString(" Critical Bonus: ") +
+                                       FString("Piercing Multiplier: ") + FString::SanitizeFloat(d.piercing) + FString(" Critical Bonus: ") +
                                            FString::SanitizeFloat(criticalChance));
       GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Orange, FString("Critical Roll: ") + FString::SanitizeFloat(critRoll));
    }
 }
 
-void URTSDamageCalculation::CalculateDamageReduction(FUpDamage& d, FGameplayTagContainer& effects) const
+void URTSDamageCalculation::CalculateCritical(FUpDamage& d)
 {
-   CalculatePiercing(d.targetUnit, d, false); // Calculate defensive piercing
+   const float critRoll           = FMath::FRandRange(1, 100);
+   const float adjustedCritCutoff = 100.f - d.piercing * d.sourceUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Critical_Chance);
 
-   PrintPreDamageReductionValues(d);
-
-   ///--After we successfully calculate piercing, apply piercing effects
-   /// 1 - Increase base damage by 1% per 35 points of affinity
-   const float pierceToPercentBonus = d.piercing / 35.f;
-   d.damage                         = d.damage * (100 + pierceToPercentBonus) / 100;
-   const float critRoll             = FMath::FRandRange(1, 100);
-
-   /// 2 - Piercing also increase critical chance (up to 30%)
-   const float adjustedCritChance = 100.f - d.sourceUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Critical_Chance);
-   if(critRoll + FMath::Clamp(pierceToPercentBonus, 0.f, 30.f) > adjustedCritChance)
+   // Max 50% crit ratio
+   if(critRoll > FMath::Clamp(adjustedCritCutoff, 50.f, 100.f))
    {
       d.crit   = true;
-      d.damage = d.damage * d.sourceUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Critical_Damage);
+      d.damage = d.damage * (150 + d.sourceUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Critical_Damage)) / 100;
    }
    else
    {
       d.crit = false;
    }
 
-   PrintCritRollInfo(d, pierceToPercentBonus, critRoll);
+   PrintCritRollInfo(d, critRoll);
+}
 
-   ///--End of piercing application
+void URTSDamageCalculation::CalculateDamageReduction(FUpDamage& d, FGameplayTagContainer& effects) const
+{
+   CalculatePiercing(d);
+
+   CalculateCritical(d);
 
    CalculateAccuracy(d, effects);
 
-   /// 4 - Apply any effects that need everything properly calculated
    ReceiveEffects(d, effects);
 
    PrintFinalCalculatedDamageValues(d);
@@ -186,23 +183,46 @@ void URTSDamageCalculation::CalculateAccuracy(FUpDamage& d, FGameplayTagContaine
    // This tag that means the ability triggering this damage event can never miss
    if(effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.NeverMiss")))
    {
-      d.accuracy = 0;
       return;
    }
 
-   /// 3 - Calculate accuracy based on our accuracy and the opponent's dodge --.
-   /// (Allies won't dodge our spells casted on them :D)
+   // (Allies won't dodge our spells casted on them :D)
    if(d.sourceUnit->GetIsEnemy() != d.targetUnit->GetIsEnemy())
    {
-      d.accuracy = d.sourceUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Accuracy) / 35.f;
-      d.accuracy = FMath::RandRange(0, 100) + FMath::Clamp(d.targetUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Dodge) - d.accuracy, 0.f, 95.f);
+      // If our accuracy and their dodge is the same, we have a 95% chance of hitting.
+      const float accuracyRoll = FMath::RandRange(5, 105);
+      const float accuracyDodgeDifferential =
+          d.targetUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Dodge) - d.sourceUnit->GetStatComponent()->GetSkillAdjValue(EUnitScalingStats::Accuracy);
+      d.accuracy = accuracyDodgeDifferential / 35.f;
+      d.accuracy = accuracyRoll + FMath::RoundToFloat(accuracyDodgeDifferential / 35.f);
    }
 }
 
-void URTSDamageCalculation::CalculatePiercing(AUnit* unit, FUpDamage& d, bool isAtt)
+void URTSDamageCalculation::CalculatePiercing(FUpDamage& d)
 {
-   // TODO: Piecewise soulslike function calculation
-   d.piercing += (-1 * static_cast<int>(isAtt)) * unit->GetStatComponent()->GetElementalStatValueFromElemTag(d.element, isAtt);
+   float elementalAffinity = d.sourceUnit->GetStatComponent()->GetElementalStatValueFromElemTag(d.element);
+   float elementalDefense  = d.targetUnit->GetStatComponent()->GetElementalStatValueFromElemTag(d.element, false);
+
+   // Healing does not get reduced if the unit has high defense. It only gets reduced by level.
+   if(d.effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Healing")))
+   {
+      elementalDefense = d.targetUnit->GetStatComponent()->GetUnitLevel();
+   }
+
+   if(elementalDefense < 1)
+   {
+      elementalDefense = 1;
+   }
+
+   if(elementalAffinity < 1)
+   {
+      elementalAffinity = 1;
+   }
+
+   d.piercing = piercingBonusCurve->GetFloatValue(elementalAffinity / elementalDefense);
+   d.damage   = d.damage * d.piercing;
+
+   PrintAffinityAndDefense(elementalAffinity, elementalDefense);
 }
 
 void URTSDamageCalculation::ShowDamageDealt(const FUpDamage& damageInfo)

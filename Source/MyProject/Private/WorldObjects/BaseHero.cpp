@@ -38,8 +38,7 @@
 #include "StorageContainer.h"
 #include "UIDelegateContext.h"
 
-ABaseHero::ABaseHero(const FObjectInitializer& oI) :
-   AAlly(oI)
+ABaseHero::ABaseHero(const FObjectInitializer& oI) : AAlly(oI)
 {
 }
 
@@ -63,8 +62,19 @@ void ABaseHero::BeginPlay()
    GiveItemAbilities();
 
    spellbook = USpellBook::CreateSpellBook(this, spellbookClass);
-   SpellGameContext::OnSpellLearnedEvent.AddUObject(this, &ABaseHero::OnSpellLearned);
-   SpellGameContext::OnSpellUpgradedEvent.AddUObject(this, &ABaseHero::OnSpellUpgraded);
+
+   if(spellbook)
+   {
+      SpellGameContext::OnSpellLearnedEvent.AddUObject(this, &ABaseHero::OnSpellLearned);
+      SpellGameContext::OnSpellUpgradedEvent.AddUObject(this, &ABaseHero::OnSpellUpgraded);
+   }
+
+   if(IsEnabled())
+   {
+      GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+         SetEnabled(true);
+      });
+   }
 }
 
 void ABaseHero::Tick(float deltaSeconds)
@@ -97,9 +107,10 @@ void ABaseHero::SetEnabled(bool bEnabled)
    if(bEnabled)
    {
       GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnAttributePointAllocated().AddUObject(this,
-         &ABaseHero::OnAttributePointAllocated);
+                                                                                                                                  &ABaseHero::OnAttributePointAllocated);
       OnPickupItem().BindUObject(this, &ABaseHero::OnItemPickup);
-   } else
+   }
+   else
    {
       GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnAttributePointAllocated().RemoveAll(this);
       OnPickupItem().Unbind();
@@ -178,12 +189,13 @@ void ABaseHero::OnAttributePointAllocated(ABaseHero* heroWithAttChange, EAttribu
       {
          GetStatComponent()->ModifyStats<true>(statComponent->GetAttributeBaseValue(att) + 1, att);
          --attPoints;
-         GetStatComponent()->UpdateStats(UMyAttributeSet::IndexAtts(static_cast<int>(att)));
-      } else
+         GetStatComponent()->UpdateStats(URTSAttributeSet::IndexAtts(static_cast<int>(att)));
+      }
+      else
       {
          GetStatComponent()->ModifyStats<true>(statComponent->GetAttributeBaseValue(att) - 1, att);
          ++attPoints;
-         GetStatComponent()->UpdateStats(UMyAttributeSet::IndexAtts(static_cast<int>(att)));
+         GetStatComponent()->UpdateStats(URTSAttributeSet::IndexAtts(static_cast<int>(att)));
       }
    }
 }
@@ -217,8 +229,9 @@ void ABaseHero::Unequip(const int unequipSlot) const
          const FBackpackUpdateResult addItemToPackResult = backpack->AddItem(changedEquip);
          equipment->Unequip(unequipSlot);
          GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().Broadcast(
-         this, addItemToPackResult.updatedBackpackIndices);
-      } else
+             this, addItemToPackResult.updatedBackpackIndices);
+      }
+      else
          URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Equipment", "NotEnoughSpaceUnequip", "Not enough space to unequip!"));
    }
 }
@@ -269,8 +282,7 @@ void ABaseHero::GiveItemAbilities() const
    for(FName& id : UItemManager::Get().GetAllConsumableIDs())
    {
       TSubclassOf<UMySpell> itemAbilityClass = UItemManager::Get().GetConsumableInfo(id)->abilityClass;
-      if(IsValid(itemAbilityClass))
-         GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(itemAbilityClass.GetDefaultObject(), 1));
+      if(IsValid(itemAbilityClass)) GetAbilitySystemComponent()->GiveAbility(FGameplayAbilitySpec(itemAbilityClass.GetDefaultObject(), 1));
    }
 }
 
@@ -293,7 +305,8 @@ void ABaseHero::OnItemDropped(FMyItem& itemDropped, int droppedItemSlot)
    {
       const FBackpackUpdateResult itemDropResult = backpack->EmptySlot(droppedItemSlot);
       GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemDropped().Broadcast(this, itemDropResult);
-   } else
+   }
+   else
    {
       URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Drop", "NoItemAtSlot", "Attempting to drop nothing..."));
    }
@@ -329,7 +342,8 @@ void ABaseHero::SetUnitSelected(bool value)
    if(value)
    {
       controllerRef->GetBasePlayer()->AddSelectedHero(this);
-   } else
+   }
+   else
    {
       controllerRef->GetBasePlayer()->RemoveSelectedHero(this);
    }

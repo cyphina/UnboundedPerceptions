@@ -275,7 +275,8 @@ void UTargetedAttackComponent::PlayAttackAnimation()
    {
       if(agent)
       {
-         attackAnim->PlayAttackAnimation(agent);
+         const float attackSpeedAnimMultiplier = 1 + AgentAttackSpeed() / 100;
+         attackAnim->PlayAttackAnimation(agent, attackSpeedAnimMultiplier);
       }
    }
 }

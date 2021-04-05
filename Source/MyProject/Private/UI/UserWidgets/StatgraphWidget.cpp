@@ -34,7 +34,7 @@ void UStatgraphWidget::Cleanup()
    {
       if(ensure(statListeners.Key.IsValid() && statListeners.Value.IsValid()))
       {
-         UMyAttributeSet* attSet = const_cast<UMyAttributeSet*>(focusedHero->GetAbilitySystemComponent()->GetSet<UMyAttributeSet>());
+         URTSAttributeSet* attSet = const_cast<URTSAttributeSet*>(focusedHero->GetAbilitySystemComponent()->GetSet<URTSAttributeSet>());
          attSet->statUpdatedEvent.Remove(statListeners.Key);
          attSet->baseStatUpdatedEvent.Remove(statListeners.Value);
          browser->CloseBrowser();

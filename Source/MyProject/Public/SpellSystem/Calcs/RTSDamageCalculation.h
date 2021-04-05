@@ -5,6 +5,7 @@
 #include "RTSDamageCalculation.generated.h"
 
 class AUnit;
+class UCurveFloat;
 
 /**
  * Damage calculation is used to calculate the damage.  Grabs information from target and receiving unit to figure out damage amounts, as well as
@@ -21,7 +22,7 @@ class MYPROJECT_API URTSDamageCalculation : public UGameplayEffectExecutionCalcu
    /** DEPRECATED: Create some text to display the damage dealt to this unit */
    static void ShowDamageDealt(const FUpDamage& damageInfo);
 
-   /** Used to figure out of our attack hits or misses */	
+   /** Used to figure out of our attack hits or misses */
    void CalculateAccuracy(FUpDamage& d, FGameplayTagContainer& effects) const;
 
  protected:
@@ -46,11 +47,17 @@ class MYPROJECT_API URTSDamageCalculation : public UGameplayEffectExecutionCalcu
    void CalculateDamageReduction(FUpDamage& damage, FGameplayTagContainer& effects) const;
 
    /** Helper function to quickly calculate attack and defense bonuses due to affinity and resistance */
-   static void CalculatePiercing(AUnit* unit, FUpDamage& d, bool isAtt);
+   static void CalculatePiercing(FUpDamage& d);
+
+   /** Calculates if we got a critical chance or not */
+   static void CalculateCritical(FUpDamage& d);
 
    /** Prints out how much damage we're doing before any sort of affinity, piercing, and accuracy calculations are applied */
    static void PrintDamageCalcsBeforeProcessing(const FUpDamage& d, int damageRange);
-   static void PrintPreDamageReductionValues(const FUpDamage& d);
+   static void PrintAffinityAndDefense(const float affinity, const float defense);
    static void PrintFinalCalculatedDamageValues(const FUpDamage& d);
-   static void PrintCritRollInfo(const FUpDamage& d, float percentageConversion, float critRoll);
+   static void PrintCritRollInfo(const FUpDamage& d, float critRoll);
+
+ private:
+   static UCurveFloat* piercingBonusCurve;
 };

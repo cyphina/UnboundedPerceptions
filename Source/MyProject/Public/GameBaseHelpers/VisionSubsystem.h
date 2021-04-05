@@ -16,8 +16,6 @@ class MYPROJECT_API UVisionSubsystem : public UObject, public FRunnable
    /** Creates a new UVisionSubsystem* and it is on the onus of the class in which the UVisionSubsystem is being created in to manage its memory (probably using UROPERTY())*/
    static UVisionSubsystem* Create(UObject* outer);
 
-   void ToggleEnemyPerspective();
-
  protected:
    void BeginDestroy() override;
 
@@ -92,6 +90,4 @@ class MYPROJECT_API UVisionSubsystem : public UObject, public FRunnable
    FRunnableThread* visionUpdateThread;
 
    FThreadSafeCounter stopTaskCounter;
-
-   bool bShowEnemyPerspective = false;
 };
