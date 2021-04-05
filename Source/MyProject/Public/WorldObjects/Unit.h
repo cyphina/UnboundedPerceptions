@@ -2,10 +2,9 @@
 
 #include "AIController.h"
 #include "UnitProperties.h"
-
 #include "GameFramework/Character.h"
-
 #include "AbilitySystemInterface.h"
+<<<<<<< HEAD
 #include "UnittargetData.h"
 
 #include "GameplayTags.h"
@@ -21,11 +20,26 @@
 #include "WorldObject.h"
 #include "Unit.generated.h"
 
+=======
+#include "RTSAbilitySystemComponent.h"
+#include "SaveLoadClass.h"
+#include "CombatParameters.h"
+#include "WorldObject.h"
+#include "Unit.generated.h"
+
+class UWidgetComponent;
+>>>>>>> componentrefactor
 class URTSDamageEffect;
 class UUpStatComponent;
 class URTSVisionComponent;
 class UTargetComponent;
 class IAttackAnim;
+<<<<<<< HEAD
+=======
+class URTSAttackExecution;
+class URTSDeathExecution;
+class URTSMoveExecution;
+>>>>>>> componentrefactor
 struct UpCombatInfo;
 struct FUpDamage;
 
@@ -33,6 +47,13 @@ DECLARE_STATS_GROUP(TEXT("RTSUnits"), STATGROUP_RTSUnits, STATCAT_Advanced);
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDamageReceived, const FUpDamage&);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDamageDealt, const FUpDamage&);
+<<<<<<< HEAD
+=======
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitHealingReceived, const FUpDamage&);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitHealingDealt, const FUpDamage&);
+
+>>>>>>> componentrefactor
 DECLARE_EVENT(AUnitController, FOnUnitDie);
 
 DECLARE_EVENT(URTSUnitAnimController, FOnUnitAttackSwingHit); // When a unit initiates an attack (animation begins)
@@ -60,6 +81,7 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
 public:
    AUnit(const FObjectInitializer& oI);
    ~AUnit();
+<<<<<<< HEAD
 
    /**
     * @brief Gets current state in state machine
@@ -67,6 +89,8 @@ public:
     */
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    EUnitState GetState() const;
+=======
+>>>>>>> componentrefactor
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    FORCEINLINE AUnitController* GetUnitController() const { return unitController; }
@@ -84,10 +108,20 @@ public:
    UTexture2D* GetImage() const { return unitProperties.image; }
 
    UFUNCTION(BlueprintCallable, Category = "Accessors")
-   virtual void SetSelected(bool value) { unitProperties.isSelected = value; }
+   virtual void SetUnitSelected(bool value);
+
+<<<<<<< HEAD
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   virtual bool GetIsEnemy() const PURE_VIRTUAL(AUnit::GetIsEnemy, return false;);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   bool GetIsDead() const;
+
+=======
+   void ClearSelectedFlag() { unitProperties.isSelected = false; };
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
-   virtual bool GetSelected() const { return unitProperties.isSelected; }
+   virtual bool GetUnitSelected() const { return unitProperties.isSelected; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
    virtual bool GetIsEnemy() const PURE_VIRTUAL(AUnit::GetIsEnemy, return false;);
@@ -95,6 +129,10 @@ public:
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
    bool GetIsDead() const;
 
+   bool GetIsUnitHidden() const { return combatInfo->isUnitHidden; }
+   void SetIsUnitHidden(bool isHidden) { combatInfo->isUnitHidden.AtomicSet(isHidden); }
+
+>>>>>>> componentrefactor
    /**
     * Function to find the bounds of a unit (screen space points)
     * Used when we're creating our selection ring around a unit
@@ -109,6 +147,7 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Functionality")
    virtual void SetEnabled(bool bEnabled);
 
+<<<<<<< HEAD
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
    const TSet<AUnit*>& GetVisibleEnemies() const { return *GetVisibleEnemies_Impl(); }
 
@@ -195,4 +234,135 @@ private:
    mutable FOnUnitDamageReceived OnUnitDamageReceivedEvent;
    mutable FOnUnitDamageDealt    OnUnitDamageDealtEvent;
    mutable FOnUnitAttackSwingHit OnUnitAttackSwingHitEvent;
+=======
+   bool IsEnabled() const { return unitProperties.bIsEnabled; }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   const TArray<AUnit*>& GetVisibleEnemies() const { return *GetVisibleEnemies_Impl(); }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   const TArray<AUnit*>& GetEnemies() const { return *GetEnemies_Impl(); }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "CombatAccessors")
+   const TArray<AUnit*>& GetAllies() const { return *GetAllies_Impl(); }
+
+   URTSAbilitySystemComponent* GetAbilitySystemComponent() const override { return abilitySystemComponent; }
+
+   URTSVisionComponent* GetVisionComponent() const { return visionComponent; }
+
+   UUpStatComponent* GetStatComponent() const { return statComponent; }
+
+   UTargetComponent* GetTargetComponent() const { return targetComponent; }
+
+   UpCombatInfo* GetCombatInfo() const { return combatInfo.Get(); }
+
+   FOnUnitDie& OnUnitDie() const { return OnUnitDieEvent; }
+
+   FOnUnitDamageReceived& OnUnitDamageReceived() const { return OnUnitDamageReceivedEvent; }
+
+   FOnUnitDamageDealt& OnUnitDamageDealt() const { return OnUnitDamageDealtEvent; }
+
+   FOnUnitHealingReceived& OnUnitHealingReceived() const { return OnUnitHealingReceivedEvent; }
+
+   FOnUnitHealingDealt& OnUnitHealingDealt() const { return OnUnitHealingDealtEvent; }
+
+   FOnUnitAttackSwingHit& OnUnitAttackSwingHit() const { return OnUnitAttackSwingHitEvent; }
+
+   TSubclassOf<URTSAttackExecution> GetCustomAttackLogic() const { return customAttackLogic; }
+
+   TSubclassOf<URTSDeathExecution> GetCustomDeathLogic() const { return customDeathLogic; }
+
+   TSubclassOf<URTSMoveExecution> GetCustomMoveLogic() const { return customMoveLogic; }
+
+ protected:
+   void BeginPlay() override;
+   void Tick(float deltaSeconds) override;
+   void PossessedBy(AController* newController) override;
+
+   UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
+   class UHealthbarComp* healthBar;
+
+   /** A little circle underneath the unit showing the radius of its collider */
+   UPROPERTY(VisibleDefaultsOnly)
+   UDecalComponent* selectionCircleDecal;
+
+   /** Units that don't have any vision can disable this or eventually we can refactor this to be optional*/
+   UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
+   URTSVisionComponent* visionComponent;
+
+   UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
+   UUpStatComponent* statComponent;
+
+   UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
+   UTargetComponent* targetComponent;
+
+   UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
+   UWidgetComponent* damageIndicatorWidget;
+
+   UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
+   URTSAbilitySystemComponent* abilitySystemComponent;
+
+   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
+   FUnitProperties unitProperties;
+
+   /**
+   * Holds logic for basic auto attacks. By default this requires a targeted attack component but some units have custom attacks which may not require them to undergo
+   * the targeting procedure.
+   */
+   UPROPERTY(EditDefaultsOnly)
+   TSubclassOf<URTSAttackExecution> customAttackLogic;
+
+   /** Holds logic for death */
+   UPROPERTY(EditDefaultsOnly)
+   TSubclassOf<URTSDeathExecution> customDeathLogic;
+
+   /** Holds custom move logic so that we add some logic for the AI to move in certain ways instead of just walking everywhere.
+   * For instance, if we want our character to teleport towards its target -
+   * we can cast a teleport spell if its off CD and if the target is far or something. 
+   */
+   UPROPERTY(EditDefaultsOnly)
+   TSubclassOf<URTSMoveExecution> customMoveLogic;
+
+   /**
+   * @brief Material reference to unit's base material so that if it changes (due to effects) we can revert it back
+   */
+   UPROPERTY(EditDefaultsOnly)
+   UMaterialInterface* originalMaterial;
+
+   class AUserInput* controllerRef;
+
+ private:
+   /** Change speed-based parameters when time multiplier changes */
+   UFUNCTION(Category = "Callback")
+   void OnUpdateGameSpeed(float speedMultiplier);
+
+   void SetupHealthbarComponent();
+   void SetupCharacterCollision() const;
+   void SetupMovementComponent() const;
+   void SetupDamageInidicatorContainerWidget();
+   void RemoveArrowComponent() const;
+
+   void SetupSelectionCircle() const;
+   void StoreUnitHeight();
+
+   void HideInvisibleUnits();
+
+   virtual const TArray<AUnit*>* GetVisibleEnemies_Impl() const PURE_VIRTUAL(AUnit::GetVisibleEnemies, return nullptr;);
+
+   virtual const TArray<AUnit*>* GetAllies_Impl() const PURE_VIRTUAL(AUnit::GetAllies, return nullptr;);
+
+   virtual const TArray<AUnit*>* GetEnemies_Impl() const PURE_VIRTUAL(AUnit::GetEnemies_Impl, return nullptr;);
+
+   class AUnitController* unitController = nullptr;
+
+   // Reference to combat parameters kept in pointer since these values are barely used much (cold splitting)
+   TUniquePtr<UpCombatInfo> combatInfo;
+
+   mutable FOnUnitDie             OnUnitDieEvent;
+   mutable FOnUnitDamageReceived  OnUnitDamageReceivedEvent;
+   mutable FOnUnitDamageDealt     OnUnitDamageDealtEvent;
+   mutable FOnUnitHealingReceived OnUnitHealingReceivedEvent;
+   mutable FOnUnitHealingDealt    OnUnitHealingDealtEvent;
+   mutable FOnUnitAttackSwingHit  OnUnitAttackSwingHitEvent;
+>>>>>>> componentrefactor
 };

@@ -4,7 +4,7 @@
 #include "Stats/Attribute.h"
 #include "GameplayEffectTypes.h"
 
-class UMyAttributeSet;
+class URTSAttributeSet;
 
 namespace CombatInfo
 {
@@ -32,14 +32,15 @@ namespace CombatInfo
       ModifyingAttribute  attMod;
       FGameplayAttribute& attribute; // Since a stat can be directly modified by things like equipment and buffs, we need it to have features of an attribute as well
 
-      RTSUnitStat(FGameplayAttribute& attData);
+      RTSUnitStat(FGameplayAttribute attData);
       /// <param name="attData"> Link to AttSet  </param>
       /// <param name="baseV"> Initial Base Value </param>
       /// <param name="mod"> Mod Value </param>
-      RTSUnitStat(FGameplayAttribute& att, int baseV, ModifyingAttribute mod, UMyAttributeSet* attSet);
+      RTSUnitStat(FGameplayAttribute att, int baseV, ModifyingAttribute mod, URTSAttributeSet* attSet);
       ~RTSUnitStat();
 
       void ChangeModifier(ModifyingAttribute arr);
+<<<<<<< HEAD
       void CalculateModValue(UMyAttributeSet* attSet); // Sets up base value for this stat
 
       float GetBaseValue(UMyAttributeSet* attSet) const;
@@ -49,7 +50,18 @@ namespace CombatInfo
 
       void  SetAdjustedValue(float value, UMyAttributeSet* attSet);
       float GetAdjustedValue(UMyAttributeSet* attSet) const;
+=======
+      void CalculateModValue(URTSAttributeSet* attSet); // Sets up base value for this stat
 
-      void Update(UMyAttributeSet* attSet);
+      float GetBaseValue(URTSAttributeSet* attSet) const;
+      void  SetBaseValue(float value, URTSAttributeSet* attSet);
+
+      float GetBuffValue(URTSAttributeSet* attSet) const; // Can be negative if we're debuffed
+
+      void  SetAdjustedValue(float value, URTSAttributeSet* attSet);
+      float GetAdjustedValue(URTSAttributeSet* attSet) const;
+>>>>>>> componentrefactor
+
+      void Update(URTSAttributeSet* attSet);
    };
 } // namespace CombatInfo

@@ -1,9 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "StatgraphWidget.h"
-
-
 #include "AbilitySystemComponent.h"
 #include "BaseCharacter.h"
 #include "BaseHero.h"
@@ -15,7 +11,7 @@
 #include "UpStatComponent.h"
 #include "UserInput.h"
 
-void UStatgraphWidget::NativeConstruct()
+void UStatgraphWidget::NativeOnInitialized()
 {
    Super::NativeConstruct();
    cpcRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
@@ -23,19 +19,22 @@ void UStatgraphWidget::NativeConstruct()
 
 void UStatgraphWidget::Startup()
 {
-   if(auto focusedHero = Cast<ABaseHero>(CheckIfFocusedUnitHero()); focusedHero) {
-      UMyAttributeSet* attSet = const_cast<UMyAttributeSet*>(focusedHero->GetAbilitySystemComponent()->GetSet<UMyAttributeSet>());
-      statListeners           = MakeTuple(attSet->statUpdatedEvent.AddUObject(this, &UStatgraphWidget::UpdateStat),
-                                attSet->baseStatUpdatedEvent.AddUObject(this, &UStatgraphWidget::UpdateBaseStat));
+   if(const auto focusedHero = Cast<ABaseHero>(CheckIfFocusedUnitHero()); focusedHero)
+   {
+      const UUpStatComponent* statComp = focusedHero->GetStatComponent();
+      statListeners                    = MakeTuple(statComp->OnStatsUpdated().AddUObject(this, &UStatgraphWidget::UpdateStat),
+                                statComp->OnBaseStatsUpdated().AddUObject(this, &UStatgraphWidget::UpdateBaseStat));
       StartDisplay(width, height);
    }
 }
 
 void UStatgraphWidget::Cleanup()
 {
-   if(auto focusedHero = Cast<ABaseHero>(CheckIfFocusedUnitHero()); focusedHero) {
-      if(ensure(statListeners.Key.IsValid() && statListeners.Value.IsValid())) {
-         UMyAttributeSet* attSet = const_cast<UMyAttributeSet*>(focusedHero->GetAbilitySystemComponent()->GetSet<UMyAttributeSet>());
+   if(auto focusedHero = Cast<ABaseHero>(CheckIfFocusedUnitHero()); focusedHero)
+   {
+      if(ensure(statListeners.Key.IsValid() && statListeners.Value.IsValid()))
+      {
+         URTSAttributeSet* attSet = const_cast<URTSAttributeSet*>(focusedHero->GetAbilitySystemComponent()->GetSet<URTSAttributeSet>());
          attSet->statUpdatedEvent.Remove(statListeners.Key);
          attSet->baseStatUpdatedEvent.Remove(statListeners.Value);
          browser->CloseBrowser();
@@ -45,14 +44,17 @@ void UStatgraphWidget::Cleanup()
 
 void UStatgraphWidget::ShowElementalOffensive()
 {
-   if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit) {
+   if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit)
+   {
       FString      heroInfoString;
       auto         writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&heroInfoString);
       const UEnum* eBonus = FindObject<UEnum>(ANY_PACKAGE, TEXT("EUnitScalingStats"), true);
 
       writer->WriteArrayStart();
-      for(auto stat : TEnumRange<EUnitScalingStats>()) {
-         if(const auto& statName = eBonus->GetNameStringByIndex(static_cast<uint8>(stat)); statName.EndsWith("_Aff")) {
+      for(auto stat : TEnumRange<EUnitScalingStats>())
+      {
+         if(const auto& statName = eBonus->GetNameStringByIndex(static_cast<uint8>(stat)); statName.EndsWith("_Aff"))
+         {
             writer->WriteObjectStart();
             writer->WriteValue("statName", statName);
             writer->WriteIdentifierPrefix("values");
@@ -66,21 +68,25 @@ void UStatgraphWidget::ShowElementalOffensive()
       writer->WriteArrayEnd();
       writer->Close();
       UpdateInformation("updateStatInfo", heroInfoString);
-   } else
+   }
+   else
       UE_LOG(LogTemp, Error, TEXT("Somehow stat browser widget was told to read data from a null or non-hero"));
 }
 
 void UStatgraphWidget::ShowElementalDefense()
 {
-   if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit) {
+   if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit)
+   {
       FString      heroInfoString;
       auto         writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&heroInfoString);
       const UEnum* eBonus = FindObject<UEnum>(ANY_PACKAGE, TEXT("EUnitScalingStats"), true);
 
       writer->WriteArrayStart();
 
-      for(auto stat : TEnumRange<EUnitScalingStats>()) {
-         if(const auto& statName = eBonus->GetNameStringByIndex(static_cast<uint8>(stat)); statName.EndsWith("_Resist")) {
+      for(auto stat : TEnumRange<EUnitScalingStats>())
+      {
+         if(const auto& statName = eBonus->GetNameStringByIndex(static_cast<uint8>(stat)); statName.EndsWith("_Resist"))
+         {
             writer->WriteObjectStart();
             writer->WriteValue("statName", statName);
             writer->WriteIdentifierPrefix("values");
@@ -95,23 +101,26 @@ void UStatgraphWidget::ShowElementalDefense()
 
       writer->Close();
       UpdateInformation("updateStatInfo", heroInfoString);
-
-   } else
+   }
+   else
       UE_LOG(LogTemp, Error, TEXT("Somehow stat browser widget was told to read data from a null or non-hero"));
 }
 
 void UStatgraphWidget::ShowMechanics()
 {
-   if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit) {
+   if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit)
+   {
       FString      heroInfoString;
       auto         writer  = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&heroInfoString);
       const UEnum* eBonus  = FindObject<UEnum>(ANY_PACKAGE, TEXT("EMechanics"), true);
       const UEnum* eBonus2 = FindObject<UEnum>(ANY_PACKAGE, TEXT("EUnitScalingStats"), true);
 
       writer->WriteArrayStart();
-      for(auto mech : TEnumRange<EMechanics>()) {
+      for(int i = 0; i < static_cast<int>(EMechanics::Count); ++i)
+      {
+         const EMechanics mech = static_cast<EMechanics>(i);
          writer->WriteObjectStart();
-         writer->WriteValue("statName", eBonus->GetNameStringByIndex(static_cast<uint8>(mech)));
+         writer->WriteValue("statName", eBonus->GetNameStringByIndex(i));
          writer->WriteIdentifierPrefix("values");
          writer->WriteArrayStart();
          writer->WriteValue(focusedUnit->GetStatComponent()->GetMechanicBaseValue(mech));
@@ -120,8 +129,10 @@ void UStatgraphWidget::ShowMechanics()
          writer->WriteObjectEnd();
       }
 
-      for(auto stat : TEnumRange<EUnitScalingStats>()) {
-         if(const auto& statName = eBonus2->GetNameStringByIndex(static_cast<uint8>(stat)); !statName.EndsWith("_Resist") && !statName.EndsWith("_Aff")) {
+      for(auto stat : TEnumRange<EUnitScalingStats>())
+      {
+         if(const auto& statName = eBonus2->GetNameStringByIndex(static_cast<uint8>(stat)); !statName.EndsWith("_Resist") && !statName.EndsWith("_Aff"))
+         {
             writer->WriteObjectStart();
             writer->WriteValue("statName", eBonus2->GetNameStringByIndex(static_cast<uint8>(stat)));
             writer->WriteIdentifierPrefix("values");
@@ -135,19 +146,23 @@ void UStatgraphWidget::ShowMechanics()
       writer->WriteArrayEnd();
       writer->Close();
       UpdateInformation("updateStatInfo", heroInfoString);
-   } else
+   }
+   else
       UE_LOG(LogTemp, Error, TEXT("Somehow stat browser widget was told to read data from a null or non-hero"));
 }
 
 void UStatgraphWidget::ShowVitals()
 {
-   if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit) {
+   if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit)
+   {
       FString      heroInfoString;
       auto         writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&heroInfoString);
       const UEnum* eBonus = FindObject<UEnum>(ANY_PACKAGE, TEXT("EVitals"), true);
 
       writer->WriteArrayStart();
-      for(auto vit : TEnumRange<EVitals>()) {
+      for(int i = 0; i < static_cast<int>(EVitals::Count); ++i)
+      {
+         const EVitals vit = static_cast<EVitals>(i);
          writer->WriteObjectStart();
          writer->WriteValue("statName", eBonus->GetNameStringByIndex(static_cast<uint8>(vit)));
          writer->WriteIdentifierPrefix("values");
@@ -160,14 +175,15 @@ void UStatgraphWidget::ShowVitals()
       writer->WriteArrayEnd();
       writer->Close();
       UpdateInformation("updateStatInfo", heroInfoString);
-
-   } else
+   }
+   else
       UE_LOG(LogTemp, Error, TEXT("Somehow stat browser widget was told to read data from a null or non-hero"));
 }
 
 void UStatgraphWidget::SwapHero()
 {
-   if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit) {
+   if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit)
+   {
       FString      heroInfoString;
       auto         writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&heroInfoString);
       const UEnum* eBonus = FindObject<UEnum>(ANY_PACKAGE, TEXT("EVitals"), true);
@@ -177,25 +193,35 @@ void UStatgraphWidget::SwapHero()
       writer->WriteObjectEnd();
       writer->Close();
       UpdateInformation("updateName", heroInfoString);
-   } else
+   }
+   else
       UE_LOG(LogTemp, Error, TEXT("Somehow stat browser widget was told to read data from a null or non-hero"));
 }
 
-void UStatgraphWidget::UpdateStat(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected)
+void UStatgraphWidget::UpdateStat(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected)
 {
    CreateAndSendStatUpdate(attributeModified, newAttributeValue, unitAffected, "baseValue");
 }
 
-void UStatgraphWidget::UpdateBaseStat(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected)
+void UStatgraphWidget::UpdateBaseStat(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected)
 {
    CreateAndSendStatUpdate(attributeModified, newAttributeValue, unitAffected, "adjValue");
 }
 
-void UStatgraphWidget::CreateAndSendStatUpdate(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected, const FString& keyName)
+void UStatgraphWidget::CreateAndSendStatUpdate(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected, const FString& keyName)
 {
+<<<<<<< HEAD
    if(cpcRef->GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Character)) { // Only send an update to the browser if it is on screen
       if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit) {
          if(focusedUnit == unitAffected) { // Make sure the stat that is updated is one pertaining to the unit we are looking at information for
+=======
+   if(cpcRef->GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Character))
+   { // Only send an update to the browser if it is on screen
+      if(const auto focusedUnit = CheckIfFocusedUnitHero(); focusedUnit)
+      {
+         if(focusedUnit == unitAffected)
+         { // Make sure the stat that is updated is one pertaining to the unit we are looking at information for
+>>>>>>> componentrefactor
             FString heroInfoString;
             auto    writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&heroInfoString);
 
@@ -207,14 +233,16 @@ void UStatgraphWidget::CreateAndSendStatUpdate(const FGameplayAttribute& attribu
             UpdateInformation("updateStat", heroInfoString);
          }
       }
-   } else
+   }
+   else
       UE_LOG(LogTemp, Error, TEXT("Somehow stat browser widget was told to read data from a null or non-hero"));
 }
 
 FReply UStatgraphWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
    Super::NativeOnMouseMove(InGeometry, InMouseEvent);
-   if(UNLIKELY(GetBrowser() && !GetBrowser()->IsBrowserLoading())) {
+   if(UNLIKELY(GetBrowser() && !GetBrowser()->IsBrowserLoading()))
+   {
       const FVector2D screenSpaceTolocalWidgetPosition{InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition())};
       GetBrowser()->TriggerMouseMove(screenSpaceTolocalWidgetPosition);
       return FReply::Handled();
@@ -225,7 +253,11 @@ FReply UStatgraphWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FP
 const AUnit* UStatgraphWidget::CheckIfFocusedUnitHero() const
 {
    const auto focusedUnit = cpcRef->GetBasePlayer()->GetFocusedUnit();
+<<<<<<< HEAD
    if(LIKELY(focusedUnit && focusedUnit->GetClass()->IsChildOf(ABaseHero::StaticClass())))
       return focusedUnit;
+=======
+   if(LIKELY(focusedUnit && focusedUnit->GetClass()->IsChildOf(ABaseHero::StaticClass()))) return focusedUnit;
+>>>>>>> componentrefactor
    return nullptr;
 }

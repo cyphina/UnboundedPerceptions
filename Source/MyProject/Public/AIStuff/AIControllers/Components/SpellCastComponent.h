@@ -28,7 +28,10 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
    GENERATED_BODY()
 
    friend AUnitController;
+<<<<<<< HEAD
    friend UManualSpellComponent;
+=======
+>>>>>>> componentrefactor
 
  public:
    /** Currently spell being casted/channeled */
@@ -49,6 +52,7 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    float GetCurrentChannelingTime() const;
 
+<<<<<<< HEAD
    /**
     * Activates the ability when we're in position AND after we've incanted. It represents us having to focus energy while the spell is activating.
     * Some abilities are casted in phases, which means they get replaced by another spell.  
@@ -59,6 +63,10 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
     * @return  - Returns true if successful cast, or false on unsuccessful cast. In multiplayer, the cast may still fail due to some desync between server.
     */
    void CastSpell(TSubclassOf<UMySpell> spellToCast);
+=======
+   /** Do we have the resources necessary to cast this spell; also make sure we don't have any status effects preventing us*/
+   bool CanCast(TSubclassOf<UMySpell> spellToCheck) const;
+>>>>>>> componentrefactor
 
    void CancelIncantation();
 
@@ -70,6 +78,12 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
    /**Setup a move towards an actor so we're in range to cast our spell (Requires currentSpell be set)*/
    void AdjustCastingPosition(TSubclassOf<UMySpell> spellClass, AActor* spellTargetActor);
 
+<<<<<<< HEAD
+=======
+   /**
+    * @brief Represents the point in which our resources for a spell has been used (the spell may be "active" for a while meaning we can't do anything)
+    */
+>>>>>>> componentrefactor
    FOnSpellCasted& OnSpellCasted() { return OnSpellCastedEvent; }
 
  protected:
@@ -88,11 +102,28 @@ class MYPROJECT_API USpellCastComponent : public UActorComponent
    UAnimMontage* castAnimation = nullptr;
 
  private:
+<<<<<<< HEAD
    void OnUnitStopped();
 
    void OnChannelingFinished();
 	
    void NotifyAIAboutSpellCast() const;
+=======
+   /**
+    * Activates the ability when we're in position AND after we've incanted. It represents us having to focus energy while the spell is activating.
+    * Some abilities are casted in phases, which means they get replaced by another spell.  
+    * Also used for item usage (which also triggers abilities).
+    * Some spells require another channeling after we've activated it. That means it's blocked until it gets an event raised from a "Confirmation Spell".
+    * This event is raised once channeling is finished.
+    * @param spellToCast - Spell we want to cast.  Left as a parameter because we can cast 
+    * @return  - Returns true if successful cast, or false on unsuccessful cast. In multiplayer, the cast may still fail due to some desync between server.
+    */
+   void CastSpell(TSubclassOf<UMySpell> spellToCast);
+
+   void OnUnitStopped();
+
+   void OnChannelingFinished();
+>>>>>>> componentrefactor
 
    int GetRange(TSubclassOf<UMySpell> spellClass) const;
 

@@ -1,16 +1,24 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "ECursorStates.h"
+<<<<<<< HEAD
+=======
+#include "Item.h"
+>>>>>>> componentrefactor
 #include "GameFramework/Pawn.h"
 #include "GameBaseHelpers/CursorClickFunctionality.h"
 #include "RTSPawn.generated.h"
 
+<<<<<<< HEAD
+=======
+class UBackpack;
+class ARTSPawn;
+>>>>>>> componentrefactor
 class ABaseHero;
 class AUnit;
 class AUserInput;
 class AAlly;
+<<<<<<< HEAD
 class ICursorClickFunctionality;
 class UCameraComponent;
 
@@ -21,6 +29,17 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);                            
 
 /**
  * @brief The RTS Pawn holds controls related to main gameplay. Contrast this to the UserInput which holds control logic for all gameplay types (it's consistent even if we
+=======
+class CursorClickFunctionalityBase;
+class USkillSlot;
+class UCameraComponent;
+
+DECLARE_EVENT_OneParam(ARTSPawn, FOnGroupTabbed, AUnit*);
+
+/**
+ * @brief This is the object that represents the player controlling all the units so the camera is attached to this pawn.
+ * The RTS Pawn holds controls related to main gameplay. Contrast this to the UserInput which holds control logic for all gameplay types (it's consistent even if we
+>>>>>>> componentrefactor
  * swap out pawn.
  */
 UCLASS()
@@ -40,6 +59,14 @@ class MYPROJECT_API ARTSPawn : public APawn
 
  protected:
    void BeginPlay() override;
+<<<<<<< HEAD
+=======
+   void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+   void Tick(float DeltaTime) override;
+   void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+   void PossessedBy(AController* newController) override;
+   void UnPossessed() override;
+>>>>>>> componentrefactor
 
    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    class USceneComponent* scene;
@@ -53,11 +80,14 @@ class MYPROJECT_API ARTSPawn : public APawn
    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
    class USpringArmComponent* mapArm;
 
+<<<<<<< HEAD
    void Tick(float DeltaTime) override;
    void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
    void PossessedBy(AController* newController) override;
    void UnPossessed() override;
 
+=======
+>>>>>>> componentrefactor
  private:
    UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = "true"))
    AUserInput* controllerRef;
@@ -67,6 +97,9 @@ class MYPROJECT_API ARTSPawn : public APawn
    /** Scales length of the line we check when we line trace during a click event to query what is under the cursor */
    static const int CLICK_TRACE_LENGTH_MULTIPLIER = 5;
 
+   UFUNCTION(BlueprintCallable)
+   bool HasSecondaryCursor() const { return bHasSecondaryCursor; }
+
    UPROPERTY(BlueprintReadWrite)
    FVector2D startMousePos;
 
@@ -75,25 +108,25 @@ class MYPROJECT_API ARTSPawn : public APawn
 
    /** Check if we're drag clicking and thus making a feasible selection rect*/
    UFUNCTION(BlueprintCallable, BlueprintPure)
-   bool isSelectionRectActive() const;
-
-   // If there is a cursor on screen not created by hovering
-   UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true), Category = "Control Settings")
-   bool hasSecondaryCursor;
+   bool IsSelectionRectActive() const;
 
    /** Used to correctly pick an arrow cursor when we are edge panning (and possibly panning with MMB in the future)*/
    UPROPERTY(BlueprintReadWrite, Category = "Control Settings")
    TArray<ECursorStateEnum> cursorDirections;
 
-   /**Stores what object collision types we hit when tracing for left clicks*/
+   /** Stores what object collision types we hit when tracing for left clicks*/
    UPROPERTY(BlueprintReadOnly, Category = "Control Settings")
    TArray<TEnumAsByte<EObjectTypeQuery>> leftClickQueryObjects;
 
-   /**Stores what object collision types we hit when tracing for right clicks*/
+   /** Stores what object collision types we hit when tracing for right clicks*/
    UPROPERTY(BlueprintReadOnly, Category = "Control Settings")
    TArray<TEnumAsByte<EObjectTypeQuery>> rightClickQueryObjects;
 
+<<<<<<< HEAD
    /**Similar to change cursor but used for changing to secondary cursors.  If cursorType is not a secondary cursor, toggles off secondary cursors*/
+=======
+   /** Similar to change cursor but used for changing to secondary cursors.  If cursorType is not a secondary cursor, toggles off secondary cursors*/
+>>>>>>> componentrefactor
    void SetSecondaryCursor(const ECursorStateEnum cursorType = ECursorStateEnum::Select);
 
    // Changes cursor to be a different picture.  Called when hovering over different objects.  Changes hardware cursor and cursorState
@@ -132,13 +165,32 @@ class MYPROJECT_API ARTSPawn : public APawn
    UFUNCTION(BlueprintCallable)
    void CreateSelectionRect();
 
+   template <typename T>
+   void CreateSelectionRect_Impl();
+
+   bool GetIsSelectionLockActive() const { return bSelectionLockActive; }
+
    /** Hopefully this gets copy elided to its destination and LTCG inlines it*/
    FLinearColor GetSelectionRectColor() const;
+
+   void ToggleQuickCast() { bQuickCast = !bQuickCast; }
 
    /** Should we enable quick casting (casting without having to click after pressing our spell key. Also makes attack move quick*/
    bool bQuickCast;
 
+   void ToggleAutoClick() { bAutoClick = !bAutoClick; }
+
+   bool bAutoClick;
+
+   FTimerHandle autoClickTimerHandle;
+
  private:
+<<<<<<< HEAD
+=======
+   UFUNCTION()
+   void ToggleSelectionLock() { bSelectionLockActive = !bSelectionLockActive; }
+
+>>>>>>> componentrefactor
    /**Stores last actor hit by the cursor hover trace.  Used so we don't retrace if we hit the same actor, but sometimes canceling actions like clicking the ground should
     *reset this*/
    UPROPERTY()
@@ -163,21 +215,18 @@ class MYPROJECT_API ARTSPawn : public APawn
    // Used to continually track the control group leader as the key is held down
    FTimerHandle controlDoubleTapHoldHandle;
 
-   TUniquePtr<ICursorClickFunctionality> clickFunctionalityClass;
+   TUniquePtr<CursorClickFunctionalityBase> clickFunctionalityClass;
 
+   /** If there is a cursor on screen not created by hovering */
+   UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true), Category = "Control Settings")
+   bool bHasSecondaryCursor;
+
+   bool bSelectionLockActive = false;
 #pragma endregion
 
 #pragma region camera
 
  public:
-   int cameraBoundsX;
-   int cameraBoundsY;
-
-   static const float maxArmLength;
-   static const float minArmLength;
-   static const float defaultArmLength;
-   static const int   baseCameraMoveSpeed = 30;
-
    /**Makes zooming in and out slower/faster.  Can be set in settings menu*/
    UPROPERTY(BlueprintReadWrite, Category = "Camera Settings")
    float zoomMultiplier = 3.f;
@@ -188,6 +237,12 @@ class MYPROJECT_API ARTSPawn : public APawn
    /**Camera move speed multiplier*/
    UPROPERTY(BlueprintReadWrite, Category = "Camera Settings")
    float camMoveSpeedMultiplier = 1;
+
+   UPROPERTY(EditDefaultsOnly, Category = "Camera Settings")
+   float camSmoothPanMultiplier = 2.f;
+
+   UPROPERTY(EditDefaultsOnly, Category = "Camera Settings")
+   float camSmoothPanTime = 1.f;
 
    /**If a BLUI event was raised due to clicking on the browser in a way that sucessfully interacted with the browser widget, then the camera pawn
     *needs to know so it register the click as a UI event rather than gameplay event*/
@@ -209,6 +264,19 @@ class MYPROJECT_API ARTSPawn : public APawn
 
  private:
    int viewX, viewY;
+
+   // TODO: Prevent panning outside bounds. Maybe use leader to determine else have level boundaries.
+   int cameraBoundsX;
+   int cameraBoundsY;
+
+   static const float maxArmLength;
+   static const float minArmLength;
+   static const float defaultArmLength;
+   static const int   baseCameraMoveSpeed = 30;
+
+   FTimerHandle smoothCameraTransitionTimerHandle;
+   float        smoothCameraTransitionTime = 0.f;
+   FVector      startCameraPos, endCameraPawnPos;
 
    void RecalculateViewportSize(FViewport* viewport, uint32 newSize);
    void ZoomIn();
@@ -233,34 +301,47 @@ class MYPROJECT_API ARTSPawn : public APawn
 
 #pragma region commands
  public:
-   /** Stop all selected unit actions, stops AI behavior, and hides the spell circle!*/
+   /**
+    * Stop all selected unit actions, stops AI behavior, and hides the spell circle!
+    * Doesn't stop movement since we don't want to lose velocity.
+    */
    UFUNCTION(BlueprintCallable, Category = "Action")
-   void StopSelectedAllyCommands();
+   void CancelSelectedUnitsActionBeforePlayerCommand();
 
-   UFUNCTION(BlueprintCallable)
-   void AttackMoveConfirm(FVector moveLocation);
+   FOnGroupTabbed& OnGroupTabbed() const { return OnGroupTabbedEvent; }
+
+   bool GetStaticFormationEnabled() const { return bStayInFormation; }
 
  private:
-   /** Spline Flight Path Controls */
-   void PrevFlight();
-   void NextFlight();
-
+   void Stop();
    void RightClick();
+   void RightClickReleased();
    void RightClickShift();
    void LeftClick();
    void LeftClickReleased();
    void LeftClickShift();
 
+<<<<<<< HEAD
    void TabThroughSelection();
    void TabThroughGroup() const;
    void TabSingleSelection() const;
+=======
+   /** When we press tab to cycle through our selected or unselected units. */
+   void TabChangeSelection();
+
+   /** When we tab through a series of preselected units */
+   void TabThroughGroup();
+
+   /** When we have only a single unit selected and we try to tab */
+   void TabSingleSelection() const;
+
+   void AttackMoveInitiate();
+>>>>>>> componentrefactor
 
    void UseAbility(int abilityIndex);
 
    /** Delegate to pass to BindAction so we can have a parameter for useability*/
    DECLARE_DELEGATE_OneParam(FAbilityUseDelegate, int);
-
-   void AttackMoveInitiate();
 
    /** Select any control group that is bound to a key*/
    void SelectControlGroup(int controlIndex);
@@ -275,8 +356,15 @@ class MYPROJECT_API ARTSPawn : public APawn
    /** The index of the control group key being held down*/
    uint8 controlBeingHeldIndex = 0;
 
-   FTimerHandle ControlGroupDoupleTapHandle;
    /** Pans the camera to the first unit in the control group if we double tap the control select button*/
+<<<<<<< HEAD
+=======
+   FTimerHandle ControlGroupDoupleTapHandle;
+
+   void ToggleStayInFormation() { bStayInFormation = !bStayInFormation; }
+
+   bool bStayInFormation = false;
+>>>>>>> componentrefactor
 
    UFUNCTION()
    void ControlGroupDoubleTapTimer();
@@ -287,26 +375,43 @@ class MYPROJECT_API ARTSPawn : public APawn
    UFUNCTION()
    void StopContolGroupFollow(int releaseIndex);
 
-   /** Create a control group*/
+   /** Create a control group */
    void MakeControlGroup(int controlGroupIndex);
    DECLARE_DELEGATE_OneParam(FMakeControlGroupDelegate, int);
 
-#pragma endregion
+   void OnSkillSlotSelected(int skillIndex);
+   void OnInventorySlotSelected(int slotIndex);
+   void OnStorageSlotSelected(int slotIndex);
+   void OnEquipmentSlotSelected(int slotIndex);
+   void OnShopSlotSelected(int slotIndex);
+   void OnEffectSlotSelected(int slotIndex);
+   void OnStorageInventoryClosed();
 
+<<<<<<< HEAD
 #pragma region selection
  public:
    /* If we need the ally that ws just selected, we can get it from baseplayer selectedAllies last */
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnAllySelected OnAllySelectedDelegate;
+=======
+   UFUNCTION()
+   void OnItemSlotDroppedFromInventory(int dragSlotIndex, int dropSlotIndex, UBackpack* dragPack, UBackpack* dropPack);
 
-   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnAllyDeselected OnAllyDeselectedDelegate;
+   UFUNCTION()
+   void OnItemSlotDroppedFromStorage(int dragSlotIndex, int dropSlotIndex, UBackpack* dragPack, UBackpack* dropPack);
 
-   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnUnitSelected OnUnitSelectedDelegate;
+   UFUNCTION()
+   void OnSkillSlotDropped(int dragSlotIndex, int dropSlotIndex);
+>>>>>>> componentrefactor
 
-   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnGroundSelected OnGroundSelectedDelegate;
+   UFUNCTION()
+   void OnSkillSlotDroppedSB(int dragSlotIndex, int dropSlotIndex);
+
+   void HandleInventoryItemSelected(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemUsed) const;
+   void HandleTransferStorageItems(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemToDeposit) const;
+   void HandleSellItemToStore(ABaseHero* heroWithInvShown, int itemUsedSlotIndex, FMyItem itemToDeposit) const;
+
+   mutable FOnGroupTabbed OnGroupTabbedEvent;
 
 #pragma endregion
 };

@@ -4,6 +4,8 @@
 #include "LevelSaveStructs.h"
 #include "MyGameInstance.generated.h"
 
+DECLARE_STATS_GROUP(TEXT("Save and Loading"), STATGROUP_SaveAndLoading, STATCAT_Advanced);
+
 class UEventManager;
 class AHUDManager;
 class UTriggerManager;

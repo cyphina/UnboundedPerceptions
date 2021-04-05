@@ -39,8 +39,12 @@ bool UDialogWheel::HandleSelectedLeafNode()
       const FName conversationName = socialWindowRef->GetNPC()->GetConversationName(currentlySelectedTopicNode->GetCompleteTag());
 
       hudManagerRef->ShowDialogWithSource(conversationName, EDialogBoxCloseCase::finishedNPCConvo);
+<<<<<<< HEAD
       NPCEvents::OnNPCTalkedEvent.Broadcast(socialWindowRef->GetNPC(), currentlySelectedTopicNode->GetCompleteTag());
       CPC->GetGameMode()->GetQuestManager()->OnTalkNPC(socialWindowRef->GetNPC(), currentlySelectedTopicNode->GetCompleteTag());
+=======
+      NPCDelegateContext::OnNPCConversationEvent.Broadcast(socialWindowRef->GetNPC(), currentlySelectedTopicNode->GetCompleteTag());
+>>>>>>> componentrefactor
       socialWindowRef->GetNPC()->AddConversedDialog(conversationName);
       return true;
    }

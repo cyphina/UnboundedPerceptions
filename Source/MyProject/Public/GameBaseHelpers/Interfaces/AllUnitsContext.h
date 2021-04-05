@@ -26,6 +26,11 @@ class IAllUnitsContext
    /** Removes an enemy in a data structure that can be replicated amongst players (unlike the one in BasePlayer) */
    FORCEINLINE virtual void UnRegisterEnemyUnit(AEnemy* enemyUnit) = 0;
 
+<<<<<<< HEAD
    FORCEINLINE virtual const TSet<AUnit*>& GetAllFriendlyUnits() const = 0;
    FORCEINLINE virtual const TSet<AUnit*>& GetAllEnemyUnits() const    = 0;
+=======
+   FORCEINLINE virtual const TArray<AUnit*>& GetAllAllyUnits() const = 0;
+   FORCEINLINE virtual const TArray<AUnit*>& GetAllEnemyUnits() const    = 0;
+>>>>>>> componentrefactor
 };

@@ -19,8 +19,7 @@ ARTSDoor::ARTSDoor() : AInteractableBase()
    doorCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("DoorCollision"));
    doorCollision->SetupAttachment(RootComponent);
    doorCollision->SetCollisionObjectType(INTERACTABLE_CHANNEL);
-
-   static ConstructorHelpers::FObjectFinder<UStaticMesh> doorFrameMesh(TEXT("/Game/StarterContent/Props/SM_DoorFrame"));
+   static ConstructorHelpers::FObjectFinder<UStaticMesh> doorFrameMesh(TEXT("/Game/RTS_Tutorial/Meshes/SM_DoorFrame"));
    // Caching the data table information can be problematic if we reimport
    if(doorFrameMesh.Object)
       interactableMesh->SetStaticMesh(doorFrameMesh.Object);
@@ -109,14 +108,14 @@ void ARTSDoor::Interact_Implementation(ABaseHero* hero)
          tL.Play();
          // SetActorEnableCollision(false);
          doorCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
-         doorCollision->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Ignore);
-         doorCollision->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Ignore);
+         doorCollision->SetCollisionResponseToChannel(ENEMY_OBJECT_CHANNEL, ECR_Ignore);
+         doorCollision->SetCollisionResponseToChannel(ALLY_OBJECT_CHANNEL, ECR_Ignore);
       } else {
          // Close the Door
          tL.Reverse();
          doorCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
-         doorCollision->SetCollisionResponseToChannel(ENEMY_CHANNEL, ECR_Block);
-         doorCollision->SetCollisionResponseToChannel(FRIENDLY_CHANNEL, ECR_Block);
+         doorCollision->SetCollisionResponseToChannel(ENEMY_OBJECT_CHANNEL, ECR_Block);
+         doorCollision->SetCollisionResponseToChannel(ALLY_OBJECT_CHANNEL, ECR_Block);
       }
       isOpen = !isOpen;
    }

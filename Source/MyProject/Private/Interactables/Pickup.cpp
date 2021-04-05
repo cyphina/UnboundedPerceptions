@@ -24,7 +24,12 @@ void APickup::BeginPlay()
 
 void APickup::Interact_Implementation(ABaseHero* hero)
 {
+<<<<<<< HEAD
    if(CanInteract_Implementation()) {
+=======
+   if(CanInteract_Implementation())
+   {
+>>>>>>> componentrefactor
       if(hero->OnPickupItem().Execute(item)) { Destroy(); }
    }
 }
@@ -49,10 +54,16 @@ void APickup::SaveInteractable(FMapSaveInfo& mapData)
 void APickup::LoadInteractable(FMapSaveInfo& mapData)
 {
    // If we have already been picked up in our save, delete this
+<<<<<<< HEAD
    if(!mapData.pickupList.Find(GetName())) {
+=======
+   if(!mapData.pickupList.Find(GetName()))
+   {
+>>>>>>> componentrefactor
       GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Pickup named %s was found"), *GetName()));
       Destroy();
-   } else {
+   } else
+   {
       GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Pickup named %s not found"), *GetName()));
    }
 }

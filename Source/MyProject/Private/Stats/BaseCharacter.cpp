@@ -3,10 +3,17 @@
 
 #include "Copy.h"
 
+<<<<<<< HEAD
 FBaseCharacter::FBaseCharacter(const UMyAttributeSet& AttSet)
 {
    level  = 1;
    attSet = &const_cast<UMyAttributeSet&>(AttSet);
+=======
+FBaseCharacter::FBaseCharacter(const URTSAttributeSet& AttSet)
+{
+   level  = 1;
+   attSet = &const_cast<URTSAttributeSet&>(AttSet);
+>>>>>>> componentrefactor
 
    SetupPrimaryAttributes();
    SetupSkills();
@@ -26,36 +33,56 @@ FBaseCharacter::~FBaseCharacter()
 
 void FBaseCharacter::SetupPrimaryAttributes()
 {
+<<<<<<< HEAD
    float minVal = MIN_STARTING_ATT_VALUE;
    for(FGameplayAttribute& att : attSet->GetAtts()) {
       baseAttributes.Add(&att);
+=======
+   for(const FGameplayAttribute& att : attSet->GetAtts())
+   {
+      baseAttributes.Add(att);
+>>>>>>> componentrefactor
    }
 }
 
 void FBaseCharacter::InitialStatUpdate()
 {
    for(auto& skill : skills)
+   {
       skill.Update(attSet);
+   }
    for(auto& vit : vitals)
+   {
       vit.Update(attSet);
+   }
 }
 
 void FBaseCharacter::InitializeAttributeBaseValues()
 {
+<<<<<<< HEAD
    float minVal = MIN_STARTING_ATT_VALUE;
    for(FGameplayAttribute* att : baseAttributes) {
       att->GetGameplayAttributeData(attSet)->SetBaseValue(MIN_STARTING_ATT_VALUE);
       att->SetNumericValueChecked(minVal, attSet);
+=======
+   static float minVal = 20;
+   for(FGameplayAttribute& att : baseAttributes)
+   {
+      att.GetGameplayAttributeData(attSet)->SetBaseValue(minVal);
+      att.SetNumericValueChecked(minVal, attSet);
+>>>>>>> componentrefactor
    }
 
-   for(auto& vital : vitals) {
+   for(auto& vital : vitals)
+   {
       vital.SetAdjustedValue(vital.GetBaseValue(attSet), attSet);
    }
 }
 
 void FBaseCharacter::SetupSkills()
 {
-   for(FGameplayAttribute& skillData : attSet->GetSkills()) {
+   for(FGameplayAttribute skillData : attSet->GetSkills())
+   {
       skills.Add(RTSUnitStat(skillData));
    }
    SetupSkillModifiers();
@@ -63,7 +90,8 @@ void FBaseCharacter::SetupSkills()
 
 void FBaseCharacter::SetupVitals()
 {
-   for(FGameplayAttribute& vitData : attSet->GetVitals()) {
+   for(FGameplayAttribute vitData : attSet->GetVitals())
+   {
       vitals.Add(Vital(vitData));
    }
    SetupVitalModifiers();
@@ -71,6 +99,7 @@ void FBaseCharacter::SetupVitals()
 
 void FBaseCharacter::SetupMechanics()
 {
+<<<<<<< HEAD
    for(FGameplayAttribute& mechData : attSet->GetMechanics()) {
       mechanics.Add(&mechData);
    }
@@ -83,60 +112,157 @@ void FBaseCharacter::SetupMechanics()
    mechanics[static_cast<int>(mech::MovementSpeed)]->GetGameplayAttributeData(attSet)->SetCurrentValue(BASE_MOVEMENT_SPEED);
    mechanics[static_cast<int>(mech::WeaponPower)]->GetGameplayAttributeData(attSet)->SetCurrentValue(BASE_ATTACK_POWER);
    mechanics[static_cast<int>(mech::GlobalDamageModifier)]->GetGameplayAttributeData(attSet)->SetCurrentValue(0);
+=======
+   for(FGameplayAttribute mechData : attSet->GetMechanics())
+   {
+      mechanics.Add(mechData);
+   }
+
+   mechanics[static_cast<int>(mech::AttackRange)].GetGameplayAttributeData(attSet)->SetBaseValue(BASE_ATTACK_RANGE);
+   mechanics[static_cast<int>(mech::MovementSpeed)].GetGameplayAttributeData(attSet)->SetBaseValue(BASE_MOVEMENT_SPEED);
+   mechanics[static_cast<int>(mech::WeaponPower)].GetGameplayAttributeData(attSet)->SetBaseValue(BASE_ATTACK_POWER);
+   mechanics[static_cast<int>(mech::GlobalDamageModifier)].GetGameplayAttributeData(attSet)->SetBaseValue(0);
+   mechanics[static_cast<int>(mech::HealthRegenModifier)].GetGameplayAttributeData(attSet)->SetBaseValue(0);
+   mechanics[static_cast<int>(mech::AttackRange)].GetGameplayAttributeData(attSet)->SetCurrentValue(BASE_ATTACK_RANGE);
+   mechanics[static_cast<int>(mech::MovementSpeed)].GetGameplayAttributeData(attSet)->SetCurrentValue(BASE_MOVEMENT_SPEED);
+   mechanics[static_cast<int>(mech::WeaponPower)].GetGameplayAttributeData(attSet)->SetCurrentValue(BASE_ATTACK_POWER);
+   mechanics[static_cast<int>(mech::GlobalDamageModifier)].GetGameplayAttributeData(attSet)->SetCurrentValue(0);
+   mechanics[static_cast<int>(mech::HealthRegenModifier)].GetGameplayAttributeData(attSet)->SetCurrentValue(0);
+>>>>>>> componentrefactor
 }
 
 void FBaseCharacter::SetupSkillModifiers()
 {
    // Understanding
-   ChangeModifier(sks::Fire_Aff, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Water_Aff, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Wind_Aff, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Earth_Aff, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Electric_Aff, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Darkness_Aff, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Light_Aff, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Arcane_Aff, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Chaos_Aff, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Poison_Aff, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Blood_Aff, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Ethereal_Aff, atts::Understanding, [](int x) { return 2 * x; });
+   ChangeModifier(sks::Fire_Aff, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Water_Aff, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Wind_Aff, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Earth_Aff, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Electric_Aff, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Darkness_Aff, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Light_Aff, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Arcane_Aff, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Chaos_Aff, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Poison_Aff, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Blood_Aff, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Ethereal_Aff, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Cosmic_Aff, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
 
-   ChangeModifier(sks::Fire_Resist, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Water_Resist, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Wind_Resist, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Earth_Resist, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Electric_Resist, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Darkness_Resist, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Light_Resist, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Arcane_Resist, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Chaos_Resist, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Poison_Resist, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Blood_Resist, atts::Understanding, [](int x) { return 2 * x; });
-   ChangeModifier(sks::Ethereal_Resist, atts::Understanding, [](int x) { return 2 * x; });
+   ChangeModifier(sks::Fire_Resist, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Water_Resist, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Wind_Resist, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Earth_Resist, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Electric_Resist, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Darkness_Resist, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Light_Resist, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Arcane_Resist, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Chaos_Resist, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Poison_Resist, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Blood_Resist, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Ethereal_Resist, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
+   ChangeModifier(sks::Cosmic_Resist, atts::Understanding, [](int x) {
+      return 2 * x;
+   });
 
-   ChangeModifier(sks::Attack_Speed, atts::Explosiveness, [](int x) { return static_cast<int>(.2f * x); }); // attack speed also depends on BAT which depends on weapon
-   ChangeModifier(sks::Cast_Speed, atts::Explosiveness, [](int x) { return static_cast<int>(.2f * x); });
-   ChangeModifier(sks::Dodge, atts::Explosiveness, [](int x) { return static_cast<int>(.2f * x); });
-   ChangeModifier(sks::Physical_Aff, atts::Explosiveness, [](int x) { return 2 * x; });
+   ChangeModifier(sks::Attack_Speed, atts::Explosiveness, [](int x) {
+      return static_cast<int>(.2f * x);
+   }); // attack speed also depends on BAT which depends on weapon
+   ChangeModifier(sks::Cast_Speed, atts::Explosiveness, [](int x) {
+      return static_cast<int>(.2f * x);
+   });
+   ChangeModifier(sks::Dodge, atts::Explosiveness, [](int x) {
+      return static_cast<int>(2 * x);
+   });
+   ChangeModifier(sks::Physical_Aff, atts::Explosiveness, [](int x) {
+      return 2 * x;
+   });
 
    // Endurance
 
-   ChangeModifier(sks::Physical_Resist, atts::Endurance, [](int x) { return 2 * x; });
+   ChangeModifier(sks::Physical_Resist, atts::Endurance, [](int x) {
+      return 2 * x;
+   });
 
    // Luck
 
-   ChangeModifier(sks::Critical_Chance, atts::Luck, [](int x) { return static_cast<int>(.1 * x); });
-   ChangeModifier(sks::Critical_Damage, atts::Luck, [](int x) { return static_cast<int>(.2 * x); });
-   ChangeModifier(sks::Accuracy, atts::Luck, [](int x) { return 2 * x; });
+   ChangeModifier(sks::Critical_Chance, atts::Luck, [](int x) {
+      return static_cast<int>(.1 * x);
+   });
+   ChangeModifier(sks::Critical_Damage, atts::Luck, [](int x) {
+      return static_cast<int>(.2 * x);
+   });
+   ChangeModifier(sks::Accuracy, atts::Luck, [](int x) {
+      return 2 * x;
+   });
 }
 
 void FBaseCharacter::SetupVitalModifiers()
 {
-   ChangeModifier(vits::Health, atts::Endurance, [](int x) { return 10 * x; });
-   ChangeModifier(vits::Mana, atts::Intelligence, [](int x) { return 5 * x; });
-   ChangeModifier(vits::Psyche, atts::Understanding, [](int x) { return 3 * x; });
-   ChangeModifier(vits::Moxie, atts::Luck, [](int x) { return 100; }); // 100 basevalue - only affected by equips
-   ChangeModifier(vits::Shield, atts::Luck, [](int x) { return 0; });  // 0 basevalue - isn't affected by baseAttributes
+   ChangeModifier(vits::Health, atts::Endurance, [](int x) {
+      return 10 * x;
+   });
+   ChangeModifier(vits::Mana, atts::Intelligence, [](int x) {
+      return 5 * x;
+   });
+   ChangeModifier(vits::Psyche, atts::Understanding, [](int x) {
+      return 3 * x;
+   });
+   ChangeModifier(vits::Moxie, atts::Luck, [](int x) {
+      return 100;
+   }); // 100 basevalue - only affected by equips
+   ChangeModifier(vits::Shield, atts::Luck, [](int x) {
+      return 0;
+   }); // 0 basevalue - isn't affected by baseAttributes
 }
 
 void FBaseCharacter::ChangeModifier(sks skillName, atts att, AttributeModifierFunction eff)
@@ -146,20 +272,36 @@ void FBaseCharacter::ChangeModifier(sks skillName, atts att, AttributeModifierFu
 
 void FBaseCharacter::ChangeModifier(vits vitalName, atts att, AttributeModifierFunction eff)
 {
+<<<<<<< HEAD
    vitals[static_cast<int>(vitalName)].ChangeModifier(ModifyingAttribute(baseAttributes[static_cast<int>(att)], eff));
+=======
+   vitals[static_cast<int>(vitalName)].ChangeModifier(ModifyingAttribute(&baseAttributes[static_cast<int>(att)], eff));
+>>>>>>> componentrefactor
 }
 
 void FBaseCharacter::StatUpdate(const FGameplayAttribute& updatedStat)
 {
    TArray<Vital> updatedVits;
-   Algo::CopyIf(vitals, updatedVits, [&updatedStat](const Vital& vit) { return vit.attMod.attribute->GetName() == updatedStat.GetName(); });
+   auto          vitPred = [&updatedStat](const Vital& vit) {
+      return vit.attMod.attribute->GetName() == updatedStat.GetName();
+   };
+   Algo::CopyIf(vitals, updatedVits, vitPred);
+
    for(auto& foundVit : updatedVits)
+   {
       foundVit.Update(attSet);
+   }
 
    TArray<RTSUnitStat> updatedStats;
-   Algo::CopyIf(skills, updatedStats, [&updatedStat](const RTSUnitStat& skill) { return skill.attMod.attribute->GetName() == updatedStat.GetName(); });
+   auto                skillPred = [&updatedStat](const RTSUnitStat& skill) {
+      return skill.attMod.attribute->GetName() == updatedStat.GetName();
+   };
+   Algo::CopyIf(skills, updatedStats, skillPred);
+
    for(auto& foundSkill : updatedStats)
+   {
       foundSkill.Update(attSet);
+   }
 }
 
 FGameplayAttributeData* FBaseCharacter::GetAttribute(int index) const
@@ -198,42 +340,72 @@ FGameplayAttributeData* FBaseCharacter::GetMechanic(int index) const
            ->GetGameplayAttributeData(attSet);
 }
 
-void FBaseCharacter::SetAttributeAdj(int skill, float newValue)
+void FBaseCharacter::SetAttributeAdj(int skillIndex, float newValue)
 {
+<<<<<<< HEAD
    baseAttributes[skill]->SetNumericValueChecked(newValue, attSet);
+=======
+   baseAttributes[skillIndex].SetNumericValueChecked(newValue, attSet);
+>>>>>>> componentrefactor
 }
 
-void FBaseCharacter::SetSkillAdj(int skill, float newValue)
+void FBaseCharacter::SetSkillAdj(int skillIndex, float newValue)
 {
-   skills[skill].SetAdjustedValue(newValue, attSet);
+   skills[skillIndex].SetAdjustedValue(newValue, attSet);
 }
 
-void FBaseCharacter::SetVitalAdj(int skill, float newValue)
+void FBaseCharacter::SetVitalAdj(int skillIndex, float newValue)
 {
-   vitals[skill].SetAdjustedValue(newValue, attSet);
+   vitals[skillIndex].SetAdjustedValue(newValue, attSet);
 }
 
-void FBaseCharacter::SetMechanicAdj(int skill, float newValue)
+void FBaseCharacter::SetMechanicAdj(int skillIndex, float newValue)
 {
+<<<<<<< HEAD
    mechanics[skill]->SetNumericValueChecked(newValue, attSet);
+=======
+   mechanics[skillIndex].SetNumericValueChecked(newValue, attSet);
+>>>>>>> componentrefactor
 }
 
-void FBaseCharacter::SetAttributeBase(int skill, float newValue)
+void FBaseCharacter::SetAttributeBase(int skillIndex, float newValue)
 {
+<<<<<<< HEAD
    baseAttributes[skill]->GetGameplayAttributeData(attSet)->SetBaseValue(newValue);
+=======
+   FGameplayAttributeData* skill     = baseAttributes[skillIndex].GetGameplayAttributeData(attSet);
+   const int               valueDiff = newValue - skill->GetBaseValue();
+   skill->SetBaseValue(newValue);
+   skill->SetCurrentValue(skill->GetCurrentValue() + valueDiff);
+>>>>>>> componentrefactor
 }
 
-void FBaseCharacter::SetSkillBase(int skill, float newValue)
+void FBaseCharacter::SetSkillBase(int skillIndex, float newValue)
 {
-   skills[skill].SetBaseValue(newValue, attSet);
+   RTSUnitStat& skill = skills[skillIndex];
+   skill.SetBaseValue(newValue, attSet);
 }
 
-void FBaseCharacter::SetVitalBase(int skill, float newValue)
+void FBaseCharacter::SetVitalBase(int skillIndex, float newValue)
 {
-   vitals[skill].SetBaseValue(newValue, attSet);
+   Vital& vital = vitals[skillIndex];
+   vital.SetBaseValue(newValue, attSet);
 }
 
-void FBaseCharacter::SetMechanicBase(int skill, float newValue)
+void FBaseCharacter::SetMechanicBase(int skillIndex, float newValue)
 {
+<<<<<<< HEAD
    mechanics[skill]->GetGameplayAttributeData(attSet)->SetBaseValue(newValue);
+=======
+   FGameplayAttributeData* mechanicData = mechanics[skillIndex].GetGameplayAttributeData(attSet);
+   FGameplayAttribute      mechanic     = attSet->GetMechanics()[skillIndex];
+
+   const int valueDiff = newValue - mechanicData->GetBaseValue();
+   attSet->PreAttributeBaseChange(mechanic, newValue);
+   mechanicData->SetBaseValue(newValue);
+
+   float newCurValue = mechanicData->GetCurrentValue() + valueDiff;
+   attSet->PreAttributeChange(mechanic, newCurValue);
+   mechanicData->SetCurrentValue(newCurValue);
+>>>>>>> componentrefactor
 }

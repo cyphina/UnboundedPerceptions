@@ -7,7 +7,8 @@
 // TODO: Use variant with these enums?
 
 USTRUCT(BlueprintType, NoExport)
-struct FUnitAttributeStruct {
+struct FUnitAttributeStruct
+{
    UPROPERTY(BlueprintReadWrite, EditAnywhere)
    EAttributes att;
    UPROPERTY(BlueprintReadWrite, EditAnywhere)
@@ -15,7 +16,8 @@ struct FUnitAttributeStruct {
 };
 
 USTRUCT(BlueprintType, NoExport)
-struct FUnitScalingStatsStruct {
+struct FUnitScalingStatsStruct
+{
    UPROPERTY(BlueprintReadWrite, EditAnywhere)
    EUnitScalingStats stat;
    UPROPERTY(BlueprintReadWrite, EditAnywhere)
@@ -23,7 +25,8 @@ struct FUnitScalingStatsStruct {
 };
 
 USTRUCT(BlueprintType, NoExport)
-struct FUnitVitalStruct {
+struct FUnitVitalStruct
+{
    UPROPERTY(BlueprintReadWrite, EditAnywhere)
    EVitals vit;
    UPROPERTY(BlueprintReadWrite, EditAnywhere)
@@ -31,7 +34,8 @@ struct FUnitVitalStruct {
 };
 
 USTRUCT(BlueprintType, NoExport)
-struct FUnitMechanicStruct {
+struct FUnitMechanicStruct
+{
    UPROPERTY(BlueprintReadWrite, EditAnywhere)
    EMechanics mech;
    UPROPERTY(BlueprintReadWrite, EditAnywhere)
@@ -40,7 +44,8 @@ struct FUnitMechanicStruct {
 
 /**Used to setup initial stats for a unit or equipment*/
 USTRUCT(BlueprintType, NoExport)
-struct FDefaultStats {
+struct FDefaultStats
+{
    UPROPERTY(BlueprintReadWrite, EditAnywhere)
    TArray<FUnitAttributeStruct> defaultAttributes;
 

@@ -15,6 +15,7 @@
 #include "RTSIngameWidget.h"
 #include "AIStuff/AIControllers/NPCAIController.h"
 #include "AIModule/Classes/BrainComponent.h"
+#include "DialogSystem/NPCDelegateStore.h"
 
 AHUDManager* ANPC::hudManagerRef = nullptr;
 
@@ -112,9 +113,9 @@ void ANPC::Interact_Implementation(ABaseHero* hero)
    GetController()->StopMovement();
 
    // Turn towards our NPC
-   FVector currentLocation    = GetActorLocation();
-   FVector difference         = hero->GetActorLocation() - currentLocation;
-   FVector projectedDirection = FVector(difference.X, difference.Y, 0);
+   const FVector currentLocation    = GetActorLocation();
+   const FVector difference         = hero->GetActorLocation() - currentLocation;
+   const FVector projectedDirection = FVector(difference.X, difference.Y, 0);
    SetActorRotation(FRotationMatrix::MakeFromX(FVector(projectedDirection)).Rotator());
 
    // If this npc wants to converse, we go to another screen after the initial conversation where we can interact more
@@ -132,7 +133,7 @@ void ANPC::Interact_Implementation(ABaseHero* hero)
    }
 
    // Check to see if any quests wanted us to talk to this NPC
-   controllerRef->GetGameMode()->GetQuestManager()->OnTalkNPC(this, FGameplayTag());
+   NPCDelegateContext::OnNPCTalkedEvent.Broadcast(this);
    controllerRef->GetBasePlayer()->heroInBlockingInteraction = hero;
    AddConversedDialog(conversationStarterName);
 }

@@ -2,7 +2,13 @@
 
 #pragma once
 #include "HUDTypes.h"
+<<<<<<< HEAD
 #include "DialogStructs.h"
+=======
+#include "ConfirmationBox.h"
+#include "DialogStructs.h"
+#include "RTSInputBox.h"
+>>>>>>> componentrefactor
 #include "WidgetToggler.generated.h"
 
 enum class EDialogBoxCloseCase : uint8;
@@ -20,6 +26,10 @@ class IWidgetToggler
 public:
    /**Toggle a hud on the screen on/off.  C++ version.*/
    virtual void AddHUD(uint8 newState) = 0;
+<<<<<<< HEAD
+=======
+   virtual void HideHUD(EHUDs newState) = 0;
+>>>>>>> componentrefactor
 
    /**
     * @brief Allows us to quickly add dialogBox loaded up with conversation.  Else we would have to set the dialog manually, then call AddHUD.
@@ -37,6 +47,7 @@ public:
    virtual void ShowDialogCustomLines(TArray<FDialogData> linesToDisplay, EDialogBoxCloseCase dialogSource) = 0;
 
    /**Adds a confirmation box that can do something once the confirmation button is pressed
+<<<<<<< HEAD
     * @param funcName - Name of the UFUNCTION we want to call (called via reflection)
     * @param funcObject - Pointer to UObject instance that has te UFUNCTION we want to call
     * @param newTitle - Title of the confirmation box
@@ -49,11 +60,31 @@ public:
     * @param funcObject - Pointer to UObject instance that has te UFUNCTION we want to call
     */
    virtual void ShowInputBox(FName funcName = "", UObject* funcObject = nullptr, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty()) = 0;
+=======
+    * @param funcToCallOnConfirmed - Delegate to call when confirmation box choice is made
+    * @param newTitle - Title of the confirmation box
+    * @param newDesc - Description of the confirmation box
+    */
+   virtual void ShowConfirmationBox(const FOnConfirmation& funcToCallOnConfirmed, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty()) = 0;
+
+   /**Adds an input box that can do something with the input once the confirmation button is pressed
+    * @param funcToCallOnConfirmed - Delegate to call when input is filled
+    * @param newTitle - Title of the confirmation box
+    * @param newDesc - Description of the confirmation box
+    */
+   virtual void ShowInputBox(const FOnInputConfirmed& funcToCallOnConfirmed, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty()) = 0;
+>>>>>>> componentrefactor
 
    /**Toggle a hud on the screen on/off.  BP_Version.  Do not call with huds that require open parameters, instead call their respective AddHUD function.*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add HUD"))
    virtual void BP_AddHUD(uint8 newState) = 0;
 
+<<<<<<< HEAD
+=======
+   UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Remove HUD"))
+   virtual void BP_RemoveHUD(EHUDs newState) = 0;
+
+>>>>>>> componentrefactor
    /**Add dialog HUD by passing in a conversation name*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add Hud Dialog with Topic"))
    virtual void BP_AddHUDDialog(FName conversationName, EDialogBoxCloseCase dialogSource) = 0;

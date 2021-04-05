@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "RTSGameMode.h"
 #include "EventSystem/EventManager.h"
@@ -46,10 +44,10 @@ bool ARTSGameMode::SaveGame(FString saveName)
 bool ARTSGameMode::LoadGame(FString fileName)
 {
    bLoading           = true;
-   bool sucessfulLoad = saveLoadManager->LoadFromFilePath(FPaths::ProjectDir().Append("\\SavedGames\\" + fileName));
+   const bool successfulLoad = saveLoadManager->LoadFromFilePath(FPaths::ProjectDir().Append("\\SavedGames\\" + fileName));
 
-   if (sucessfulLoad) saveLoadManager->SetupLoad();
+   if (successfulLoad) saveLoadManager->SetupLoad();
 
    bLoading = false;
-   return sucessfulLoad;
+   return successfulLoad;
 }

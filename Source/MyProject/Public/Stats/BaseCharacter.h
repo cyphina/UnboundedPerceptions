@@ -2,7 +2,11 @@
 
 #include "Stats/Vital.h"
 #include "StatEnums.h"
+<<<<<<< HEAD
 #include "MyAttributeSet.h"
+=======
+#include "RTSAttributeSet.h"
+>>>>>>> componentrefactor
 
 class UAbilitySystemComponent;
 
@@ -22,17 +26,30 @@ using namespace CombatInfo;
  * We never need to use this class directly. A stat component contains this struct and it will expose this classes useful functionality
  */
 USTRUCT(BlueprintType, NoExport)
-struct FBaseCharacter {
+struct FBaseCharacter
+{
    static const int BASE_ATTACK_RANGE   = 500;
    static const int BASE_MOVEMENT_SPEED = 500;
    static const int BASE_ATTACK_POWER   = 100;
 
+<<<<<<< HEAD
    FBaseCharacter(const UMyAttributeSet& AttSet);
    ~FBaseCharacter();
    FBaseCharacter& operator=(const FBaseCharacter& otherChar) = default;
    int             GetLevel() const { return level; }
    void            SetLevel(int newLevel) { level = newLevel; }
    void            InitializeAttributeBaseValues();
+=======
+   FBaseCharacter(const URTSAttributeSet& AttSet);
+   ~FBaseCharacter();
+   FBaseCharacter& operator=(const FBaseCharacter& otherChar) = default;
+
+   int GetLevel() const { return level; }
+
+   void SetLevel(int newLevel) { level = newLevel; }
+
+   void InitializeAttributeBaseValues();
+>>>>>>> componentrefactor
 
    /** Recalculate base values of skills from a base attribute change
     * @param updatedStat - Attribute that was modified
@@ -44,37 +61,54 @@ struct FBaseCharacter {
    FGameplayAttributeData* GetVital(int skill) const;
    FGameplayAttributeData* GetMechanic(int skill) const;
 
-   void SetAttributeAdj(int skill, float newValue);
-   void SetSkillAdj(int skill, float newValue);
-   void SetVitalAdj(int skill, float newValue);
-   void SetMechanicAdj(int skill, float newValue);
+   void SetAttributeAdj(int skillIndex, float newValue);
+   void SetSkillAdj(int skillIndex, float newValue);
+   void SetVitalAdj(int skillIndex, float newValue);
+   void SetMechanicAdj(int skillIndex, float newValue);
 
-   void SetAttributeBase(int skill, float newValue);
-   void SetSkillBase(int skill, float newValue);
-   void SetVitalBase(int skill, float newValue);
-   void SetMechanicBase(int skill, float newValue);
+   void SetAttributeBase(int skillIndex, float newValue);
+   void SetSkillBase(int skillIndex, float newValue);
+   void SetVitalBase(int skillIndex, float newValue);
+   void SetMechanicBase(int skillIndex, float newValue);
 
+   const TArray<FGameplayAttribute>& GetAttributes() const { return baseAttributes; }
+
+   const TArray<RTSUnitStat>& GetSkills() const { return skills; }
+
+   const TArray<Vital>& GetVitals() const { return vitals; }
+
+<<<<<<< HEAD
    const TArray<FGameplayAttribute*>& GetAttributes() const { return baseAttributes; }
    const TArray<RTSUnitStat>&         GetSkills() const { return skills; }
    const TArray<Vital>&               GetVitals() const { return vitals; }
    const TArray<FGameplayAttribute*>& GetMechanics() const { return mechanics; }
+=======
+   const TArray<FGameplayAttribute>& GetMechanics() const { return mechanics; }
+>>>>>>> componentrefactor
 
-   UMyAttributeSet* GetAttSet() const { return attSet; }
+   URTSAttributeSet* GetAttSet() const { return attSet; }
 
- private:
-   UMyAttributeSet* attSet;
+private:
+   URTSAttributeSet* attSet;
    using atts = EAttributes;
-   using sks  = EUnitScalingStats;
+   using sks = EUnitScalingStats;
    using vits = EVitals;
    using mech = EMechanics;
 
-   int level                  = 1;
-   int MIN_STARTING_ATT_VALUE = 20;
+   int level = 1;
 
+<<<<<<< HEAD
    TArray<FGameplayAttribute*> baseAttributes;
    TArray<RTSUnitStat>         skills; // called them skills here but stats and skills are interchangeable names
    TArray<Vital>               vitals;
    TArray<FGameplayAttribute*> mechanics;
+=======
+   // TODO: One day fix so we are not storing multiple copies of these property references...
+   TArray<FGameplayAttribute> baseAttributes;
+   TArray<RTSUnitStat>        skills; // called them skills here but stats and skills are interchangeable names
+   TArray<Vital>              vitals;
+   TArray<FGameplayAttribute> mechanics;
+>>>>>>> componentrefactor
 
    void SetupPrimaryAttributes();
    void InitialStatUpdate();

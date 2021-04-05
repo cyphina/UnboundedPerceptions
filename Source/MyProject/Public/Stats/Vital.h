@@ -3,7 +3,7 @@
 #pragma once
 #include "Stats/RTSUnitStat.h"
 
-class UMyAttributeSet;
+class URTSAttributeSet;
 
 namespace CombatInfo
 {
@@ -13,10 +13,10 @@ namespace CombatInfo
    class MYPROJECT_API Vital : public RTSUnitStat
    {
     public:
-      Vital(FGameplayAttribute& att);
-      Vital(FGameplayAttribute& att, int baseV, ModifyingAttribute mod, UMyAttributeSet* attSet);
+      Vital(FGameplayAttribute att);
+      Vital(FGameplayAttribute att, int baseV, ModifyingAttribute mod, URTSAttributeSet* attSet);
       ~Vital();
 
-      int GetCurrValue(UMyAttributeSet* attSet) const;
+      int GetCurrValue(URTSAttributeSet* attSet) const;
    };
 }

@@ -22,7 +22,6 @@ class MYPROJECTEDITOR_API UBPNode_CreateGameplayEffect : public UK2Node_Construc
    FText GetMenuCategory() const override;                                 //Changes category inside the node browser
 
    ///Pin Accessors
-   UEdGraphPin* GetAbilityRefPin() const;
    UEdGraphPin* GetDurationPin() const;
    UEdGraphPin* GetPeriodPin() const;
    UEdGraphPin* GetLevelPin() const;

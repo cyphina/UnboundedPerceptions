@@ -1,15 +1,41 @@
+<<<<<<< HEAD
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+=======
+#pragma once
+
+#include "AbilitySystemComponent.h"
+#include "DEPRECATED_RTSRangeDiminishCalc.h"
+
+>>>>>>> componentrefactor
 #include "RTSAbilitySystemComponent.generated.h"
 
 struct FDamageScalarStruct;
 class UMySpell;
 
 /**
+<<<<<<< HEAD
+=======
+ * @brief Spells that a unit starts out with.
+ */
+USTRUCT(BlueprintType)
+struct FDefaultLearnedAbility
+{
+   GENERATED_BODY()
+
+   UPROPERTY(EditAnywhere)
+   TSubclassOf<UMySpell> spellClass = nullptr;
+
+   UPROPERTY(EditAnywhere, Meta = (ClampMin = "1"))
+   int initialLevel = 1;
+};
+
+/**
+>>>>>>> componentrefactor
  * Custom ability component with extra functionality
  * All units need a copy of this if we want to allow them to get status effects. That means every unit has this.
  */
@@ -17,7 +43,11 @@ UCLASS()
 class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
 {
    GENERATED_BODY()
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> componentrefactor
    URTSAbilitySystemComponent();
 
  public:
@@ -27,6 +57,7 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "Spells")
    TSubclassOf<UMySpell> GetSpellAtSlot(int index) const;
 
+<<<<<<< HEAD
    void SetSpellAtSlot(TSubclassOf<UMySpell> spellClassToSet, int slotIndex);
 
    const TArray<TSubclassOf<UMySpell>>& GetAbilities() const { return abilities; }
@@ -35,6 +66,18 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
 
    /** Do we have the resources necessary to cast this spell; also make sure we don't have any status effects preventing us*/
    bool CanCast(TSubclassOf<UMySpell> spellToCheck) const;
+=======
+   /** We can use this to apply a damage effect if we care to know if the damage effect was blocked or missed */
+   UFUNCTION(BlueprintCallable, Category = "Spell Helper")
+   bool ApplyDamageEffectSpecToTarget(const FGameplayEffectSpecHandle& damageEffectSpecHandle, UAbilitySystemComponent* targetComp);
+
+   UFUNCTION(BlueprintCallable)
+   const TArray<TSubclassOf<UMySpell>>& GetAbilities() const { return abilities; }
+
+   void SetSpellAtSlot(TSubclassOf<UMySpell> spellClassToSet, int slotIndex);
+
+   int FindSlotIndexOfSpell(TSubclassOf<UMySpell> spellToLookFor) const;
+>>>>>>> componentrefactor
 
    /** Attempts to removes invisibility effect. Usually called when a unit performs an action when they are invisible, thus breaking the invisibility*/
    void TryRemoveInvisibility();
@@ -43,6 +86,7 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
    FActiveGameplayEffectHandle ApplyGameplayEffectSpecToSelf(const FGameplayEffectSpec& Spec, FPredictionKey PredictionKey) override;
 
    FGameplayEffectSpecHandle MakeDamageEffect(FDamageScalarStruct damageScalars, FGameplayTag attackElement);
+<<<<<<< HEAD
    void                      ApplyDamageToSelf(FDamageScalarStruct damageScalars, FGameplayTag attackElement);
    void                      ApplyDamageToTarget(URTSAbilitySystemComponent* targetComponent, FDamageScalarStruct damageScalars, FGameplayTag attackElement);
 
@@ -56,4 +100,39 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
 
  private:
    class AUnit* unitOwnerRef;
+=======
+   bool                      ApplyDamageToSelf(FDamageScalarStruct damageScalars, FGameplayTag attackElement);
+   bool                      ApplyDamageToTarget(URTSAbilitySystemComponent* targetComponent, FDamageScalarStruct damageScalars, FGameplayTag attackElement);
+
+   FGameplayAbilitySpec*       FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass);
+   const FGameplayAbilitySpec* FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass) const;
+
+   /** Dedicated attribute for passing in parameters to our effect exec calculations */
+   UPROPERTY(meta = (SystemGameplayAttribute = "true"))
+   float EffectParameter;
+
+   static FProperty* GetEffectParameterProperty();
+
+   static const FGameplayEffectAttributeCaptureDefinition& GetEffectParameterCapture();
+
+ protected:
+   /**
+    * For allies, this is the list of abilities that are in their skill slot (max 6).
+    * Heroes can potentially swap out skills from their spell book to a skill slot.
+    * For enemies, this is all the skills they have.
+    */
+   UPROPERTY(Transient)
+   TArray<TSubclassOf<class UMySpell>> abilities;
+
+   /**
+    * Abilities that this unit should start out with. Used to give enemies a set of abilities to work with,
+    * although enemies could gain or lose abilities in certain scenarios in which that would refelct in the abilities property.
+    */
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Unit Defaults")
+   TArray<FDefaultLearnedAbility> defaultAbilities;
+
+ private:
+   class AUnit* unitOwnerRef;
+
+>>>>>>> componentrefactor
 };

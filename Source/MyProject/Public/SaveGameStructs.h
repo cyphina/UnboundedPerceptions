@@ -7,7 +7,8 @@
  The structs are declared here since we want them to be class members since we need to setup a callback without any parameters
 to FWorldDelegate::OnPostWorldInitialization to properly call the loading setup at the right time since OpenLevel is Async.*/
 
-struct FSaveGameDataInfo {
+struct FSaveGameDataInfo
+{
    FName     id;        // Player can name a save
    FDateTime timestamp; // time when game is saved
 
@@ -20,7 +21,8 @@ struct FSaveGameDataInfo {
 };
 
 // LevelData - Will contain information about level state
-struct FSceneSaveInfo {
+struct FSceneSaveInfo
+{
    FName         levelName;
    TArray<FName> pickedUpInteractables; // what items have been picked up already? - This may be saved in a struct with all the level data
 
@@ -32,7 +34,8 @@ struct FSceneSaveInfo {
    }
 };
 
-struct FCameraSaveInfo {
+struct FCameraSaveInfo
+{
    FTransform cameraTransform;
    int        cameraSpeed;
    bool       isCamNavDisabled;
@@ -53,7 +56,8 @@ struct FCameraSaveInfo {
    }
 };
 
-struct FBasePlayerSaveInfo {
+struct FBasePlayerSaveInfo
+{
    int           money;
    TArray<FName> dialogTopics;
    int           heroNum;
@@ -69,7 +73,8 @@ struct FBasePlayerSaveInfo {
    }
 };
 
-struct FBaseCharacterSaveInfo {
+struct FBaseCharacterSaveInfo
+{
    TArray<int> attributes;
    TArray<int> skills;
    TArray<int> vitals;
@@ -88,7 +93,8 @@ struct FBaseCharacterSaveInfo {
    }
 };
 
-struct FAllySaveInfo {
+struct FAllySaveInfo
+{
    FText                  name;
    FTransform             actorTransform;
    FBaseCharacterSaveInfo baseCSaveInfo;
@@ -103,7 +109,8 @@ struct FAllySaveInfo {
    }
 };
 
-struct FSummonSaveInfo {
+struct FSummonSaveInfo
+{
    FAllySaveInfo allyInfo;
    int           duration;
 
@@ -115,7 +122,8 @@ struct FSummonSaveInfo {
    }
 };
 
-struct FBackpackSaveInfo {
+struct FBackpackSaveInfo
+{
    TArray<int> itemIDs;
    TArray<int> itemCounts;
    TArray<int> itemSlots;
@@ -142,14 +150,15 @@ struct FSpellbookSaveInfo
    }
 };
 
-struct FHeroSaveInfo {
-   FAllySaveInfo     allyInfo;
-   int               currentExp;
-   int               expToNextLevel; // we could technically recalculate this...
-   int               attPoints;
-   int               skillPoints;
-   TArray<int>       spellIDs;
-   FBackpackSaveInfo backpackInfo;
+struct FHeroSaveInfo
+{
+   FAllySaveInfo        allyInfo;
+   int                  currentExp;
+   int                  expToNextLevel; // we could technically recalculate this...
+   int                  attPoints;
+   int                  skillPoints;
+   TArray<FGameplayTag> nameTags;
+   FBackpackSaveInfo    backpackInfo;
 
    friend FArchive& operator<<(FArchive& ar, FHeroSaveInfo& saveData)
    {
@@ -158,20 +167,22 @@ struct FHeroSaveInfo {
       ar << saveData.expToNextLevel;
       ar << saveData.attPoints;
       ar << saveData.skillPoints;
-      ar << saveData.spellIDs;
+      ar << saveData.nameTags;
       ar << saveData.backpackInfo;
       return ar;
    }
 };
 
 // TODO: In progress
-struct FQuestSaveInfo {
+struct FQuestSaveInfo
+{
    TArray<int>    currentGoalIndices;
    TMap<int, int> currentAmounts;
    FText          currentDescription;
 };
 
-struct FQuestManagerSaveInfo {
+struct FQuestManagerSaveInfo
+{
    TArray<FGameplayTag> currentQuestIDs;
    TArray<FGameplayTag> completedQuestIDs;
    FGameplayTag         currentlySelectedQuest;

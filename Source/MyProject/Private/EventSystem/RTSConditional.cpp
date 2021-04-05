@@ -59,7 +59,11 @@ bool UConditionalManager::GetQuestConditionVal(FConditionData& condData) const
 {
    checkf(condData.conditionalValues.Num() == 1, TEXT("Error with number of quest condition values (%d items)"), condData.conditionalValues.Num());
    if(gameModeRef->GetQuestManager()->completedQuests.FindByPredicate(
+<<<<<<< HEAD
           [&](AQuest* questToFilter) { return questToFilter->questInfo.id.ToString() == "QuestName." + condData.conditionalValues[0]; }))
+=======
+          [&](AQuest* questToFilter) { return questToFilter->GetQuestInfo().id.ToString() == "QuestName." + condData.conditionalValues[0]; }))
+>>>>>>> componentrefactor
       return true;
    return false;
 }
@@ -68,18 +72,22 @@ bool UConditionalManager::GetGoalsCompletedVal(FConditionData& condData) const
 {
    checkf(condData.conditionalValues.Num() > 1, TEXT("Error with number of quest condition values (%d items)"), condData.conditionalValues.Num());
    auto pred = [&](AQuest* questToFilter) {
+<<<<<<< HEAD
       return questToFilter->questInfo.id.ToString() == "QuestName." + condData.conditionalValues[0];
+=======
+      return questToFilter->GetQuestInfo().id.ToString() == "QuestName." + condData.conditionalValues[0];
+>>>>>>> componentrefactor
    };
 
    // If we've already completed this quest then of course we already finished whatever goals we are checking
    if(gameModeRef->GetQuestManager()->completedQuests.FindByPredicate(pred)) return true;
 
    // If we can find this quest in our list of all quests, then
-   if(auto questToCheck = gameModeRef->GetQuestManager()->quests.FindByPredicate(pred); questToCheck) {
+   if(auto questToCheck = gameModeRef->GetQuestManager()->activeQuests.FindByPredicate(pred); questToCheck) {
       AQuest* quest = *questToCheck;
       for(int i = 1; i < condData.conditionalValues.Num(); ++i) {
          int condIndex = FCString::Atoi(*condData.conditionalValues[i]);
-         if(quest->questInfo.subgoals[condIndex].goalState != EGoalState::completedGoal) {
+         if(quest->GetQuestInfo().GetSubgoals()[condIndex]->GetGoalState() != EGoalState::completedGoal) {
             // GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::White, FString("Haven't completed goal with index:") + FString::FromInt(condIndex));
             return false;
          }
@@ -109,7 +117,11 @@ bool UConditionalManager::GetHasCurrentQuestConditionVal(FConditionData& condDat
 {
    checkf(condData.conditionalValues.Num() == 1, TEXT("Error with number of quest condition values (%d items)"), condData.conditionalValues.Num());
    if(gameModeRef->GetQuestManager()->completedQuests.FindByPredicate(
+<<<<<<< HEAD
           [&](AQuest* questToFilter) { return questToFilter->questInfo.id.ToString() == "QuestName." + condData.conditionalValues[0]; }))
+=======
+          [&](AQuest* questToFilter) { return questToFilter->GetQuestInfo().id.ToString() == "QuestName." + condData.conditionalValues[0]; }))
+>>>>>>> componentrefactor
       return true;
    return false;
 }
@@ -125,7 +137,11 @@ FText UConditionalManager::GetConditionMessage(FConditionData& cond) const
          args.Add(gameModeRef->GetQuestManager()
                       ->questClassList[FGameplayTag::RequestGameplayTag(*(FString("QuestName.") + cond.conditionalValues[0]))]
                       ->GetDefaultObject<AQuest>()
+<<<<<<< HEAD
                       ->questInfo.name);
+=======
+                      ->GetQuestInfo().name);
+>>>>>>> componentrefactor
          return cond.reverseResult ? FText::Format(LOCTEXT("QuestCompleteCond", "noncompletion of {0}"), args)
                                    : FText::Format(LOCTEXT("QuestCompleteCond", "completion of {0}"), args);
       case EConditionalType::QuestCompletionCond:
@@ -133,14 +149,18 @@ FText UConditionalManager::GetConditionMessage(FConditionData& cond) const
          args.Add(gameModeRef->GetQuestManager()
                       ->questClassList[FGameplayTag::RequestGameplayTag(*(FString("QuestName.") + cond.conditionalValues[0]))]
                       ->GetDefaultObject<AQuest>()
+<<<<<<< HEAD
                       ->questInfo.name);
+=======
+                      ->GetQuestInfo().name);
+>>>>>>> componentrefactor
          return cond.reverseResult ? FText::Format(LOCTEXT("QuestCompleteCond", "noncompletion of {0}"), args)
                                    : FText::Format(LOCTEXT("QuestCompleteCond", "completion of {0}"), args);
       case EConditionalType::GoalsCompletionCond: {
          args.Add(gameModeRef->GetQuestManager()
                       ->questClassList[FGameplayTag::RequestGameplayTag(*(FString("QuestName.") + cond.conditionalValues[0]))]
                       ->GetDefaultObject<AQuest>()
-                      ->questInfo.name);
+                      ->GetQuestInfo().name);
          FString goalIndices;
          for(int i = 1; i < cond.conditionalValues.Num() - 1; ++i) {
             goalIndices += cond.conditionalValues[i] + ", ";

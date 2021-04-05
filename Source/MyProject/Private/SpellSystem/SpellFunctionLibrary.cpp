@@ -11,57 +11,91 @@
 #include "MySpell.h"
 
 #include "WorldObjects/Unit.h"
-
-#include "AIControllers/UnitController.h"
 #include "UserInput.h"
 #include "HUDManager.h"
+<<<<<<< HEAD
 #include "ActionbarInterface.h"
 #include "ESkillContainer.h"
 #include "RTSIngameWidget.h"
 #include "RTSProjectileStrategy.h"
 #include "SkillSlot.h"
+=======
+#include "RTSProjectileStrategy.h"
+#include "TextFormatter.h"
+#include "Engine/CompositeCurveTable.h"
+
+const FGameplayTag    USpellFunctionLibrary::CONFIRM_SPELL_TAG        = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Spell");
+const FGameplayTag    USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Target");
+UCompositeCurveTable* USpellFunctionLibrary::effectPowerTableRef      = nullptr;
+>>>>>>> componentrefactor
 
 USpellFunctionLibrary::USpellFunctionLibrary(const FObjectInitializer& o) : Super(o)
 {
+   const ConstructorHelpers::FObjectFinder<UCompositeCurveTable> skillTable(TEXT("/Game/RTS_Tutorial/Blueprints/SpellSystem/SpellEffect/CurveTables/Up_CT_AllSkills"));
+   if(skillTable.Succeeded())
+   {
+      effectPowerTableRef = skillTable.Object;
+      effectPowerTableRef->AddToRoot();
+   }
 }
 
-FGameplayEffectSpecHandle USpellFunctionLibrary::MakeGameplayEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration,
+FGameplayEffectSpecHandle USpellFunctionLibrary::MakeGameplayEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
                                                                     float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags)
 {
-   FGameplayEffectSpecHandle effect = AbilityRef->MakeOutgoingGameplayEffectSpec(EffectClass, Level);
+   FGameplayEffectSpecHandle effect           = AbilityRef->MakeOutgoingGameplayEffectSpec(EffectClass, Level);
+   const UGameplayEffect*    effectDefinition = effect.Data->Def;
+
    effect.Data->DynamicAssetTags.AddTag(Elem); // Use add tag to check if tag is valid and prevents duplicate tags.
    effect.Data->DynamicAssetTags.AddTag(Name);
    effect.Data->DynamicAssetTags.AppendTags(assetTags);
-   if(effect.Data->Def->DurationPolicy != EGameplayEffectDurationType::Instant) // Do this check since some instant effects rely on this procedure too
+   if(effectDefinition->DurationPolicy != EGameplayEffectDurationType::Instant && effectDefinition->DurationPolicy != EGameplayEffectDurationType::Infinite)
    {
-      effect.Data->Period = Period;
-      effect.Data->SetDuration(Duration, true); // if we don't lock the duration, the duration will be recalcuated somewhere in active effect creation ...
+      if(effectDefinition->Executions.Num())
+      {
+         // Spells that have executions and durations need to be periodic but we don't want the period to do anything so set it to something really large.
+         if(effectDefinition->Period.Value <= 0 && Period <= 0)
+         {
+            Period = 999;
+         }
+      }
+
+      if(Period > 0)
+      {
+         effect.Data->Period = Period;
+      }
+
+      if(Duration > 0)
+      {
+         effect.Data->SetDuration(Duration, true); // if we don't lock the duration, the duration will be recalcuated somewhere in active effect creation ...
+      }
    }
    return effect;
 }
 
-FGameplayEffectSpecHandle USpellFunctionLibrary::MakeDamageEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration,
-                                                                  float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
-                                                                  FDamageScalarStruct damageValues)
+FGameplayEffectSpecHandle USpellFunctionLibrary::MakeDamageOrHealingEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level,
+                                                                           float Duration, float Period, FGameplayTag Elem, FGameplayTag Name,
+                                                                           FGameplayTagContainer assetTags, FDamageScalarStruct damageVals)
 {
    FGameplayEffectSpecHandle effect = MakeGameplayEffect(AbilityRef, EffectClass, Level, Duration, Period, Elem, Name, assetTags);
    effect.Data->DynamicAssetTags.AddTag(Elem); // Use add tag to check if tag is valid and prevents duplicate tags.
    effect.Data->DynamicAssetTags.AddTag(Name);
 
    // no period since damage is instant application
-   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Strength"), damageValues.strength);
-   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Intelligence"), damageValues.intelligence);
-   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), damageValues.agility);
-   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Understanding"), damageValues.agility);
+   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Health"), damageVals.hitpoints);
+   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Strength"), damageVals.strength);
+   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Intelligence"), damageVals.intelligence);
+   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), damageVals.agility);
+   effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Understanding"), damageVals.understanding);
    return effect;
 }
 
-FGameplayEffectSpecHandle USpellFunctionLibrary::MakeStatChangeEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, float Level, float Duration,
+FGameplayEffectSpecHandle USpellFunctionLibrary::MakeStatChangeEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
                                                                       float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
                                                                       TArray<FStatChange> StatChanges = TArray<FStatChange>())
 {
    FGameplayEffectSpecHandle effect = MakeGameplayEffect(AbilityRef, EffectClass, Level, Duration, Period, Elem, Name, assetTags);
-   for(FStatChange statChange : StatChanges) {
+   for(FStatChange statChange : StatChanges)
+   {
       effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(*(FString("Combat.Stats.") + statChange.changedAtt.GetName())),
                                            statChange.changeStatMagnitude);
       // GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, *(FString("Combat.Stats.") + statChange.changedAtt.GetName()));
@@ -70,53 +104,131 @@ FGameplayEffectSpecHandle USpellFunctionLibrary::MakeStatChangeEffect(UGameplayA
    return effect;
 }
 
+<<<<<<< HEAD
 ARTSProjectile* USpellFunctionLibrary::SetupBulletTargetting(AUnit* casterRef, TSubclassOf<ARTSProjectile> bulletClass, URTSProjectileStrategy* projectileStrategy,
                                                              UPARAM(ref) FGameplayEffectSpecHandle& specHandle, bool canGoThroughWalls)
+=======
+ARTSProjectile* USpellFunctionLibrary::SetupBulletTargetting(AUnit* casterRef, TSubclassOf<ARTSProjectile> bulletClass,
+                                                             TSubclassOf<URTSProjectileStrategy>           projectileStrategyClass,
+                                                             UPARAM(ref) TArray<FGameplayEffectSpecHandle> specHandles, bool canGoThroughWalls)
+>>>>>>> componentrefactor
 {
    FTransform spawnTransform = casterRef->GetActorTransform();
    spawnTransform.SetLocation(spawnTransform.GetLocation() + casterRef->GetActorForwardVector() * 10.f);
 
+<<<<<<< HEAD
    projectileStrategy->canGoThroughWalls = canGoThroughWalls;
    projectileStrategy->defaultHitEffects.Append(TArray<FGameplayEffectSpecHandle>{specHandle});
+=======
+   URTSProjectileStrategy* projectileStrategy = nullptr;
+   if(projectileStrategyClass)
+   {
+      projectileStrategy                    = NewObject<URTSProjectileStrategy>(casterRef, projectileStrategyClass);
+      projectileStrategy->canGoThroughWalls = canGoThroughWalls;
+   }
+   else
+   {
+      projectileStrategy = URTSProjectileStrategy::StaticClass()->GetDefaultObject<URTSProjectileStrategy>();
+   }
+   projectileStrategy->defaultHitEffects = specHandles;
+
+>>>>>>> componentrefactor
    ARTSProjectile* projectile =
        ARTSProjectile::MakeRTSProjectile(casterRef->GetWorld(), casterRef->GetTargetComponent(), casterRef->GetActorTransform(), bulletClass, projectileStrategy);
 
    return projectile;
 }
 
-FText USpellFunctionLibrary::ParseDesc(FText inputText, UAbilitySystemComponent* compRef, UMySpell* spell, TMap<FString, FString> args = TMap<FString, FString>())
+FText USpellFunctionLibrary::ParseDesc(const FText& inputText, const UAbilitySystemComponent* compRef, const UMySpell* spell)
 {
-   static const TCHAR* strKey      = TEXT("{str}");
-   static const TCHAR* intKey      = TEXT("{int}");
-   static const TCHAR* agiKey      = TEXT("{agi}");
-   static const TCHAR* undKey      = TEXT("{und}");
-   static const TCHAR* hpKey       = TEXT("{hp}");
-   static const TCHAR* aoekey      = TEXT("{aoe}");
-   static const TCHAR* durationkey = TEXT("{duration}");
-   static const TCHAR* rangekey    = TEXT("{range}");
+   FTextFormatPatternDefinitionRef descriptionPatternDef = MakeShared<FTextFormatPatternDefinition, ESPMode::ThreadSafe>();
+   descriptionPatternDef->SetArgStartChar(TEXT('['));
+   descriptionPatternDef->SetArgEndChar(TEXT(']'));
 
-   FString parsedString = inputText.ToString();
+<<<<<<< HEAD
+=======
+   const FString descriptionString = inputText.ToString();
 
-   parsedString.Replace(strKey, *FString::FromInt(spell->GetDamage(compRef).strength));
-   parsedString.Replace(intKey, *FString::FromInt(spell->GetDamage(compRef).intelligence));
-   parsedString.Replace(agiKey, *FString::FromInt(spell->GetDamage(compRef).agility));
-   parsedString.Replace(undKey, *FString::FromInt(spell->GetDamage(compRef).understanding));
-   parsedString.Replace(hpKey, *FString::FromInt(spell->GetDamage(compRef).hitpoints));
+   FFormatNamedArguments effectArgs;
+   const FTextFormat     effectFormat = FTextFormat::FromString(descriptionString, descriptionPatternDef);
 
-   parsedString.Replace(aoekey, *FString::FromInt(spell->GetAOE(compRef)));
-   parsedString.Replace(durationkey, *FString::SanitizeFloat(spell->GetSpellDuration(compRef)));
-   parsedString.Replace(rangekey, *FString::FromInt(spell->GetRange(compRef)));
+   if(FCString::Strchr(*descriptionString, descriptionPatternDef->ArgStartChar) != nullptr)
+   {
+      if(effectFormat.IsValid())
+      {
+         TArray<FString> effectFormatTokens;
 
-   return FText::FromString(parsedString);
+         effectFormat.GetFormatArgumentNames(effectFormatTokens);
+
+         for(const FString& token : effectFormatTokens)
+         {
+            if(effectPowerTableRef->GetRowMap().Contains(*token))
+            {
+               // The field might have less entries than the max level of the ability.
+               FRealCurve* effectPowerCurve = effectPowerTableRef->GetRowMap()[*token];
+               float       minTime, maxTime;
+               effectPowerCurve->GetTimeRange(minTime, maxTime);
+
+               int trueMaxTimeIndex = maxTime;
+               for(int i = minTime; i < maxTime; ++i)
+               {
+                  if(FKeyHandle keyHandle = effectPowerCurve->FindKey(i); keyHandle != FKeyHandle::Invalid())
+                  {
+                     const float keyValue = effectPowerCurve->GetKeyValue(keyHandle);
+                     if(keyValue == 0)
+                     {
+                        trueMaxTimeIndex = i - 1;
+                        break;
+                     }
+                  }
+               }
+
+               const int index = UMySpell::GetIndex(spell->GetLevel(compRef), trueMaxTimeIndex, spell->GetMaxLevel());
+
+               if(index > -1)
+               {
+                  const float effectTokenArgValue = effectPowerCurve->Eval(index + 1);
+                  effectArgs.Add(*token, effectTokenArgValue);
+               }
+            }
+         }
+      }
+   }
+
+   FFormatNamedArguments args;
+
+   static const TCHAR* strKey      = TEXT("str");
+   static const TCHAR* intKey      = TEXT("int");
+   static const TCHAR* agiKey      = TEXT("agi");
+   static const TCHAR* undKey      = TEXT("und");
+   static const TCHAR* hpKey       = TEXT("hit");
+   static const TCHAR* aoeKey      = TEXT("aoe");
+   static const TCHAR* durationKey = TEXT("dur");
+   static const TCHAR* periodKey   = TEXT("per");
+
+   args.Add(strKey, spell->GetDamage(compRef).strength);
+   args.Add(intKey, spell->GetDamage(compRef).intelligence);
+   args.Add(agiKey, spell->GetDamage(compRef).agility);
+   args.Add(undKey, spell->GetDamage(compRef).understanding);
+   args.Add(hpKey, spell->GetDamage(compRef).hitpoints);
+   args.Add(aoeKey, spell->GetAOE(compRef));
+   args.Add(durationKey, spell->GetSpellDuration(compRef));
+   args.Add(periodKey, spell->GetPeriod(compRef));
+
+   return FText::Format(FText::FromString(FTextFormatter::FormatStr(effectFormat, effectArgs, false, true)), args);
 }
 
+>>>>>>> componentrefactor
 void USpellFunctionLibrary::SpellConfirmSwap(TSubclassOf<UMySpell> confirmSpell, TSubclassOf<UMySpell> originalSpell, AUnit* ownerRef, bool bSwapInConfirm)
 {
    TSubclassOf<UMySpell> spellToReplace, replacementSpell;
-   if(bSwapInConfirm) {
+   if(bSwapInConfirm)
+   {
       spellToReplace   = originalSpell;
       replacementSpell = confirmSpell;
-   } else {
+   }
+   else
+   {
       spellToReplace   = confirmSpell;
       replacementSpell = originalSpell;
    }
@@ -126,6 +238,7 @@ void USpellFunctionLibrary::SpellConfirmSwap(TSubclassOf<UMySpell> confirmSpell,
 
 void USpellFunctionLibrary::SpellSwap(TSubclassOf<UMySpell> originalSpell, TSubclassOf<UMySpell> newSpell, AUnit* ownerRef)
 {
+<<<<<<< HEAD
    int slot = 0;
    for(auto equippedSkills : ownerRef->GetAbilitySystemComponent()->GetAbilities()) {
       if(equippedSkills == originalSpell) { break; }
@@ -141,4 +254,15 @@ void USpellFunctionLibrary::SpellSwap(TSubclassOf<UMySpell> originalSpell, TSubc
           ->UpdateSkillSlot(newSpell);
    else
       UE_LOG(LogTemp, Warning, TEXT("Cannot find original spell to swap with"));
+=======
+   const int slot = ownerRef->GetAbilitySystemComponent()->GetAbilities().Find(originalSpell);
+
+   if(slot == INDEX_NONE)
+   {
+      UE_LOG(LogTemp, Error, TEXT("Cannot find original spell to swap with"));
+      return;
+   }
+
+   ownerRef->GetAbilitySystemComponent()->SetSpellAtSlot(newSpell, slot);
+>>>>>>> componentrefactor
 }

@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -7,40 +5,23 @@
 #include "../Quest.h"
 #include "QuestJournal.generated.h"
 
-/* Class for a journal widget that displays more detailed information on quests */
-
+class UButton;
+class UScrollBox;
+class UTextBlock;
 class ABaseHero;
 class ARTSGameMode;
 class UQuestJournalEntry;
 
+/* Class for a journal widget that displays more detailed information on quests */
 UCLASS()
 class MYPROJECT_API UQuestJournal : public UMyDraggableWidget
 {
    GENERATED_BODY()
 
- public:
-   void NativeConstruct() override;
-   bool OnWidgetAddToViewport_Implementation() override;
-
-   /** update all details of quest information window*/
-   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Quest Journal Updates")
-   void UpdateDetailWindow();
-
-   /**add a new entry to the quest journal*/
-   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Quest Journal Updates")
-   void AddEntry(AQuest* quest);
-
+public:
    /**when one of the quests in the journal is selected*/
    UFUNCTION(BlueprintCallable, Category = "Quest Journal Interface")
    void OnQuestEntryClicked(AQuest* quest, UQuestJournalEntry* questButton);
-
-   /**remove a quest from the journal*/
-   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Quest Journal Interface")
-   void RemoveFromQuestJournal(AQuest* quest);
-
-   /** Change the color of the suggested level text based on if it's higher or lower level than our party leader*/
-   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Quest Journal Interface")
-   void UpdateSuggestedLevelColor();
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    AQuest* GetSelectedQuest() const { return selectedQuest; }
@@ -48,16 +29,82 @@ class MYPROJECT_API UQuestJournal : public UMyDraggableWidget
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    UQuestJournalEntry* GetQuestJournalEntry(AQuest* quest);
 
-   UPROPERTY(BlueprintReadWrite, Category = "References")
-   UQuestJournalEntry* currentQuestWidget;
+   /** Update all details of quest information window*/
+   void UpdateDetailWindow();
+
+protected:
+   /** Add a new entry to the quest journal or recategorizes an existing one*/
+   UFUNCTION(BlueprintImplementableEvent, Category = "Quest Journal Updates")
+   void AddOrReparentEntry(AQuest* quest);
+
+   UFUNCTION(BlueprintImplementableEvent, Category = "Quest Journal Updates")
+   void GenerateSubgoals();
+
+   void NativeOnInitialized() override;
+   bool OnWidgetAddToViewport_Implementation() override;
+   void SetupQuestCategoryText(const FQuestInfo& questInfo);
+   void SetupRewardsText(const FQuestInfo& questInfo);
+
+   UPROPERTY(BlueprintReadOnly, Meta=(BindWidget))
+   UScrollBox* Scroll_QuestDetailsPanel;
+
+   UPROPERTY(BlueprintReadOnly, Meta=(BindWidget))
+   UTextBlock* Text_SuggestedLevel;
+
+   UPROPERTY(BlueprintReadOnly, Meta=(BindWidget))
+   UTextBlock* Text_QuestName;
+
+   UPROPERTY(BlueprintReadOnly, Meta=(BindWidget))
+   UTextBlock* Text_QuestCategory;
+
+   UPROPERTY(BlueprintReadOnly, Meta=(BindWidget))
+   UTextBlock* Text_QuestRegion;
+
+   UPROPERTY(BlueprintReadOnly, Meta=(BindWidget))
+   UTextBlock* Text_Exp;
+
+   UPROPERTY(BlueprintReadOnly, Meta=(BindWidget))
+   UTextBlock* Text_Currency;
+
+   UPROPERTY(BlueprintReadOnly, Meta=(BindWidget))
+   UTextBlock* Text_Description;
+
+   UPROPERTY(BlueprintReadOnly, Meta=(BindWidget))
+   UButton* Btn_TrackQuest;
+
+   UPROPERTY(BlueprintReadOnly, Meta=(BindWidget))
+   UButton* Btn_CancelQuest;
 
    UPROPERTY(BlueprintReadWrite, category = "Data")
    TArray<UQuestJournalEntry*> questJournalEntries;
 
- private:
-   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "References")
-   ARTSGameMode* gameModeRef;
+   UPROPERTY(BlueprintReadWrite, Category = "References")
+   UQuestJournalEntry* currentQuestWidget;
+
+private:
+   void OnHeroLevelUp(ABaseHero* levelingHero);
+
+   void OnSubgoalCompleted(AQuest* quest, int subgoalIndex);
+
+   UFUNCTION()
+   void OnQuestCompleted(AQuest* questToEnd);
+
+   UFUNCTION()
+   void OnQuestStarted(AQuest* questToStart);
+
+   UFUNCTION()
+   void TrackQuest();
+
+   UFUNCTION()
+   void StopQuestTracking();
+
+   /** Change the color of the suggested level text based on if it's higher or lower level than our party leader*/
+   void UpdateSuggestedLevelColor();
+
+   void RemoveFromQuestJournal(AQuest* quest);
 
    UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "References")
    AQuest* selectedQuest;
+
+   FText noRewardsText = NSLOCTEXT("Quest", "NoReward", "N/A");
 };

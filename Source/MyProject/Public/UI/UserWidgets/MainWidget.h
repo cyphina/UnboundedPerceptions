@@ -4,6 +4,11 @@
 #include "UI/UserWidgetExtensions/MyUserWidget.h"
 #include "MainWidget.generated.h"
 
+<<<<<<< HEAD
+=======
+class UKeyRemapWidget;
+class USaveLoadMenu;
+>>>>>>> componentrefactor
 class URTSIngameWidget;
 class USettingsMenu;
 class UBreakMenu;
@@ -19,10 +24,26 @@ class MYPROJECT_API UMainWidget : public UMyUserWidget
 {
    GENERATED_BODY()
 
-   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
+public:
+   URTSIngameWidget* GetIngameWidget() const { return ingameWidget; }
+
+   UBreakMenu* GetBreakMenu() const { return breakMenu; }
+
+<<<<<<< HEAD
+ protected:
+=======
+   USettingsMenu* GetSettingsMenu() const { return settingsMenu; }
+
+   USaveLoadMenu* GetSaveLoadMenu() const { return saveLoadMenu; }
+
+   UKeyRemapWidget* GetRemapMenu() const { return keyRemapMenu; }
+
+   
+protected:
+   UPROPERTY(BlueprintReadOnly)
    class AHUDManager* hudManagerRef;
 
- protected:
+>>>>>>> componentrefactor
    UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
    URTSIngameWidget* ingameWidget;
 
@@ -32,5 +53,11 @@ class MYPROJECT_API UMainWidget : public UMyUserWidget
    UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
    UBreakMenu* breakMenu;
 
+   UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
+   USaveLoadMenu* saveLoadMenu;
+
+   UPROPERTY(BlueprintReadWrite, Meta = (BindWidget))
+   UKeyRemapWidget* keyRemapMenu;
+   
 #pragma endregion
 };

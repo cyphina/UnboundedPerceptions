@@ -14,6 +14,7 @@ class APickup;
 class UQuestManager;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDialogTopicLearned, FGameplayTag, dialogTopic);
+
 DECLARE_EVENT(ABasePlayer, OnPartyUpdated);
 
 /**
@@ -31,6 +32,7 @@ class MYPROJECT_API ABasePlayer : public APlayerState
 
    void BeginPlay() override;
 
+<<<<<<< HEAD
  public:
    static const int MAX_NUM_HEROES = 4;
 
@@ -38,9 +40,39 @@ class MYPROJECT_API ABasePlayer : public APlayerState
 
    AUnit* GetFocusedUnit() const { return focusedUnit; }
    void   SetFocusedUnit(AUnit* newFocusedUnit);
+=======
+public:
+   static const int MAX_NUM_HEROES = 4;
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-   TArray<ABaseHero*> selectedHeroes;
+   const TArray<ABaseHero*>& GetHeroes() const { return heroes; }
+>>>>>>> componentrefactor
+
+   const TArray<AAlly*>& GetAllies() const { return allies; }
+
+   const TArray<AUnit*>& GetSelectedUnits() const { return selectedUnits; }
+
+   void AddSelectedUnit(AUnit* unitToAdd) { selectedUnits.AddUnique(unitToAdd); }
+
+   void RemoveSelectedUnit(AUnit* unitToRemove) { selectedUnits.RemoveSingle(unitToRemove); }
+
+   const TArray<AAlly*>& GetSelectedAllies() const { return selectedAllies; }
+
+   void AddSelectedAlly(AAlly* allyToAdd) { selectedAllies.AddUnique(allyToAdd); }
+
+   void RemoveSelectedAlly(AAlly* allyToRemove) { selectedAllies.RemoveSingle(allyToRemove); }
+
+   const TArray<ABaseHero*>& GetSelectedHeroes() const { return selectedHeroes; }
+
+   void AddSelectedHero(ABaseHero* heroToAdd) { selectedHeroes.AddUnique(heroToAdd); }
+
+   void RemoveSelectedHero(ABaseHero* heroToRemove) { selectedHeroes.RemoveSingle(heroToRemove); }
+
+   UFUNCTION(BlueprintCallable, Category = "Party")
+   AUnit* GetFocusedUnit() const;
+
+   /** TODO: Implement Party Leader */
+   UFUNCTION(BlueprintCallable, Category = "Party")
+   ABaseHero* GetPartyLeader() const { return nullptr; }
 
    /**List of every hero in the game *discovered currently* that may not be in the party currently*/
    UPROPERTY(BlueprintReadOnly, Category = "Party")
@@ -48,17 +80,13 @@ class MYPROJECT_API ABasePlayer : public APlayerState
 
    /**
     * If there's any hero that is interacting currently with something blocking (e.g., storage or dialog)
+<<<<<<< HEAD
+=======
+    * TODO: Remove this and only let the party leader interact for simplicity
+>>>>>>> componentrefactor
     */
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    ABaseHero* heroInBlockingInteraction;
-
-   /**Returns list of ALIVE heroes and friendly units.*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-   TArray<AAlly*> allies;
-
-   /**List of all alive selected allies*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-   TArray<AAlly*> selectedAllies;
 
    /*List of all units summoned*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
@@ -79,18 +107,18 @@ class MYPROJECT_API ABasePlayer : public APlayerState
 
    /** Helper function when all selected ally units are cleared */
    UFUNCTION(BlueprintCallable, Category = "Player Unit Management")
-   void ClearSelectedAllies();
+   void ClearSelectedUnits();
 
    /**
     *Change a party around
     *@param newHeroes - This is an array with the new heroes that will be in the party.  Must be of sizes 1-4
     */
    UFUNCTION(BlueprintCallable, Category = "Player Unit Management")
-   void UpdateParty(TArray<ABaseHero*> newHeroes);
+   void UpdateActiveParty(TArray<ABaseHero*> newHeroes);
 
    /**Called when a new hero joins the team and can be assigned to the 4 man squad*/
    UFUNCTION(BlueprintCallable, Category = "Player Unit Management")
-   void JoinParty(ABaseHero* newHero);
+   void AddHeroToRoster(ABaseHero* newHero);
 
    /**
    *Update the coins
@@ -125,13 +153,20 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    int GetMoney() const { return money; }
 
    UFUNCTION(BlueprintCallable)
+<<<<<<< HEAD
    void SetMoney(int newMoneyVal) { money = newMoneyVal; }
 
  protected:
+=======
+   void SetMoney(int newMoneyVal);
+
+protected:
+>>>>>>> componentrefactor
    /**
     * List of active heroes.
     * Party leader should always be at slot 0.
     */
+<<<<<<< HEAD
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    TArray<ABaseHero*> heroes;
 
@@ -139,17 +174,57 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    AUnit* focusedUnit = nullptr;
 
  private:
+=======
+   UPROPERTY(BlueprintReadOnly, Category = "Party")
+   TArray<ABaseHero*> heroes;
+
+   /**
+    * Returns list of ALIVE heroes and friendly units.
+    */
+   UPROPERTY(BlueprintReadOnly, Category = "Party")
+   TArray<AAlly*> allies;
+
+   /** Used when debugging enemy control */
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
+   TArray<AUnit*> selectedUnits;
+   
+   /** List of all alive selected allies */
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
+   TArray<AAlly*> selectedAllies;
+
+   TArray<ABaseHero*> selectedHeroes;
+
+   /**
+    * Enemy or hero unit that we see detailed information in our actionbar.
+    * Used when we select the UnitSlots in a MultiUnit view or if we tab through units.
+    * Also very important for base game (no enemy control debugging) since we can use it to store a single selected enemy whereas
+    * with enemy debugging enabled, we store enemy references in selectedUnits.
+    */
+   AUnit* focusedUnit = nullptr;
+
+private:
+>>>>>>> componentrefactor
    void OnHeroSelected(ABaseHero* heroRef);
    void OnAllySelected(AAlly* allyRef);
    void OnUnitSelected(AUnit* unitRef);
    void OnHeroDeselected(ABaseHero* heroRef);
    void OnAllyDeselected(AAlly* allyRef);
    void OnUnitDeselected(AUnit* unitRef);
+<<<<<<< HEAD
 
+=======
+   void OnUnitSlotSelected(AUnit* unitSelected);
+   void OnGroupTabbed(AUnit* newFocusedUnit);
+>>>>>>> componentrefactor
    void OnAllyActiveChanged(AAlly* allyRef, bool isActive);
    void OnHeroActiveChanged(ABaseHero* heroRef, bool isActive);
    void OnSummonActiveChanged(ASummon* summonRef, bool isActive);
 
+<<<<<<< HEAD
+=======
+   void SetFocusedUnit(AUnit* newFocusedUnit);
+
+>>>>>>> componentrefactor
    /** How much squeezies we have (that's the currency name... for now) */
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Meta = (AllowPrivateAccess = true))
    int money;

@@ -1,13 +1,14 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "StoreInventory.h"
 #include "UserInput.h"
 #include "UI/HUDManager.h"
+<<<<<<< HEAD
 
 #include "QuestManager.h"
 
 #include "UI/UserWidgets/RTSIngameWidget.h"
+=======
+>>>>>>> componentrefactor
 #include "Items/HeroInventory.h"
 
 #include "BasePlayer.h"
@@ -15,6 +16,7 @@
 #include "WorldObjects/ShopNPC.h"
 #include "ItemManager.h"
 
+<<<<<<< HEAD
 #include "ItemDelegateStore.h"
 
 const FText UStoreInventory::NotEnoughItemsText       = NSLOCTEXT("HelpMessages", "MisisngItems", "Missing required items for trade");
@@ -83,16 +85,41 @@ bool UStoreInventory::EnoughFunds(int numPurchasing) const
                URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NotEnoughItemsText);
                return false;
             }
-         }
-      }
-      return true;
-   }
-   URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NotEnoughMoneyText);
-   return false;
+=======
+#include "ItemDelegateContext.h"
+#include "UIDelegateContext.h"
+
+void UStoreInventory::NativeOnInitialized()
+{
+   Super::NativeOnInitialized();
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnItemPurchased().AddUObject(this, &UStoreInventory::OnItemPurchased);
 }
 
 bool UStoreInventory::OnWidgetAddToViewport_Implementation()
 {
+   if(ABaseHero* blockerHero = CPC->GetBasePlayer()->heroInBlockingInteraction)
+   {
+      if(blockerHero->GetCurrentInteractable())
+      {
+         shopkeeper = Cast<AShopNPC>(CPC->GetBasePlayer()->heroInBlockingInteraction->GetCurrentInteractable());
+         if(shopkeeper)
+         {
+            SetBackPack(shopkeeper->GetItemsToSell());
+            return Super::OnWidgetAddToViewport_Implementation();
+>>>>>>> componentrefactor
+         }
+      }
+   }
+<<<<<<< HEAD
+   URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NotEnoughMoneyText);
+=======
+>>>>>>> componentrefactor
+   return false;
+}
+
+void UStoreInventory::OnItemPurchased(const ABaseHero* heroRef, const FBackpackUpdateResult& addItemResult, const TArray<FBackpackUpdateResult>& removeItemsResults)
+{
+<<<<<<< HEAD
    shopkeeper = Cast<AShopNPC>(CPC->GetBasePlayer()->heroInBlockingInteraction->GetCurrentInteractable());
    if(shopkeeper) {
       SetBackPack(shopkeeper->itemsToSellBackpack);
@@ -123,6 +150,16 @@ void UStoreInventory::UseItemAtInventorySlot_Implementation(int32 iSlot)
       } else
          hudManagerRef->ShowInputBox("OnItemsPurchased", this, confirmTitleText, ensurePurchaseSingleText);
    }
+=======
+   TSet<int> updatedSlotIndices;
+   updatedSlotIndices.Append(addItemResult.updatedBackpackIndices);
+   for(const FBackpackUpdateResult& removeItemsResult : removeItemsResults)
+   {
+      updatedSlotIndices.Append(removeItemsResult.updatedBackpackIndices);
+   }
+
+   ReloadSlots(updatedSlotIndices);
+>>>>>>> componentrefactor
 }
 
 void UStoreInventory::NativeOnInitialized()

@@ -1,45 +1,86 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "QuestListSlot.h"
-#include "QuestList.h"
-#include "RTSGameMode.h"
-#include "../QuestManager.h"
-#include "SubGoalWidget.h"
+#include "QuestListSlotGoalEntry.h"
+#include "TextBlock.h"
 #include "../Quest.h"
 
-void UQuestListSlot::SelectSubGoal(int subGoalIndex)
+void UQuestListSlot::NativeOnInitialized()
 {
-   if (subGoalIndex >= 0 && subGoalIndex < subGoalWidgets.Num() && IsValid(subGoalWidgets[subGoalIndex])) {
-      selectedSubGoal = subGoalWidgets[subGoalIndex];
-      selectedSubGoal->ToggleEnabled(true);
-      selectedGoalIndex = selectedSubGoal->GetGoalIndex();
-      gameModeRef->GetQuestManager()->OnSwitchSubGoal();
-   } else // if this index is not an index of a current subgoal of our quest (like if you forget to setup starting subgoals)
+   Super::NativeOnInitialized();
+
+   if(GetAssignedQuest())
    {
-      selectedSubGoal->ToggleEnabled(false);
-      selectedSubGoal   = nullptr;
-      selectedGoalIndex = -1;
+      const FQuestInfo& questInfo = GetAssignedQuest()->GetQuestInfo();
+      Text_QuestName->SetText(GetAssignedQuest()->GetQuestInfo().name);
+
+      FLinearColor questTitleColor;
+      switch(GetAssignedQuest()->GetQuestInfo().questCategory)
+      {
+         case EQuestCategory::Event: questTitleColor = FLinearColor(0.63, 0.18, 0.57, 1);
+            break;
+         case EQuestCategory::MainQuest: questTitleColor = FLinearColor(0.20, 0.48, 0.57, 1);
+            break;
+         case EQuestCategory::SideQuest: questTitleColor = FLinearColor(0.30, 0.58, 0.29, 1);
+            break;
+      }
+
+      Text_QuestName->SetColorAndOpacity(questTitleColor);
    }
 }
 
 void UQuestListSlot::RemoveSubGoalWidget(int goalIndex)
 {
-   for (USubGoalWidget* subGoalWidg : subGoalWidgets) {
-      if (subGoalWidg->GetGoalIndex() == goalIndex) {
-         subGoalWidg->RemoveFromParent();
-         return;
+   UQuestListSlotGoalEntry* goalEntryToRemove = GetGoalEntryWithGoalIndex(goalIndex);
+
+   if(goalEntryToRemove)
+   {
+      goalEntryToRemove->RemoveFromParent();
+      if(selectedGoalIndex == goalIndex)
+      {
+         selectedGoalIndex = INDEX_NONE;
       }
    }
 }
 
-bool UQuestListSlot::IsCurrentQuest()
+void UQuestListSlot::OnSubgoalSelected(AQuest* quest, int goalIndex)
 {
-   if (assignedQuest == gameModeRef->GetQuestManager()->questListRef->currentlySelectedQuest) return true;
-   return false;
+   if(GetAssignedQuest() == quest)
+   {
+      if(selectedGoalIndex != INDEX_NONE)
+      {
+         UQuestListSlotGoalEntry* selectedSubGoal = GetGoalEntryWithGoalIndex(selectedGoalIndex);
+         if(selectedSubGoal)
+         {
+            selectedSubGoal->ToggleEnabled(false);
+         }
+      }
+      selectedGoalIndex = goalIndex;
+   }
 }
 
-UQuestManager* UQuestListSlot::GetQuestManagerRef() const
+void UQuestListSlot::OnSubgoalCompleted(AQuest* quest, int goalIndex)
 {
-   return gameModeRef->GetQuestManager();
+   if(quest == GetAssignedQuest())
+   {
+      RemoveSubGoalWidget(goalIndex);
+   }
+}
+
+UQuestListSlotGoalEntry* UQuestListSlot::GetGoalEntryWithGoalIndex(int goalIndexToSearchFor) const
+{
+   const auto pred  = [goalIndexToSearchFor, this](UQuestListSlotGoalEntry* goalEntry)
+   {
+      // Since we only store the goal inside the quest list slot, we have to find what it's goal index is inside the list of subgoals
+      const int slotGoalIndex = goalEntry->GetCorrespondingGoalIndex(GetAssignedQuest());
+      // Then we try to match it with the index we're looking for
+      return slotGoalIndex == goalIndexToSearchFor;
+   };
+   
+   const int index = subgoalWidgets.IndexOfByPredicate(pred);
+   
+   if(index != INDEX_NONE)
+   {
+      return subgoalWidgets[index];
+   }
+   return nullptr;
 }

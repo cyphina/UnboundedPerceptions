@@ -4,18 +4,16 @@
 #include "UI/Slots/ActionSlot.h"
 #include "ShopSlot.generated.h"
 
-/**
- * Slot we press to buy and sell items!
- */
-
 struct FItemPrice;
 
+/**
+* Slot we press to buy and sell items!
+*/
 UCLASS()
 class MYPROJECT_API UShopSlot : public UActionSlot
 {
    GENERATED_BODY()
-
-   void OnBtnClick() override;
+   
    void ShowDesc(UToolTipWidget* tooltip) override;
 
    FText MakeItemPriceText(const FItemPrice& price) const;

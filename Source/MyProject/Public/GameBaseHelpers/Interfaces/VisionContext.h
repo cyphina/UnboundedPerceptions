@@ -16,6 +16,14 @@ class IVisionContext
    GENERATED_BODY()
 
  public:
+<<<<<<< HEAD
    FORCEINLINE virtual const TSet<AUnit*>& GetVisibleEnemies() const     = 0;
    FORCEINLINE virtual const TSet<AUnit*>& GetVisiblePlayerUnits() const = 0;
+=======
+   FORCEINLINE virtual const TArray<AUnit*>& GetVisibleEnemies() const     = 0;
+   FORCEINLINE virtual const TArray<AUnit*>& GetVisiblePlayerUnits() const = 0;
+
+   virtual void StartVisionChecks() = 0;
+   virtual void StopVisionChecks()  = 0;
+>>>>>>> componentrefactor
 };

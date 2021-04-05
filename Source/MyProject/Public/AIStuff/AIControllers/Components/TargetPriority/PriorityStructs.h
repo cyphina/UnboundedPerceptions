@@ -1,4 +1,8 @@
 ﻿#pragma once
+<<<<<<< HEAD
+=======
+#include "GameplayTags.h"
+>>>>>>> componentrefactor
 
 class UEnvQueryTest;
 

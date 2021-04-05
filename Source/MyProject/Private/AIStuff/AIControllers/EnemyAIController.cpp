@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "EnemyAIController.h"
 
@@ -8,7 +6,11 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 
+<<<<<<< HEAD
 AEnemyAIController::AEnemyAIController()
+=======
+AEnemyAIController::AEnemyAIController(const FObjectInitializer& ObjectInitializer) : AUnitController(ObjectInitializer)
+>>>>>>> componentrefactor
 {
 }
 

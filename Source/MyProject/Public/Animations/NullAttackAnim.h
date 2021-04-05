@@ -11,7 +11,11 @@
  * If the animation represents a swing of the sword, the hit notify represents when the sword touches the enemy.
  */
 UCLASS()
+<<<<<<< HEAD
 class MYPROJECT_API UNullAttackAnim : public UAnimInstance, public IAttackAnim
+=======
+class MYPROJECT_API UNullAttackAnim : public UObject, public IAttackAnim
+>>>>>>> componentrefactor
 {
    GENERATED_BODY()
 
@@ -19,6 +23,7 @@ class MYPROJECT_API UNullAttackAnim : public UAnimInstance, public IAttackAnim
    /** By default the parent class looks for a mesh if we don't have one so we should be fine to set this */
    UNullAttackAnim();
 
+<<<<<<< HEAD
    void          PlayAttackAnimation(float playRate) override;
    void          StopAttackAnimation() override;
    FOnHitNotify& OnAttackNotify() override { return OnAttackNotifyEvent; }
@@ -29,6 +34,18 @@ class MYPROJECT_API UNullAttackAnim : public UAnimInstance, public IAttackAnim
 	
    void  SetupNotifyEvent(float notifyTime);
 	
+=======
+   void PlayAttackAnimation(ACharacter* characterToPlayMontageOn, float playRate) override;
+   void StopAttackAnimation(ACharacter* characterToStopMontageOn) override;
+
+   FOnHitNotify*          OnAttackNotify(ACharacter* characterToNotify) override { return &OnAttackNotifyEvent; }
+   FOnAttackAnimFinished* OnAttackAnimFinished() override { return &OnAttackAnimFinishedEvent; }
+
+   float GetMockAnimationLength() const;
+
+   void SetMockAnimationLength(float newLength);
+
+>>>>>>> componentrefactor
    /** Requires us to create a new timeline since there's nothing in FTimeline's API to delete an event*/
    void SetAttackEventTime(float newTime);
 
@@ -39,9 +56,25 @@ class MYPROJECT_API UNullAttackAnim : public UAnimInstance, public IAttackAnim
    UFUNCTION()
    void AttackNotify() override;
 
+<<<<<<< HEAD
    void NativeUpdateAnimation(float DeltaSeconds) override;
 
  private:
    FOnHitNotify OnAttackNotifyEvent;
    FTimeline    mockAnimationTimeline;
+=======
+   void SetupHitTimer();
+
+ private:
+   FOnHitNotify          OnAttackNotifyEvent;
+   FOnAttackAnimFinished OnAttackAnimFinishedEvent;
+
+   /** Little longer than hit timer to emulate backswing */
+   FTimerHandle mockAnimationTimer;
+
+   FTimerHandle hitNotifyTimer;
+
+   float hitNotifyTime;
+   float timelineLength;
+>>>>>>> componentrefactor
 };

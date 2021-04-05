@@ -19,10 +19,10 @@ EBTNodeResult::Type UBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& ownerCom
    myMemory->AICon               = Cast<AAIController>(ownerComp.GetAIOwner());
    myMemory->patrolComp          = myMemory->AICon->FindComponentByClass<UPatrolComponent>();
 
-   if(myMemory->AICon && myMemory->patrolComp->patrolPoints.Num() > 0) {
+   if(myMemory->AICon && myMemory->patrolComp->GetPatrolPoints().Num() > 0) {
       UBlackboardComponent* blackboardComp = ownerComp.GetBlackboardComponent();
       if(blackboardComp) {
-         if(myMemory->patrolComp->patrolPoints.Num() > 0) {
+         if(myMemory->patrolComp->GetPatrolPoints().Num() > 0) {
             return PatrolToNextLocation(ownerComp, nodeMemory);
          }
       }
@@ -53,7 +53,6 @@ uint16 UBTTask_Patrol::GetInstanceMemorySize() const
 
 void UBTTask_Patrol::OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, FName Message, int32 RequestID, bool bSuccess)
 {
-   // Line 84 - BTTaskNoded.cpp shows that bSuccess is the message status for whathever message triggers this
    if(!bSuccess)
    {
       UE_LOG(LogBehaviorTree, Warning, TEXT("Problem patrolling to location"));

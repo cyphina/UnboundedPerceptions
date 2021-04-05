@@ -30,7 +30,7 @@ If you'd like to see the story visit the blog link above. I haven't uploaded the
 
 ## Play the demo online
 
-You can play a demo online at https://cyphina.itch.io/unbounded-perceptions. I may have not posted the latest version online, but i'm in
+You can play a demo online at https://cyphina.itch.io/unbounded-perceptions. I may have not posted the latest version online.
 
 ## Next steps
 

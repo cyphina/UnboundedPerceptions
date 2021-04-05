@@ -1,13 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
-#include "CoreMinimal.h"
-#include "BehaviorTree/BTTaskNode.h"
+#include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "BTTask_AttackWhileMove.generated.h"
 
 /**
- * Task that moves a target but continuously attacks the enemy if the target is in range while moving
+ * Use only on enemies ai!!!
+ * Task that moves a target but continuously attacks (executing the custom attack execution in the unit controller) the enemy if the target is in range while moving.
+ * Completely ignores the targeted attack protocol, meaning we need to manually setup delay between attacks.
  */
 
 class AUnitController;
@@ -18,7 +17,7 @@ struct FBTAttackMoveMemory {
 };
 
 UCLASS()
-class MYPROJECT_API UBTTask_AttackWhileMove : public UBTTaskNode
+class MYPROJECT_API UBTTask_AttackWhileMove : public UBTTask_BlackboardBase
 {
    GENERATED_BODY()
 

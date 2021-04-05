@@ -10,7 +10,11 @@ class MYPROJECT_API UFogOfWarComponent : public USphereComponent
 {
    GENERATED_BODY()
 
+<<<<<<< HEAD
  public:
+=======
+public:
+>>>>>>> componentrefactor
    UFogOfWarComponent();
 
    /** Sorts the corner points, adds points to make visibility polygon shape approximate a circle,
@@ -19,10 +23,17 @@ class MYPROJECT_API UFogOfWarComponent : public USphereComponent
 
    const TArray<FVector>& GetVisionPolygonVertices() const { return visionPolygonVertices; }
 
+<<<<<<< HEAD
  protected:
    void BeginPlay() override;
 
  private:
+=======
+protected:
+   void BeginPlay() override;
+
+private:
+>>>>>>> componentrefactor
    /**
     * @brief When we overlap an obstacle, track the corners do we know how to deform the FOW around it.
     */
@@ -45,8 +56,14 @@ class MYPROJECT_API UFogOfWarComponent : public USphereComponent
     * @brief Used to add corners to be taken into account when drawing visibility polygon
     */
    UFUNCTION()
+<<<<<<< HEAD
    void OnBeginOverlap(UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep,
                        const FHitResult& sweepRes);
+=======
+   void OnBeginOverlap
+   (UPrimitiveComponent* overlappedComponent, AActor* otherActor, UPrimitiveComponent* otherComponent, int otherBodyIndex, bool fromSweep,
+    const FHitResult&    sweepRes);
+>>>>>>> componentrefactor
 
    /**
     * @brief used to remove corners of being visibility checked (used to draw visibility polygon)

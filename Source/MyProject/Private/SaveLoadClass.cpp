@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "SaveLoadClass.h"
 
@@ -23,8 +21,11 @@
 #include "RTSGameMode.h"
 #include "MyGameInstance.h"
 #include "UpStatComponent.h"
+<<<<<<< HEAD
 
 CSV_DEFINE_CATEGORY(UpLevelLoading, false);
+=======
+>>>>>>> componentrefactor
 
 USaveLoadClass::~USaveLoadClass()
 {
@@ -131,7 +132,11 @@ void USaveLoadClass::SetupSaveHeroData()
          for(TSubclassOf<UMySpell> spell : heroRef->GetAbilitySystemComponent()->GetAbilities()) {
             // TODO: Properly setup namespace and keys for each spell in table
             if(spell.GetDefaultObject())
+<<<<<<< HEAD
                heroesSaveData[i].spellIDs.Add(spell.GetDefaultObject()->spellDefaults.id);
+=======
+               heroesSaveData[i].nameTags.Add(spell.GetDefaultObject()->GetSpellDefaults().nameTag);
+>>>>>>> componentrefactor
          }
 
          heroRef->GetBackpack().SaveBackpack(heroesSaveData[i].backpackInfo);
@@ -197,7 +202,7 @@ void USaveLoadClass::SetupAlliedUnits()
       if(AAlly* spawnedNPCAlly = UpResourceManager::FindTriggerObjectInWorld<AAlly>(*finishedTalkNPC.name.ToString(), controllerRef->GetWorld())) {
          spawnedNPCAlly->SetActorTransform(finishedTalkNPC.actorTransform);
          SetupBaseCharacter(spawnedNPCAlly, finishedTalkNPC.baseCSaveInfo);
-         spawnedNPCAlly->GetUnitController()->Stop();
+         spawnedNPCAlly->GetUnitController()->StopCurrentAction();
       } else {
          FAssetRegistryModule& assetReg = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
          // TArray<FAssetData> allyAssets;
@@ -216,13 +221,18 @@ void USaveLoadClass::SetupAlliedUnits()
       if(ABaseHero* spawnedHero = UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(*heroSaveData.allyInfo.name.ToString(), controllerRef->GetWorld())) {
          spawnedHero->SetActorTransform(heroSaveData.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedHero, heroSaveData.allyInfo.baseCSaveInfo);
+<<<<<<< HEAD
          for(int i = 0; i < heroSaveData.spellIDs.Num(); ++i) {
             spawnedHero->GetAbilitySystemComponent()->SetSpellAtSlot(USpellDataManager::GetData().GetSpellClass(heroSaveData.spellIDs[i]), i);
+=======
+         for(int i = 0; i < heroSaveData.nameTags.Num(); ++i) {
+            spawnedHero->GetAbilitySystemComponent()->SetSpellAtSlot(USpellDataManager::GetData().GetSpellClass(heroSaveData.nameTags[i]), i);
+>>>>>>> componentrefactor
          }
          spawnedHero->attPoints = heroSaveData.attPoints;
          spawnedHero->SetCurrentExp(heroSaveData.currentExp);
          spawnedHero->expForLevel = heroSaveData.expToNextLevel;
-         spawnedHero->GetUnitController()->Stop();
+         spawnedHero->GetUnitController()->StopCurrentAction();
 
          // Load items into backpack
          spawnedHero->backpack->LoadBackpack(heroSaveData.backpackInfo);
@@ -232,8 +242,13 @@ void USaveLoadClass::SetupAlliedUnits()
              assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/Allies") + heroSaveData.allyInfo.name.ToString()));
          spawnedHero = controllerRef->GetWorld()->SpawnActorDeferred<ABaseHero>(heroAsset.GetAsset()->GetClass(), heroSaveData.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedHero, heroSaveData.allyInfo.baseCSaveInfo);
+<<<<<<< HEAD
          for(int i = 0; i < heroSaveData.spellIDs.Num(); ++i) {
             spawnedHero->GetAbilitySystemComponent()->SetSpellAtSlot(USpellDataManager::GetData().GetSpellClass(heroSaveData.spellIDs[i]), i);
+=======
+         for(int i = 0; i < heroSaveData.nameTags.Num(); ++i) {
+            spawnedHero->GetAbilitySystemComponent()->SetSpellAtSlot(USpellDataManager::GetData().GetSpellClass(heroSaveData.nameTags[i]), i);
+>>>>>>> componentrefactor
          }
          spawnedHero->attPoints = heroSaveData.attPoints;
          spawnedHero->SetCurrentExp(heroSaveData.currentExp);
@@ -252,7 +267,7 @@ void USaveLoadClass::SetupAlliedUnits()
          spawnedSummon->SetActorTransform(summon.allyInfo.actorTransform);
          SetupBaseCharacter(spawnedSummon, summon.allyInfo.baseCSaveInfo);
          spawnedSummon->timeLeft = summon.duration;
-         spawnedSummon->GetUnitController()->Stop();
+         spawnedSummon->GetUnitController()->StopCurrentAction();
       } else {
          FAssetRegistryModule& assetReg = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
          FAssetData summonAsset = assetReg.Get().GetAssetByObjectPath(*(FString("/Game/RTS_Tutorial/Blueprints/Actors/WorldObjects/") + summon.allyInfo.name.ToString()));
@@ -339,7 +354,7 @@ bool USaveLoadClass::SaveToFilePath(const FString& filePath)
       return true;
    }
 
-   // Free Binary ARray
+   // Free Binary Array
    binaryArray.FlushCache();
    binaryArray.Empty();
    controllerRef->ClientMessage("File Could Not Be Saved!", NAME_None, 2.f);

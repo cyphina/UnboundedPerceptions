@@ -1,13 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
-#include "CoreMinimal.h"
 #include "EnvironmentQuery/EnvQueryTest.h"
 #include "EnvQueryTest_IsEnemy.generated.h"
 
 /**
- *
+ * Used to test if the things inside our query generator are enemy units or not. We already have the ability to create generates that filter for enemies, but this may be a good test for certain spells
+ * that can target allies and enemies.
  */
 UCLASS()
 class MYPROJECT_API UEnvQueryTest_IsEnemy : public UEnvQueryTest

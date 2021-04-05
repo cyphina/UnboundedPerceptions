@@ -1,33 +1,45 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "BackpackStructs.h"
 #include "Items/Inventory.h"
 #include "StoreInventory.generated.h"
-
-/**
- * Inventory for shops
- */
 
 class AShopNPC;
 class UBackpack;
 struct FMyItem;
 struct FItemPrice;
 
+/**
+* Inventory for shops to buy things in game for your units!
+*/
 UCLASS()
 class MYPROJECT_API UStoreInventory : public UInventory
 {
    GENERATED_BODY()
 
 public:
+<<<<<<< HEAD
    UStoreInventory();
 
    UFUNCTION()
    AShopNPC* GetShopkeeper() const { return shopkeeper; }
+=======
+   UFUNCTION()
+   AShopNPC* GetShopkeeper() const { return shopkeeper; }
+   
+protected:
+   void NativeOnInitialized() override;
+   bool OnWidgetAddToViewport_Implementation() override;
+
+private:
+   void OnItemPurchased(const ABaseHero* heroRef, const FBackpackUpdateResult& addItemResult, const TArray<FBackpackUpdateResult>& removeItemsResults);
+>>>>>>> componentrefactor
 
    void UseItemAtInventorySlot_Implementation(int32 iSlot) override;
 
+<<<<<<< HEAD
 protected:
    void NativeOnInitialized() override;
    
@@ -61,4 +73,7 @@ private:
    int         itemSlot  = -1;
    FItemPrice* itemPrice = nullptr;
    int         itemToBuy = -1;
+=======
+   AShopNPC* shopkeeper;
+>>>>>>> componentrefactor
 };

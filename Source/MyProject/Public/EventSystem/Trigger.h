@@ -17,7 +17,8 @@ class AUserInput;
 class ARTSGameMode;
 
 UENUM(BlueprintType)
-enum class ETriggerType : uint8 {
+enum class ETriggerType : uint8
+{
    /** Doesn't do anything */
    None,
    /** Given an NPC name (object 1), changes dialog of topic (value 1 (is fully qualified gameplaytag)) to dialog (value 2).  If (value2) empty, changes default dialog to dialogName
@@ -65,11 +66,15 @@ enum class ETriggerType : uint8 {
 
 ENUM_RANGE_BY_COUNT(ETriggerType, static_cast<uint8>(ETriggerType::TriggerCount));
 
-USTRUCT(BlueprintType, NoExport)
-struct FTriggerData {
+USTRUCT(BlueprintType)
+struct FTriggerData
+{
+   GENERATED_BODY()
+
    FTriggerData();
+
    FTriggerData(bool isEnabled, ETriggerType trigType, int numberOfCalls, TArray<FString> triggerObj, TArray<FString> triggerVals) :
-       enabled(isEnabled), triggerType(trigType), numCalls(numberOfCalls), triggerObjects(triggerObj), triggerValues(triggerVals)
+      enabled(isEnabled), triggerType(trigType), numCalls(numberOfCalls), triggerObjects(triggerObj), triggerValues(triggerVals)
    {
    }
 
@@ -85,7 +90,7 @@ struct FTriggerData {
 
    /**Number of times this trigger can activate.  Set to -1 to be able to call this infinately*/
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Properties")
-   int numCalls = 1;
+   mutable int numCalls = 1;
 
    /**What objects this trigger will act on*/
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Parameters")
@@ -101,8 +106,13 @@ class MYPROJECT_API UTriggerManager : public UObject
 {
    GENERATED_BODY()
 
-   UTriggerManager() {}
-   ~UTriggerManager() {}
+   UTriggerManager()
+   {
+   }
+
+   ~UTriggerManager()
+   {
+   }
 
    /** Record for triggers on WorldObjects so they can be stored across levels
     * To store triggers on a WorldObject, just add the trigger to the map with the key being the WorldObject's name.
@@ -113,7 +123,11 @@ class MYPROJECT_API UTriggerManager : public UObject
    UPROPERTY()
    class AHUDManager* hudManagerRef;
 
+<<<<<<< HEAD
  public:
+=======
+public:
+>>>>>>> componentrefactor
    void Init();
 
    UPROPERTY()
@@ -132,9 +146,9 @@ class MYPROJECT_API UTriggerManager : public UObject
    @param triggerData - Reference to triggerData incase we need to care about the # times activated and such
    */
    UFUNCTION(BlueprintCallable, Category = "TriggerLibrary")
-   void ActivateTrigger(UPARAM(ref) FTriggerData& triggerData);
+   void ActivateTrigger(UPARAM(ref) const FTriggerData& triggerData);
 
- private:
+private:
    ///---Trigger helper functions---
    void ChangeDialog(const FTriggerData& tdata);
    void ModifyStats(const FTriggerData& tdata);
@@ -157,8 +171,15 @@ class MYPROJECT_API UTriggerManager : public UObject
    void PlaySequence(const FTriggerData& tdata);
 
    /**Function that triggers an effect when the trigger is activated*/
+<<<<<<< HEAD
    void TriggerEffect(FTriggerData& tdata);
 
    static int TriggerValueToNum(const FTriggerData& tdata, int triggerValueIndex) { return FCString::Atoi(*tdata.triggerValues[triggerValueIndex]); }
+=======
+   void TriggerEffect(const FTriggerData& tdata);
+
+   static int TriggerValueToNum(const FTriggerData& tdata, int triggerValueIndex) { return FCString::Atoi(*tdata.triggerValues[triggerValueIndex]); }
+
+>>>>>>> componentrefactor
    static int TriggerObjectToNum(const FTriggerData& tdata, int triggerObjectIndex) { return FCString::Atoi(*tdata.triggerObjects[triggerObjectIndex]); }
 };

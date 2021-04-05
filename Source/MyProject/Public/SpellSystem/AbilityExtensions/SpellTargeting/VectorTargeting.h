@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "SpellTargetingTypes.h"
+<<<<<<< HEAD
 
 // TODO: Implement this
 struct FUpSpellTargeting_Vector : public FUpSpellTargeting
@@ -11,6 +12,18 @@ struct FUpSpellTargeting_Vector : public FUpSpellTargeting
    }
 
    bool ManualTargetingCheck(const FHitResult& hitResult) const override { return false; }
+=======
+#include "VectorTargeting.generated.h"
+
+// TODO: Implement this
+UCLASS()
+class UUpSpellTargeting_Vector : public UUpSpellTargeting
+{
+   GENERATED_BODY()
+
+public:
+   bool ManualTargetingCheck(const AUnit* caster, const FHitResult& hitResult) const override { return false; }
+>>>>>>> componentrefactor
 
    void ClickResponse(const FHitResult& hitResult, TSubclassOf<UMySpell> spellClass, IManualTargetingController& sourceUnitController) const override
    {
@@ -26,7 +39,11 @@ struct FUpSpellTargeting_Vector : public FUpSpellTargeting
 
    bool ShouldTryAdjustPosition(AUnit* spellCaster) const override { return false; }
 
+<<<<<<< HEAD
    virtual UEnvQuery* GetDefaultQueryForTargetingScheme(UDA_DefaultTargetingScheme* targetingSchemes) const override { return nullptr; }
+=======
+   UEnvQuery* GetDefaultQueryForTargetingScheme(UDA_DefaultTargetingScheme* targetingSchemes) const override { return nullptr; }
+>>>>>>> componentrefactor
 
    void HandleQueryResult
    (TSharedPtr<FEnvQueryResult> result, AUnit* casterRef, USpellCastComponent* spellCastComponent,

@@ -50,7 +50,11 @@ class MYPROJECT_API URTSVisionComponent : public USphereComponent
    /** Radius of the vision sphere we use to filter what enemies we can see and what corners are included into the vision polygon
     * May be modified (spell might reduce vision or something). Then we'd have to somehow manage the lighting as well...
     */
+<<<<<<< HEAD
    UPROPERTY(BlueprintReadOnly, EditAnywhere, Meta = (AllowPrivateAccess = true))
+=======
+   UPROPERTY(BlueprintReadOnly, EditAnywhere, Meta = (AllowPrivateAccess = true), Category = "Unit Defaults")
+>>>>>>> componentrefactor
    int visionRadius = 1000;
 
    /** Tells us how many units have vision on us. When this drops to 0, we are no longer in consideration for a visible enemy.

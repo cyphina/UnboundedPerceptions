@@ -1,7 +1,6 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 #include "Item.h"
+#include "BackpackStructs.h"
 #include "Backpack.generated.h"
 
 struct FBackpackSaveInfo;
@@ -21,7 +20,11 @@ class MYPROJECT_API UBackpack : public UObject
    static const int INIT_CAPACITY      = 10;            // initial capacity
    int              backpack_max_items = INIT_CAPACITY; // max number of item slots (set to 40 in base hero)
 
+<<<<<<< HEAD
  public:
+=======
+public:
+>>>>>>> componentrefactor
    static UBackpack* CreateBackpack(UObject* outer, const int itemMax);
 
    /**Adds item to specified slot.  Returns number of items left (if new item is stackable and a place isn't found for it).
@@ -30,7 +33,7 @@ class MYPROJECT_API UBackpack : public UObject
     * @param slot - Index for the newItem
     */
    UFUNCTION(BlueprintCallable)
-   bool AddItemToSlot(FMyItem& newItem, int slot);
+   FBackpackUpdateResult AddItemToSlot(FMyItem newItem, int slot);
 
    /**
     * @brief Adds item to first available slot.  Returns number of items left (if new item is stackable and a place isn't found for it)
@@ -38,60 +41,83 @@ class MYPROJECT_API UBackpack : public UObject
     * @return Returns the index (or indices for stackable items) of the slot(s) the item was added to if successful, or returns an empty array.
     */
    UFUNCTION(BlueprintCallable)
+<<<<<<< HEAD
    bool AddItem(FMyItem& newItem);
    bool AddItem(FMyItem&& newItem);
+=======
+   FBackpackUpdateResult AddItem(FMyItem newItem);
+>>>>>>> componentrefactor
 
    /**Add several items to the backpack.  On sucess, the array passed in will be full of 0 count items. On fail there will be items with remaining counts > 0
     * @param newItems - Data about each new item to be added
     * @return - Returns the index (or indices for stackable items) of the slot(s) the item was added to if successful, or returns an empty array.
     */
    UFUNCTION(BlueprintCallable)
-   bool AddItems(TArray<FMyItem>& newItems);
+   TArray<FBackpackUpdateResult> AddItems(const TArray<FMyItem>& newItems);
 
    /**Remove an item at a certain slot
     * @param slot - Slot of the item to be removed
     * @param removeCount - How many should be removed
     */
    UFUNCTION(BlueprintCallable)
+<<<<<<< HEAD
    bool RemoveItemAtSlot(const int slot, const int removeCount = 0);
+=======
+   FBackpackUpdateResult RemoveItemAtSlot(const int slot, const int removeCount = 1);
+>>>>>>> componentrefactor
 
    /**Remove particular item from inventory
     * @param itemToRemove - Information pertaining to removal.  Stores count (how many to remove), and id (what kind of item to remove)
     */
    UFUNCTION(BlueprintCallable)
-   bool RemoveItem(const FMyItem& itemToRemove);
+   FBackpackUpdateResult RemoveItem(FMyItem itemToRemove);
 
    /**Attempts to remove items in itemsToRemove from the backpack.
     * @param itemsToRemove - Array listing what items to remove and how much of that item should be removed
     */
    UFUNCTION(BlueprintCallable)
-   bool RemoveItems(const TArray<FMyItem>& itemsToRemove);
+   TArray<FBackpackUpdateResult> RemoveItems(const TArray<FMyItem>& itemsToRemove);
 
    /**Empties a slot*/
    UFUNCTION(BlueprintCallable)
+<<<<<<< HEAD
    void EmptySlot(const int slot);
+=======
+   FBackpackUpdateResult EmptySlot(const int slot);
+>>>>>>> componentrefactor
 
    /**Clears the backpack*/
    UFUNCTION(BlueprintCallable)
    void EmptyAll();
 
-   /**Transfers an item from one backpack to another. This backpack receives the item in the first available slot
+   /**
+    * Transfers an item from a specific slot in another backpack to the first available slot in this one (like when we click on items in storage)
     * @param otherPack - Reference to backpack we're moving items from
     * @param transferSlot - Slot index of the item we're moving
-    * @return - Returns true if valid transfer occurred
+    * @return - Returns a pair containing first the removal result (from removing an item in other pack), then the add result (from adding an item to this pack)
     */
+<<<<<<< HEAD
    UFUNCTION(BlueprintCallable)
    bool TransferItems(UBackpack* otherPack, const int transferSlot);
+=======
+   TPair<FBackpackUpdateResult, FBackpackUpdateResult> TransferItems(UBackpack* otherPack, const int transferSlot);
+>>>>>>> componentrefactor
 
-   /**Swap two items location in seperate backpacks.  Swaps item from the other pack to this one
+   /**
+    * Swap two items location in separate backpacks.  Swaps item from the other pack to this one.
+    * Used when dragging and dropping items from one backpack slot to another, or from a backpack slot to a storage slot.
     * @param otherPack - The other backpack which swaps an item to us
     * @param slot1 - Index of the slot in this backpack which is going to be swapped
     * @param slot2 - Index of the slot in the other backpack which we're swapping to
     */
+<<<<<<< HEAD
    UFUNCTION(BlueprintCallable)
    void SwapItems(UBackpack* otherPack, const int slot1, const int slot2);
+=======
+   static void SwapItems(UBackpack* pack1, UBackpack* pack2, const int slot1, const int slot2);
+>>>>>>> componentrefactor
 
-   /**Item accessor
+   /** Gets information about the item in a slot. Returns a copy so it can't actually modify the backpack
     * @param slot - The slot of the item to grab
     * @return - Returns default FMyItem() if there was nothing in that slot
     */
@@ -124,19 +150,23 @@ class MYPROJECT_API UBackpack : public UObject
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Read Inventory Info")
    bool IsEmptySlot(const int slotIndex) const;
 
-   /**Refers to constant denoting how large a stack of items can go to so we can use it in BP*/
+   /** Refers to constant denoting how large a stack of items can go to so we can use it in BP*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Information")
    int MAX_STACK() const { return STACK_MAX; }
 
-   /**Max capacity of backpack*/
+   /** Max capacity of backpack*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Information")
    int GetItemMax() const { return backpack_max_items; }
 
+<<<<<<< HEAD
    /**Change max capacity of backpack. Can only increase max capacity (no decreasing at runtime) */
+=======
+   /** Change max capacity of backpack. Can only increase max capacity (no decreasing at runtime) */
+>>>>>>> componentrefactor
    UFUNCTION(BlueprintCallable, Category = "Inventory Information")
    void SetItemMax(const int newMax);
 
-   /**Returns how many items in inventory*/
+   /** Returns how many items in inventory*/
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Information")
    int Count() const;
 
@@ -148,6 +178,7 @@ class MYPROJECT_API UBackpack : public UObject
    /**Loads backpack information from a saving struct*/
    void LoadBackpack(FBackpackSaveInfo& backpackInfo);
 
+<<<<<<< HEAD
  protected:
    void BeginDestroy() override;
 
@@ -161,4 +192,19 @@ class MYPROJECT_API UBackpack : public UObject
    bool AddUnstackableItem(FMyItem& newItem);
 
    void OnItemUsed(const ABaseHero* heroUsingItem, const FMyItem& itemID);
+=======
+protected:
+   void BeginDestroy() override;
+
+private:
+   UBackpack();
+
+   /** Find the first empty slot in the backpack */
+   int FindEmptySlot() const;
+
+   FBackpackUpdateResult AddStackableItem(FMyItem itemToAdd);
+   FBackpackUpdateResult AddUnstackableItem(FMyItem itemToAdd);
+
+   bool                  IsItemStackable(int itemID);
+>>>>>>> componentrefactor
 };

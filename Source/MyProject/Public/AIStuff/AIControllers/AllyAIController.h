@@ -14,12 +14,15 @@
 
 class UManualSpellComponent;
 class USpellCastComponent;
+<<<<<<< HEAD
 struct FUpSpellTargeting;
+=======
+>>>>>>> componentrefactor
 class UTargetComponent;
 struct FGameplayAbilityTargetDataHandle;
 
 UENUM(BlueprintType)
-enum class AllyBehavioralMode : uint8 {
+enum class EAllyBehavioralMode : uint8 {
    ABM_Passive,   // Heal and buff allies but run away of enemies are nearby
    ABM_Defensive, // Avoid enemies, focus on healing and attack if the enemy isn't attacking back
    ABM_Neutral,   // Player controlled behavior (may change this to doing both controlled attack and defensive options)
@@ -49,6 +52,10 @@ class AAlly;
 
 /**
  * @brief See AUnitController comments for more details about AIControllers. This class is an AIController with functionality specific to all allied units
+<<<<<<< HEAD
+=======
+ * TODO: Componentize the ally behaviors and group behaviors
+>>>>>>> componentrefactor
  */
 UCLASS()
 class MYPROJECT_API AAllyAIController : public AUnitController
@@ -56,11 +63,19 @@ class MYPROJECT_API AAllyAIController : public AUnitController
    GENERATED_BODY()
 
  public:
+<<<<<<< HEAD
    AAllyAIController();
 
    /** Players who are tired of microing can switch to one of the various AI modes which vary in their offensive and defensive play. */
    UFUNCTION(BlueprintCallable, Category = "AI Mode")
    void SwitchAIModes(AllyBehavioralMode newMode);
+=======
+   AAllyAIController(const FObjectInitializer& ObjectInitializer);
+
+   /** Players who are tired of microing can switch to one of the various AI modes which vary in their offensive and defensive play. */
+   UFUNCTION(BlueprintCallable, Category = "AI Mode")
+   void SwitchAIModes(EAllyBehavioralMode newMode);
+>>>>>>> componentrefactor
 
    UFUNCTION(BlueprintCallable)
    UPatrolComponent* GetPatrolComponent() const { return patrolComp; }
@@ -74,6 +89,11 @@ class MYPROJECT_API AAllyAIController : public AUnitController
 
    UManualSpellComponent* GetManualSpellComponent() const { return manualSpellCastComponent; }
 
+<<<<<<< HEAD
+=======
+   EAllyBehavioralMode GetAllyBehaviorMode() const { return currentAllyBehavior; }
+   
+>>>>>>> componentrefactor
  protected:
    void OnPossess(APawn* InPawn) override;
    void OnUnPossess() override;
@@ -106,7 +126,11 @@ class MYPROJECT_API AAllyAIController : public AUnitController
 
    /** Used to change the AIs of our allied units (different modes range from aggressive to supporting styles) */
    UPROPERTY(BlueprintReadOnly, Category = "AI Mode", meta = (AllowPrivateAccess = "true"))
+<<<<<<< HEAD
    AllyBehavioralMode currentAllyBehavior;
+=======
+   EAllyBehavioralMode currentAllyBehavior;
+>>>>>>> componentrefactor
 
    UPROPERTY()
    AAlly* allyRef;

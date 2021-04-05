@@ -2,7 +2,10 @@
 
 #pragma once
 
+<<<<<<< HEAD
 #include "CoreMinimal.h"
+=======
+>>>>>>> componentrefactor
 #include "GameplayEffect.h"
 #include "DamageStructs.h"
 #include "RTSDamageEffect.generated.h"
@@ -21,8 +24,15 @@ class MYPROJECT_API URTSDamageEffect : public UGameplayEffect
 {
    GENERATED_BODY()
 
+<<<<<<< HEAD
    URTSDamageEffect();
 
+=======
+ public:
+   URTSDamageEffect();
+
+ private:
+>>>>>>> componentrefactor
    UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true", ExposeOnSpawn = "true"))
    FDamageScalarStruct damageVals;
 

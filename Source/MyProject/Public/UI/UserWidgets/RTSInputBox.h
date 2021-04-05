@@ -14,18 +14,26 @@ class MYPROJECT_API URTSInputBox : public UPopupWidget
 {
    GENERATED_BODY()
 
-   UPROPERTY()
-   class AHUDManager* hudManagerRef;
-
  public:
    UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = "true"))
    FString txtInput;
 
    void Confirm() override;
 
+<<<<<<< HEAD
    /** Look at my notes why accessors are important even in this seemingly trivial case. In particular, it's important for providing a debugging point. */
    FOnInputConfirmed& OnInputConfirmed() const { return OnInputConfirmedEvent; };
 
 private:
+=======
+   FOnInputConfirmed& OnInputConfirmed() const { return OnInputConfirmedEvent; };
+
+   void SetOnInputConfirmed(const FOnInputConfirmed& confirmationEvent) { OnInputConfirmedEvent = confirmationEvent; }
+   
+private:
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
+   
+>>>>>>> componentrefactor
    mutable FOnInputConfirmed OnInputConfirmedEvent;
 };

@@ -55,7 +55,11 @@ class MYPROJECT_API UDialogWheel : public UMyUserWidget
    void UpdateDialogWheel();
 
    UPROPERTY(BlueprintReadWrite, Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true), Category = "References")
+<<<<<<< HEAD
    UNPCSocialMenu* socialWindowRef;
+=======
+   UDialogUI* socialWindowRef;
+>>>>>>> componentrefactor
 
    UPROPERTY()
    class AHUDManager* hudManagerRef;

@@ -17,7 +17,7 @@ DECLARE_LOG_CATEGORY_EXTERN(MyProjectEditorVisualizations, All, All);
 
 class FMyProjectEditorVisualizationsModule : public IModuleInterface
 {
-public:
-	virtual void StartupModule() override;
-	virtual void ShutdownModule() override;
+ public:
+   virtual void StartupModule() override;
+   virtual void ShutdownModule() override;
 };

@@ -14,34 +14,46 @@ IMPLEMENT_HIT_PROXY(HPatrolProxy, HRTSVisProxy)
 #define LOCTEXT_NAMESPACE "PatrolVisualizerCommands"
 class FPatrolVisualizerCommands : public TCommands<FPatrolVisualizerCommands>
 {
-public:
-	FPatrolVisualizerCommands() : TCommands<FPatrolVisualizerCommands>(
-		TEXT("Patrol Point Commands"), LOCTEXT("PatrolComponentVisualizer", "Patrol Component Visualizer"),
-		NAME_None, FEditorStyle::GetStyleSetName()
-		) {}
+ public:
+   FPatrolVisualizerCommands() :
+       TCommands<FPatrolVisualizerCommands>(TEXT("Patrol Point Commands"), LOCTEXT("PatrolComponentVisualizer", "Patrol Component Visualizer"), NAME_None,
+                                            FEditorStyle::GetStyleSetName())
+   {
+   }
 
-	virtual void RegisterCommands() override
-	{
-		/**Command, Text appears on menu, and Long text for command*/
-		UI_COMMAND(DuplicateItem, "Duplicate", "Duplicate the current target.", EUserInterfaceActionType::Button, FInputChord());
-	}
+   virtual void RegisterCommands() override
+   {
+      /**Command, Text appears on menu, and Long text for command*/
+      UI_COMMAND(DuplicateItem, "Duplicate", "Duplicate the current target.", EUserInterfaceActionType::Button, FInputChord());
+   }
 
-	TSharedPtr<FUICommandInfo> DuplicateItem;
+   TSharedPtr<FUICommandInfo> DuplicateItem;
 };
 #undef LOCTEXT_NAMESPACE
-void FPatrolVisualizer::OnRegister()
-{
-	/**Bind commands to a function that will be called when selected*/
-	PatrolComponentVisualizerActions = MakeShareable(new FUICommandList);
-	const auto& commands = FPatrolVisualizerCommands::Get();
 
-	PatrolComponentVisualizerActions->MapAction(commands.DuplicateItem, FExecuteAction::CreateSP(this, &FPatrolVisualizer::OnDuplicateItem), EUIActionRepeatMode::RepeatDisabled);
+FPatrolVisualizer::FPatrolVisualizer()
+{
+   FPatrolVisualizerCommands::Register();
 }
 
-
-void FPatrolVisualizer::DrawVisualization(const UActorComponent* component, const FSceneView* view,
-	FPrimitiveDrawInterface* pdi)
+FPatrolVisualizer::~FPatrolVisualizer()
 {
+   FPatrolVisualizerCommands::Unregister();
+}
+
+void FPatrolVisualizer::OnRegister()
+{
+   /**Bind commands to a function that will be called when selected*/
+   PatrolComponentVisualizerActions = MakeShareable(new FUICommandList);
+   const auto& commands             = FPatrolVisualizerCommands::Get();
+
+   PatrolComponentVisualizerActions->MapAction(commands.DuplicateItem, FExecuteAction::CreateSP(this, &FPatrolVisualizer::OnDuplicateItem),
+                                               EUIActionRepeatMode::RepeatDisabled);
+}
+
+void FPatrolVisualizer::DrawVisualization(const UActorComponent* component, const FSceneView* view, FPrimitiveDrawInterface* pdi)
+{
+<<<<<<< HEAD
 	if (const UPatrolComponent* patrolComponent = Cast<const UPatrolComponent>(component))
 	{
 		const FLinearColor selectedColor = patrolComponent->EDITOR_SELECTED_PATROL_COLOR;
@@ -67,90 +79,114 @@ void FPatrolVisualizer::DrawVisualization(const UActorComponent* component, cons
 			pdi->SetHitProxy(NULL);
 		}
 	}
+=======
+   if(const UPatrolComponent* patrolComponent = Cast<const UPatrolComponent>(component))
+   {
+      const FLinearColor selectedColor   = patrolComponent->EDITOR_SELECTED_PATROL_COLOR;
+      const FLinearColor unselectedColor = patrolComponent->EDITOR_UNSELECTED_PATROL_COLOR;
+
+      const FVector location = patrolComponent->GetOwner()->GetActorLocation();
+
+      if(patrolComponent->GetPatrolPoints().Num() > 0)
+      {
+         FLinearColor color = (currentlySelectedPointIndex == 0) ? selectedColor : unselectedColor;
+         pdi->SetHitProxy(new HPatrolProxy(component, 0));
+         pdi->DrawLine(location, patrolComponent->GetPatrolPoints()[0], color, SDPG_Foreground);
+         pdi->DrawPoint(patrolComponent->GetPatrolPoints()[0], color, 20.f, SDPG_Foreground);
+         pdi->SetHitProxy(NULL);
+      }
+
+      for(int i = 1; i < patrolComponent->GetPatrolPoints().Num(); ++i)
+      {
+         FLinearColor color = (i == currentlySelectedPointIndex) ? selectedColor : unselectedColor;
+         pdi->SetHitProxy(new HPatrolProxy(component, i));
+         pdi->DrawLine(patrolComponent->GetPatrolPoints()[i - 1], patrolComponent->GetPatrolPoints()[i], color, SDPG_Foreground);
+         pdi->DrawPoint(patrolComponent->GetPatrolPoints()[i], color, 20.f, SDPG_Foreground);
+         pdi->SetHitProxy(NULL);
+      }
+   }
+>>>>>>> componentrefactor
 }
 
-bool FPatrolVisualizer::VisProxyHandleClick(FEditorViewportClient* inViewportClient, HComponentVisProxy* visProxy,
-	const FViewportClick& click)
+bool FPatrolVisualizer::VisProxyHandleClick(FEditorViewportClient* inViewportClient, HComponentVisProxy* visProxy, const FViewportClick& click)
 {
-	bool bEditing = false;
+   bool bEditing = false;
 
-	if (visProxy && visProxy->Component.IsValid())
-	{
-		bEditing = true;
-		const UPatrolComponent* patrolComponentRef = CastChecked<UPatrolComponent>(visProxy->Component.Get());
-		propertyPath = FComponentPropertyPath(patrolComponentRef);
-		
-		if (visProxy->IsA(HPatrolProxy::StaticGetType()))
-		{
-			HPatrolProxy* proxy = (HPatrolProxy*)visProxy;
-			currentlySelectedPointIndex = proxy->patrolIndex;
-		}
-	}
-	else
-	{
-		currentlySelectedPointIndex = INDEX_NONE;
-	}
-	return bEditing;
+   if(visProxy && visProxy->Component.IsValid())
+   {
+      bEditing                                   = true;
+      const UPatrolComponent* patrolComponentRef = CastChecked<UPatrolComponent>(visProxy->Component.Get());
+      propertyPath                               = FComponentPropertyPath(patrolComponentRef);
+
+      if(visProxy->IsA(HPatrolProxy::StaticGetType()))
+      {
+         HPatrolProxy* proxy         = (HPatrolProxy*)visProxy;
+         currentlySelectedPointIndex = proxy->patrolIndex;
+      }
+   }
+   else
+   {
+      currentlySelectedPointIndex = INDEX_NONE;
+   }
+   return bEditing;
 }
 
 bool FPatrolVisualizer::GetWidgetLocation(const FEditorViewportClient* viewportClient, FVector& outLocation) const
 {
-	if (IsValid(GetEditedPatrolComponent()) && currentlySelectedPointIndex != INDEX_NONE)
-	{
-		outLocation = GetEditedPatrolComponent()->patrolPoints[currentlySelectedPointIndex];
-		return true;
-	}
-	return false;
+   if(IsValid(GetEditedPatrolComponent()) && currentlySelectedPointIndex != INDEX_NONE)
+   {
+      outLocation = GetEditedPatrolComponent()->GetPatrolPoints()[currentlySelectedPointIndex];
+      return true;
+   }
+   return false;
 }
 
-bool FPatrolVisualizer::HandleInputDelta(FEditorViewportClient* viewportClient, FViewport* viewport,
-	FVector& deltaTranslate, FRotator& deltalRotate, FVector& deltaScale)
+bool FPatrolVisualizer::HandleInputDelta(FEditorViewportClient* viewportClient, FViewport* viewport, FVector& deltaTranslate, FRotator& deltalRotate, FVector& deltaScale)
 {
-	bool bHandled = false;
-	if (IsValid(GetEditedPatrolComponent()) && currentlySelectedPointIndex != INDEX_NONE)
-	{
-		GetEditedPatrolComponent()->patrolPoints[currentlySelectedPointIndex] += deltaTranslate;
-		bHandled = true;
-	}
-	return bHandled;
+   bool bHandled = false;
+   if(IsValid(GetEditedPatrolComponent()) && currentlySelectedPointIndex != INDEX_NONE)
+   {
+      FVector* patrolPointLocation = const_cast<FVector*>(&GetEditedPatrolComponent()->GetPatrolPoints()[currentlySelectedPointIndex]);
+      *patrolPointLocation += deltaTranslate;
+      bHandled = true;
+   }
+   return bHandled;
 }
 
-bool FPatrolVisualizer::HandleInputKey(FEditorViewportClient* viewportClient, FViewport* viewport, FKey key,
-	EInputEvent Event)
+bool FPatrolVisualizer::HandleInputKey(FEditorViewportClient* viewportClient, FViewport* viewport, FKey key, EInputEvent Event)
 {
-	bool bHandled = false;
-	if (key == EKeys::Delete)
-	{
-		if (IsValid(GetEditedPatrolComponent()) && currentlySelectedPointIndex != INDEX_NONE)
-		{
-			GetEditedPatrolComponent()->DeletePatrolPoint(currentlySelectedPointIndex);
-			bHandled = true;
-		}
-	}
-	return bHandled;
+   bool bHandled = false;
+   if(key == EKeys::Delete)
+   {
+      if(IsValid(GetEditedPatrolComponent()) && currentlySelectedPointIndex != INDEX_NONE)
+      {
+         GetEditedPatrolComponent()->DeletePatrolPoint(currentlySelectedPointIndex);
+         bHandled = true;
+      }
+   }
+   return bHandled;
 }
 
 TSharedPtr<SWidget> FPatrolVisualizer::GenerateContextMenu() const
 {
-	FMenuBuilder menuBuilder(true, PatrolComponentVisualizerActions);
-	{
-		menuBuilder.BeginSection("Patrol Point Actions");
-		{
-			menuBuilder.AddMenuEntry(FPatrolVisualizerCommands::Get().DuplicateItem);
-		}
-		menuBuilder.EndSection();
-	}
+   FMenuBuilder menuBuilder(true, PatrolComponentVisualizerActions);
+   {
+      menuBuilder.BeginSection("Patrol Point Actions");
+      {
+         menuBuilder.AddMenuEntry(FPatrolVisualizerCommands::Get().DuplicateItem);
+      }
+      menuBuilder.EndSection();
+   }
 
-	TSharedPtr<SWidget> menuWidget = menuBuilder.MakeWidget();
-	return menuWidget;
+   TSharedPtr<SWidget> menuWidget = menuBuilder.MakeWidget();
+   return menuWidget;
 }
 
 UPatrolComponent* FPatrolVisualizer::GetEditedPatrolComponent() const
 {
-	return Cast<UPatrolComponent>(propertyPath.GetComponent());
+   return Cast<UPatrolComponent>(propertyPath.GetComponent());
 }
 
 void FPatrolVisualizer::OnDuplicateItem()
 {
-
 }

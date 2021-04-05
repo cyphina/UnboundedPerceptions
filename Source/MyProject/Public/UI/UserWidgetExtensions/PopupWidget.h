@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -7,7 +5,7 @@
 #include "PopupWidget.generated.h"
 
 /**
- * Base class for any popup windows that ask for user input
+ * Base class for any popup windows (modals) that ask for user input
  */
 
 UCLASS()

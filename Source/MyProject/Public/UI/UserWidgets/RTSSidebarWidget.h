@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UI/UserWidgetExtensions/RTSBrowserWidgetBase.h"
-#include "MyAttributeSet.h"
+#include "RTSAttributeSet.h"
 #include "RTSSidebarWidget.generated.h"
 
 /**
@@ -49,29 +49,29 @@ class MYPROJECT_API URTSSidebarWidget : public URTSBrowserWidgetBase
     * @param bToggled - Did we select a single unit (then deselect others) or did we shift click
     */
    UFUNCTION()
-   void UpdateSingleHeroSelect(bool bToggled);
+   void UpdateSingleHeroSelect(AAlly* selectedALly);
 
    /** Updates the hero's health current value when it senses a change*/
    UFUNCTION()
-   void UpdateHeroHealth(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected);
+   void UpdateHeroHealth(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected);
 
    ///** Updates hero's mana value when it sees a change */
    UFUNCTION()
-   void UpdateHeroMana(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected);
+   void UpdateHeroMana(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected);
 
    UFUNCTION()
-   void UpdateHeroVitals(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected);
+   void UpdateHeroVitals(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected);
 
    /** Updates hero's base health value when it sees a change (either changing base value or current value)*/
    UFUNCTION()
-   void UpdateHeroMaxHealth(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected);
+   void UpdateHeroMaxHealth(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected);
 
    /** Updates hero's base mana value when it sees a change (either changing base value or current value)*/
    UFUNCTION()
-   void UpdateHeroMaxMana(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected);
+   void UpdateHeroMaxMana(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected);
 
    UFUNCTION()
-   void UpdateHeroMaxVitals(const FGameplayAttribute& attributeModified, float& newAttributeValue, AUnit* unitAffected);
+   void UpdateHeroMaxVitals(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected);
 
  private:
    /** Creates a JSON string used to update the browser to tell it we selected a single hero

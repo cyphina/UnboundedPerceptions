@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "GameFramework/Actor.h"
@@ -18,26 +16,24 @@ class AEnemy;
 class ANPC;
 class AGoalActor;
 class UNamedInteractableDecorator;
+struct FBackpackUpdateResult;
 
-UCLASS()
-class MYPROJECT_API UQuestMap : public UDataAsset
-{
-   GENERATED_BODY()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnQuestStarted, AQuest*, startedQuest);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnQuestCompleted, AQuest*, completedQuest);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnQuestFailed, AQuest*, failedQuest);
 
- public:
-   /**Map of classes from which we can activate quests from*/
-   UPROPERTY(EditAnywhere)
-   TMap<FGameplayTag, TSubclassOf<AQuest>> questClassList;
-};
+DECLARE_EVENT_TwoParams(AQuest, FOnSubgoalCompleted, AQuest*, int);
 
-// TODO: Add a delegate for if quest failed
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnQuestCompleted);
+DECLARE_EVENT_TwoParams(AQuest, FOnSubgoalUnlocked, AQuest*, int);
+
+DECLARE_EVENT_TwoParams(AQuest, FOnSubgoalUpdated, AQuest*, int);
 
 UCLASS(Blueprintable)
 class MYPROJECT_API UQuestManager : public UObject
 {
    GENERATED_BODY()
 
+<<<<<<< HEAD
  public:
  #if WITH_EDITOR
    void PostEditChangeProperty( struct FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -60,24 +56,27 @@ class MYPROJECT_API UQuestManager : public UObject
 
    UPROPERTY(BlueprintReadWrite, Category = "References")
    UQuestJournal* questJournalRef;
+=======
+public:
+   /**Add a new current quest.  Returns true on success, false on failure
+   * @param questClassToSpawn - Class of quest actor to spawn
+   */
+   UFUNCTION(BlueprintCallable, Category = "Quest Managing")
+   bool AddNewQuest(TSubclassOf<AQuest> questClassToSpawn);
+>>>>>>> componentrefactor
 
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Quest Managing")
+   AGoalActor* GetGoalActor() const { return currentGoalActor; }
+   
    /**
     *Map of quest GameplayTagName to quest class so we can add new quests via triggers
     */
    UPROPERTY(EditAnywhere)
    TMap<FGameplayTag, TSubclassOf<AQuest>> questClassList;
 
-   /**Actor that determies location of the quest*/
-   UPROPERTY(BlueprintReadWrite, Category = "References")
-   AGoalActor* currentGoalActor;
-
    /**List of all quests currently happening*/
    UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
-   TArray<AQuest*> quests;
-
-   /**Distance away from goalactor*/
-   UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
-   int currentDistance;
+   TArray<AQuest*> activeQuests;
 
    /**Completed quests*/
    UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
@@ -92,47 +91,72 @@ class MYPROJECT_API UQuestManager : public UObject
 
    /**Called when a quest is completed to unlock new quests or such*/
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+   FOnQuestStarted OnQuestStartedDelegate;
+   
+   /**Called when a quest is completed to unlock new quests or such*/
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnQuestCompleted OnQuestCompletedDelegate;
-
+   
+   FOnSubgoalCompleted& OnSubgoalCompleted() { return OnSubgoalCompletedEvent; }
+   FOnSubgoalUnlocked& OnSubgoalUnlocked() { return OnSubgoalUnlockedEvent; }
+   
    void Init();
 
-   /**Select a new quest in the quest list*/
-   UFUNCTION(BlueprintCallable, Category = "Quest Managing")
-   void SelectNewQuest(AQuest* quest);
+protected:
+#if WITH_EDITOR
+   void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+   
+   UPROPERTY(BlueprintReadWrite, Category = "References")
+   AUserInput* controllerRef;
 
-   /**Add a new current quest.  Returns true on success, false on failure
-    * @param questClassToSpawn - Class of quest actor to spawn
-    * @param forcedStart - Forces this quest to be selected in the quest journal
+   UPROPERTY(BlueprintReadWrite, Category = "References")
+   UQuestList* questListRef;
+
+   UPROPERTY(BlueprintReadWrite, Category = "References")
+   UQuestJournal* questJournalRef;
+
+private:
+   /**
+    *Updates map that maps quest classes to quest gameplay tags whenever we recompile the blueprint
     */
-   UFUNCTION(BlueprintCallable, Category = "Quest Managing")
-   bool AddNewQuest(TSubclassOf<AQuest> questClassToSpawn, bool forcedStart);
+   void UpdateQuestClassList();
 
-   /**Called when switching subgoals to change goal actor location and change UI*/
-   UFUNCTION(BlueprintCallable, Category = "Quest Managing")
-   void OnSwitchSubGoal();
-
-   /**Get distance to goal actor (distance marker)*/
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Quest Managing")
-   int GetDistanceToGoal();
-
-   /**Changes UI and data to match ending quest, and hands out rewards*/
-   UFUNCTION(BlueprintCallable, Category = "Quest Managing")
-   void EndQuest(AQuest* questToEnd);
-
-   /**Used to complete all goals that aren't finished when completing a quest*/
-   UFUNCTION(BlueprintCallable, Category = "Quest Managing")
-   void CompleteGoals();
-
-   /**Called when party leader moves to recalculate distance and move arrow around*/
-   UFUNCTION(BlueprintCallable, Category = "Callbacks")
-   void OnPartyLeaderMove();
-
-   /**Callback when enemy dies to check to see if this quest condition is fulfilled
+   /**
+    * Callback when enemy dies to check to see if this quest condition is fulfilled
     * Need callbacks here since we specifically need that parameter
     */
-   UFUNCTION(BlueprintCallable, Category = "Callbacks")
-   void OnEnemyDie(const AEnemy* enemyClass);
+   void OnEnemyDie(AUnit* deadUnit);
 
+   /**
+    * Changes UI and data to match ending quest, and hands out rewards
+    */
+   void OnQuestCompleted(AQuest* questToEnd);
+
+   /**
+    * @brief Callback when we talk to an NPC
+    * @param talkedToNPC - NPC we talked to.
+    * @param conversationTopic - If this is the default tag, then it means there was no conversation topic.
+    */
+   void OnTalkNPC(ANPC* talkedToNPC, FGameplayTag conversationTopic);
+
+   void OnItemPickedUp(const ABaseHero* heroPickingItem, const FBackpackUpdateResult& itemUpdateResult);
+
+   void OnItemPurchased
+   (const ABaseHero* purchasingHero, const FBackpackUpdateResult& addPurchasedItemResult, const TArray<FBackpackUpdateResult>& removePaymentItemsResults);
+
+<<<<<<< HEAD
+   /**Callback when enemy dies to check to see if this quest condition is fulfilled
+    * Need callbacks here since we specifically need that parameter
+=======
+   /**
+    *Callback when Interactable is successfully interacted with
+    * @param decoratorName - Name of the interactable with a "Named Decorator"
+>>>>>>> componentrefactor
+    */
+   void OnInteracted(TSubclassOf<AInteractableBase> interactableClass, const FText& decoratorName);
+
+<<<<<<< HEAD
    
    /**
     * @brief Callback when we talk to an NPC
@@ -143,8 +167,29 @@ class MYPROJECT_API UQuestManager : public UObject
    void OnTalkNPC(ANPC* talkedToNPC, const FGameplayTag& conversationTopic);
 
    void OnItemPickedUp(const ABaseHero* heroPickingItem, const FMyItem& newItem);
+=======
+   void RecalculateItemCountsForGoals(const FMyItem item);
 
-   /**Callback when Interactable is sucessfully interacted with*/
-   UFUNCTION(BlueprintCallable, Category = "Callbacks")
-   void OnInteracted(const UNamedInteractableDecorator* finishedInteractableDialog);
+   bool TurnInItemsFromGatherGoal(int gatherItemId, int numItemsToGather);
+   
+   void SetupWidgetReferences();
+
+   void CompleteSubgoal(AQuest* quest, int goalIndex);
+>>>>>>> componentrefactor
+
+   void OnSubgoalSwitched(AQuest* quest, int goalIndex);
+   
+   UPROPERTY()
+   class AHUDManager* hudManagerRef;
+
+   /**Actor that determines location of the quest*/
+   AGoalActor* currentGoalActor;
+   
+   int currentDistance;
+
+   FOnSubgoalCompleted OnSubgoalCompletedEvent;
+
+   FOnSubgoalUnlocked OnSubgoalUnlockedEvent;
+
+   FOnSubgoalUpdated OnSubgoalUpdatedEvent;
 };

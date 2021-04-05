@@ -2,7 +2,12 @@
 
 // Quantities used for determining skill power and stats
 UENUM(BlueprintType)
+<<<<<<< HEAD
 enum class EAttributes : uint8 {
+=======
+enum class EAttributes : uint8
+{
+>>>>>>> componentrefactor
    // Skill Damage
    Strength = 0,
    // Elemental Affinity, Elemental Resistance, PPC Shield
@@ -23,7 +28,12 @@ enum class EAttributes : uint8 {
 
 // Impactful qualities
 UENUM(BlueprintType)
+<<<<<<< HEAD
 enum class EUnitScalingStats : uint8 {
+=======
+enum class EUnitScalingStats : uint8
+{
+>>>>>>> componentrefactor
    Critical_Chance,
    Critical_Damage,
    Accuracy,
@@ -45,6 +55,10 @@ enum class EUnitScalingStats : uint8 {
    Poison_Aff,
    Blood_Aff,
    Ethereal_Aff,
+<<<<<<< HEAD
+=======
+   Cosmic_Aff,
+>>>>>>> componentrefactor
 
    // Resistances (these suffixes are used in statgraph so be weary of changing them)
    Physical_Resist,
@@ -60,13 +74,22 @@ enum class EUnitScalingStats : uint8 {
    Poison_Resist,
    Blood_Resist,
    Ethereal_Resist,
+<<<<<<< HEAD
+=======
+   Cosmic_Resist,
+>>>>>>> componentrefactor
 
    Count UMETA(Hidden)
 };
 
 // Battle resources
 UENUM(BlueprintType)
+<<<<<<< HEAD
 enum class EVitals : uint8 {
+=======
+enum class EVitals : uint8
+{
+>>>>>>> componentrefactor
    Health,
    Mana,
    Psyche,
@@ -79,12 +102,22 @@ enum class EVitals : uint8 {
 
 // Useful game mechanics
 UENUM(BlueprintType)
+<<<<<<< HEAD
 enum class EMechanics : uint8 {
    MovementSpeed, // max walking speed in ue4 is based off of centimeters per second.  Average person walks 5km in an hour, which is around 138 cm/s which is how max speed is measured
    AttackRange,
    WeaponPower,
    GlobalDamageModifier, // damage reduction modifier, 0 = no damage reduction, 100 = no damage received
 
+=======
+enum class EMechanics : uint8
+{
+   MovementSpeed, // max walking speed in ue4 is based off of centimeters per second.  Average person walks 5km in an hour, which is around 138 cm/s which is how max speed is measured
+   AttackRange,
+   WeaponPower,
+   GlobalDamageModifier, // damage reduction modifier, 0 = no damage reduction, -100 = no damage received, 100 = double damage taken
+   HealthRegenModifier, // Amplifes how much healing received. Positive means more healing received, negative means less.
+>>>>>>> componentrefactor
    Count UMETA(Hidden)
 };
 
