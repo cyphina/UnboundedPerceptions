@@ -7,6 +7,9 @@
 #include "ItemManager.h"
 #include "NPC.h"
 
+const FText UUpGoal::EmptyGoalArgText = NSLOCTEXT("Quest", "EmptyGoalArg", "(Empty-CDO-Placeholder)");
+const FVector FGoalStyleInfo::invalidGoalLocation = FVector(-66666, -66666, -66666);
+
 UUpGatherGoal::UUpGatherGoal()
 {
    const ConstructorHelpers::FObjectFinder<UDataTable> loadedItemTable(TEXT("/Game/RTS_Tutorial/Tables/ItemList"));

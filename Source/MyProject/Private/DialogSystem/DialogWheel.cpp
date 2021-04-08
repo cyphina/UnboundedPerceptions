@@ -14,6 +14,8 @@
 
 #include "NPCDelegateStore.h"
 
+const FName UDialogWheel::ROOT_DIALOG_NODE_NAME = "Dialog";
+
 UDialogWheel::UDialogWheel()
 {
 }

@@ -158,7 +158,7 @@ void UBPNode_CreateGameplayEffect::ExpandNode(FKismetCompilerContext& compilerCo
    static const FString periodParamName      = FString(TEXT("Period"));
    static const FString levelParamName       = FString(TEXT("Level"));
    static const FString elemParamName        = FString(TEXT("Elem"));
-   static const FString nameParamName        = FString(TEXT("Name"));
+   static const FString nameParamName        = FString(TEXT("EffectName"));
    static const FString assetTagsParamName   = FString(TEXT("AssetTags"));
 
    //Create pin we see when we get CreateGameplayEffect

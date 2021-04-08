@@ -16,6 +16,10 @@
 
 #define LOCTEXT_NAMESPACE "SpellbookSlot"
 
+const  FLinearColor USpellbookSlot::tooHighLevelSpellColor = FLinearColor(0.6, 0, 0.02, 1.0);
+const  FLinearColor USpellbookSlot::canLearnSpellColor    = FLinearColor(0.62, 0.61, 0, 1.0);
+const  FLinearColor USpellbookSlot::learnedSpellColor = FLinearColor::White;
+
 void USpellbookSlot::UpdateSlotColor()
 {
    const ABaseHero* heroRef   = GetHeroRef();

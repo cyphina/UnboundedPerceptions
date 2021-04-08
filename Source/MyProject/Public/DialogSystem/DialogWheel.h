@@ -60,7 +60,7 @@ class MYPROJECT_API UDialogWheel : public UMyUserWidget
    UPROPERTY()
    class AHUDManager* hudManagerRef;
 
-   static inline FName ROOT_DIALOG_NODE_NAME = "Dialog";
+   static const FName ROOT_DIALOG_NODE_NAME;
 
    /** These are the topics that can be seen due to being children of the currentlySelectedTopic*/
    TArray<FGameplayTagNode*> conversationTopicTagNodes;

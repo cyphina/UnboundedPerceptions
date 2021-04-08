@@ -28,6 +28,8 @@
 #include "AIModule/Classes/BehaviorTree/BlackboardComponent.h"
 #include "AIModule/Classes/BehaviorTree/BehaviorTreeComponent.h"
 
+const FText AAllyAIController::INVALID_TARGET_TEXT = NSLOCTEXT("Attacking", "InvalidTarget", "Cannot attack this target");
+
 AAllyAIController::AAllyAIController(const FObjectInitializer& ObjectInitializer) : AUnitController(ObjectInitializer)
 {
    SetActorTickInterval(0.2f);

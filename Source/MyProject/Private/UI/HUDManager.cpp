@@ -8,6 +8,7 @@
 #include "RTSGameState.h"
 #include "RTSIngameWidget.h"
 #include "RTSPawn.h"
+#include "SaveLoadMenu.h"
 #include "SpellBook.h"
 #include "StorageContainer.h"
 #include "StorageInventory.h"
@@ -120,7 +121,7 @@ void AHUDManager::SetupWidgetReferences()
    SetWidget(mainWidget->GetIngameWidget()->GetStorageHUD(), EHUDs::HS_Storage);
    SetWidget(mainWidget->GetIngameWidget()->GetShopHUD(), EHUDs::HS_Shop_General);
    SetWidget(mainWidget->GetIngameWidget()->GetExamineMenu(), EHUDs::HS_ExamineMenu);
-   SetWidget(mainWidget->GetIngameWidget()->GetShopHUD(), EHUDs::HS_SaveLoad);
+   SetWidget(mainWidget->GetSaveLoadMenu(), EHUDs::HS_SaveLoad);
    SetWidget(mainWidget->GetIngameWidget()->GetConfirmModal(), EHUDs::HS_Confirmation);
    SetWidget(mainWidget->GetIngameWidget()->GetInputModal(), EHUDs::HS_InputBox);
    SetWidget(mainWidget->GetIngameWidget()->GetChatBox(), EHUDs::HS_ChatBox);
@@ -169,6 +170,7 @@ void AHUDManager::HideHUD(EHUDs newState)
    if(currentlyDisplayedWidgetsBitSet[static_cast<uint8>(newState)]) // if our widget is already on screen, we probably pressed button to take it off
    {
       HideWidgetOnScreen(widgetToApply);
+      currentlyDisplayedWidgetsBitSet[static_cast<uint8>(newState)] = 0;
    }
 
    if(blockingWidget && blockingWidget == widgetToApply)

@@ -255,7 +255,7 @@ void URTSDamageCalculation::ShowDamageDealt(const FUpDamage& damageInfo)
          tRC->SetRelativeScale3D(FVector(2.f));
       }
 
-      tRC->SetTextRenderColor(USpellDataLibrary::elementalMap[damageInfo.element]);
+      tRC->SetTextRenderColor(USpellDataLibrary::GetElementalColorMap()[damageInfo.element]);
       tRC->SetHorizontalAlignment(EHTA_Center);
       tRC->SetVerticalAlignment(EVRTA_TextBottom);
    }

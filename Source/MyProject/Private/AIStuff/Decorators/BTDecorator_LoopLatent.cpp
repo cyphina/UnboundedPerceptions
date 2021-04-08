@@ -113,7 +113,9 @@ FString UBTDecorator_LoopLatent::GetStaticDescription() const
    }
 }
 
+#if WITH_EDITOR
 FName UBTDecorator_LoopLatent::GetNodeIconName() const
 {
    return FName("BTEditor.Graph.BTNode.Decorator.Loop.Icon");
 }
+#endif

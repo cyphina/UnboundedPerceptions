@@ -21,6 +21,7 @@ void UActionbar_MultiUnitPortrait::NativeOnInitialized()
    }
 }
 
+#if WITH_EDITOR
 void UActionbar_MultiUnitPortrait::ValidateCompiledDefaults(IWidgetCompilerLog& CompileLog) const
 {
    Super::ValidateCompiledDefaults(CompileLog);
@@ -29,6 +30,7 @@ void UActionbar_MultiUnitPortrait::ValidateCompiledDefaults(IWidgetCompilerLog& 
       CompileLog.Error(FText::Format(FText::FromString("{0} does not have a valid unit selection slot class set."), FText::FromString(GetName())));
    }
 }
+#endif
 
 void UActionbar_MultiUnitPortrait::RefreshDisplayedUnitImages()
 {

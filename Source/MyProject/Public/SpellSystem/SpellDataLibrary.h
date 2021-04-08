@@ -85,8 +85,40 @@ class MYPROJECT_API USpellDataLibrary : public UBlueprintFunctionLibrary
    UFUNCTION(BlueprintCallable, Meta = (DisplayName = "GetEffectNameTag"))
    static void RemoveEffectWtihNameTag(UAbilitySystemComponent* ASC, FGameplayTag EffectName, int StacksToRemove = -1);
 
-   static const FGameplayTagContainer      supportTags;   // List of tags support spells will have
-   static const FGameplayTagContainer      offensiveTags; // List of tags elemental spells will have
-   static const TMap<FGameplayTag, int>    purgeTagMap;   // Mapping of purge tags to how many effects a purge can attempt to dispel
-   static const TMap<FGameplayTag, FColor> elementalMap;  // Maps a gameplay tag representing an element to its corresponding color
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   static FGameplayTagContainer GetEffectNameTag();
+
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   static FGameplayTagContainer GetEffectElemTag();
+
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   static FGameplayTagContainer GetEffectRemoveableTag();
+
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   static FGameplayTagContainer GetEffectPseudoStackTag();
+
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   static FGameplayTag GetConfirmSpellTag();
+
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   static FGameplayTag GetConfirmSpellTargetTag();
+
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   static const FGameplayTagContainer& GetSupportTags();
+
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   static const FGameplayTagContainer& GetOffensiveTags();
+
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   static const TMap<FGameplayTag, int>& GetPurgeTagMap();
+
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   static const TMap<FGameplayTag, FColor>& GetElementalColorMap();
+
+ private:
+   const FGameplayTagContainer EffectNameTagFilter       = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.EffectName"));
+   const FGameplayTagContainer EffectElemTagFilter       = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Element"));
+   const FGameplayTagContainer EffectRemoveableTagFilter = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Removable"));
+   // Use this when we have multiple effects that have their own timers, but should be treated as a single effect (called pseudo-stackable effects)
+   const FGameplayTagContainer EffectPseudoStackTagFilter = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.ShowEffectsAsStack"));
 };

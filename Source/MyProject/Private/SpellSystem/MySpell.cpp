@@ -257,9 +257,9 @@ FGameplayEffectSpecHandle UMySpell::CreateGameplayEffectFromTableValues(TSubclas
    UAbilitySystemComponent*  abilityComp = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetActorInfo().AvatarActor.Get());
    FGameplayEffectSpecHandle effect      = MakeOutgoingGameplayEffectSpec(effectClass, GetAbilityLevel());
 
-   effect.Data->DynamicAssetTags.AddTag(GetElemTag());
-   effect.Data->DynamicAssetTags.AddTag(name);
-   effect.Data->DynamicAssetTags.AppendTags(assetTags);
+   effect.Data->DynamicGrantedTags.AddTag(GetElemTag());
+   effect.Data->DynamicGrantedTags.AddTag(name);
+   effect.Data->DynamicGrantedTags.AppendTags(assetTags);
    if(effect.Data->Def->DurationPolicy != EGameplayEffectDurationType::Instant)
    {
       effect.Data->Period = GetPeriod(abilityComp);

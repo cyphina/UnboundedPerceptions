@@ -28,6 +28,9 @@
 #include "UserInput.h"
 #include "Navigation/CrowdFollowingComponent.h"
 
+const FText AUnitController::FILLED_QUEUE_TEXT       = NSLOCTEXT("HelpMessages", "Queue", "Command Queue Filled!");
+const float AUnitController::SMALL_MOVE_IGNORE_RANGE = 50.f;
+
 AUnitController::AUnitController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
    SetActorTickInterval(0.f);
@@ -442,6 +445,7 @@ bool AUnitController::AdjustPosition(float range, AActor* targetActor)
       const AActor* previousMoveGoal = GetPathFollowingComponent()->GetMoveGoal();
       if(!previousMoveGoal || previousMoveGoal != targetActor)
       {
+         // const float targetActorRadius = targetActor->GetSimpleCollisionRadius();
          MoveToActor(targetActor, range, false, true, false);
          QueueTurnAfterMovement(targetActor);
       }

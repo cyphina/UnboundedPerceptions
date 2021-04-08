@@ -13,13 +13,16 @@ class MYPROJECT_API UUpFunctionLibrary : public UBlueprintFunctionLibrary
 {
    GENERATED_BODY()
 
-public:
-   UFUNCTION(BlueprintCallable, Category = "Trigger", meta=(WorldContext = "WorldContextObject"))
+ public:
+   UFUNCTION(BlueprintCallable, Category = "Trigger", meta = (WorldContext = "WorldContextObject"))
    static void ActivateTrigger(const FTriggerData& triggerData, const UObject* worldContextObject);
 
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Global Accessors", meta=(WorldContext = "WorldContextObject"))
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Global Accessors", meta = (WorldContext = "WorldContextObject"))
    static const TArray<ABaseHero*>& GetHeroes(const UObject* worldContextObject);
 
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Global Accessors", meta=(WorldContext = "WorldContextObject"))
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Global Accessors", meta = (WorldContext = "WorldContextObject"))
+   static ABaseHero* GetHeroFromIndex(const UObject* worldContextObject, int heroIndex);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Global Accessors", meta = (WorldContext = "WorldContextObject"))
    static AHUDManager* GetHUDManager(const UObject* worldContextObject);
 };

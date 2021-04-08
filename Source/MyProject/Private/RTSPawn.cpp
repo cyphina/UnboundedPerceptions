@@ -33,6 +33,7 @@
 #include "MySpell.h"
 #include "NoTargeting.h"
 #include "SpellCastComponent.h"
+#include "SpellDataLibrary.h"
 #include "StorageContainer.h"
 #include "StorageInventory.h"
 #include "StoreInventory.h"
@@ -1093,12 +1094,12 @@ void ARTSPawn::OnEffectSlotSelected(int slotIndex)
       }
 
       const FActiveGameplayEffectHandle effectToRemoveHandle =
-          focusedASC->GetActiveEffects(FGameplayEffectQuery::MakeQuery_MatchAnyEffectTags(UpResourceManager::EffectNameTagFilter))[slotIndex];
+          focusedASC->GetActiveEffects(FGameplayEffectQuery::MakeQuery_MatchAnyEffectTags(USpellDataLibrary::GetEffectNameTag()))[slotIndex];
 
       FGameplayTagContainer effectToRemoveAssetTags;
       focusedASC->GetActiveGameplayEffect(effectToRemoveHandle)->Spec.GetAllAssetTags(effectToRemoveAssetTags);
 
-      if(effectToRemoveAssetTags.HasAnyExact(UpResourceManager::EffectRemoveableTagFilter))
+      if(effectToRemoveAssetTags.HasAnyExact(USpellDataLibrary::GetEffectRemoveableTag()))
       {
          focusedASC->RemoveActiveGameplayEffect(effectToRemoveHandle);
       }

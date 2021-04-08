@@ -17,8 +17,8 @@ UDEPRECATED_RTSRangeDiminishCalc::UDEPRECATED_RTSRangeDiminishCalc()
    RelevantAttributesToCapture.Add(attributes.IntelligenceDef);
    RelevantAttributesToCapture.Add(attributes.AgilityDef);
 
-   ValidTransientAggregatorIdentifiers.AddTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Data.Thresholds"));
-   ValidTransientAggregatorIdentifiers.AddTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Data.PowerScaling"));
+   /*ValidTransientAggregatorIdentifiers.AddTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Data.Thresholds"));
+   ValidTransientAggregatorIdentifiers.AddTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Data.PowerScaling"));*/
 }
 
 void UDEPRECATED_RTSRangeDiminishCalc::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& executionParams,

@@ -38,6 +38,8 @@
 #include "StorageContainer.h"
 #include "UIDelegateContext.h"
 
+const float ABaseHero::NEXT_EXP_MULTIPLIER = 1.5f;
+
 ABaseHero::ABaseHero(const FObjectInitializer& oI) : AAlly(oI)
 {
 }
@@ -299,7 +301,7 @@ bool ABaseHero::OnItemPickup(FMyItem& itemPickedUp) const
    return true;
 }
 
-void ABaseHero::OnItemDropped(FMyItem& itemDropped, int droppedItemSlot)
+void ABaseHero::OnItemDropped(int droppedItemSlot)
 {
    if(!backpack->IsEmptySlot(droppedItemSlot))
    {

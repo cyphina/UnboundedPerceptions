@@ -21,6 +21,11 @@ const TArray<ABaseHero*>& UUpFunctionLibrary::GetHeroes(const UObject* worldCont
    return controllerRef->GetBasePlayer()->GetHeroes();
 }
 
+ABaseHero* UUpFunctionLibrary::GetHeroFromIndex(const UObject* worldContextObject, int heroIndex)
+{
+   return GetHeroes(worldContextObject)[heroIndex];
+}
+
 AHUDManager* UUpFunctionLibrary::GetHUDManager(const UObject* worldContextObject)
 {
    if(AUserInput* controllerRef = Cast<AUserInput>(worldContextObject->GetWorld()->GetFirstPlayerController()))

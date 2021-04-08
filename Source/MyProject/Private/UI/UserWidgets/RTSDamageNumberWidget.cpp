@@ -27,7 +27,7 @@ void URTSDamageNumberWidget::SetDamageTextProps(const FUpDamage& damageInfo, boo
       }
       else
       {
-         damageText->SetColorAndOpacity(FSlateColor(USpellDataLibrary::elementalMap[damageInfo.element]));
+         damageText->SetColorAndOpacity(FSlateColor(USpellDataLibrary::GetElementalColorMap()[damageInfo.element]));
 
          if(damageInfo.crit)
          {
@@ -43,7 +43,7 @@ void URTSDamageNumberWidget::SetDamageTextProps(const FUpDamage& damageInfo, boo
 
          damageText->SetText(FText::Format(NSLOCTEXT("DamageNumbers", "DamageFormat", "{0}"), FText::FromString(damageString)));
 
-         damageText->SetColorAndOpacity(FSlateColor(USpellDataLibrary::elementalMap[damageInfo.element]));
+         damageText->SetColorAndOpacity(FSlateColor(USpellDataLibrary::GetElementalColorMap()[damageInfo.element]));
       }
       PlayAnimation(floatAndDissapearAnimation);
    }

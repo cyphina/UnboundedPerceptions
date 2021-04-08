@@ -113,7 +113,7 @@ class MYPROJECT_API ABaseHero : public AAlly
    /**
     * @brief Multiplier to increase amount of xp needed for next level
     */
-   static inline const float NEXT_EXP_MULTIPLIER = 1.5f;
+   static const float NEXT_EXP_MULTIPLIER;
 
  protected:
    void BeginPlay() override final;
@@ -165,7 +165,9 @@ class MYPROJECT_API ABaseHero : public AAlly
    void GiveItemAbilities() const;
 
    bool OnItemPickup(FMyItem& itemPickedUp) const;
-   void OnItemDropped(FMyItem& itemDropped, int droppedItemSlot);
+
+   UFUNCTION(BlueprintCallable)
+   void OnItemDropped(int droppedItemSlot);
 
    UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess))
    USpellBook* spellbook;

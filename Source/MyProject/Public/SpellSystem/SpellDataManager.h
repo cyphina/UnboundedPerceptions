@@ -13,13 +13,16 @@ UCLASS()
 class MYPROJECT_API USpellDataManager : public UObject
 {
    GENERATED_BODY()
-public:
+ public:
    USpellDataManager();
    ~USpellDataManager() = default;
 
    FORCEINLINE static USpellDataManager& GetData()
    {
-      if(SingletonManager == nullptr) { InitializeManager(); }
+      if(SingletonManager == nullptr)
+      {
+         InitializeManager();
+      }
       return *SingletonManager;
    }
 
@@ -29,10 +32,20 @@ public:
       return spellClasses[spellID];
    }
 
-private:
+   const FGameplayTagContainer&      GetSupportTags() const { return supportTags; }
+   const FGameplayTagContainer&      GetOffensiveTags() const { return offensiveTags; }
+   const TMap<FGameplayTag, int>&    GetPurgeTagMap() const { return purgeTagMap; }
+   const TMap<FGameplayTag, FColor>& GetElementalColorMap() const { return elementalColorMap; }
+
+ private:
    static USpellDataManager* SingletonManager;
 
    static TMap<FGameplayTag, TSubclassOf<UMySpell>> spellClasses;
+
+   static FGameplayTagContainer      supportTags;       // List of tags support spells will have
+   static FGameplayTagContainer      offensiveTags;     // List of tags elemental spells will have
+   static TMap<FGameplayTag, int>    purgeTagMap;       // Mapping of purge tags to how many effects a purge can attempt to dispel
+   static TMap<FGameplayTag, FColor> elementalColorMap; // Maps a gameplay tag representing an element to its corresponding color
 
    static void InitializeManager();
    static void SetupCachedSpellClassMap();

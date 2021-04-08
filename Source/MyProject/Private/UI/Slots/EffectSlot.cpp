@@ -6,6 +6,7 @@
 #include "GameplayEffectTypes.h"
 #include "Image.h"
 #include "MySpell.h"
+#include "SpellDataLibrary.h"
 #include "Globals/UpResourceManager.h"
 #include "ToolTipWidget.h"
 
@@ -54,8 +55,9 @@ int32 UEffectSlot::GetStackCount() const
       if(const FActiveGameplayEffect* activeEffect = effectedUnitASC->GetActiveGameplayEffect(currentActiveEffectHandle))
       {
          activeEffect->Spec.GetAllAssetTags(assetTags);
-         if(assetTags.HasTagExact(UpResourceManager::EffectPseudoStackTagFilter.First()))
+         if(assetTags.HasTagExact(USpellDataLibrary::GetEffectPseudoStackTag().First()))
          {
+            // TODO: See impact of this on my switch DYnamicAssetTags to DynamicGrantedTags
             return effectedUnitASC->GetActiveEffects(FGameplayEffectQuery::MakeQuery_MatchAnyEffectTags(currentEffectSlotData->effectNameTag.GetSingleTagContainer()))
                 .Num();
          }
@@ -72,7 +74,7 @@ FText UEffectSlot::GetEffectTogglableText(const FGameplayEffectSpec& effectSpec)
 {
    FGameplayTagContainer assetTags;
    effectSpec.GetAllAssetTags(assetTags);
-   if(assetTags.HasTagExact(UpResourceManager::EffectRemoveableTagFilter.First()))
+   if(assetTags.HasTagExact(USpellDataLibrary::GetEffectRemoveableTag().First()))
    {
       return NSLOCTEXT("EffectUI", "ToggleableIndicator", "Can Toggle with Right Click");
    }

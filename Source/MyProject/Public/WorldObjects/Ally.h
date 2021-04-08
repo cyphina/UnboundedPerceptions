@@ -42,7 +42,7 @@ class MYPROJECT_API AAlly : public AUnit
    UPROPERTY()
    AAllyAIController* allyController;
 
-   static inline const FText STUNNED_TEXT = NSLOCTEXT("HelpMessages", "Stun", "Currently Stunned!");
+   static const FText STUNNED_TEXT;
 
  protected:
    void BeginPlay() override;

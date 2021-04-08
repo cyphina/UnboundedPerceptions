@@ -16,10 +16,10 @@ void UActionbar_AllyInterface::NativeOnInitialized()
    AIOptionButtons[4] = Btn_Aggressive;
 
    AIOptionButtons[0]->OnClicked.AddDynamic(this, &UActionbar_AllyInterface::SelectPassiveMode);
-   AIOptionButtons[0]->OnClicked.AddDynamic(this, &UActionbar_AllyInterface::SelectDefensiveMode);
-   AIOptionButtons[0]->OnClicked.AddDynamic(this, &UActionbar_AllyInterface::SelectNeutralMode);
-   AIOptionButtons[0]->OnClicked.AddDynamic(this, &UActionbar_AllyInterface::SelectOffensiveMode);
-   AIOptionButtons[0]->OnClicked.AddDynamic(this, &UActionbar_AllyInterface::SelectAggressiveMode);
+   AIOptionButtons[1]->OnClicked.AddDynamic(this, &UActionbar_AllyInterface::SelectDefensiveMode);
+   AIOptionButtons[2]->OnClicked.AddDynamic(this, &UActionbar_AllyInterface::SelectNeutralMode);
+   AIOptionButtons[3]->OnClicked.AddDynamic(this, &UActionbar_AllyInterface::SelectOffensiveMode);
+   AIOptionButtons[4]->OnClicked.AddDynamic(this, &UActionbar_AllyInterface::SelectAggressiveMode);
 }
 
 void UActionbar_AllyInterface::OnWidgetShown(AUnit* focusedUnit)
@@ -28,7 +28,9 @@ void UActionbar_AllyInterface::OnWidgetShown(AUnit* focusedUnit)
    if(focusedAlly)
    {
       AIOptionButtons[currentlySelectedButtonIndex]->SetIsEnabled(true);
-      AIOptionButtons[static_cast<int>(focusedAlly->GetAllyAIController()->GetAllyBehaviorMode())]->SetIsEnabled(false);
+      const int selectedOption = static_cast<int>(focusedAlly->GetAllyAIController()->GetAllyBehaviorMode());
+      AIOptionButtons[selectedOption]->SetIsEnabled(false);
+      currentlySelectedButtonIndex = selectedOption;
    }
 }
 

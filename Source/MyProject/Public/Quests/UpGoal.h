@@ -44,7 +44,7 @@ struct FGoalStyleInfo
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Minimap", Meta=(MakeEditWidget))
    FVector goalLocation = invalidGoalLocation;
 
-   static const inline FVector invalidGoalLocation = FVector(-66666, -66666, -66666);
+   static const FVector invalidGoalLocation;
 };
 
 /** Has information about the subgoal's CDO (no instanced data here) */
@@ -137,7 +137,7 @@ protected:
    UPROPERTY(EditAnywhere, Category = "Goal Game Data")
    TArray<int> requiredSubgoalIndices;
 
-   static inline FText EmptyGoalArgText = NSLOCTEXT("Quest", "EmptyGoalArg", "(Empty-CDO-Placeholder)");
+   static const FText EmptyGoalArgText; 
    
    // TODO: Maybe add some delegates to when the goals are completed? If I can find a reason to that is...
 };

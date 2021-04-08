@@ -9,6 +9,7 @@
 
 class UGameplayAbility;
 class UGameplayEffect;
+class UBackpack;
 
 // A class that holds a blueprint library, that is it can be used anywhere inside blueprints so we can get our spellInfo via the manager in our blueprints
 UCLASS(MinimalAPI)
@@ -21,6 +22,9 @@ class UItemFunctionLibrary : public UBlueprintFunctionLibrary
  public:
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item Data Accessor", meta = (DisplayName = "Get Item Info"))
    static FItemLookupRow& GetItemInfo(int itemID);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item Data Accessor", meta = (DisplayName = "Get Item Info From Backpack"))
+   static FItemLookupRow& GetItemInfoFromBackpack(UBackpack* backpack, int itemSlotIndex);
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Item Data Accessor", meta = (DisplayName = "Get Equip Info"))
    static FEquipLookupRow& GetEquipInfo(int equipID);

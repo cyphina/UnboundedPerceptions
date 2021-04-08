@@ -51,8 +51,8 @@ void URTSAbilitySystemComponent::BeginPlay()
    }
    defaultAbilities.Empty();
 
-   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_TAG)));
-   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG)));
+   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellDataLibrary::GetConfirmSpellTag())));
+   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellDataLibrary::GetConfirmSpellTargetTag())));
 
    InitAbilityActorInfo(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(), unitOwnerRef);
 }
@@ -294,7 +294,7 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
           Spec.Def->InheritableGameplayEffectTags.CombinedTags.Filter(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Purge"))).First();
 
       TArray<FActiveGameplayEffectHandle> removableEffects = GetActiveEffects(ClearQuery);
-      for(int i = 0; i < USpellDataLibrary::purgeTagMap[purgeDesc] && i < removableEffects.Num(); ++i)
+      for(int i = 0; i < USpellDataLibrary::GetPurgeTagMap()[purgeDesc] && i < removableEffects.Num(); ++i)
       {
          // TODO: Do some kind of roll to see if it the spell is successfully purged
          // GetActiveGameplayEffect(activeEffectHandle)->Spec.GetSetByCallerMagnitude()
@@ -387,7 +387,7 @@ FGameplayEffectSpecHandle URTSAbilitySystemComponent::MakeDamageEffect(FDamageSc
                                                                  damageScalars.understanding);
    UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Agility"), damageScalars.agility);
    UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(damageEffectHandle, FGameplayTag::RequestGameplayTag("Combat.Stats.Health"), damageScalars.hitpoints);
-   UAbilitySystemBlueprintLibrary::AddAssetTag(damageEffectHandle, attackElement);
+   UAbilitySystemBlueprintLibrary::AddGrantedTag(damageEffectHandle, attackElement);
 
    return damageEffectHandle;
 }

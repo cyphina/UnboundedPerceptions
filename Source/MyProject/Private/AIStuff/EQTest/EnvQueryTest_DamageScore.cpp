@@ -62,7 +62,7 @@ int UEnvQueryTest_DamageScore::FindNumOffensiveAbilities(AUnit* unit) const
 
    for(const auto& spellClass : unit->GetAbilitySystemComponent()->GetAbilities())
    {
-      if(spellClass.GetDefaultObject()->AbilityTags.HasAny(USpellDataLibrary::offensiveTags))
+      if(spellClass.GetDefaultObject()->AbilityTags.HasAny(USpellDataLibrary::GetOffensiveTags()))
       {
          UMySpell* spell = spellClass.GetDefaultObject();
          {

@@ -155,10 +155,4 @@ namespace UpResourceManager
        FVector(-1.f, -1.f, 0.f),
        FVector(-1.f, 1.f, -1.f),
    };
-
-   const FGameplayTagContainer EffectNameTagFilter       = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.EffectName"));
-   const FGameplayTagContainer EffectElemTagFilter       = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Element"));
-   const FGameplayTagContainer EffectRemoveableTagFilter = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Removable"));
-   // Use this when we have multiple effects that have their own timers, but should be treated as a single effect (called pseudo-stackable effects)
-   const FGameplayTagContainer EffectPseudoStackTagFilter  = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.ShowEffectsAsStack"));
 }

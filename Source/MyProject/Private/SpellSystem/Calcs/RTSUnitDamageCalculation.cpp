@@ -41,7 +41,7 @@ void URTSUnitDamageCalculation::Execute_Implementation(const FGameplayEffectCust
       damage.sourceUnit = sourceUnit;
       damage.targetUnit = targetUnit;
 
-      FGameplayTagContainer tags = executionParams.GetOwningSpec().DynamicAssetTags;
+      FGameplayTagContainer tags = executionParams.GetOwningSpec().DynamicGrantedTags;
       damage.element             = tags.Filter(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Element"))).GetByIndex(0);
       damage.effects             = tags;
 

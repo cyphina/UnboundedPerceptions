@@ -17,8 +17,6 @@
 #include "TextFormatter.h"
 #include "Engine/CompositeCurveTable.h"
 
-const FGameplayTag    USpellFunctionLibrary::CONFIRM_SPELL_TAG        = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Spell");
-const FGameplayTag    USpellFunctionLibrary::CONFIRM_SPELL_TARGET_TAG = FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Target");
 UCompositeCurveTable* USpellFunctionLibrary::effectPowerTableRef      = nullptr;
 
 USpellFunctionLibrary::USpellFunctionLibrary(const FObjectInitializer& o) : Super(o)
@@ -32,14 +30,14 @@ USpellFunctionLibrary::USpellFunctionLibrary(const FObjectInitializer& o) : Supe
 }
 
 FGameplayEffectSpecHandle USpellFunctionLibrary::MakeGameplayEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
-                                                                    float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags)
+                                                                    float Period, FGameplayTag Elem, FGameplayTag EffectName, FGameplayTagContainer AssetTags)
 {
    FGameplayEffectSpecHandle effect           = AbilityRef->MakeOutgoingGameplayEffectSpec(EffectClass, Level);
    const UGameplayEffect*    effectDefinition = effect.Data->Def;
 
-   effect.Data->DynamicAssetTags.AddTag(Elem); // Use add tag to check if tag is valid and prevents duplicate tags.
-   effect.Data->DynamicAssetTags.AddTag(Name);
-   effect.Data->DynamicAssetTags.AppendTags(assetTags);
+   effect.Data->DynamicGrantedTags.AddTag(Elem); // Use add tag to check if tag is valid and prevents duplicate tags.
+   effect.Data->DynamicGrantedTags.AddTag(EffectName);
+   effect.Data->DynamicGrantedTags.AppendTags(AssetTags);
    if(effectDefinition->DurationPolicy != EGameplayEffectDurationType::Instant && effectDefinition->DurationPolicy != EGameplayEffectDurationType::Infinite)
    {
       if(effectDefinition->Executions.Num())
@@ -65,12 +63,12 @@ FGameplayEffectSpecHandle USpellFunctionLibrary::MakeGameplayEffect(UGameplayAbi
 }
 
 FGameplayEffectSpecHandle USpellFunctionLibrary::MakeDamageOrHealingEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level,
-                                                                           float Duration, float Period, FGameplayTag Elem, FGameplayTag Name,
+                                                                           float Duration, float Period, FGameplayTag Elem, FGameplayTag EffectName,
                                                                            FGameplayTagContainer assetTags, FDamageScalarStruct damageVals)
 {
-   FGameplayEffectSpecHandle effect = MakeGameplayEffect(AbilityRef, EffectClass, Level, Duration, Period, Elem, Name, assetTags);
-   effect.Data->DynamicAssetTags.AddTag(Elem); // Use add tag to check if tag is valid and prevents duplicate tags.
-   effect.Data->DynamicAssetTags.AddTag(Name);
+   FGameplayEffectSpecHandle effect = MakeGameplayEffect(AbilityRef, EffectClass, Level, Duration, Period, Elem, EffectName, assetTags);
+   effect.Data->DynamicGrantedTags.AddTag(Elem); // Use add tag to check if tag is valid and prevents duplicate tags.
+   effect.Data->DynamicGrantedTags.AddTag(EffectName);
 
    // no period since damage is instant application
    effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Combat.Stats.Health"), damageVals.hitpoints);
@@ -82,10 +80,10 @@ FGameplayEffectSpecHandle USpellFunctionLibrary::MakeDamageOrHealingEffect(UGame
 }
 
 FGameplayEffectSpecHandle USpellFunctionLibrary::MakeStatChangeEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
-                                                                      float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
+                                                                      float Period, FGameplayTag Elem, FGameplayTag EffectName, FGameplayTagContainer assetTags,
                                                                       TArray<FStatChange> StatChanges = TArray<FStatChange>())
 {
-   FGameplayEffectSpecHandle effect = MakeGameplayEffect(AbilityRef, EffectClass, Level, Duration, Period, Elem, Name, assetTags);
+   FGameplayEffectSpecHandle effect = MakeGameplayEffect(AbilityRef, EffectClass, Level, Duration, Period, Elem, EffectName, assetTags);
    for(FStatChange statChange : StatChanges)
    {
       effect.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(*(FString("Combat.Stats.") + statChange.changedAtt.GetName())),

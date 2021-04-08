@@ -61,8 +61,8 @@ void UTargetedAttackComponent::BeginAttackMove(FVector targetLocation)
 
       if(!bAttackAnimationPlaying)
       {
-         agent->GetUnitController()->AdjustPosition(agent->GetUnitController()->smallMoveIgnoreRange, attackMoveLocation, [this]() {
-            if(UUpAIHelperLibrary::IsTargetInRange(agent, attackMoveLocation, agent->GetUnitController()->smallMoveIgnoreRange))
+         agent->GetUnitController()->AdjustPosition(agent->GetUnitController()->SMALL_MOVE_IGNORE_RANGE, attackMoveLocation, [this]() {
+            if(UUpAIHelperLibrary::IsTargetInRange(agent, attackMoveLocation, agent->GetUnitController()->SMALL_MOVE_IGNORE_RANGE))
             {
                agent->GetUnitController()->FinishCurrentAction();
             }

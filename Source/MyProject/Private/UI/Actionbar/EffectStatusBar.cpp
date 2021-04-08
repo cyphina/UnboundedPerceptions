@@ -37,7 +37,7 @@ bool UEffectStatusBar::CheckEffectStillExistsAndAdjustIndex()
    {
       const FActiveGameplayEffectHandle          effectToRemoveHandle = effects[GetSelectedSlotIndex()];
       const TArray<FActiveGameplayEffectHandle>& activeEffectHandles =
-          focusedUnit->GetAbilitySystemComponent()->GetActiveEffects(FGameplayEffectQuery::MakeQuery_MatchAnyEffectTags(UpResourceManager::EffectNameTagFilter));
+          focusedUnit->GetAbilitySystemComponent()->GetActiveEffects(FGameplayEffectQuery::MakeQuery_MatchAnyEffectTags(USpellDataLibrary::GetEffectNameTag()));
 
       const int32 effectToRemoveHandleIndex = activeEffectHandles.Find(effectToRemoveHandle);
       if(effectToRemoveHandleIndex != INDEX_NONE)
@@ -67,14 +67,14 @@ void UEffectStatusBar::UpdateStatusBar()
       const FGameplayTagQuery tagQuery =
           FGameplayTagQuery::BuildQuery(FGameplayTagQueryExpression()
                                             .AllExprMatch()
-                                            .AddExpr(FGameplayTagQueryExpression().AnyTagsMatch().AddTags(UpResourceManager::EffectNameTagFilter))
-                                            .AddExpr(FGameplayTagQueryExpression().NoTagsMatch().AddTags(UpResourceManager::EffectPseudoStackTagFilter)));
+                                            .AddExpr(FGameplayTagQueryExpression().AnyTagsMatch().AddTags(USpellDataLibrary::GetEffectNameTag()))
+                                            .AddExpr(FGameplayTagQueryExpression().NoTagsMatch().AddTags(USpellDataLibrary::GetEffectPseudoStackTag())));
       FGameplayEffectQuery effectQuery;
       effectQuery.OwningTagQuery = tagQuery;
       effects                    = focusedUnit->GetAbilitySystemComponent()->GetActiveEffects(effectQuery);
 
       TArray<FActiveGameplayEffectHandle> pseudoStackableEffects =
-          focusedUnit->GetAbilitySystemComponent()->GetActiveEffects(FGameplayEffectQuery::MakeQuery_MatchAnyEffectTags(UpResourceManager::EffectPseudoStackTagFilter));
+          focusedUnit->GetAbilitySystemComponent()->GetActiveEffects(FGameplayEffectQuery::MakeQuery_MatchAnyEffectTags(USpellDataLibrary::GetEffectPseudoStackTag()));
 
       TMap<TSubclassOf<UGameplayEffect>, FActiveGameplayEffectHandle> uniquePseudoStackableEffects;
 
@@ -113,13 +113,14 @@ void UEffectStatusBar::UpdateStatusBar()
          FActiveGameplayEffectHandle  effectHandle = effects[i];
          FGameplayTagContainer        effectAssetTags;
          const FActiveGameplayEffect* activeEffect = effectHandle.GetOwningAbilitySystemComponent()->GetActiveGameplayEffect(effectHandle);
+
+         activeEffect->Spec.GetAllGrantedTags(effectAssetTags);
          activeEffect->Spec.GetAllAssetTags(effectAssetTags);
 
-         FGameplayTag effectNameTag = effectAssetTags.Filter(UpResourceManager::EffectNameTagFilter).First();
+         FGameplayTag effectNameTag = effectAssetTags.Filter(USpellDataLibrary::GetEffectNameTag()).First();
 
          const FGameplayEffectSlotData* effectSlotData = effectIconDatabase->GetEffectIcon(effectNameTag);
 
-#if UE_EDITOR
          if(!ensure(effectSlotData))
          {
             UE_LOG(LogTemp, Error, TEXT("Effect tag does not have an icon in the data asset holding tag to icon maps"));
@@ -131,7 +132,6 @@ void UEffectStatusBar::UpdateStatusBar()
             UE_LOG(LogTemp, Error, TEXT("Effect tag with empty name was added as a status effect"));
             break;
          }
-#endif
 
          const FGameplayEffectSlotData* effectData = GetEffectSlotData(effectNameTag);
 
@@ -143,10 +143,10 @@ void UEffectStatusBar::UpdateStatusBar()
 FLinearColor UEffectStatusBar::GetEffectColor(const FGameplayTagContainer& effectAssetTags) const
 {
    FLinearColor          finalColor = FColor::White;
-   FGameplayTagContainer elemTags   = effectAssetTags.Filter(UpResourceManager::EffectElemTagFilter);
+   FGameplayTagContainer elemTags   = effectAssetTags.Filter(USpellDataLibrary::GetEffectElemTag());
    for(FGameplayTag elemTag : elemTags)
    {
-      finalColor *= USpellDataLibrary::elementalMap[elemTag].WithAlpha(0.5);
+      finalColor *= USpellDataLibrary::GetElementalColorMap()[elemTag].WithAlpha(0.5);
    }
    return finalColor;
 }

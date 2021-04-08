@@ -35,7 +35,7 @@ class MYPROJECT_API URTSIngameWidget : public UMyUserWidget
 
    URTSIngameWidget();
 
-public:
+ public:
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
    USpellbookHUD* GetSpellBookMenu() const { return Menu_Spellbook; }
 
@@ -83,7 +83,7 @@ public:
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
    UConfirmationBox* GetChatBox() const { return Modal_Confirm; }
-   
+
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
    UConfirmationBox* GetConfirmModal() const { return Modal_Confirm; }
 
@@ -97,13 +97,13 @@ public:
     */
    static void NativeDisplayHelpText(UWorld* worldRef, const FText& hText);
 
-protected:
-   void NativeOnInitialized() override;
-
    UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Help")
    void DisplayHelpText(const FText& hText);
 
-private:
+ protected:
+   void NativeOnInitialized() override;
+
+ private:
    UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
    class AHUDManager* hudManagerRef;
 

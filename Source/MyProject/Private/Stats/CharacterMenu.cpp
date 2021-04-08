@@ -30,7 +30,7 @@ void UCharacterMenu::NativeOnInitialized()
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnExpGained().AddUObject(this, &UCharacterMenu::OnEXPGained);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroLevelUp().AddUObject(this, &UCharacterMenu::OnHeroLevelUp);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnAttributePointAllocated().AddUObject(
-   this, &UCharacterMenu::OnAttributePointAllocated);
+       this, &UCharacterMenu::OnAttributePointAllocated);
 }
 
 bool UCharacterMenu::OnWidgetAddToViewport_Implementation()
@@ -59,12 +59,14 @@ void UCharacterMenu::OnAnimationFinished_Implementation(const UWidgetAnimation* 
    if(IsAnimationPlayingForward(Animation))
    {
       Widget_StatGraph->ShowElementalOffensive();
-   } else
+   }
+   else
    {
       Widget_StatGraph->Cleanup();
    }
 }
 
+#if WITH_EDITOR
 void UCharacterMenu::ValidateCompiledDefaults(IWidgetCompilerLog& CompileLog) const
 {
    if(!AttributePointerWidgetClass)
@@ -72,6 +74,7 @@ void UCharacterMenu::ValidateCompiledDefaults(IWidgetCompilerLog& CompileLog) co
       CompileLog.Error(FText::Format(FText::FromString("{0} does not have a valid attribute pointer widget class set."), FText::FromString(GetName())));
    }
 }
+#endif
 
 void UCharacterMenu::ShowAffinities()
 {

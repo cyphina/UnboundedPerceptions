@@ -15,74 +15,78 @@ class UButton;
 class ABaseHero;
 class UVerticalBox;
 class UAttributePointSpenderWidget;
+class IWidgetCompilerLog;
 
 UCLASS()
 class MYPROJECT_API UCharacterMenu : public UAnimHudWidget
 {
    GENERATED_BODY()
 
-public:
+ public:
    ABaseHero* GetHeroWithInfoDisplayed() const { return baseHeroRef; };
 
-protected:
+ protected:
    UFUNCTION(BlueprintImplementableEvent)
    void SetupCharacterPortrait(ABaseHero* heroToPortray);
-   
+
    void NativeOnInitialized() override;
    bool OnWidgetAddToViewport_Implementation() override;
    void OnWidgetRemovedFromViewport_Implementation() override;
    void OnAnimationFinished_Implementation(const UWidgetAnimation* Animation) override;
+
+#if WITH_EDITOR
    void ValidateCompiledDefaults(IWidgetCompilerLog& CompileLog) const override;
-   
-   UPROPERTY(Meta=(BindWidget))
+#endif
+	
+   UPROPERTY(Meta = (BindWidget))
    UStatgraphWidget* Widget_StatGraph;
 
-   UPROPERTY(Meta=(BindWidget))
+   UPROPERTY(Meta = (BindWidget))
    UVerticalBox* Pan_CharBio;
 
-   UPROPERTY(Meta=(BindWidget))
+   UPROPERTY(Meta = (BindWidget))
    UVerticalBox* Pan_Attributes;
 
-   UPROPERTY(Meta=(BindWidget))
+   UPROPERTY(Meta = (BindWidget))
    UVerticalBox* Pan_Social;
 
-   UPROPERTY(Meta=(BindWidget))
+   UPROPERTY(Meta = (BindWidget))
    UVerticalBox* Pan_Party;
 
-   UPROPERTY(Meta=(BindWidget))
+   UPROPERTY(Meta = (BindWidget))
    UVerticalBox* Pan_OtherM;
 
-   UPROPERTY(Meta=(BindWidget))
+   UPROPERTY(Meta = (BindWidget))
    UTextBlock* Text_Name;
-   
-   UPROPERTY(Meta=(BindWidget))
+
+   UPROPERTY(Meta = (BindWidget))
    UTextBlock* Text_Level;
 
-   UPROPERTY(Meta=(BindWidget))
+   UPROPERTY(Meta = (BindWidget))
    UTextBlock* Text_Money;
 
-   UPROPERTY(Meta=(BindWidget))
+   UPROPERTY(Meta = (BindWidget))
    UTextBlock* Text_EXP;
 
-   UPROPERTY(Meta=(BindWidget))
+   UPROPERTY(Meta = (BindWidget))
    UTextBlock* Text_AttPoints;
-   
-   UPROPERTY(Meta=(BindWidget))
+
+   UPROPERTY(Meta = (BindWidget))
    UButton* Btn_Affinity;
 
-   UPROPERTY(Meta=(BindWidget))
+   UPROPERTY(Meta = (BindWidget))
    UButton* Btn_Resist;
 
-   UPROPERTY(Meta=(BindWidget))
+   UPROPERTY(Meta = (BindWidget))
    UButton* Btn_Mechanics;
 
-   UPROPERTY(Meta=(BindWidget))
+   UPROPERTY(Meta = (BindWidget))
    UButton* Btn_Vitals;
 
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<UAttributePointSpenderWidget> AttributePointerWidgetClass;
 
-private:
+ private:
    UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true), Category = "References")
    ABaseHero* baseHeroRef = nullptr;
 
@@ -101,16 +105,16 @@ private:
    void OnBaseStatsUpdated(const FGameplayAttribute& updatedBaseAttribute, float newValue, AUnit* updatedUnit);
 
    void OnStatsUpdated(const FGameplayAttribute& updatedAttribute, float newValue, AUnit* updatedUnit);
-   
+
    void OnAttributePointAllocated(ABaseHero* heroAllocating, EAttributes upgradedStat, bool bAllocated);
 
    void InitialHeroValueSetup(ABaseHero* heroRef);
-   
+
    void OnMoneyGained(int moneyGained);
 
    void OnEXPGained(int expGained);
 
    void OnHeroLevelUp(ABaseHero* heroLevelingUp);
-   
+
    void CreateAttPointSpendingWidgets();
 };

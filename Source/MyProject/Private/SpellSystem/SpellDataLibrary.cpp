@@ -1,33 +1,8 @@
 ﻿#include "SpellDataLibrary.h"
 #include "GameplayTagAssetInterface.h"
 #include "RTSAbilitySystemComponent.h"
+#include "SpellDataManager.h"
 #include "UpResourceManager.h"
-
-const TMap<FGameplayTag, FColor> USpellDataLibrary::elementalMap = {{FGameplayTag::RequestGameplayTag("Combat.Element.None"), FColor::White},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Arcane"), FColor(0, 0x66, 0xBB)},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Blood"), FColor(255, 51, 51)},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Chaos"), FColor::Purple},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Cosmic"), FColor(213, 127, 209)},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Dark"), FColor(0, 0, 0x33)},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Earth"), FColor(210, 180, 140)},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Electric"), FColor::Yellow},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Ethereal"), FColor::Emerald},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Fire"), FColor::Red},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Force"), FColor(96, 96, 96)},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Light"), FColor::White},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Poison"), FColor(255, 102, 255)},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Water"), FColor::Blue},
-                                                                    {FGameplayTag::RequestGameplayTag("Combat.Element.Wind"), FColor(51, 255, 153)},
-                                                                    {FGameplayTag::EmptyTag, FColor::White}};
-
-const TMap<FGameplayTag, int> USpellDataLibrary::purgeTagMap = {
-    {FGameplayTag::RequestGameplayTag("Combat.Effect.Purge.One"), 1},   {FGameplayTag::RequestGameplayTag("Combat.Effect.Purge.Two"), 2},
-    {FGameplayTag::RequestGameplayTag("Combat.Effect.Purge.Three"), 3}, {FGameplayTag::RequestGameplayTag("Combat.Effect.Purge.Four"), 4},
-    {FGameplayTag::RequestGameplayTag("Combat.Effect.Purge.Five"), 5},  {FGameplayTag::RequestGameplayTag("Combat.Effect.Purge.Six"), 6},
-    {FGameplayTag::RequestGameplayTag("Combat.Effect.Purge.All"), 100}};
-
-const FGameplayTagContainer USpellDataLibrary::supportTags   = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Category.Support"));
-const FGameplayTagContainer USpellDataLibrary::offensiveTags = FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Category.Offensive"));
 
 bool USpellDataLibrary::BP_IsStunned(const URTSAbilitySystemComponent* abilityComponent)
 {
@@ -122,14 +97,14 @@ FGameplayTag USpellDataLibrary::GetEffectNameTagFromSpec(UAbilitySystemComponent
 {
    FGameplayTagContainer assetTags;
    EffectSpecHandle.Data->GetAllAssetTags(assetTags);
-   return assetTags.Filter(UpResourceManager::EffectNameTagFilter).First();
+   return assetTags.Filter(GetEffectNameTag()).First();
 }
 
 FGameplayTag USpellDataLibrary::GetEffectNameTagFromActiveHandle(UAbilitySystemComponent* ASC, FActiveGameplayEffectHandle EffectHandle)
 {
    FGameplayTagContainer assetTags;
    ASC->GetActiveGameplayEffect(EffectHandle)->Spec.GetAllAssetTags(assetTags);
-   return assetTags.Filter(UpResourceManager::EffectNameTagFilter).First();
+   return assetTags.Filter(GetEffectNameTag()).First();
 }
 
 void USpellDataLibrary::RemoveEffectWtihNameTag(UAbilitySystemComponent* ASC, FGameplayTag EffectName, int StacksToRemove)
@@ -139,4 +114,54 @@ void USpellDataLibrary::RemoveEffectWtihNameTag(UAbilitySystemComponent* ASC, FG
    {
       ASC->RemoveActiveGameplayEffect(effectsWithTag[0], StacksToRemove);
    }
+}
+
+FGameplayTagContainer USpellDataLibrary::GetEffectNameTag()
+{
+   return FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.EffectName"));
+}
+
+FGameplayTagContainer USpellDataLibrary::GetEffectElemTag()
+{
+   return FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Element"));
+}
+
+FGameplayTagContainer USpellDataLibrary::GetEffectRemoveableTag()
+{
+   return FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Removable"));
+}
+
+FGameplayTagContainer USpellDataLibrary::GetEffectPseudoStackTag()
+{
+   return FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.ShowEffectsAsStack"));
+}
+
+FGameplayTag USpellDataLibrary::GetConfirmSpellTag()
+{
+   return FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Spell");
+}
+
+FGameplayTag USpellDataLibrary::GetConfirmSpellTargetTag()
+{
+   return FGameplayTag::RequestGameplayTag("Skill.Name.Confirm Target");
+}
+
+const FGameplayTagContainer& USpellDataLibrary::GetSupportTags()
+{
+   return USpellDataManager::GetData().GetSupportTags();
+}
+
+const FGameplayTagContainer& USpellDataLibrary::GetOffensiveTags()
+{
+   return USpellDataManager::GetData().GetOffensiveTags();
+}
+
+const TMap<FGameplayTag, int>& USpellDataLibrary::GetPurgeTagMap()
+{
+   return USpellDataManager::GetData().GetPurgeTagMap();
+}
+
+const TMap<FGameplayTag, FColor>& USpellDataLibrary::GetElementalColorMap()
+{
+   return USpellDataManager::GetData().GetElementalColorMap();
 }

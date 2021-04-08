@@ -53,12 +53,12 @@ void AUserInput::SetupInputComponent()
    InputComponent->BindAction("ToggleQuestJournal", IE_Pressed, this, &AUserInput::ToggleQuestJournal);
 }
 
-FORCEINLINE TScriptInterface<IWidgetToggler> AUserInput::GetWidgetToggler() const
+TScriptInterface<IWidgetToggler> AUserInput::GetWidgetToggler() const
 {
    return hudManagerRef;
 }
 
-FORCEINLINE TScriptInterface<IHUDProvider> AUserInput::GetWidgetProvider() const
+TScriptInterface<IHUDProvider> AUserInput::GetWidgetProvider() const
 {
    return hudManagerRef;
 }

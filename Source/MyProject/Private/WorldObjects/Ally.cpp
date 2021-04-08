@@ -12,10 +12,12 @@
 #include "RTSVisionComponent.h"
 #include "PartyDelegateContext.h"
 
+const FText AAlly::STUNNED_TEXT = NSLOCTEXT("HelpMessages", "Stun", "Currently Stunned!");
+
 AAlly::AAlly(const FObjectInitializer& oI) : AUnit(oI)
 {
    GetCapsuleComponent()->SetCollisionProfileName("Ally");
-   GetMesh()->CustomDepthStencilValue = 254; // Green Highlights when Hovering
+   GetMesh()->CustomDepthStencilValue = 252; // Green Highlights when Hovering
    visionComponent->SetHiddenInGame(true);
    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }

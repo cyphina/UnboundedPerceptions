@@ -78,13 +78,19 @@ class MYPROJECT_API AUnitController : public AAIController
    /** Stops a unit completely - Cancels any ongoing AI and clears the command queue. Probably only useful for manually controlled units (allies) and testing */
    UFUNCTION(BlueprintCallable, Category = "Action")
    void HaltUnit();
-   
+
    UFUNCTION(BlueprintCallable, Category = "Action")
    void Die();
 
    /** Calls execute within the functor object and handles some logic common to all attacking methods */
    UFUNCTION(BlueprintCallable, Category = "Action")
    void Attack();
+
+   UFUNCTION(BlueprintCallable)
+   void PauseCurrentMovement();
+
+   UFUNCTION(BlueprintCallable)
+   void ResumeCurrentMovement();
 
    /**
     * Function to move to appropriate distance from target and face direction*
@@ -111,7 +117,7 @@ class MYPROJECT_API AUnitController : public AAIController
     * to an NPC or something.
     */
    void FinishCurrentAction();
-   
+
    /** Queues an action to our action queue */
    void QueueAction(TFunction<void()> actionToQueue);
 
@@ -122,16 +128,10 @@ class MYPROJECT_API AUnitController : public AAIController
       queueCount = 0;
    }
 
-   static const int CHASE_RANGE = 100;
-   static const inline float smallMoveIgnoreRange = 50.f;
-   
- protected:
-   UFUNCTION(BlueprintCallable)
-   void PauseCurrentMovement();
+   static const int   CHASE_RANGE = 100;
+   static const float SMALL_MOVE_IGNORE_RANGE;
 
-   UFUNCTION(BlueprintCallable)
-   void ResumeCurrentMovement();
-   
+ protected:
    void BeginPlay() override;
    void Tick(float deltaSeconds) override final;
 
@@ -233,7 +233,7 @@ class MYPROJECT_API AUnitController : public AAIController
     */
    FAIMessageObserverHandle protectListener;
 
-   static inline const FText                   FILLED_QUEUE_TEXT = NSLOCTEXT("HelpMessages", "Queue", "Command Queue Filled!");
+   static const FText                          FILLED_QUEUE_TEXT;
    TQueue<TFunction<void()>, EQueueMode::Spsc> commandQueue;
    int                                         queueCount = 0;
 

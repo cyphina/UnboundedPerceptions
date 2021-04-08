@@ -37,7 +37,9 @@ void UInventory::LoadItems()
 {
    if(GetBackpack())
    {
-      Algo::ForEach(GetInventorySlots(), [this](UActionSlot* actionSlot) { ResetSlot(actionSlot); });
+      Algo::ForEach(GetInventorySlots(), [this](UActionSlot* actionSlot) {
+         ResetSlot(actionSlot);
+      });
 
       const int maxUpdateIndex = FMath::Min(GetInventorySlots().Num(), GetBackpack()->GetItemMax());
       for(int i = 0; i < maxUpdateIndex; ++i)
@@ -49,9 +51,16 @@ void UInventory::LoadItems()
 
 void UInventory::ReloadSlots(TSet<int> slotIndices)
 {
-   for(int slotIndex : slotIndices)
+   if(backpack)
    {
-      UpdateSlot(slotIndex);
+      const int maxUpdateIndex = FMath::Min(GetInventorySlots().Num(), GetBackpack()->GetItemMax());
+      for(int slotIndex : slotIndices)
+      {
+         if(slotIndex >= 0 && slotIndex < maxUpdateIndex)
+         {
+            UpdateSlot(slotIndex);
+         }
+      }
    }
 }
 
@@ -115,5 +124,10 @@ int UInventory::GetCorrespondingBackpackIndex(int slotIndex) const
 
 FMyItem UInventory::GetBackpackItemAtSlot(int slotIndex) const
 {
-   return GetBackpack()->GetItem(inventoryView->GetCorrespondingBackpackIndex(slotIndex));
+   const float correspondingSlotIndex = inventoryView->GetCorrespondingBackpackIndex(slotIndex);
+   if(correspondingSlotIndex >= 0 && correspondingSlotIndex < GetBackpack()->GetItemMax())
+   {
+      return GetBackpack()->GetItem(correspondingSlotIndex);
+   }
+   return FMyItem();
 }

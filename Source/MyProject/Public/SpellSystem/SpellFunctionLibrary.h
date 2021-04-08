@@ -28,22 +28,19 @@ class MYPROJECT_API USpellFunctionLibrary : public UBlueprintFunctionLibrary
 {
    GENERATED_UCLASS_BODY()
 
-   static const FGameplayTag CONFIRM_SPELL_TAG;
-   static const FGameplayTag CONFIRM_SPELL_TARGET_TAG;
-
  public:
    /** Function with custom BPNode which wraps around make gameplay effect to provide it with more functionality*/
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Gameplay Effect", BlueprintInternalUseOnly = "true", DefaultToSelf = "AbilityRef"),
              Category = "Spell Creation Helper")
    static struct FGameplayEffectSpecHandle MakeGameplayEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
                                                               float Period, UPARAM(meta = (Categories = "Combat.Element")) FGameplayTag Elem,
-                                                              UPARAM(meta = (Categories = "Skill.Name")) FGameplayTag Name, FGameplayTagContainer assetTags);
+                                                              UPARAM(meta = (Categories = "Skill.Name")) FGameplayTag EffectName, FGameplayTagContainer AssetTags);
 
    /** Creates a damage or healing effect. Both effects scale off damage vals, so they use a common function be manipulated. */
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Damage Effect", BlueprintInternalUseOnly = "true", DefaultToSelf = "AbilityRef"),
              Category = "EffectFactory")
    static struct FGameplayEffectSpecHandle MakeDamageOrHealingEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
-                                                                     float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
+                                                                     float Period, FGameplayTag Elem, FGameplayTag EffectName, FGameplayTagContainer assetTags,
                                                                      FDamageScalarStruct damageVals);
 
    /**
@@ -57,7 +54,7 @@ class MYPROJECT_API USpellFunctionLibrary : public UBlueprintFunctionLibrary
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Create Stat Change Effect", BlueprintInternalUseOnly = "true", DefaultToSelf = "AbilityRef"),
              Category = "EffectFactory")
    static struct FGameplayEffectSpecHandle MakeStatChangeEffect(UGameplayAbility* AbilityRef, TSubclassOf<UGameplayEffect> EffectClass, int Level, float Duration,
-                                                                float Period, FGameplayTag Elem, FGameplayTag Name, FGameplayTagContainer assetTags,
+                                                                float Period, FGameplayTag Elem, FGameplayTag EffectName, FGameplayTagContainer assetTags,
                                                                 TArray<FStatChange> StatChanges);
 
    /** Exposes factory bullet function to BPs */

@@ -16,6 +16,7 @@
 #include "SpellbookSlot.h"
 #include "SpellDelegateStore.h"
 #include "TextBlock.h"
+#include "UpStatComponent.h"
 
 void USpellbookHUD::NativeOnInitialized()
 {
@@ -85,7 +86,8 @@ FReply USpellbookHUD::NativeOnMouseButtonUp(const FGeometry& InGeometry, const F
 
 void USpellbookHUD::ResetHUDForNewHero()
 {
-   txtPoints->SetText(FText::FromString(FString::FromInt(heroWithOpenSpellbookRef->GetSkillPoints())));
+   txtPoints->SetText(FText::AsNumber(heroWithOpenSpellbookRef->GetSkillPoints()));
+   txtLevel->SetText(FText::AsNumber(heroWithOpenSpellbookRef->GetStatComponent()->GetUnitLevel()));
    UpdateSpellSlotImageAndLevelText();
    ColorUnknownSpellSlots();
    ColorLearnableSpellSlots();

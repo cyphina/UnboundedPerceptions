@@ -6,7 +6,7 @@
 
 class UUniformGridPanel;
 class UUnitSelectionSlot;
-
+class IWidgetCompilerLog;
 
 /**
  * @brief Shows different units that are selected on the actionbar when more than one is selected.
@@ -16,19 +16,22 @@ class MYPROJECT_API UActionbar_MultiUnitPortrait : public UUserWidget
 {
    GENERATED_BODY()
 
-public:
+ public:
    void RefreshDisplayedUnitImages();
 
-protected:
+ protected:
    void NativeOnInitialized() override;
-   void ValidateCompiledDefaults(IWidgetCompilerLog& CompileLog) const override;
 
-   UPROPERTY(Meta=(BindWidget))
+#if WITH_EDITOR
+   void ValidateCompiledDefaults(IWidgetCompilerLog& CompileLog) const override;
+#endif
+
+   UPROPERTY(Meta = (BindWidget))
    UUniformGridPanel* unitGrid;
 
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<UUnitSelectionSlot> unitSelectionSlotClass;
-private:
- 
+
+ private:
    TStaticArray<UUnitSelectionSlot*, 16> unitSlots;
 };

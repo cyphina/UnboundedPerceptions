@@ -18,7 +18,8 @@ class UTargetComponent;
 struct FGameplayAbilityTargetDataHandle;
 
 UENUM(BlueprintType)
-enum class EAllyBehavioralMode : uint8 {
+enum class EAllyBehavioralMode : uint8
+{
    ABM_Passive,   // Heal and buff allies but run away of enemies are nearby
    ABM_Defensive, // Avoid enemies, focus on healing and attack if the enemy isn't attacking back
    ABM_Neutral,   // Player controlled behavior (may change this to doing both controlled attack and defensive options)
@@ -27,7 +28,8 @@ enum class EAllyBehavioralMode : uint8 {
 };
 
 UENUM(BlueprintType)
-enum class AllyGroupTacticsMode : uint8 {
+enum class AllyGroupTacticsMode : uint8
+{
    AM_Split,    // Split up units
    AM_Surround, // Surround a target
    AM_TacGroup, // Stay in formation
@@ -75,7 +77,7 @@ class MYPROJECT_API AAllyAIController : public AUnitController
    UManualSpellComponent* GetManualSpellComponent() const { return manualSpellCastComponent; }
 
    EAllyBehavioralMode GetAllyBehaviorMode() const { return currentAllyBehavior; }
-   
+
  protected:
    void OnPossess(APawn* InPawn) override;
    void OnUnPossess() override;
@@ -116,7 +118,7 @@ class MYPROJECT_API AAllyAIController : public AUnitController
    /** If this unit was part of a group tactic assignment, then set its tactic mode here */
    AllyGroupTacticsMode tacticsBehavior;
 
-   inline static const FText INVALID_TARGET_TEXT = NSLOCTEXT("Attacking", "InvalidTarget", "Cannot attack this target");
+   static const FText INVALID_TARGET_TEXT;
 
-   inline static const int NUM_BEHAVIORAL_MODES = 5;
+   static const int NUM_BEHAVIORAL_MODES = 5;
 };

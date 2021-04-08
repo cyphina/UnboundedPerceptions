@@ -12,6 +12,11 @@ class MYPROJECT_API UUpWidgetHelperLibrary : public UBlueprintFunctionLibrary
    GENERATED_BODY()
 
  public:
+
+   /** Displays an obvious message at the top of the screen the player can see. */
+   UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject"))
+   static void DisplayHelpText(UObject* WorldContextObject, const FText& helpText);
+
    /**
     * Looks for the first user widget in the hierarchy that contains the passed in widget.
     * Casts it to the desired type and returns it if it matches the desired type.
