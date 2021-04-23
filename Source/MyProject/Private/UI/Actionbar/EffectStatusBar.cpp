@@ -62,80 +62,84 @@ FReply UEffectStatusBar::NativeOnMouseButtonUp(const FGeometry& InGeometry, cons
 
 void UEffectStatusBar::UpdateStatusBar()
 {
-   if(AUnit* focusedUnit = CPCRef->GetBasePlayer()->GetFocusedUnit(); IsValid(focusedUnit))
+   if(ABasePlayer* basePlayer = CPCRef->GetBasePlayer())
    {
-      const FGameplayTagQuery tagQuery =
-          FGameplayTagQuery::BuildQuery(FGameplayTagQueryExpression()
-                                            .AllExprMatch()
-                                            .AddExpr(FGameplayTagQueryExpression().AnyTagsMatch().AddTags(USpellDataLibrary::GetEffectNameTag()))
-                                            .AddExpr(FGameplayTagQueryExpression().NoTagsMatch().AddTags(USpellDataLibrary::GetEffectPseudoStackTag())));
-      FGameplayEffectQuery effectQuery;
-      effectQuery.OwningTagQuery = tagQuery;
-      effects                    = focusedUnit->GetAbilitySystemComponent()->GetActiveEffects(effectQuery);
-
-      TArray<FActiveGameplayEffectHandle> pseudoStackableEffects =
-          focusedUnit->GetAbilitySystemComponent()->GetActiveEffects(FGameplayEffectQuery::MakeQuery_MatchAnyEffectTags(USpellDataLibrary::GetEffectPseudoStackTag()));
-
-      TMap<TSubclassOf<UGameplayEffect>, FActiveGameplayEffectHandle> uniquePseudoStackableEffects;
-
-      if(pseudoStackableEffects.Num() > 0)
+      if(AUnit* focusedUnit = basePlayer->GetFocusedUnit(); IsValid(focusedUnit))
       {
-         for(const FActiveGameplayEffectHandle handle : pseudoStackableEffects)
-         {
-            const FActiveGameplayEffect* activeEffect = focusedUnit->GetAbilitySystemComponent()->GetActiveGameplayEffect(handle);
+         const FGameplayTagQuery tagQuery =
+             FGameplayTagQuery::BuildQuery(FGameplayTagQueryExpression()
+                                               .AllExprMatch()
+                                               .AddExpr(FGameplayTagQueryExpression().AnyTagsMatch().AddTags(USpellDataLibrary::GetEffectNameTag()))
+                                               .AddExpr(FGameplayTagQueryExpression().NoTagsMatch().AddTags(USpellDataLibrary::GetEffectPseudoStackTag())));
+         FGameplayEffectQuery effectQuery;
+         effectQuery.OwningTagQuery = tagQuery;
+         effects                    = focusedUnit->GetAbilitySystemComponent()->GetActiveEffects(effectQuery);
 
-            if(activeEffect)
+         TArray<FActiveGameplayEffectHandle> pseudoStackableEffects =
+             focusedUnit->GetAbilitySystemComponent()->GetActiveEffects(FGameplayEffectQuery::MakeQuery_MatchAnyEffectTags(USpellDataLibrary::GetEffectPseudoStackTag()));
+
+         TMap<TSubclassOf<UGameplayEffect>, FActiveGameplayEffectHandle> uniquePseudoStackableEffects;
+
+         if(pseudoStackableEffects.Num() > 0)
+         {
+            for(const FActiveGameplayEffectHandle handle : pseudoStackableEffects)
             {
-               if(!uniquePseudoStackableEffects.Contains(activeEffect->Spec.Def->GetClass()))
+               const FActiveGameplayEffect* activeEffect = focusedUnit->GetAbilitySystemComponent()->GetActiveGameplayEffect(handle);
+
+               if(activeEffect)
                {
-                  uniquePseudoStackableEffects.Add(activeEffect->Spec.Def->GetClass(), handle);
-               }
-               else
-               {
-                  const FActiveGameplayEffectHandle currentShortestActiveEffectHandle = uniquePseudoStackableEffects[activeEffect->Spec.Def->GetClass()];
-                  const float currentShorestEndTime = focusedUnit->GetAbilitySystemComponent()->GetActiveGameplayEffect(currentShortestActiveEffectHandle)->GetEndTime();
-                  if(activeEffect->GetEndTime() < currentShorestEndTime)
+                  if(!uniquePseudoStackableEffects.Contains(activeEffect->Spec.Def->GetClass()))
                   {
-                     uniquePseudoStackableEffects[activeEffect->Spec.Def->GetClass()] = handle;
+                     uniquePseudoStackableEffects.Add(activeEffect->Spec.Def->GetClass(), handle);
+                  }
+                  else
+                  {
+                     const FActiveGameplayEffectHandle currentShortestActiveEffectHandle = uniquePseudoStackableEffects[activeEffect->Spec.Def->GetClass()];
+                     const float                       currentShorestEndTime =
+                         focusedUnit->GetAbilitySystemComponent()->GetActiveGameplayEffect(currentShortestActiveEffectHandle)->GetEndTime();
+                     if(activeEffect->GetEndTime() < currentShorestEndTime)
+                     {
+                        uniquePseudoStackableEffects[activeEffect->Spec.Def->GetClass()] = handle;
+                     }
                   }
                }
             }
          }
-      }
 
-      uniquePseudoStackableEffects.GenerateValueArray(pseudoStackableEffects);
-      effects.Append(pseudoStackableEffects);
+         uniquePseudoStackableEffects.GenerateValueArray(pseudoStackableEffects);
+         effects.Append(pseudoStackableEffects);
 
-      ResetShownEffects();
+         ResetShownEffects();
 
-      for(int i = 0; i < GetMaxNumberSlotsToDisplay(); ++i)
-      {
-         FActiveGameplayEffectHandle  effectHandle = effects[i];
-         FGameplayTagContainer        effectAssetTags;
-         const FActiveGameplayEffect* activeEffect = effectHandle.GetOwningAbilitySystemComponent()->GetActiveGameplayEffect(effectHandle);
-
-         activeEffect->Spec.GetAllGrantedTags(effectAssetTags);
-         activeEffect->Spec.GetAllAssetTags(effectAssetTags);
-
-         FGameplayTag effectNameTag = effectAssetTags.Filter(USpellDataLibrary::GetEffectNameTag()).First();
-
-         const FGameplayEffectSlotData* effectSlotData = effectIconDatabase->GetEffectIcon(effectNameTag);
-
-         if(!ensure(effectSlotData))
+         for(int i = 0; i < GetMaxNumberSlotsToDisplay(); ++i)
          {
-            UE_LOG(LogTemp, Error, TEXT("Effect tag does not have an icon in the data asset holding tag to icon maps"));
-            break;
+            FActiveGameplayEffectHandle  effectHandle = effects[i];
+            FGameplayTagContainer        effectAssetTags;
+            const FActiveGameplayEffect* activeEffect = effectHandle.GetOwningAbilitySystemComponent()->GetActiveGameplayEffect(effectHandle);
+
+            activeEffect->Spec.GetAllGrantedTags(effectAssetTags);
+            activeEffect->Spec.GetAllAssetTags(effectAssetTags);
+
+            FGameplayTag effectNameTag = effectAssetTags.Filter(USpellDataLibrary::GetEffectNameTag()).First();
+
+            const FGameplayEffectSlotData* effectSlotData = effectIconDatabase->GetEffectIcon(effectNameTag);
+
+            if(!ensure(effectSlotData))
+            {
+               UE_LOG(LogTemp, Error, TEXT("Effect tag does not have an icon in the data asset holding tag to icon maps"));
+               break;
+            }
+
+            if(!ensure(effectNameTag != FGameplayTag::EmptyTag))
+            {
+               UE_LOG(LogTemp, Error, TEXT("Effect tag with empty name was added as a status effect"));
+               break;
+            }
+
+            const FGameplayEffectSlotData* effectData = GetEffectSlotData(effectNameTag);
+
+            effectSlots[i]->ActivateEffectSlot(effectHandle, *effectSlotData, GetEffectColor(effectAssetTags));
          }
-
-         if(!ensure(effectNameTag != FGameplayTag::EmptyTag))
-         {
-            UE_LOG(LogTemp, Error, TEXT("Effect tag with empty name was added as a status effect"));
-            break;
-         }
-
-         const FGameplayEffectSlotData* effectData = GetEffectSlotData(effectNameTag);
-
-         effectSlots[i]->ActivateEffectSlot(effectHandle, *effectSlotData, GetEffectColor(effectAssetTags));
       }
    }
 }

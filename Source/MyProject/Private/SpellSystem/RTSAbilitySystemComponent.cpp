@@ -51,8 +51,11 @@ void URTSAbilitySystemComponent::BeginPlay()
    }
    defaultAbilities.Empty();
 
-   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellDataLibrary::GetConfirmSpellTag())));
-   GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellDataLibrary::GetConfirmSpellTargetTag())));
+   if(GetOwner()->HasAuthority())
+   {
+      GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellDataLibrary::GetConfirmSpellTag())));
+      GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellDataLibrary::GetConfirmSpellTargetTag())));
+   }
 
    InitAbilityActorInfo(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(), unitOwnerRef);
 }
@@ -179,13 +182,13 @@ FActiveGameplayEffectHandle URTSAbilitySystemComponent::ApplyGameplayEffectSpecT
          // Log results of applied GE spec
          if(UE_LOG_ACTIVE(VLogAbilitySystem, Log))
          {
-            ABILITY_VLOG(OwnerActor, Log, TEXT("Applied %s"), *OurCopyOfSpec->Def->GetFName().ToString());
+            ABILITY_VLOG(GetOwnerActor(), Log, TEXT("Applied %s"), *OurCopyOfSpec->Def->GetFName().ToString());
 
             for(FGameplayModifierInfo Modifier : Spec.Def->Modifiers)
             {
                float Magnitude = 0.f;
                Modifier.ModifierMagnitude.AttemptCalculateMagnitude(Spec, Magnitude);
-               ABILITY_VLOG(OwnerActor, Log, TEXT("         %s: %s %f"), *Modifier.Attribute.GetName(), *EGameplayModOpToString(Modifier.ModifierOp), Magnitude);
+               ABILITY_VLOG(GetOwnerActor(), Log, TEXT("         %s: %s %f"), *Modifier.Attribute.GetName(), *EGameplayModOpToString(Modifier.ModifierOp), Magnitude);
             }
          }
       }
@@ -423,7 +426,7 @@ bool URTSAbilitySystemComponent::ApplyDamageEffectSpecToTarget(const FGameplayEf
 
 FGameplayAbilitySpec* URTSAbilitySystemComponent::FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass)
 {
-   return const_cast<FGameplayAbilitySpec*>(AsConst(this)->FindAbilitySpecFromClass(InAbilityClass));
+   return const_cast<FGameplayAbilitySpec*>(AsConst(*this).FindAbilitySpecFromClass(InAbilityClass));
 }
 
 const FGameplayAbilitySpec* URTSAbilitySystemComponent::FindAbilitySpecFromClass(TSubclassOf<UGameplayAbility> InAbilityClass) const

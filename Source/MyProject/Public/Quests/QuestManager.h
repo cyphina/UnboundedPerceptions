@@ -15,6 +15,7 @@ class UQuestJournal;
 class AEnemy;
 class ANPC;
 class AGoalActor;
+class AInteractableBase;
 class UNamedInteractableDecorator;
 struct FBackpackUpdateResult;
 
@@ -33,7 +34,7 @@ class MYPROJECT_API UQuestManager : public UObject
 {
    GENERATED_BODY()
 
-public:
+ public:
    /**Add a new current quest.  Returns true on success, false on failure
    * @param questClassToSpawn - Class of quest actor to spawn
    */
@@ -42,7 +43,7 @@ public:
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Quest Managing")
    AGoalActor* GetGoalActor() const { return currentGoalActor; }
-   
+
    /**
     *Map of quest GameplayTagName to quest class so we can add new quests via triggers
     */
@@ -67,21 +68,21 @@ public:
    /**Called when a quest is completed to unlock new quests or such*/
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnQuestStarted OnQuestStartedDelegate;
-   
+
    /**Called when a quest is completed to unlock new quests or such*/
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnQuestCompleted OnQuestCompletedDelegate;
-   
+
    FOnSubgoalCompleted& OnSubgoalCompleted() { return OnSubgoalCompletedEvent; }
-   FOnSubgoalUnlocked& OnSubgoalUnlocked() { return OnSubgoalUnlockedEvent; }
-   
+   FOnSubgoalUnlocked&  OnSubgoalUnlocked() { return OnSubgoalUnlockedEvent; }
+
    void Init();
 
-protected:
+ protected:
 #if WITH_EDITOR
    void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
-   
+
    UPROPERTY(BlueprintReadWrite, Category = "References")
    AUserInput* controllerRef;
 
@@ -91,7 +92,7 @@ protected:
    UPROPERTY(BlueprintReadWrite, Category = "References")
    UQuestJournal* questJournalRef;
 
-private:
+ private:
    /**
     *Updates map that maps quest classes to quest gameplay tags whenever we recompile the blueprint
     */
@@ -117,8 +118,8 @@ private:
 
    void OnItemPickedUp(const ABaseHero* heroPickingItem, const FBackpackUpdateResult& itemUpdateResult);
 
-   void OnItemPurchased
-   (const ABaseHero* purchasingHero, const FBackpackUpdateResult& addPurchasedItemResult, const TArray<FBackpackUpdateResult>& removePaymentItemsResults);
+   void OnItemPurchased(const ABaseHero* purchasingHero, const FBackpackUpdateResult& addPurchasedItemResult,
+                        const TArray<FBackpackUpdateResult>& removePaymentItemsResults);
 
    /**
     *Callback when Interactable is successfully interacted with
@@ -129,19 +130,21 @@ private:
    void RecalculateItemCountsForGoals(const FMyItem item);
 
    bool TurnInItemsFromGatherGoal(int gatherItemId, int numItemsToGather);
-   
+
    void SetupWidgetReferences();
 
    void CompleteSubgoal(AQuest* quest, int goalIndex);
 
    void OnSubgoalSwitched(AQuest* quest, int goalIndex);
-   
+
+   bool HasAuthority() const;
+
    UPROPERTY()
    class AHUDManager* hudManagerRef;
 
    /**Actor that determines location of the quest*/
    AGoalActor* currentGoalActor;
-   
+
    int currentDistance;
 
    FOnSubgoalCompleted OnSubgoalCompletedEvent;

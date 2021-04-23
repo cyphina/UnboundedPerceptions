@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Ally.h"
 #include "UnitController.h"
 #include "ManualTargetingControl.h"
 
@@ -16,16 +17,6 @@ class UManualSpellComponent;
 class USpellCastComponent;
 class UTargetComponent;
 struct FGameplayAbilityTargetDataHandle;
-
-UENUM(BlueprintType)
-enum class EAllyBehavioralMode : uint8
-{
-   ABM_Passive,   // Heal and buff allies but run away of enemies are nearby
-   ABM_Defensive, // Avoid enemies, focus on healing and attack if the enemy isn't attacking back
-   ABM_Neutral,   // Player controlled behavior (may change this to doing both controlled attack and defensive options)
-   ABM_Offensive, // Attack closest enemy and try to use spells as efficiently as possible
-   ABM_Aggressive // Attack lowest hp enemy and drop all spells on weak enemy
-};
 
 UENUM(BlueprintType)
 enum class AllyGroupTacticsMode : uint8
@@ -60,10 +51,6 @@ class MYPROJECT_API AAllyAIController : public AUnitController
  public:
    AAllyAIController(const FObjectInitializer& ObjectInitializer);
 
-   /** Players who are tired of microing can switch to one of the various AI modes which vary in their offensive and defensive play. */
-   UFUNCTION(BlueprintCallable, Category = "AI Mode")
-   void SwitchAIModes(EAllyBehavioralMode newMode);
-
    UFUNCTION(BlueprintCallable)
    UPatrolComponent* GetPatrolComponent() const { return patrolComp; }
 
@@ -76,7 +63,9 @@ class MYPROJECT_API AAllyAIController : public AUnitController
 
    UManualSpellComponent* GetManualSpellComponent() const { return manualSpellCastComponent; }
 
-   EAllyBehavioralMode GetAllyBehaviorMode() const { return currentAllyBehavior; }
+   UBehaviorTreeComponent* GetBehaviorTreeComponent() const { return behaviorTreeComp; }
+
+   void SwitchAIModes(EAllyBehavioralMode newMode);
 
  protected:
    void OnPossess(APawn* InPawn) override;
@@ -107,10 +96,6 @@ class MYPROJECT_API AAllyAIController : public AUnitController
    /** Behavior tree contains logic of our AI.  Will swap depending on tactic and behavioral mode */
    UPROPERTY(EditAnywhere)
    TArray<UBehaviorTree*> behaviorTrees;
-
-   /** Used to change the AIs of our allied units (different modes range from aggressive to supporting styles) */
-   UPROPERTY(BlueprintReadOnly, Category = "AI Mode", meta = (AllowPrivateAccess = "true"))
-   EAllyBehavioralMode currentAllyBehavior;
 
    UPROPERTY()
    AAlly* allyRef;

@@ -41,22 +41,29 @@ void UTriggerManager::AddTriggerToRecords(FName worldObjectName, const FTriggerD
 
 void UTriggerManager::ActivateTrigger(UPARAM(ref) const FTriggerData& triggerData)
 {
-   if(triggerData.enabled)
+   if(gameModeRef->HasAuthority() || !IsRunningDedicatedServer())
    {
-      if(triggerData.numCalls != 0) { TriggerEffect(triggerData); }
+      if(triggerData.enabled)
+      {
+         if(triggerData.numCalls != 0)
+         {
+            TriggerEffect(triggerData);
+         }
+      }
    }
 }
 
 void UTriggerManager::ChangeDialog(const FTriggerData& tdata)
 {
    check(tdata.triggerObjects.Num() == 1 && tdata.triggerValues.Num() <= 2);
-   if(ANPC* finishedTalkNPC = UpResourceManager::FindTriggerObjectInWorld<ANPC>(tdata.triggerObjects[0], cpcRef->GetWorld()))
+   if(ANPC* finishedTalkNPC = UpResourceManager::FindTriggerObjectInWorld<ANPC>(tdata.triggerObjects[0], gameModeRef->GetWorld()))
    {
       if(tdata.triggerValues.Num() == 1)
          finishedTalkNPC->SetCurrentDialog(*tdata.triggerValues[0]);
       else
          finishedTalkNPC->SetSpecificDialog(FGameplayTag::RequestGameplayTag(*tdata.triggerValues[0]), *tdata.triggerValues[1]);
-   } else
+   }
+   else
    {
       // TODO: Find a way to add to trigger records w/o knowing if there's already an entry in triggerRecords
       AddTriggerToRecords(*tdata.triggerObjects[0], tdata);
@@ -67,7 +74,7 @@ void UTriggerManager::ModifyStats(const FTriggerData& tdata)
 {
    check(tdata.triggerObjects.Num() == 1 && tdata.triggerValues.Num() <= 2);
    uint8 offset = 0;
-   if(AUnit* unit = UpResourceManager::FindTriggerObjectInWorld<AUnit>(tdata.triggerObjects[0], cpcRef->GetWorld()))
+   if(AUnit* unit = UpResourceManager::FindTriggerObjectInWorld<AUnit>(tdata.triggerObjects[0], gameModeRef->GetWorld()))
       for(int i = 0; i < tdata.triggerValues.Num(); i += 2)
       {
          const uint8 statId      = TriggerValueToNum(tdata, i);
@@ -76,15 +83,17 @@ void UTriggerManager::ModifyStats(const FTriggerData& tdata)
 
          switch(statEnumVal)
          {
-            case 0: unit->GetStatComponent()->ModifyStats<false>(statValue, static_cast<EAttributes>(statId - offset));
-               break;
-            case 1: offset = AttCount;
+            case 0: unit->GetStatComponent()->ModifyStats<false>(statValue, static_cast<EAttributes>(statId - offset)); break;
+            case 1:
+               offset = AttCount;
                unit->GetStatComponent()->ModifyStats<false>(statValue, static_cast<EUnitScalingStats>(statId - offset));
                break;
-            case 2: offset = AttCount + StatCount;
+            case 2:
+               offset = AttCount + StatCount;
                unit->GetStatComponent()->ModifyStats<false>(statValue, static_cast<EVitals>(statId - offset));
                break;
-            case 3: offset = AttCount + StatCount + VitalCount;
+            case 3:
+               offset = AttCount + StatCount + VitalCount;
                unit->GetStatComponent()->ModifyStats<false>(statValue, static_cast<EMechanics>(statId - offset));
                break;
             default: break;
@@ -117,10 +126,16 @@ void UTriggerManager::ChangeParty(const FTriggerData& tdata)
    for(FString heroName : tdata.triggerObjects)
    {
       // empty string means no hero at that slot
-      if(heroName.IsEmpty()) { break; }
+      if(heroName.IsEmpty())
+      {
+         break;
+      }
 
-      ABaseHero* hero = UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(heroName, cpcRef->GetWorld());
-      if(hero) { newHeroes.Add(hero); }
+      ABaseHero* hero = UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(heroName, gameModeRef->GetWorld());
+      if(hero)
+      {
+         newHeroes.Add(hero);
+      }
    }
    // GetBasePlayer will return null if we don't go through persistent level setup first
    cpcRef->GetBasePlayer()->UpdateActiveParty(newHeroes);
@@ -143,10 +158,10 @@ bool UTriggerManager::AddQuest(const FTriggerData& tdata)
 {
    checkf(tdata.triggerObjects.Num() == 0 && tdata.triggerValues.Num() == 2, TEXT("Incorrect parameters for OPENHUDTRIGGER"));
    checkf(tdata.triggerValues[1].IsNumeric(), TEXT("ADDQUESTTRIGGER triggerValue 2 should be numeric"));
-   
-   const FGameplayTag questId = FGameplayTag::RequestGameplayTag(*(FString("QuestName.") + tdata.triggerValues[0]));
+
+   const FGameplayTag        questId    = FGameplayTag::RequestGameplayTag(*(FString("QuestName.") + tdata.triggerValues[0]));
    const TSubclassOf<AQuest> questToAdd = *gameModeRef->GetQuestManager()->questClassList.Find(questId);
-   
+
    if(gameModeRef->GetQuestManager()->AddNewQuest(questToAdd))
    {
       return true;
@@ -159,9 +174,10 @@ bool UTriggerManager::CompleteQuestGoal(const FTriggerData& tdata)
    checkf(tdata.triggerValues.Num() == 3, TEXT("Complete quest goal trigger should have 3 parameters!"));
    checkf(tdata.triggerValues[1].IsNumeric(), TEXT("ADDQUESTTRIGGER triggerValue 2 should be numeric"));
 
-   AQuest*     quest = *gameModeRef->GetQuestManager()->activeQuests.FindByPredicate(
-   [&](AQuest* questToFilter) { return questToFilter->GetQuestInfo().id.ToString() == "QuestName." + tdata.triggerValues[0]; });
-   int         goalIndex = FCString::Atoi(*tdata.triggerValues[1]);
+   AQuest* quest     = *gameModeRef->GetQuestManager()->activeQuests.FindByPredicate([&](AQuest* questToFilter) {
+      return questToFilter->GetQuestInfo().id.ToString() == "QuestName." + tdata.triggerValues[0];
+   });
+   int     goalIndex = FCString::Atoi(*tdata.triggerValues[1]);
 
    if(quest->GetQuestInfo().GetSubgoals()[goalIndex]->GetGoalState() == EGoalState::currentGoal)
    {
@@ -215,11 +231,11 @@ void UTriggerManager::AddItem(const FTriggerData& tdata)
       if(tdata.triggerObjects.Num() > 0)
       {
          UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(*tdata.triggerObjects[0], cpcRef->GetWorld())->backpack->AddItem(itemToAdd);
-      } else
+      }
+      else
       {
          // If there's a hero using something, add the item to him/her
-         if(ABaseHero* activeHero = cpcRef->GetBasePlayer()->heroInBlockingInteraction; activeHero)
-            activeHero->backpack->AddItem(itemToAdd);
+         if(ABaseHero* activeHero = cpcRef->GetBasePlayer()->heroInBlockingInteraction; activeHero) activeHero->backpack->AddItem(itemToAdd);
       }
    }
 }
@@ -240,13 +256,12 @@ void UTriggerManager::SetNPCFollow(const FTriggerData& tdata)
       {
          int         heroIndex = FCString::Atoi(*tdata.triggerObjects[0]);
          const auto& heroes    = cpcRef->GetBasePlayer()->GetHeroes();
-         if(heroIndex > 0 && heroIndex < heroes.Num())
-            heroRef = heroes[FCString::Atoi(*tdata.triggerObjects[0])];
-      } else
+         if(heroIndex > 0 && heroIndex < heroes.Num()) heroRef = heroes[FCString::Atoi(*tdata.triggerObjects[0])];
+      }
+      else
          heroRef = cpcRef->GetBasePlayer()->heroInBlockingInteraction;
 
-      if(heroRef)
-         Cast<ANPCAIController>(npcRef->GetController())->Follow(heroRef);
+      if(heroRef) Cast<ANPCAIController>(npcRef->GetController())->Follow(heroRef);
    }
 }
 
@@ -254,7 +269,10 @@ void UTriggerManager::SetNPCWantConverse(const FTriggerData& tdata)
 {
    checkf(tdata.triggerObjects.Num() > 0 && tdata.triggerObjects.Num() < 3, TEXT("Set NPC want converse trigger should have 2 parameters!"));
    ANPC* npcRef = UpResourceManager::FindTriggerObjectInWorld<ANPC>(*tdata.triggerObjects[0], cpcRef->GetWorld());
-   if(npcRef) { npcRef->bWantsToConverse = static_cast<bool>(FCString::Atoi(*tdata.triggerValues[0])); }
+   if(npcRef)
+   {
+      npcRef->bWantsToConverse = static_cast<bool>(FCString::Atoi(*tdata.triggerValues[0]));
+   }
 }
 
 void UTriggerManager::PlaySequence(const FTriggerData& tdata)
@@ -264,7 +282,7 @@ void UTriggerManager::PlaySequence(const FTriggerData& tdata)
    FStringAssetReference sequencetoLoad{filePath};
    ALevelSequenceActor*  sequenceActorRef;
    ULevelSequencePlayer* sequencePlayer =
-   ULevelSequencePlayer::CreateLevelSequencePlayer(cpcRef, Cast<ULevelSequence>(sequencetoLoad.TryLoad()), FMovieSceneSequencePlaybackSettings(), sequenceActorRef);
+       ULevelSequencePlayer::CreateLevelSequencePlayer(cpcRef, Cast<ULevelSequence>(sequencetoLoad.TryLoad()), FMovieSceneSequencePlaybackSettings(), sequenceActorRef);
    sequencePlayer->Play();
 }
 
@@ -277,45 +295,29 @@ void UTriggerManager::TriggerEffect(const FTriggerData& triggerData)
    // If the trigger activation fails somehow, the call count will not be decreased.
    switch(triggerData.triggerType)
    {
-      case ETriggerType::None: return;
+      case ETriggerType::None: return; break;
+      case ETriggerType::OpenHUDTrigger: OpenHUDTrigger(triggerData); break;
+      case ETriggerType::ModifyStats: ModifyStats(triggerData); break;
+      case ETriggerType::ActivateOtherTrigger: ActivateTrigger(UPARAM(ref) triggerData); break;
+      case ETriggerType::ChangeDialog: ChangeDialog(triggerData); break;
+      case ETriggerType::ChangePartyTrigger: ChangeParty(triggerData); break;
+      case ETriggerType::AddQuestTrigger:
+         if(!AddQuest(triggerData)) return;
          break;
-      case ETriggerType::OpenHUDTrigger: OpenHUDTrigger(triggerData);
+      case ETriggerType::CompleteQuestGoalTrigger:
+         if(!CompleteQuestGoal(triggerData)) return;
          break;
-      case ETriggerType::ModifyStats: ModifyStats(triggerData);
-         break;
-      case ETriggerType::ActivateOtherTrigger: ActivateTrigger(UPARAM(ref) triggerData);
-         break;
-      case ETriggerType::ChangeDialog: ChangeDialog(triggerData);
-         break;
-      case ETriggerType::ChangePartyTrigger: ChangeParty(triggerData);
-         break;
-      case ETriggerType::AddQuestTrigger: if(!AddQuest(triggerData))
-            return;
-         break;
-      case ETriggerType::CompleteQuestGoalTrigger: if(!CompleteQuestGoal(triggerData))
-            return;
-         break;
-      case ETriggerType::DisplayConversationTrigger: DisplayConversation(triggerData);
-         break;
-      case ETriggerType::DisplayDialogTrigger: DisplayDialog(triggerData);
-         break;
-      case ETriggerType::DestroyNPCTrigger: DestroyNPC(triggerData);
-         break;
-      case ETriggerType::MoveNPCTrigger: MoveNPC(triggerData);
-         break;
-      case ETriggerType::AddItemTrigger: AddItem(triggerData);
-         break;
-      case ETriggerType::LearnDialogTopic: LearnDialogTopic(triggerData);
-         break;
-      case ETriggerType::SetNPCFollow: SetNPCFollow(triggerData);
-         break;
-      case ETriggerType::SetNPCWantConverse: SetNPCWantConverse(triggerData);
-         break;
-      case ETriggerType::PlaySequence: PlaySequence(triggerData);
-         break;
+      case ETriggerType::DisplayConversationTrigger: DisplayConversation(triggerData); break;
+      case ETriggerType::DisplayDialogTrigger: DisplayDialog(triggerData); break;
+      case ETriggerType::DestroyNPCTrigger: DestroyNPC(triggerData); break;
+      case ETriggerType::MoveNPCTrigger: MoveNPC(triggerData); break;
+      case ETriggerType::AddItemTrigger: AddItem(triggerData); break;
+      case ETriggerType::LearnDialogTopic: LearnDialogTopic(triggerData); break;
+      case ETriggerType::SetNPCFollow: SetNPCFollow(triggerData); break;
+      case ETriggerType::SetNPCWantConverse: SetNPCWantConverse(triggerData); break;
+      case ETriggerType::PlaySequence: PlaySequence(triggerData); break;
       default: UE_LOG(LogTemp, Warning, TEXT("Unknown Trigger type attempted to be activated!"));
    }
 
-   if(triggerData.numCalls != -1)
-      --triggerData.numCalls;
+   if(triggerData.numCalls != -1) --triggerData.numCalls;
 }

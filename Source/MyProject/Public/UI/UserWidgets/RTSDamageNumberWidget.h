@@ -21,7 +21,7 @@ protected:
    UPROPERTY(Meta=(BindWidget))
    UTextBlock* damageText;
 
-   UPROPERTY(Meta=(BindWidgetAnim))
+   UPROPERTY(Transient, Meta=(BindWidgetAnim))
    UWidgetAnimation* floatAndDissapearAnimation;
 
 private:

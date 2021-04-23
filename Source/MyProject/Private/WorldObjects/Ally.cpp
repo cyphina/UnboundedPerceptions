@@ -43,12 +43,33 @@ void AAlly::PossessedBy(AController* newAllyControllerRef)
    allyController = Cast<AAllyAIController>(newAllyControllerRef);
 }
 
+void AAlly::Restart()
+{
+   Super::Restart();
+}
+
 void AAlly::SetEnabled(bool bEnabled)
 {
    Super::SetEnabled(bEnabled);
-   if(ULocalPlayer* player = Cast<ULocalPlayer>(controllerRef->Player))
+
+   if(!HasAuthority() || !IsRunningDedicatedServer())
    {
-      player->GetSubsystem<UPartyDelegateContext>()->OnAllyActiveChanged().Broadcast(this, bEnabled);
+      if(ULocalPlayer* player = Cast<ULocalPlayer>(controllerRef->Player))
+      {
+         player->GetSubsystem<UPartyDelegateContext>()->OnAllyActiveChanged().Broadcast(this, bEnabled);
+      }
+   }
+}
+
+void AAlly::SwitchAIModes_Implementation(EAllyBehavioralMode newMode)
+{
+   if(HasAuthority())
+   {
+      if(currentAllyBehavior != EAllyBehavioralMode::ABM_Neutral)
+      {
+         GetAllyAIController()->SwitchAIModes(newMode);
+      }
+      currentAllyBehavior = newMode;
    }
 }
 
@@ -59,33 +80,38 @@ void AAlly::SetUnitSelected(bool value)
    {
       if(controllerRef->GetBasePlayer()->GetSelectedAllies().Num() < 16)
       {
-         controllerRef->GetBasePlayer()->AddSelectedAlly(this);
          controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.Broadcast(this);
       }
    }
    else
    {
-      controllerRef->GetBasePlayer()->RemoveSelectedAlly(this);
       controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.Broadcast(this);
    }
 }
 
 bool AAlly::GetOverlappingObjects(TArray<FHitResult>& hits)
 {
-   const FVector start = controllerRef->GetCameraPawn()->GetCameraComponent()->GetComponentLocation();
-   const FVector end   = GetActorLocation();
+   if(!HasAuthority() || !IsRunningDedicatedServer())
+   {
+      const FVector start = controllerRef->GetCameraPawn()->GetCameraComponent()->GetComponentLocation();
+      const FVector end   = GetActorLocation();
 
-   //// For debugging trace
-   // const FName TraceTag("MyTraceTag");
-   // GetWorld()->DebugDrawTraceTag = TraceTag;
-   // FCollisionQueryParams params;
-   // params.TraceTag = TraceTag;
+      //// For debugging trace
+      // const FName TraceTag("MyTraceTag");
+      // GetWorld()->DebugDrawTraceTag = TraceTag;
+      // FCollisionQueryParams params;
+      // params.TraceTag = TraceTag;
 
-   FQuat cameraRotation = controllerRef->GetCameraPawn()->GetCameraComponent()->GetComponentQuat();
-   cameraRotation.W *= -1;
-   GetWorld()->SweepMultiByChannel(hits, start, end, cameraRotation, FADE_CHANNEL, FCollisionShape::MakeBox(FVector(200, 200, 100)));
-   if(!hits.Num()) return false;
-   return true;
+      FQuat cameraRotation = controllerRef->GetCameraPawn()->GetCameraComponent()->GetComponentQuat();
+      cameraRotation.W *= -1;
+      GetWorld()->SweepMultiByChannel(hits, start, end, cameraRotation, FADE_CHANNEL, FCollisionShape::MakeBox(FVector(200, 200, 100)));
+      if(!hits.Num())
+      {
+         return false;
+      }
+      return true;
+   }
+   return false;
 }
 
 const TSet<AUnit*>& AAlly::GetSeenEnemies() const

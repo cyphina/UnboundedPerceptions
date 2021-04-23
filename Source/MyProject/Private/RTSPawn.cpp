@@ -32,6 +32,7 @@
 #include "Spellbook.h"
 #include "MySpell.h"
 #include "NoTargeting.h"
+#include "RTSGameState.h"
 #include "SpellCastComponent.h"
 #include "SpellDataLibrary.h"
 #include "StorageContainer.h"
@@ -134,6 +135,7 @@ void ARTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
    check(InputComponent);
 
    InputComponent->BindAction("Stop", IE_Pressed, this, &ARTSPawn::Stop);
+   InputComponent->BindAction("SelectAllAllies", IE_Pressed, this, &ARTSPawn::SelectALlAllies);
    InputComponent->BindAction("LockCamera", IE_Pressed, this, &ARTSPawn::LockCamera);
    InputComponent->BindAction("RightClick", IE_Pressed, this, &ARTSPawn::RightClick);
    InputComponent->BindAction("RightClick", IE_Released, this, &ARTSPawn::RightClickReleased);
@@ -155,8 +157,8 @@ void ARTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
    InputComponent->BindAction("CameraSpeedup", IE_Pressed, this, &ARTSPawn::CameraSpeedOn);
    InputComponent->BindAction("CameraSpeedup", IE_Released, this, &ARTSPawn::CameraSpeedOff);
 
-   InputComponent->BindAxis("MoveForward", this, &ARTSPawn::MoveX);
-   InputComponent->BindAxis("MoveRight", this, &ARTSPawn::MoveY);
+   InputComponent->BindAxis("MoveForward", this, &ARTSPawn::MoveY);
+   InputComponent->BindAxis("MoveRight", this, &ARTSPawn::MoveX);
 
    InputComponent->BindAxis("EdgeMoveX", this, &ARTSPawn::EdgeMovementX);
    InputComponent->BindAxis("EdgeMoveY", this, &ARTSPawn::EdgeMovementY);
@@ -204,15 +206,18 @@ void ARTSPawn::PossessedBy(AController* newController)
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnAutoclickToggled().AddUObject(this, &ARTSPawn::ToggleAutoClick);
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnEnemySkillSlotClicked().AddUObject(this, &ARTSPawn::OnSkillSlotSelected);
 
-      GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
-         controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnSkillSlotSelected().AddUObject(this, &ARTSPawn::OnSkillSlotSelected);
-         controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnEffectSlotSelected().AddUObject(this, &ARTSPawn::OnEffectSlotSelected);
-         controllerRef->GetHUDManager()->GetIngameHUD()->GetEquipHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnEquipmentSlotSelected);
-         controllerRef->GetHUDManager()->GetIngameHUD()->GetShopHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnShopSlotSelected);
-         controllerRef->GetHUDManager()->GetIngameHUD()->GetStorageHUD()->OnStorageInventoryClosed().AddUObject(this, &ARTSPawn::OnStorageInventoryClosed);
-         controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnInventorySlotSelected);
-         controllerRef->GetHUDManager()->GetIngameHUD()->GetStorageHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnStorageSlotSelected);
-      });
+      if(!HasAuthority() && !IsRunningDedicatedServer())
+      {
+         GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+            controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnSkillSlotSelected().AddUObject(this, &ARTSPawn::OnSkillSlotSelected);
+            controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnEffectSlotSelected().AddUObject(this, &ARTSPawn::OnEffectSlotSelected);
+            controllerRef->GetHUDManager()->GetIngameHUD()->GetEquipHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnEquipmentSlotSelected);
+            controllerRef->GetHUDManager()->GetIngameHUD()->GetShopHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnShopSlotSelected);
+            controllerRef->GetHUDManager()->GetIngameHUD()->GetStorageHUD()->OnStorageInventoryClosed().AddUObject(this, &ARTSPawn::OnStorageInventoryClosed);
+            controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnInventorySlotSelected);
+            controllerRef->GetHUDManager()->GetIngameHUD()->GetStorageHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnStorageSlotSelected);
+         });
+      }
    }
 
    EnableInput(controllerRef);
@@ -229,6 +234,53 @@ void ARTSPawn::DisableInput(APlayerController* PlayerController)
 {
    Super::DisableInput(PlayerController);
    hitActor = nullptr;
+}
+
+bool ARTSPawn::IsPointInMapBounds(FVector point) const
+{
+   return IsPointInMapBoundsX(point) && IsPointInMapBoundsY(point);
+}
+
+void ARTSPawn::MoveCameraByOffset(const FVector& offset)
+{
+   const FVector actorLocation = GetActorLocation();
+   if(IsPointInMapBounds(actorLocation - offset))
+   {
+      AddActorLocalOffset(offset);
+   }
+   else
+   {
+      if(const ARTSGameState* GS = controllerRef->GetGameState())
+      {
+         if(offset.X < 0)
+         {
+            SetActorLocation(FVector(GS->GetCameraBoundY().X, actorLocation.Y, actorLocation.Z));
+         }
+         else if(offset.X > 0)
+         {
+            SetActorLocation(FVector(-GS->GetCameraBoundY().Y, actorLocation.Y, actorLocation.Z));
+         }
+
+         if(offset.Y < 0)
+         {
+            SetActorLocation(FVector(actorLocation.X, GS->GetCameraBoundX().X, actorLocation.Z));
+         }
+         else if(offset.Y > 0)
+         {
+            SetActorLocation(FVector(actorLocation.X, -GS->GetCameraBoundX().Y, actorLocation.Z));
+         }
+      }
+   }
+}
+
+bool ARTSPawn::IsPointInMapBoundsX(FVector point) const
+{
+   return point.Y <= controllerRef->GetGameState()->GetCameraBoundX().X && point.Y >= -controllerRef->GetGameState()->GetCameraBoundX().Y;
+}
+
+bool ARTSPawn::IsPointInMapBoundsY(FVector point) const
+{
+   return point.X <= controllerRef->GetGameState()->GetCameraBoundY().X && point.X >= -controllerRef->GetGameState()->GetCameraBoundY().Y;
 }
 
 bool ARTSPawn::IsSelectionRectActive() const
@@ -516,27 +568,29 @@ void ARTSPawn::CameraSpeedOff()
 
 FORCEINLINE void ARTSPawn::MoveX(float axisValue)
 {
-   if(GetWorld()->GetTimerManager().IsTimerActive(smoothCameraTransitionTimerHandle))
+   if(axisValue == 0 || GetWorld()->GetTimerManager().IsTimerActive(smoothCameraTransitionTimerHandle))
    {
       return;
    }
 
    if(!isCamNavDisabled)
    {
-      SetActorLocation(GetActorTransform().TransformPosition(FVector(axisValue * baseCameraMoveSpeed * camMoveSpeedMultiplier, 0, 0)));
+      const FVector offset = FVector(0, axisValue * baseCameraMoveSpeed * 100 * camMoveSpeedMultiplier * GetWorld()->GetDeltaSeconds(), 0);
+      MoveCameraByOffset(offset);
    }
 }
 
 FORCEINLINE void ARTSPawn::MoveY(float axisValue)
 {
-   if(GetWorld()->GetTimerManager().IsTimerActive(smoothCameraTransitionTimerHandle))
+   if(axisValue == 0 || GetWorld()->GetTimerManager().IsTimerActive(smoothCameraTransitionTimerHandle))
    {
       return;
    }
 
    if(!isCamNavDisabled)
    {
-      SetActorLocation(GetActorTransform().TransformPosition(FVector(0, axisValue * baseCameraMoveSpeed * camMoveSpeedMultiplier, 0)));
+      const FVector offset = FVector(axisValue * baseCameraMoveSpeed * 100 * camMoveSpeedMultiplier * GetWorld()->GetDeltaSeconds(), 0, 0);
+      MoveCameraByOffset(offset);
    }
 }
 
@@ -550,7 +604,8 @@ void ARTSPawn::MMBDragX(float axisValue)
    if(controllerRef && controllerRef->IsInputKeyDown(FKey("MiddleMouseButton")) && !controllerRef->IsInputKeyDown(FKey("LeftShift")) &&
       !controllerRef->IsInputKeyDown(FKey("RightShift")))
    {
-      AddActorLocalOffset(FVector(0, axisValue * -1.f * camMoveSpeedMultiplier * baseCameraMoveSpeed, 0));
+      const FVector offset = FVector(0, axisValue * -1.f * camMoveSpeedMultiplier * baseCameraMoveSpeed, 0);
+      MoveCameraByOffset(offset);
    }
 }
 
@@ -564,7 +619,8 @@ void ARTSPawn::MMBDragY(float axisValue)
    if(controllerRef && controllerRef->IsInputKeyDown(FKey("MiddleMouseButton")) && !controllerRef->IsInputKeyDown(FKey("LeftShift")) &&
       !controllerRef->IsInputKeyDown(FKey("RightShift")))
    {
-      AddActorLocalOffset(FVector(axisValue * -1.f * camMoveSpeedMultiplier * baseCameraMoveSpeed, 0, 0));
+      const FVector offset = FVector(axisValue * -1.f * camMoveSpeedMultiplier * baseCameraMoveSpeed, 0, 0);
+      MoveCameraByOffset(offset);
    }
 }
 
@@ -605,6 +661,95 @@ void ARTSPawn::PanReset()
    SetActorRotation(FRotator(0, 180.f, 0));
 }
 
+template <bool UseX, bool UseMinLimit>
+void ARTSPawn::EdgeMove()
+{
+   FVector           offset;
+   FTimerHandle*     handle;
+   TFunction<bool()> movePred;
+   ECursorStateEnum  cursorState;
+
+   if constexpr(UseX)
+   {
+      handle = &moveXHandle;
+      if constexpr(UseMinLimit)
+      {
+         offset   = FVector(0, -1 * baseCameraMoveSpeed, 0);
+         movePred = [this]() {
+            float mouseX, mouseY;
+            if(controllerRef && controllerRef->GetMousePosition(mouseX, mouseY))
+            {
+               return mouseX / viewX < .025 && GetActorLocation().Y < controllerRef->GetGameState()->GetCameraBoundX().X;
+            }
+            return false;
+         };
+         cursorState = ECursorStateEnum::PanLeft;
+      }
+      else
+      {
+         offset   = FVector(0, baseCameraMoveSpeed, 0);
+         movePred = [this]() {
+            float mouseX, mouseY;
+            if(controllerRef && controllerRef->GetMousePosition(mouseX, mouseY))
+            {
+               return mouseX / viewX > .975 && GetActorLocation().Y > -controllerRef->GetGameState()->GetCameraBoundX().Y;
+            }
+            return false;
+         };
+         cursorState = ECursorStateEnum::PanRight;
+      }
+   }
+   else
+   {
+      handle = &moveYHandle;
+
+      if constexpr(UseMinLimit)
+      {
+         offset   = FVector(-1 * baseCameraMoveSpeed, 0, 0);
+         movePred = [this]() {
+            float mouseX, mouseY;
+            if(controllerRef && controllerRef->GetMousePosition(mouseX, mouseY))
+            {
+               return mouseY / viewY > .975 && GetActorLocation().X < controllerRef->GetGameState()->GetCameraBoundY().X;
+            }
+            return false;
+         };
+         cursorState = ECursorStateEnum::PanDown;
+      }
+      else
+      {
+         offset   = FVector(baseCameraMoveSpeed, 0, 0);
+         movePred = [this]() {
+            float mouseX, mouseY;
+            if(controllerRef && controllerRef->GetMousePosition(mouseX, mouseY))
+            {
+               return mouseY / viewY < .025 && GetActorLocation().X > -controllerRef->GetGameState()->GetCameraBoundY().Y;
+            }
+            return false;
+         };
+         cursorState = ECursorStateEnum::PanUp;
+      }
+   }
+
+   if(!GetWorld()->GetTimerManager().IsTimerActive(*handle))
+   {
+      GetWorld()->GetTimerManager().SetTimer(
+          *handle,
+          [this, offset, handle, movePred]() {
+             if(movePred())
+             {
+                AddActorLocalOffset(offset * camMoveSpeedMultiplier / 10);
+             }
+             else
+             {
+                GetWorld()->GetTimerManager().ClearTimer(*handle);
+             }
+          },
+          0.001f, true, 0.f);
+      cursorDirections.Add(cursorState);
+   }
+}
+
 void ARTSPawn::EdgeMovementX(float axisValue)
 {
    if(GetWorld()->GetTimerManager().IsTimerActive(smoothCameraTransitionTimerHandle))
@@ -619,13 +764,11 @@ void ARTSPawn::EdgeMovementX(float axisValue)
       {
          if(mouseX / viewX < .025)
          {
-            AddActorLocalOffset(FVector(0, -1 * baseCameraMoveSpeed * camMoveSpeedMultiplier, 0));
-            cursorDirections.AddUnique(ECursorStateEnum::PanLeft);
+            EdgeMove<true, true>();
          }
          else if(mouseX / viewX > .975)
          {
-            AddActorLocalOffset(FVector(0, baseCameraMoveSpeed * camMoveSpeedMultiplier, 0));
-            cursorDirections.AddUnique(ECursorStateEnum::PanRight);
+            EdgeMove<true, false>();
          }
          else
          {
@@ -650,13 +793,11 @@ void ARTSPawn::EdgeMovementY(float axisValue)
       {
          if(mouseY / viewY < .025)
          {
-            AddActorLocalOffset(FVector(baseCameraMoveSpeed * camMoveSpeedMultiplier, 0, 0));
-            cursorDirections.AddUnique(ECursorStateEnum::PanUp);
+            EdgeMove<false, false>();
          }
          else if(mouseY / viewY > .975)
          {
-            AddActorLocalOffset(FVector(-1 * baseCameraMoveSpeed * camMoveSpeedMultiplier, 0, 0));
-            cursorDirections.AddUnique(ECursorStateEnum::PanDown);
+            EdgeMove<false, true>();
          }
          else
          {
@@ -674,6 +815,14 @@ void ARTSPawn::Stop()
       selectedUnit->GetUnitController()->StopMovement();
    }
    CancelSelectedUnitsActionBeforePlayerCommand();
+}
+
+void ARTSPawn::SelectALlAllies()
+{
+   for(AUnit* ally : controllerRef->GetBasePlayer()->GetAllies())
+   {
+      ally->SetUnitSelected(true);
+   }
 }
 
 void ARTSPawn::CancelSelectedUnitsActionBeforePlayerCommand()

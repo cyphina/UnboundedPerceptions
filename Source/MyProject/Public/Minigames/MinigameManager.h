@@ -1,8 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
-#include "CoreMinimal.h"
 #include "MinigameTypes.h"
 #include "MinigameManager.generated.h"
 
@@ -23,11 +20,23 @@ class MYPROJECT_API UMinigameManager : public UObject
  public:
    void Init();
 
-   UPROPERTY(BlueprintReadWrite, Category = "References")
-   AUserInput* controllerRef;
+   UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Minigame Starter")
+   void Auth_StartMiniGame(AUserInput* controllerRef, EMinigameType minigameType);
 
-   UPROPERTY(BlueprintReadWrite, Category = "References")
-   AMinigamePawn* minigamePawn;
+   //UFUNCTION(BlueprintNativeEvent, Category = "Minigame Starter")
+   //void StartNurikabe(FMinigameData& minigameData);
+
+ protected:
+   /**
+   * Most minigames end in a similar manner.  If the player beat the minigame, then activate some triggers.  If the player fails, activate
+	 * other trigger, or destroy the Destroy the pawn, possess the main pawn again 
+	 */
+   UFUNCTION(BlueprintCallable, Category = "Minigame Helper")
+   void EndMiniGame(AUserInput* controllerRef);
+
+   /** Quit the game early on client request */
+   UFUNCTION(BlueprintCallable, Category = "Minigame Helper")
+   void AbortMinigame(AUserInput* controllerRef);
 
    UPROPERTY(EditDefaultsOnly, Category = "References")
    TSubclassOf<AMinigamePawn> drawingPawn;
@@ -38,23 +47,9 @@ class MYPROJECT_API UMinigameManager : public UObject
    UPROPERTY()
    class AHUDManager* hudManagerRef;
 
-   UFUNCTION(BlueprintCallable, Category = "Minigame Starter")
-   void StartMiniGame(EMinigameType minigameType, const FMinigameData& minigameData);
-
-   //UFUNCTION(BlueprintNativeEvent, Category = "Minigame Starter")
-   //void StartNurikabe(FMinigameData& minigameData);
-
  private:
-   void StartTankGame(const FMinigameData& minigameData);
-   void StartDrawingGame(const FMinigameData& minigameData);
+   void StartTankGame(AUserInput* controllerRef);
+   void StartDrawingGame(AUserInput* controllerRef);
 
-   /**Most minigames end in a similar manner.  If the player beat the minigame, then activate some triggers.  If the player fails, activate
-	* other trigger, or destroy the Destroy the pawn, possess the main pawn again 
-	*/
-   UFUNCTION(BlueprintCallable, Category = "Minigame Helper")
-   void EndMiniGame();
-
-   /**Quit the game early*/
-   UFUNCTION(BlueprintCallable, Category = "Minigame Helper")
-   void AbortMinigame();
+   bool HasAuthority() const;
 };

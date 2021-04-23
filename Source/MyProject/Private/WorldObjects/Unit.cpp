@@ -162,21 +162,24 @@ void AUnit::BeginPlay()
    Super::BeginPlay();
    // GetCapsuleComponent()->SetCanEverAffectNavigation(true);
 
-   if(UNLIKELY(!IsValid(controllerRef)))
+   if((!HasAuthority() || !IsRunningDedicatedServer()) && UNLIKELY(!IsValid(controllerRef)))
    {
       controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
    }
 
-   GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
-      damageIndicatorWidget->SetWidgetClass(controllerRef->GetHUDManager()->damageIndicatorContainerClass);
-      URTSDamageNumberContainer* damageNumberContainerWidget = Cast<URTSDamageNumberContainer>(damageIndicatorWidget->GetUserWidgetObject());
-      damageIndicatorWidget->SetOwnerPlayer(controllerRef->GetLocalPlayer());
-      if(damageNumberContainerWidget)
-      {
-         damageNumberContainerWidget->SetOwningUnit(this);
-      }
-      damageIndicatorWidget->SetRelativeLocation(FVector::ZeroVector);
-   });
+   if(!HasAuthority() || !IsRunningDedicatedServer())
+   {
+      GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+         damageIndicatorWidget->SetWidgetClass(controllerRef->GetHUDManager()->damageIndicatorContainerClass);
+         URTSDamageNumberContainer* damageNumberContainerWidget = Cast<URTSDamageNumberContainer>(damageIndicatorWidget->GetUserWidgetObject());
+         damageIndicatorWidget->SetOwnerPlayer(controllerRef->GetLocalPlayer());
+         if(damageNumberContainerWidget)
+         {
+            damageNumberContainerWidget->SetOwningUnit(this);
+         }
+         damageIndicatorWidget->SetRelativeLocation(FVector::ZeroVector);
+      });
+   }
 
    StoreUnitHeight();
    SetupSelectionCircle();
@@ -189,17 +192,19 @@ void AUnit::BeginPlay()
    GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed);
 
    visionComponent->SetRelativeLocation(FVector::ZeroVector);
-
-   if(!IsEnabled())
-   {
-      SetEnabled(false);
-   }
 }
 
 void AUnit::PossessedBy(AController* newController)
 {
    Super::PossessedBy(newController);
    unitController = Cast<AUnitController>(newController);
+
+   if(!IsEnabled())
+   {
+      GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+         SetEnabled(false);
+      });
+   }
 }
 
 void AUnit::HideInvisibleUnits()
@@ -264,6 +269,7 @@ void AUnit::SetEnabled(bool bEnabled)
    else
    {
       GetUnitController()->StopCurrentAction();
+      GetUnitController()->StopAutomation();
       GetCapsuleComponent()->SetVisibility(false, true);
       SetActorEnableCollision(false);
       SetActorTickEnabled(false);

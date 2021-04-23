@@ -28,7 +28,7 @@ void UActionbar_AllyInterface::OnWidgetShown(AUnit* focusedUnit)
    if(focusedAlly)
    {
       AIOptionButtons[currentlySelectedButtonIndex]->SetIsEnabled(true);
-      const int selectedOption = static_cast<int>(focusedAlly->GetAllyAIController()->GetAllyBehaviorMode());
+      const int selectedOption = static_cast<int>(focusedAlly->GetAllyBehaviorMode());
       AIOptionButtons[selectedOption]->SetIsEnabled(false);
       currentlySelectedButtonIndex = selectedOption;
    }
@@ -39,7 +39,7 @@ void UActionbar_AllyInterface::SelectNewAIMode(int modeIndex)
    AIOptionButtons[currentlySelectedButtonIndex]->SetIsEnabled(true);
    AIOptionButtons[modeIndex]->SetIsEnabled(false);
    currentlySelectedButtonIndex = modeIndex;
-   focusedAlly->allyController->SwitchAIModes(static_cast<EAllyBehavioralMode>(modeIndex));
+   focusedAlly->SwitchAIModes(static_cast<EAllyBehavioralMode>(modeIndex));
 }
 
 void UActionbar_AllyInterface::SelectPassiveMode()

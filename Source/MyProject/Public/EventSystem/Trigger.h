@@ -74,7 +74,7 @@ struct FTriggerData
    FTriggerData();
 
    FTriggerData(bool isEnabled, ETriggerType trigType, int numberOfCalls, TArray<FString> triggerObj, TArray<FString> triggerVals) :
-      enabled(isEnabled), triggerType(trigType), numCalls(numberOfCalls), triggerObjects(triggerObj), triggerValues(triggerVals)
+       enabled(isEnabled), triggerType(trigType), numCalls(numberOfCalls), triggerObjects(triggerObj), triggerValues(triggerVals)
    {
    }
 
@@ -101,29 +101,30 @@ struct FTriggerData
    TArray<FString> triggerValues = TArray<FString>();
 };
 
+/**
+ * @brief TriggerManager used to activate the effects of triggers on the server. Results get replicated down to clients or results may cause client RPCs to fire off.
+ */
 UCLASS(Blueprintable)
 class MYPROJECT_API UTriggerManager : public UObject
 {
    GENERATED_BODY()
 
-   UTriggerManager()
-   {
-   }
+   UTriggerManager() {}
 
-   ~UTriggerManager()
-   {
-   }
+   ~UTriggerManager() {}
 
-   /** Record for triggers on WorldObjects so they can be stored across levels
+   /**
+    * Record for triggers on WorldObjects so they can be stored across levels
     * To store triggers on a WorldObject, just add the trigger to the map with the key being the WorldObject's name.
     * When the WorldObject is created again and calls BeginPlay(), load up the appropriate trigger records.
     */
    TMultiMap<FName, FTriggerData> triggerRecords;
 
+   // TODO: This doesn't exist on server. Fix this when we refactor triggers.
    UPROPERTY()
    class AHUDManager* hudManagerRef;
 
-public:
+ public:
    void Init();
 
    UPROPERTY()
@@ -144,7 +145,7 @@ public:
    UFUNCTION(BlueprintCallable, Category = "TriggerLibrary")
    void ActivateTrigger(UPARAM(ref) const FTriggerData& triggerData);
 
-private:
+ private:
    ///---Trigger helper functions---
    void ChangeDialog(const FTriggerData& tdata);
    void ModifyStats(const FTriggerData& tdata);

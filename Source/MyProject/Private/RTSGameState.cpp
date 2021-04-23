@@ -50,7 +50,24 @@ void ARTSGameState::BeginPlay()
 
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnAllyActiveChanged().AddUObject(this, &ARTSGameState::OnAllyActiveChanged);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnEnemyActiveChanged().AddUObject(this, &ARTSGameState::OnEnemyActiveChanged);
-   Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode())->OnLevelAboutToUnload.AddDynamic(this, &ARTSGameState::CleanupUnitLists);
+
+   if(HasAuthority() || !IsRunningDedicatedServer())
+   {
+      if(ARTSGameMode* RTSGameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode()))
+      {
+         RTSGameModeRef->OnLevelAboutToUnload.AddDynamic(this, &ARTSGameState::CleanupUnitLists);
+      }
+   }
+
+#if WITH_EDITORONLY_DATA
+   if(HasAuthority() || !IsRunningDedicatedServer())
+   {
+      if(ARTSGameMode* RTSGameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode()))
+      {
+         RTSGameModeRef->OnLevelLoaded.AddDynamic(this, &ARTSGameState::CheckMapBounds);
+      }
+   }
+#endif
 }
 
 void ARTSGameState::CleanupUnitLists()
@@ -58,6 +75,20 @@ void ARTSGameState::CleanupUnitLists()
    Cast<ARTSGameState>(GetWorld()->GetGameState())->enemyList.Shrink();
    Cast<ARTSGameState>(GetWorld()->GetGameState())->allyList.Shrink();
 }
+
+#if WITH_EDITORONLY_DATA
+void ARTSGameState::CheckMapBounds()
+{
+   GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+      if(cameraBoundX.X <= 0 && cameraBoundX.Y <= 0 || cameraBoundY.X <= 0 && cameraBoundY.Y <= 0)
+      {
+         UE_LOG(
+             LogTemp, Warning,
+             TEXT("Map limits set to be less than or equal to 0. Camera will not be unable to move until this is changed in level blueprint. Is this what you wanted?"));
+      }
+   });
+}
+#endif
 
 void ARTSGameState::Up_PrintOutVisibleUnits()
 {
@@ -151,6 +182,16 @@ void ARTSGameState::UpdateGameSpeed(float newSpeedMultiplier)
    UE_LOG(LogTemp, Warning, TEXT("Setting game speed to: %f"), newSpeedMultiplier);
    speedModifier = newSpeedMultiplier;
    UGameplayStatics::SetGlobalTimeDilation(GetWorld(), newSpeedMultiplier);
+}
+
+void ARTSGameState::Client_EndMinigame_Implementation(EMinigameType MinigameType)
+{
+   OnMinigameStartedEvent.Broadcast(MinigameType);
+}
+
+void ARTSGameState::Client_StartMinigame_Implementation(EMinigameType MinigameType)
+{
+   OnMinigameStartedEvent.Broadcast(MinigameType);
 }
 
 void ARTSGameState::OnAllyActiveChanged(AAlly* allyRef, bool isActive)

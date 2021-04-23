@@ -17,11 +17,16 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnFocusedUnitChanged, AUnit*);
 
 DECLARE_EVENT_OneParam(ABaseHero, FOnHeroLevelUp, ABaseHero*);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllySelected, AAlly*, selectedAlly); // (ToggleSelect is if we shift click) ToggleAllySelect, SelectAllyUnit, SelectionRect
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllyDeselected, AAlly*, deselectedAlly); // ToggleAllyDeselect,
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGroundSelected); // SelectGround,
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllySelected, AAlly*, selectedAlly);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllyDeselected, AAlly*, deselectedAlly);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAllySelectionToggled, AAlly*, toggledAlly);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBaseHeroSelected, ABaseHero*, selectedBaseHero);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBaseHeroDeselected, ABaseHero*, deselectedBaseHero);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGroundSelected); // SelectGround,
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitDeselected);
 
 DECLARE_DELEGATE_OneParam(FOnEnemySelectedWithoutDebugging, AUnit*);
@@ -31,7 +36,7 @@ class UPartyDelegateContext : public ULocalPlayerSubsystem
 {
    GENERATED_BODY()
 
-public:
+ public:
    FOnAllyActiveChanged& OnAllyActiveChanged() const { return OnAllyActiveChangedEvent; }
 
    FOnHeroActiveChanged& OnHeroActiveChanged() const { return OnHeroActiveChangedEvent; }
@@ -44,13 +49,23 @@ public:
 
    FOnHeroLevelUp& OnHeroLevelUp() const { return OnHeroLevelUpEvent; }
 
-   FOnEnemySelectedWithoutDebugging& OnEnemySelectedWithouDebugging() const { return OnEnemySelectedWithoutDebuggingEvent; }
+   /** When an enemy is selected and we don't have the debug option to control enemy units on */
+   FOnEnemySelectedWithoutDebugging& OnEnemySelectedWithoutDebugging() const { return OnEnemySelectedWithoutDebuggingEvent; }
 
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnAllySelected OnAllySelectedDelegate;
 
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
-   FOnAllyDeselected OnAllyToggleDeselectedDelegate;
+   FOnAllyDeselected OnAllyDeselectedDelegate;
+
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+   FOnAllySelectionToggled OnAllySelectionToggled;
+
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+   FOnBaseHeroSelected OnHeroSelectedDelegate;
+
+   UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
+   FOnBaseHeroDeselected OnHeroDeselectedDelegate;
 
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnUnitSelected OnUnitSelectedDelegate;
@@ -61,11 +76,11 @@ public:
    UPROPERTY(BlueprintAssignable, BlueprintCallable, Category = "Callback")
    FOnGroundSelected OnSelectionClearedDelegate;
 
-protected:
+ protected:
    void Initialize(FSubsystemCollectionBase& Collection) override;
    void Deinitialize() override;
 
-private:
+ private:
    mutable FOnAllyActiveChanged             OnAllyActiveChangedEvent;
    mutable FOnHeroActiveChanged             OnHeroActiveChangedEvent;
    mutable FOnEnemyActiveChanged            OnEnemyActiveChangedEvent;

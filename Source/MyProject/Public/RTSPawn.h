@@ -76,6 +76,15 @@ class MYPROJECT_API ARTSPawn : public APawn
    UPROPERTY(BlueprintReadWrite)
    FVector2D endMousePos;
 
+   UFUNCTION(BlueprintCallable)
+   bool IsPointInMapBounds(FVector point) const;
+
+   /** Use this to move the camera to make sure it does not go out of bounds */
+   void MoveCameraByOffset(const FVector& offset);
+
+   FORCEINLINE bool IsPointInMapBoundsX(FVector point) const;
+   FORCEINLINE bool IsPointInMapBoundsY(FVector point) const;
+
    /** Check if we're drag clicking and thus making a feasible selection rect*/
    UFUNCTION(BlueprintCallable, BlueprintPure)
    bool IsSelectionRectActive() const;
@@ -238,8 +247,11 @@ class MYPROJECT_API ARTSPawn : public APawn
    static const int   baseCameraMoveSpeed = 30;
 
    FTimerHandle smoothCameraTransitionTimerHandle;
-   float        smoothCameraTransitionTime = 0.f;
-   FVector      startCameraPos, endCameraPawnPos;
+   FTimerHandle moveXHandle;
+   FTimerHandle moveYHandle;
+
+   float   smoothCameraTransitionTime = 0.f;
+   FVector startCameraPos, endCameraPawnPos;
 
    void RecalculateViewportSize(FViewport* viewport, uint32 newSize);
    void ZoomIn();
@@ -249,6 +261,15 @@ class MYPROJECT_API ARTSPawn : public APawn
 
    void CameraSpeedOn();
    void CameraSpeedOff();
+
+   /**
+    * @brief Camera
+    * @tparam UseX - If true, does a Truck motion (X axis movement), else does a dolly motion (Y axis movement)
+    * @tparam UseMinLimit - If true, we're moving towards the negative end of the axis, else we're moving to he maximum end of the axis.
+    */
+   template <bool UseX, bool UseMinLimit>
+   void EdgeMove();
+
    void MoveX(float axisValue);
    void MoveY(float axisValue);
    void MMBDragX(float axisValue);
@@ -277,6 +298,7 @@ class MYPROJECT_API ARTSPawn : public APawn
 
  private:
    void Stop();
+   void SelectALlAllies();
    void RightClick();
    void RightClickReleased();
    void RightClickShift();

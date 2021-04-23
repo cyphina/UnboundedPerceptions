@@ -67,15 +67,18 @@ float UChannelingBar::GetSpellChannelProgress()
 
 ESlateVisibility UChannelingBar::IsFocusedUnitChanneling()
 {
-   AUnit* channelingUnit = controllerRef->GetBasePlayer()->GetFocusedUnit();
-
-   if(IsValid(channelingUnit))
+   if(ABasePlayer* BasePlayer = controllerRef->GetBasePlayer())
    {
-      if(USpellCastComponent* channelingComp = channelingUnit->GetUnitController()->FindComponentByClass<USpellCastComponent>())
+      AUnit* channelingUnit = BasePlayer->GetFocusedUnit();
+
+      if(IsValid(channelingUnit))
       {
-         if(channelingComp->GetCurrentChannelingTime() > 0 || channelingComp->GetCurrentIncantationTime() > 0)
+         if(USpellCastComponent* channelingComp = channelingUnit->GetUnitController()->FindComponentByClass<USpellCastComponent>())
          {
-            return ESlateVisibility::SelfHitTestInvisible;
+            if(channelingComp->GetCurrentChannelingTime() > 0 || channelingComp->GetCurrentIncantationTime() > 0)
+            {
+               return ESlateVisibility::SelfHitTestInvisible;
+            }
          }
       }
    }

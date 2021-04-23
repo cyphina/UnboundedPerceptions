@@ -14,13 +14,14 @@
 class UBluEye;
 class AUnit;
 class AAlly;
+class ABaseHero;
 
 UCLASS()
 class MYPROJECT_API URTSSidebarWidget : public URTSBrowserWidgetBase
 {
    GENERATED_BODY()
 
-   UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (AllowPrivateAccess=true))
+   UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (AllowPrivateAccess = true))
    class AUserInput* cpcRef;
 
  public:
@@ -30,8 +31,8 @@ class MYPROJECT_API URTSSidebarWidget : public URTSBrowserWidgetBase
    UPROPERTY(EditDefaultsOnly)
    int height;
 
-   void NativeConstruct() override final;
-
+   void NativeOnInitialized() override final;
+   void NativeConstruct() override;
    /** This updates the sidebar with information pertaining to all the heroes so it properly updates what hero is selected and the hp values and such by filling up an array
     * of JSON objects representing each hero.
     */
@@ -43,13 +44,13 @@ class MYPROJECT_API URTSSidebarWidget : public URTSBrowserWidgetBase
 
    /** Called when we toggle deselect on a single hero*/
    UFUNCTION()
-   void UpdateHeroToggleDeselected(AAlly* deselectedHeroRef);
+   void UpdateHeroSelectionToggled(AAlly* deselectedHeroRef);
 
-   /** Called when we select a single hero and deselect everything else, or if we toggle selection on
-    * @param bToggled - Did we select a single unit (then deselect others) or did we shift click
+   /**
+    * Used when a hero is selected. Handles if the hero is CTRL clicked or just regular selected.
     */
    UFUNCTION()
-   void UpdateSingleHeroSelect(AAlly* selectedALly);
+   void UpdateSingleHeroSelect(ABaseHero* selectedHero);
 
    /** Updates the hero's health current value when it senses a change*/
    UFUNCTION()
@@ -73,6 +74,13 @@ class MYPROJECT_API URTSSidebarWidget : public URTSBrowserWidgetBase
    UFUNCTION()
    void UpdateHeroMaxVitals(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected);
 
+ protected:
+   FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override final;
+   FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override final;
+
+   UFUNCTION()
+   void HandleBluEvent(const FString& eventName, const FString& eventMessage);
+
  private:
    /** Creates a JSON string used to update the browser to tell it we selected a single hero
     * @param heroRef - A hero unit aliased by an AAlly pointer
@@ -87,10 +95,5 @@ class MYPROJECT_API URTSSidebarWidget : public URTSBrowserWidgetBase
    /** Handles to events we are subscribed to that should be unregistered when we change party members*/
    TArray<TPair<FDelegateHandle, FDelegateHandle>, TFixedAllocator<8>> subscribedAttributeSetDelegateHandles;
 
- protected:
-   FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override final;
-   FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override final;
-
-   UFUNCTION()
-   void HandleBluEvent(const FString& eventName, const FString& eventMessage);
+   FTimerHandle initialSetupTimer;
 };

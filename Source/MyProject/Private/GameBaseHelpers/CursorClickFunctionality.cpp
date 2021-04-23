@@ -19,7 +19,23 @@ void CursorClickFunctionalityBase::IssueMoveToSelectedUnits(FVector moveLocation
 {
    for(AUnit* unit : controllerRef->GetBasePlayer()->GetSelectedUnits())
    {
-      unit->GetUnitController()->Move(moveLocation);
+      if(unit->GetUnitController()->GetState() != EUnitState::STATE_CASTING && unit->GetUnitController()->GetState() != EUnitState::STATE_CHANNELING &&
+         unit->GetUnitController()->GetState() != EUnitState::STATE_INCANTATION)
+      {
+         unit->GetUnitController()->Move(moveLocation);
+      }
+   }
+}
+
+void CursorClickFunctionalityBase::IssueMoveToFocusedUnit(FVector moveLocation)
+{
+   if(AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit())
+   {
+      if(focusedUnit->GetUnitController()->GetState() != EUnitState::STATE_CASTING && focusedUnit->GetUnitController()->GetState() != EUnitState::STATE_CHANNELING &&
+         focusedUnit->GetUnitController()->GetState() != EUnitState::STATE_INCANTATION)
+      {
+         focusedUnit->GetUnitController()->Move(moveLocation);
+      }
    }
 }
 
@@ -38,11 +54,34 @@ void CursorClickFunctionalityBase::IssueAttackToSelectedUnits(AUnit* attackTarge
    }
 }
 
+void CursorClickFunctionalityBase::IssueAttackToFocusedUnit(AUnit* attackTarget)
+{
+   if(AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit())
+   {
+      if(focusedUnit->GetIsEnemy() != attackTarget->GetIsEnemy())
+      {
+         if(UTargetedAttackComponent* attackComp = focusedUnit->GetUnitController()->FindComponentByClass<UTargetedAttackComponent>())
+         {
+            attackComp->BeginAttack(attackTarget);
+            focusedUnit->GetUnitController()->StopAutomation();
+         }
+      }
+   }
+}
+
 void CursorClickFunctionalityBase::IssueAttackMoveToSelectedUnits(FVector attackLocation)
 {
    for(AUnit* unit : controllerRef->GetBasePlayer()->GetSelectedUnits())
    {
       unit->GetUnitController()->FindComponentByClass<UTargetedAttackComponent>()->BeginAttackMove(attackLocation);
+   }
+}
+
+void CursorClickFunctionalityBase::IssueAttackMoveToFocusedUnit(FVector attackLocation)
+{
+   if(AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit())
+   {
+      focusedUnit->GetUnitController()->FindComponentByClass<UTargetedAttackComponent>()->BeginAttackMove(attackLocation);
    }
 }
 
@@ -68,7 +107,9 @@ void CursorClickFunctionalityBase::QueueActionToSelectedUnits(const TFunction<vo
 {
    for(AUnit* unit : controllerRef->GetBasePlayer()->GetSelectedUnits())
    {
-      unit->GetUnitController()->QueueAction([unit, queuedAction]() { queuedAction(unit); });
+      unit->GetUnitController()->QueueAction([unit, queuedAction]() {
+         queuedAction(unit);
+      });
    }
 }
 
@@ -103,7 +144,7 @@ void CursorClickFunctionalityBase::IssueItemUseCommandToHeroWithInventory()
 
       const auto heroController = heroUsingInventory->GetHeroController();
 
-      const TSubclassOf<UMySpell> spellToCast = heroController->GetManualSpellComponent()->GetCurrentlySelectedSpell(); 
+      const TSubclassOf<UMySpell> spellToCast = heroController->GetManualSpellComponent()->GetCurrentlySelectedSpell();
       if(heroController->GetManualSpellComponent()->OnSpellConfirmInput(clickHitResult, spellToCast))
       {
          heroController->HaltUnit();

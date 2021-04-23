@@ -19,8 +19,6 @@ void USpellBook::Init()
 {
    if(heroRef)
    {
-      cpcRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
-
       int index = 0;
       for(TSubclassOf<UMySpell> spell : availableSpells)
       {
@@ -34,9 +32,17 @@ void USpellBook::Init()
       }
 
       SetupInitialSpellNodeConnections();
-      GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
-         cpcRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->OnSlotSelected().AddUObject(this, &USpellBook::OnSpellSlotSelected);
-      });
+
+      if(!heroRef->HasAuthority() || !IsRunningDedicatedServer())
+      {
+         cpcRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
+         if(cpcRef)
+         {
+            GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
+               cpcRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->OnSlotSelected().AddUObject(this, &USpellBook::OnSpellSlotSelected);
+            });
+         }
+      }
    }
 }
 

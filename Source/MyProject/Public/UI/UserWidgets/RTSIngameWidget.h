@@ -23,6 +23,7 @@ class UBackpack;
 class USpellbookHUD;
 class UConfirmationBox;
 class URTSInputBox;
+class UUpChatBox;
 
 /**
  * Holds every widget used in the main gamemode Up (the top down game where we control four heroes).
@@ -82,7 +83,7 @@ class MYPROJECT_API URTSIngameWidget : public UMyUserWidget
    UGameSpeedWidget* GetGamespeedWidget() const { return Widget_Gamespeed; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
-   UConfirmationBox* GetChatBox() const { return Modal_Confirm; }
+   UUpChatBox* GetChatBox() const { return Chatbox; }
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HUDManager")
    UConfirmationBox* GetConfirmModal() const { return Modal_Confirm; }
@@ -157,4 +158,7 @@ class MYPROJECT_API URTSIngameWidget : public UMyUserWidget
 
    UPROPERTY(BlueprintReadOnly, Meta = (BindWidget), Meta = (AllowPrivateAccess = true))
    URTSInputBox* Modal_Input;
+
+   UPROPERTY(BlueprintReadOnly, Meta = (BindWidget), Meta = (AllowPrivateAccess = true))
+   UUpChatBox* Chatbox;
 };

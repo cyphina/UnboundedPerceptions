@@ -95,7 +95,14 @@ void DefaultCursorClickFunctionality::HandleRightClick()
 
                if(!pawnRef->GetStaticFormationEnabled())
                {
-                  IssueMoveToSelectedUnits(location);
+                  if(!controllerRef->IsInputKeyDown(FKey("SpaceBar")))
+                  {
+                     IssueMoveToSelectedUnits(location);
+                  }
+                  else
+                  {
+                     IssueMoveToFocusedUnit(location);
+                  }
                }
                else
                {
@@ -111,18 +118,33 @@ void DefaultCursorClickFunctionality::HandleRightClick()
                   pawnRef->CancelSelectedUnitsActionBeforePlayerCommand();
                   if(!unit->GetIsUnitHidden())
                   {
-                     IssueAttackToSelectedUnits(unit);
+                     if(!controllerRef->IsInputKeyDown(FKey("SpaceBar")))
+                     {
+                        IssueAttackToSelectedUnits(unit);
+                     }
+                     else
+                     {
+                        IssueAttackToFocusedUnit(unit);
+                     }
                   }
                   else
                   {
                      const FVector location = unit->GetActorLocation();
                      pawnRef->CreateClickVisual(location);
                      IssueMoveToSelectedUnits(location);
+                     if(!controllerRef->IsInputKeyDown(FKey("SpaceBar")))
+                     {
+                        IssueMoveToSelectedUnits(location);
+                     }
+                     else
+                     {
+                        IssueMoveToFocusedUnit(location);
+                     }
                   }
                }
+               break;
+               default: break;
             }
-            break;
-            default: break;
          }
       }
    }
@@ -169,7 +191,9 @@ void DefaultCursorClickFunctionality::HandleShiftRightClick()
             const FVector location = clickHitResult.Location;
             pawnRef->CreateClickVisual(location);
 
-            QueueActionToSelectedUnits([location](AUnit* unit) { unit->GetUnitController()->Move(location); });
+            QueueActionToSelectedUnits([location](AUnit* unit) {
+               unit->GetUnitController()->Move(location);
+            });
          }
          break;
          case ENEMY_OBJECT_CHANNEL:
@@ -211,6 +235,7 @@ void DefaultCursorClickFunctionality::ToggleSingleAllySelection()
             {
                allyRef->SetUnitSelected(true);
             }
+            controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectionToggled.Broadcast(allyRef);
          }
       }
    }
@@ -239,6 +264,20 @@ void DefaultCursorClickFunctionality::SpellCastQueue()
    pawnRef->GetHitResultClick(clickHitResult);
    if(clickHitResult.IsValidBlockingHit())
    {
+      if(AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit())
+      {
+         if(UManualSpellComponent* manSpellComp = focusedUnit->GetUnitController()->FindComponentByClass<UManualSpellComponent>())
+         {
+            const TSubclassOf<UMySpell> selectedSpell = manSpellComp->GetCurrentlySelectedSpell();
+            if(manSpellComp->OnSpellConfirmInput(clickHitResult, selectedSpell))
+            {
+               focusedUnit->GetUnitController()->QueueAction([this, currentHitResult = this->clickHitResult, manSpellComp, selectedSpell]() {
+                  manSpellComp->StartSpellCastAction(currentHitResult, selectedSpell);
+               });
+               ResetSecondaryCursorState();
+            }
+         }
+      }
       for(AUnit* selectedUnit : controllerRef->GetBasePlayer()->GetSelectedUnits())
       {
          if(UManualSpellComponent* manSpellComp = selectedUnit->GetUnitController()->FindComponentByClass<UManualSpellComponent>())
@@ -293,7 +332,7 @@ void DefaultCursorClickFunctionality::SelectSingleUnitUnderClick()
          {
             if(selectedUnit->GetIsEnemy())
             {
-               controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnEnemySelectedWithouDebugging().Execute(selectedUnit);
+               controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnEnemySelectedWithoutDebugging().Execute(selectedUnit);
             }
          }
          selectedUnit->SetUnitSelected(true);
@@ -323,7 +362,7 @@ void DefaultCursorClickFunctionality::SelectEnemy()
          {
             if(!GameplayModifierCVars::bEnableEnemyControl)
             {
-               controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnEnemySelectedWithouDebugging().Execute(selectedUnit);
+               controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnEnemySelectedWithoutDebugging().Execute(selectedUnit);
             }
             else
             {
@@ -358,17 +397,35 @@ void DefaultCursorClickFunctionality::ClickCastSpell()
    pawnRef->GetHitResultClick(clickHitResult);
    if(clickHitResult.IsValidBlockingHit())
    {
-      for(AUnit* unit : controllerRef->GetBasePlayer()->GetSelectedUnits())
+      if(AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit())
       {
-         if(UManualSpellComponent* manSpellCastComp = unit->GetUnitController()->FindComponentByClass<UManualSpellComponent>())
+         if(UManualSpellComponent* manSpellCastComp = focusedUnit->GetUnitController()->FindComponentByClass<UManualSpellComponent>())
          {
             if(CheckWantToCast(manSpellCastComp->GetSpellCastComp()))
             {
                const TSubclassOf<UMySpell> currentSpell = manSpellCastComp->GetCurrentlySelectedSpell();
                if(manSpellCastComp->OnSpellConfirmInput(clickHitResult, currentSpell))
                {
-                  unit->GetUnitController()->HaltUnit();
+                  focusedUnit->GetUnitController()->HaltUnit();
                   manSpellCastComp->StartSpellCastAction(clickHitResult, currentSpell);
+               }
+            }
+         }
+      }
+      else
+      {
+         for(AUnit* unit : controllerRef->GetBasePlayer()->GetSelectedUnits())
+         {
+            if(UManualSpellComponent* manSpellCastComp = unit->GetUnitController()->FindComponentByClass<UManualSpellComponent>())
+            {
+               if(CheckWantToCast(manSpellCastComp->GetSpellCastComp()))
+               {
+                  const TSubclassOf<UMySpell> currentSpell = manSpellCastComp->GetCurrentlySelectedSpell();
+                  if(manSpellCastComp->OnSpellConfirmInput(clickHitResult, currentSpell))
+                  {
+                     unit->GetUnitController()->HaltUnit();
+                     manSpellCastComp->StartSpellCastAction(clickHitResult, currentSpell);
+                  }
                }
             }
          }
@@ -388,7 +445,14 @@ void DefaultCursorClickFunctionality::ClickAttackMove()
    {
       const FVector moveLocation = clickHitResult.Location;
 
-      IssueAttackMoveToSelectedUnits(moveLocation);
+      if(!controllerRef->IsInputKeyDown(FKey("SpaceBar")))
+      {
+         IssueAttackMoveToSelectedUnits(moveLocation);
+      }
+      else
+      {
+         IssueAttackMoveToFocusedUnit(moveLocation);
+      }
 
       pawnRef->CreateClickVisual(moveLocation);
       ResetSecondaryCursorState();

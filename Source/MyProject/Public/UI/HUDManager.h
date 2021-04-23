@@ -17,12 +17,12 @@
 
 class UCompositeCurveTable;
 class UToolTipWidget;
-class ARTSGameMode;
 class AUserInput;
 class UMainWidget;
 class AShopNPC;
 class UDIRender;
 class URTSDamageNumberContainer;
+enum class EMinigameType : uint8;
 
 /**
  * @brief Provides functionality to toggle HUDs on and off, and provides a place to get references to all the HUDs
@@ -146,12 +146,15 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    bool ShowHiddenWidget(UMyUserWidget* widgetToApply) const;
    void HideWidgetOnScreen(UMyUserWidget* widgetToApply) const;
 
+   void OnMinigameStarted(EMinigameType minigameType);
+   void OnMinigameEnded(EMinigameType minigameType);
+	
+
    /**
     * @brief Number of huds we have total. As long as we add new HUD types before this ENUM entry it should be properly updated
     */
    static const int HUDCount = static_cast<uint8>(EHUDs::HS_Count);
 
-   ARTSGameMode* gameMode;
    AUserInput*   playerControllerRef;
 
    /**

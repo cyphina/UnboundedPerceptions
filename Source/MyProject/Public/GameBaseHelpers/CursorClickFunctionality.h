@@ -11,19 +11,25 @@ class ABaseHero;
 
 class MYPROJECT_API CursorClickFunctionalityBase
 {
-public:
-   virtual void HandleLeftClick() = 0;
-   virtual void HandleRightClick() = 0;
-   virtual void HandleShiftLeftClick() = 0;
-   virtual void HandleShiftRightClick() = 0;
+ public:
+   virtual void HandleLeftClick()        = 0;
+   virtual void HandleRightClick()       = 0;
+   virtual void HandleShiftLeftClick()   = 0;
+   virtual void HandleShiftRightClick()  = 0;
    virtual void HandleLeftClickRelease() = 0;
 
    virtual ~CursorClickFunctionalityBase() = default;
 
-protected:
+ protected:
    void IssueMoveToSelectedUnits(FVector moveLocation);
+   void IssueMoveToFocusedUnit(FVector moveLocation);
+
    void IssueAttackToSelectedUnits(AUnit* attackTarget);
+   void IssueAttackToFocusedUnit(AUnit* attackTarget);
+
    void IssueAttackMoveToSelectedUnits(FVector attackLocation);
+   void IssueAttackMoveToFocusedUnit(FVector attackLocation);
+
    void CancelSelectedUnitsSelectedSpell();
    void SelectionRectSetup();
    void QueueActionToSelectedUnits(const TFunction<void(AUnit*)>& queuedAction);
@@ -31,10 +37,10 @@ protected:
    void IssueTalkComandToSelectedHeroes();
    void IssueItemUseCommandToHeroWithInventory();
    void ResetSecondaryCursorState();
-   
+
    ABaseHero* GetHeroUsingInventory() const;
-   
-   ARTSPawn*   pawnRef = nullptr;
+
+   ARTSPawn*   pawnRef       = nullptr;
    AUserInput* controllerRef = nullptr;
    FHitResult  clickHitResult;
 };

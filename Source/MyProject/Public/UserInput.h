@@ -120,5 +120,8 @@ class MYPROJECT_API AUserInput : public APlayerController
    void ToggleSpellbookMenu();
 
    FORCEINLINE bool NotInMinigame();
+
+   void OnRep_PlayerState() override;
+   void OnRep_Pawn() override;
 #pragma endregion
 };

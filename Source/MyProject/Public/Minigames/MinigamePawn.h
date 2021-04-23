@@ -16,10 +16,6 @@ class MYPROJECT_API AMinigamePawn : public APawn
    // Sets default values for this pawn's properties
    AMinigamePawn();
 
-   /**Data used to decide what to do when the minigame completes and how to construct this instance of the game*/
-   UPROPERTY(BlueprintReadWrite)
-   FMinigameData mData;
-
    /**StartMinigame should probably be called when the pawn is possessed*/
    UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Minigame Event")
    void StartMinigame();
@@ -30,9 +26,16 @@ class MYPROJECT_API AMinigamePawn : public APawn
    UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Minigame Event")
    bool EndMinigame();
 
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   const FMinigameData& GetMinigameData() const { return mData; }
+
  protected:
    virtual void BeginPlay() override;
    virtual void Tick(float DeltaTime) override;
    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
    virtual void PossessedBy(AController* newController) override;
+
+   /**Data used to decide what to do when the minigame completes and how to construct this instance of the game*/
+   UPROPERTY(EditDefaultsOnly)
+   FMinigameData mData;
 };

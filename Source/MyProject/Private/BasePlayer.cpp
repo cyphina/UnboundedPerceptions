@@ -20,10 +20,24 @@ void ABasePlayer::BeginPlay()
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnAllyActiveChanged().AddUObject(this, &ABasePlayer::OnAllyActiveChanged);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnSummonActiveChanged().AddUObject(this, &ABasePlayer::OnSummonActiveChanged);
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroActiveChanged().AddUObject(this, &ABasePlayer::OnHeroActiveChanged);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnEnemySelectedWithouDebugging().BindUObject(
-   this, &ABasePlayer::SetFocusedUnit);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnEnemySelectedWithoutDebugging().BindUObject(this,
+                                                                                                                                         &ABasePlayer::SetFocusedUnit);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.AddDynamic(this, &ABasePlayer::OnAllySelected);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnAllyDeselectedDelegate.AddDynamic(this, &ABasePlayer::OnAllyDeselected);
+
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroSelectedDelegate.AddDynamic(this, &ABasePlayer::OnHeroSelected);
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroDeselectedDelegate.AddDynamic(this, &ABasePlayer::OnHeroDeselected);
+
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnUnitSlotSelected().AddUObject(this, &ABasePlayer::OnUnitSlotSelected);
    Cast<ARTSPawn>(GetWorld()->GetFirstPlayerController()->GetPawn())->OnGroupTabbed().AddUObject(this, &ABasePlayer::OnGroupTabbed);
+
+   for(TActorIterator<ABaseHero> actItr(GetWorld()); actItr; ++actItr)
+   {
+      if(actItr->GetOwningPlayer() == GetWorld()->GetFirstPlayerController())
+      {
+         allHeroes.Add(*actItr);
+      }
+   }
 }
 
 AUnit* ABasePlayer::GetFocusedUnit() const
@@ -166,7 +180,10 @@ void ABasePlayer::OnAllyActiveChanged(AAlly* allyRef, bool isActive)
    else
    {
       allies.RemoveSingle(allyRef);
-      if(allyRef->GetUnitSelected()) { selectedAllies.RemoveSingle(allyRef); }
+      if(allyRef->GetUnitSelected())
+      {
+         selectedAllies.RemoveSingle(allyRef);
+      }
    }
 }
 
@@ -175,7 +192,8 @@ void ABasePlayer::OnHeroActiveChanged(ABaseHero* heroRef, bool isActive)
    if(isActive)
    {
       heroes.Add(heroRef);
-   } else
+   }
+   else
    {
       heroes.RemoveSingle(heroRef);
       for(int i = 0; i < heroes.Num(); ++i)

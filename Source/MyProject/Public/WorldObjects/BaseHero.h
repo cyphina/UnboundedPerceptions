@@ -85,6 +85,9 @@ class MYPROJECT_API ABaseHero : public AAlly
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
    AHeroAIController* GetHeroController() const { return heroController; }
 
+   UFUNCTION(BlueprintPure, BlueprintCallable)
+   APlayerController* GetOwningPlayer() const;
+
    void SetCurrentInteractable(AActor* newInteractable);
 
    /** Gets the item set to be used currently by this hero */

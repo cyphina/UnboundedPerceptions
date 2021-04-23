@@ -32,7 +32,7 @@ class MYPROJECT_API ABasePlayer : public APlayerState
 
    void BeginPlay() override;
 
-public:
+ public:
    static const int MAX_NUM_HEROES = 4;
 
    const TArray<ABaseHero*>& GetHeroes() const { return heroes; }
@@ -46,10 +46,6 @@ public:
    void RemoveSelectedUnit(AUnit* unitToRemove) { selectedUnits.RemoveSingle(unitToRemove); }
 
    const TArray<AAlly*>& GetSelectedAllies() const { return selectedAllies; }
-
-   void AddSelectedAlly(AAlly* allyToAdd) { selectedAllies.AddUnique(allyToAdd); }
-
-   void RemoveSelectedAlly(AAlly* allyToRemove) { selectedAllies.RemoveSingle(allyToRemove); }
 
    const TArray<ABaseHero*>& GetSelectedHeroes() const { return selectedHeroes; }
 
@@ -142,7 +138,7 @@ public:
    UFUNCTION(BlueprintCallable)
    void SetMoney(int newMoneyVal);
 
-protected:
+ protected:
    /**
     * List of active heroes.
     * Party leader should always be at slot 0.
@@ -159,7 +155,7 @@ protected:
    /** Used when debugging enemy control */
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    TArray<AUnit*> selectedUnits;
-   
+
    /** List of all alive selected allies */
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    TArray<AAlly*> selectedAllies;
@@ -174,12 +170,21 @@ protected:
     */
    AUnit* focusedUnit = nullptr;
 
-private:
+ private:
+   UFUNCTION()
    void OnHeroSelected(ABaseHero* heroRef);
+
+   UFUNCTION()
    void OnAllySelected(AAlly* allyRef);
+
    void OnUnitSelected(AUnit* unitRef);
+
+   UFUNCTION()
    void OnHeroDeselected(ABaseHero* heroRef);
+
+   UFUNCTION()
    void OnAllyDeselected(AAlly* allyRef);
+
    void OnUnitDeselected(AUnit* unitRef);
    void OnUnitSlotSelected(AUnit* unitSelected);
    void OnGroupTabbed(AUnit* newFocusedUnit);

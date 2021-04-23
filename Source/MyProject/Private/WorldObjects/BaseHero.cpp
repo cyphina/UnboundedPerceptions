@@ -48,9 +48,6 @@ void ABaseHero::BeginPlay()
 {
    Super::BeginPlay();
 
-   player = Cast<ABasePlayer>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController()->PlayerState);
-   player->allHeroes.Add(this);
-
    currentInteractable = nullptr;
 
    backpack = UBackpack::CreateBackpack(this, 40);
@@ -58,18 +55,7 @@ void ABaseHero::BeginPlay()
    equipment = NewObject<UEquipmentContainer>(this, "Equipment");
    equipment->OnEquipmentContainerChanged().BindUObject(this, &ABaseHero::OnEquipped);
 
-   GetHeroController()->GetSpellCastComponent()->OnSpellCasted().AddUObject(this, &ABaseHero::OnSpellCasted);
-
    LoadSavedTriggers();
-   GiveItemAbilities();
-
-   spellbook = USpellBook::CreateSpellBook(this, spellbookClass);
-
-   if(spellbook)
-   {
-      SpellGameContext::OnSpellLearnedEvent.AddUObject(this, &ABaseHero::OnSpellLearned);
-      SpellGameContext::OnSpellUpgradedEvent.AddUObject(this, &ABaseHero::OnSpellUpgraded);
-   }
 
    if(IsEnabled())
    {
@@ -92,8 +78,35 @@ void ABaseHero::EndPlay(EEndPlayReason::Type epr)
 void ABaseHero::PossessedBy(AController* newController)
 {
    Super::PossessedBy(newController);
-   heroController = Cast<AHeroAIController>(GetController());
-   OnUnitDie().AddUObject(this, &ABaseHero::CheckGameOverOnDeath);
+
+   if(!HasAuthority() || !IsRunningDedicatedServer())
+   {
+      if(controllerRef)
+      {
+         player = Cast<ABasePlayer>(controllerRef->PlayerState);
+         if(player)
+         {
+            player->allHeroes.Add(this);
+         }
+      }
+
+      heroController = Cast<AHeroAIController>(GetController());
+      OnUnitDie().AddUObject(this, &ABaseHero::CheckGameOverOnDeath);
+      GetHeroController()->GetSpellCastComponent()->OnSpellCasted().AddUObject(this, &ABaseHero::OnSpellCasted);
+
+      if(HasAuthority() || !IsRunningDedicatedServer())
+      {
+         GiveItemAbilities();
+
+         spellbook = USpellBook::CreateSpellBook(this, spellbookClass);
+
+         if(spellbook)
+         {
+            SpellGameContext::OnSpellLearnedEvent.AddUObject(this, &ABaseHero::OnSpellLearned);
+            SpellGameContext::OnSpellUpgradedEvent.AddUObject(this, &ABaseHero::OnSpellUpgraded);
+         }
+      }
+   }
 }
 
 void ABaseHero::UnPossessed()
@@ -175,6 +188,11 @@ void ABaseHero::LevelUp_Implementation()
    statComponent->SetUnitLevel(statComponent->GetUnitLevel() + 1);
    expForLevel *= NEXT_EXP_MULTIPLIER;
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroLevelUp().Broadcast(this);
+}
+
+APlayerController* ABaseHero::GetOwningPlayer() const
+{
+   return controllerRef;
 }
 
 void ABaseHero::SetCurrentInteractable(AActor* newInteractable)
@@ -344,9 +362,11 @@ void ABaseHero::SetUnitSelected(bool value)
    if(value)
    {
       controllerRef->GetBasePlayer()->AddSelectedHero(this);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnHeroSelectedDelegate.Broadcast(this);
    }
    else
    {
       controllerRef->GetBasePlayer()->RemoveSelectedHero(this);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnHeroDeselectedDelegate.Broadcast(this);
    }
 }

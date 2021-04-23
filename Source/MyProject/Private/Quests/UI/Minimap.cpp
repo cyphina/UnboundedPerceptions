@@ -11,23 +11,30 @@
 void UMinimap::NativeOnInitialized()
 {
    Super::NativeOnInitialized();
-   GetWorld()->GetTimerManager().SetTimer(updateQuestDirectionArrowTimerHandle, [this]()
-   {
-      if(AActor* goalActor = CPC->GetGameMode()->questManager->GetGoalActor())
-      {
-         if(GetDistanceToGoal() > 10)
-         {
-            ToggleDirectionArrowVisibility(false);
-         } else
-         {
-            ToggleDirectionArrowVisibility(true);
-         }
-         const FVector partyLeaderLocation           = CPC->GetBasePlayer()->GetHeroes()[0]->GetActorLocation();
-         const FVector questGoalActorLocation        = goalActor->GetActorLocation();
-         const FVector fromPartyLeaderToQuestGoalVec = partyLeaderLocation - questGoalActorLocation;
-         UpdateDirectionArrow(FMath::RadiansToDegrees(FMath::Acos(FVector::ForwardVector.CosineAngle2D(fromPartyLeaderToQuestGoalVec))));
-      }
-   }, 0.1f, true, 0.f);
+   GetWorld()->GetTimerManager().SetTimer(
+       updateQuestDirectionArrowTimerHandle,
+       [this]() {
+          if(ARTSGameMode* GM = CPC->GetGameMode())
+          {
+             // TODO: Use FindActorInWorld instead of referencing something that only exists on the server
+             if(AActor* goalActor = CPC->GetGameMode()->questManager->GetGoalActor())
+             {
+                if(GetDistanceToGoal() > 10)
+                {
+                   ToggleDirectionArrowVisibility(false);
+                }
+                else
+                {
+                   ToggleDirectionArrowVisibility(true);
+                }
+                const FVector partyLeaderLocation           = CPC->GetBasePlayer()->GetHeroes()[0]->GetActorLocation();
+                const FVector questGoalActorLocation        = goalActor->GetActorLocation();
+                const FVector fromPartyLeaderToQuestGoalVec = partyLeaderLocation - questGoalActorLocation;
+                UpdateDirectionArrow(FMath::RadiansToDegrees(FMath::Acos(FVector::ForwardVector.CosineAngle2D(fromPartyLeaderToQuestGoalVec))));
+             }
+          }
+       },
+       0.1f, true, 0.f);
 }
 
 void UMinimap::OnQuestCompleted(AQuest* questCompleted)
@@ -39,7 +46,8 @@ void UMinimap::OnSubgoalSwitched(AQuest* quest, int goalIndex)
    if(GetDistanceToGoal() > 10)
    {
       ToggleDirectionArrowVisibility(true);
-   } else
+   }
+   else
    {
       ToggleDirectionArrowVisibility(false);
    }

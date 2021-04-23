@@ -16,67 +16,97 @@
 #include "Blu/Public/BluEye.h"
 #include "Blu/Public/BluBlueprintFunctionLibrary.h"
 
+void URTSSidebarWidget::NativeOnInitialized()
+{
+   Super::NativeOnInitialized();
+   cpcRef = GetOwningPlayer<AUserInput>();
+   if(cpcRef)
+   {
+      if(ABasePlayer* BasePlayer = cpcRef->GetBasePlayer())
+      {
+         BasePlayer->partyUpdatedEvent.AddUObject(this, &URTSSidebarWidget::UpdatePartyInformation);
+      }
+      cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnHeroSelectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateSingleHeroSelect);
+      cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectionToggled.AddDynamic(this, &URTSSidebarWidget::UpdateHeroSelectionToggled);
+      cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnSelectionClearedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateDeselectAllHeroes);
+   }
+
+   StartDisplay(width, height);
+   browser->ScriptEventEmitter.AddDynamic(this, &URTSSidebarWidget::HandleBluEvent);
+}
+
 void URTSSidebarWidget::NativeConstruct()
 {
    Super::NativeConstruct();
-   cpcRef = Cast<AUserInput>(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController());
-   cpcRef->GetBasePlayer()->partyUpdatedEvent.AddUObject(this, &URTSSidebarWidget::UpdatePartyInformation);
-   cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateSingleHeroSelect);
-   cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnAllyToggleDeselectedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateHeroToggleDeselected);
-   cpcRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnSelectionClearedDelegate.AddDynamic(this, &URTSSidebarWidget::UpdateDeselectAllHeroes);
-   StartDisplay(width, height);
-   browser->ScriptEventEmitter.AddDynamic(this, &URTSSidebarWidget::HandleBluEvent);
+   GetWorld()->GetTimerManager().SetTimer(
+       initialSetupTimer,
+       [this]() {
+          if(browser)
+          {
+             if(!browser->IsBrowserLoading())
+             {
+                UpdatePartyInformation();
+                GetWorld()->GetTimerManager().ClearTimer(initialSetupTimer);
+             }
+          }
+       },
+       1.f, true, 0.f);
+   UpdatePartyInformation();
 }
 
 void URTSSidebarWidget::UpdatePartyInformation()
 {
    if(browser && !browser->IsBrowserLoading())
    {
-      // Unsubscribe existing party members
-      int index = 0;
-      for(auto& handles : subscribedAttributeSetDelegateHandles)
+      if(ABasePlayer* BasePlayer = cpcRef->GetBasePlayer())
       {
-         if(handles.Key.IsValid() && handles.Value.IsValid())
+         // Unsubscribe existing party members
+         int index = 0;
+         for(auto& handles : subscribedAttributeSetDelegateHandles)
          {
-            URTSAttributeSet* attributeSet = const_cast<URTSAttributeSet*>(cpcRef->GetBasePlayer()->GetHeroes()[index]->GetAbilitySystemComponent()->GetSet<URTSAttributeSet
-            >());
-            attributeSet->statUpdatedEvent.Remove(handles.Key);
-            attributeSet->baseStatUpdatedEvent.Remove(handles.Value);
-         } else
-         {
-            break;
+            if(handles.Key.IsValid() && handles.Value.IsValid())
+            {
+               URTSAttributeSet* attributeSet = const_cast<URTSAttributeSet*>(BasePlayer->GetHeroes()[index]->GetAbilitySystemComponent()->GetSet<URTSAttributeSet>());
+               attributeSet->statUpdatedEvent.Remove(handles.Key);
+               attributeSet->baseStatUpdatedEvent.Remove(handles.Value);
+            }
+            else
+            {
+               break;
+            }
+            ++index;
          }
-         ++index;
+         subscribedAttributeSetDelegateHandles.Empty();
+
+         // Create the string to send to the browser
+         FString heroInfoString;
+         auto    writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&heroInfoString);
+
+         writer->WriteArrayStart();
+         // Create JSON for each hero object which is used to update the sidebar browser
+
+         for(auto hero : BasePlayer->GetHeroes())
+         {
+            TSharedPtr<FJsonObject> heroObj = MakeShareable(new FJsonObject);
+            heroObj->SetStringField("name", hero->GetGameName().ToString());
+            heroObj->SetNumberField("hitpoints", hero->GetStatComponent()->GetVitalCurValue(EVitals::Health));
+            heroObj->SetNumberField("maxHitpoints", hero->GetStatComponent()->GetVitalBaseValue(EVitals::Health));
+            heroObj->SetNumberField("mana", hero->GetStatComponent()->GetVitalCurValue(EVitals::Mana));
+            heroObj->SetNumberField("maxMana", hero->GetStatComponent()->GetVitalBaseValue(EVitals::Mana));
+            heroObj->SetBoolField("bSelected", hero->GetUnitSelected());
+
+            // Start listening to the health values
+            URTSAttributeSet* attSet = const_cast<URTSAttributeSet*>(hero->GetAbilitySystemComponent()->GetSet<URTSAttributeSet>());
+            subscribedAttributeSetDelegateHandles.Emplace(MakeTuple(attSet->statUpdatedEvent.AddUObject(this, &URTSSidebarWidget::UpdateHeroVitals),
+                                                                    attSet->baseStatUpdatedEvent.AddUObject(this, &URTSSidebarWidget::UpdateHeroMaxVitals)));
+            // Serialize our object (write the object to the string)
+            FJsonSerializer::Serialize(heroObj.ToSharedRef(), writer);
+         }
+
+         heroInfoString.AppendChar(']');
+
+         UpdateInformation("updatePartyInfo", heroInfoString);
       }
-      subscribedAttributeSetDelegateHandles.Empty();
-
-      // Create the string to send to the browser
-      FString heroInfoString;
-      auto    writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&heroInfoString);
-
-      writer->WriteArrayStart();
-      // Create JSON for each hero object which is used to update the sidebar browser
-      for(auto hero : cpcRef->GetBasePlayer()->GetHeroes())
-      {
-         TSharedPtr<FJsonObject> heroObj = MakeShareable(new FJsonObject);
-         heroObj->SetStringField("name", hero->GetGameName().ToString());
-         heroObj->SetNumberField("hitpoints", hero->GetStatComponent()->GetVitalCurValue(EVitals::Health));
-         heroObj->SetNumberField("maxHitpoints", hero->GetStatComponent()->GetVitalBaseValue(EVitals::Health));
-         heroObj->SetNumberField("mana", hero->GetStatComponent()->GetVitalCurValue(EVitals::Mana));
-         heroObj->SetNumberField("maxMana", hero->GetStatComponent()->GetVitalBaseValue(EVitals::Mana));
-         heroObj->SetBoolField("bSelected", hero->GetUnitSelected());
-
-         // Start listening to the health values
-         URTSAttributeSet* attSet = const_cast<URTSAttributeSet*>(hero->GetAbilitySystemComponent()->GetSet<URTSAttributeSet>());
-         subscribedAttributeSetDelegateHandles.Emplace(MakeTuple(attSet->statUpdatedEvent.AddUObject(this, &URTSSidebarWidget::UpdateHeroVitals),
-                                                                 attSet->baseStatUpdatedEvent.AddUObject(this, &URTSSidebarWidget::UpdateHeroMaxVitals)));
-         // Serialize our object (write the object to the string)
-         FJsonSerializer::Serialize(heroObj.ToSharedRef(), writer);
-      }
-
-      heroInfoString.AppendChar(']');
-
-      UpdateInformation("updatePartyInfo", heroInfoString);
    }
 }
 
@@ -85,24 +115,37 @@ void URTSSidebarWidget::UpdateDeselectAllHeroes()
    UpdateInformation("updateDeselectAllHeroes", TEXT(""_SV));
 }
 
-void URTSSidebarWidget::UpdateHeroToggleDeselected(AAlly* deselectedHeroRef)
+void URTSSidebarWidget::UpdateHeroSelectionToggled(AAlly* deselectedHeroRef)
 {
    if(deselectedHeroRef->GetClass()->IsChildOf(ABaseHero::StaticClass()))
    {
       const FString heroInfoString = MakeSingleHeroSelectedJson(deselectedHeroRef);
-      UpdateInformation("updateHeroToggleDeselect", heroInfoString);
+
+      if(!deselectedHeroRef->IsSelected())
+      {
+         UpdateInformation("updateHeroToggleDeselect", heroInfoString);
+      }
+      else
+      {
+         UpdateInformation("updateSingleHeroToggleSelect", heroInfoString);
+      }
    }
 }
 
-void URTSSidebarWidget::UpdateSingleHeroSelect(AAlly* selectedAlly)
+void URTSSidebarWidget::UpdateSingleHeroSelect(ABaseHero* selectedHero)
 {
-   if(selectedAlly->GetClass()->IsChildOf(ABaseHero::StaticClass()))
-   {
-      const FString heroInfoString = MakeSingleHeroSelectedJson(selectedAlly);
+   GetWorld()->GetTimerManager().SetTimerForNextTick([this, selectedHero]() {
+      const FString heroInfoString = MakeSingleHeroSelectedJson(selectedHero);
 
-      // Send JSON data to the browser, which will automatically set deselected to its saved objects and then select the hero we passed in
-      UpdateInformation("updateSingleHeroSelect", heroInfoString);
-   }
+      if(cpcRef->GetBasePlayer()->GetSelectedHeroes().Num() == 1)
+      {
+         UpdateInformation("updateSingleHeroSelect", heroInfoString);
+      }
+      else
+      {
+         UpdateInformation("updateSingleHeroToggleSelect", heroInfoString);
+      }
+   });
 }
 
 void URTSSidebarWidget::UpdateHeroHealth(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected)
@@ -122,7 +165,8 @@ void URTSSidebarWidget::UpdateHeroVitals(const FGameplayAttribute& attributeModi
    if(attributeModified.GetName() == "Health")
    {
       UpdateHeroHealth(attributeModified, newAttributeValue, unitAffected);
-   } else if(attributeModified.GetName() == "Mana")
+   }
+   else if(attributeModified.GetName() == "Mana")
    {
       UpdateHeroMana(attributeModified, newAttributeValue, unitAffected);
    }
@@ -145,7 +189,8 @@ void URTSSidebarWidget::UpdateHeroMaxVitals(const FGameplayAttribute& attributeM
    if(attributeModified.GetName() == "Health")
    {
       UpdateHeroMaxHealth(attributeModified, newAttributeValue, unitAffected);
-   } else if(attributeModified.GetName() == "Mana")
+   }
+   else if(attributeModified.GetName() == "Mana")
    {
       UpdateHeroMaxMana(attributeModified, newAttributeValue, unitAffected);
    }
@@ -217,7 +262,8 @@ void URTSSidebarWidget::HandleBluEvent(const FString& eventName, const FString& 
       {
          cpcRef->GetBasePlayer()->ClearSelectedUnits();
          selectedHeroRef->SetUnitSelected(true);
-      } else
+      }
+      else
       {
          selectedHeroRef->SetUnitSelected(!selectedHeroRef->GetUnitSelected());
       }

@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "AllUnitsContext.h"
@@ -15,6 +13,10 @@ class AAlly;
 class AUnit;
 class AFogOfWarPlane;
 class UVisionSubsystem;
+enum class EMinigameType : uint8;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnMinigameStarted, EMinigameType);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnMinigameEnded, EMinigameType);
 
 /**
  * Game State has information that is replicated to all clients.
@@ -48,6 +50,15 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsConte
    UFUNCTION()
    void UpdateGameSpeed(float newSpeedMultiplier);
 
+   UFUNCTION(Client, Reliable)
+   void Client_StartMinigame(EMinigameType MinigameType);
+
+   UFUNCTION(Client, Reliable)
+   void Client_EndMinigame(EMinigameType MinigameType);
+
+   FOnMinigameStarted& OnMinigameStarted() { return OnMinigameStartedEvent; }
+   FOnMinigameEnded&   OnMinigameEndded() { return OnMinigameEndedEvent; }
+
    const FUpGameClock* GetGameClock() const { return clock.Get(); }
 
    void AddGameTime(FUpTime timeToAdd, FUpDate daysToAdd);
@@ -56,6 +67,12 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsConte
    float GetGameSpeed() const override { return speedModifier; }
 
    FUpdateGameSpeed OnGameSpeedUpdated() const override { return UpdateGameSpeedDelegate; }
+
+   FVector2D GetCameraBoundX() const { return cameraBoundX; }
+   FVector2D GetCameraBoundY() const { return cameraBoundY; }
+
+   void SetCameraBoundX(FVector2D newBounds) { cameraBoundX = newBounds; }
+   void SetCameraBoundY(FVector2D newBounds) { cameraBoundY = newBounds; }
 
  protected:
    void Tick(float deltaSeconds) override;
@@ -77,6 +94,11 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsConte
    /** As units get killed off due to level unload, we need to make sure these data structures are on good shape when we resume playing in the next level */
    UFUNCTION()
    void CleanupUnitLists();
+
+#if WITH_EDITORONLY_DATA
+   UFUNCTION()
+   void CheckMapBounds();
+#endif
 
    /**
     * Allows us to toggle if we hide allies or enemies via the vision subsystem
@@ -118,4 +140,12 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsConte
 
    /** Copy of cached value (value gotten from reading thread last) */
    TArray<AUnit*> visibleEnemies;
+
+   /** How far away relative to the origin we can move left (X) and right (Y)*/
+   FVector2D cameraBoundX;
+   /** How far away relative to the origin we can move down (X) and up (Y) */
+   FVector2D cameraBoundY;
+
+   FOnMinigameStarted OnMinigameStartedEvent;
+   FOnMinigameEnded   OnMinigameEndedEvent;
 };

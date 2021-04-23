@@ -46,6 +46,7 @@
 #include "Quests/QuestManager.h"
 
 #include "ToolTipWidget.h"
+#include "UpChatBox.h"
 
 AHUDManager::AHUDManager() : Super()
 {
@@ -66,12 +67,6 @@ void AHUDManager::BeginPlay()
 
    ARTSPawn* playerPawn = Cast<ARTSPawn>(playerControllerRef->GetPawn());
    if(!ensure(playerPawn != nullptr))
-   {
-      return;
-   }
-
-   gameMode = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
-   if(!ensure(gameMode != nullptr))
    {
       return;
    }
@@ -287,6 +282,24 @@ void AHUDManager::HideWidgetOnScreen(UMyUserWidget* widgetToApply) const
    }
 }
 
+void AHUDManager::OnMinigameStarted(EMinigameType minigameType)
+{
+   // TODO: Check minigame tags to see if it's a minigame where we hide the main hud.
+   if(IsWidgetOnScreen(EHUDs::HS_Ingame))
+   {
+      HideHUD(EHUDs::HS_Ingame);
+   }
+}
+
+void AHUDManager::OnMinigameEnded(EMinigameType minigameType)
+{
+   // TODO: Check minigame tags to see if it's a minigame where we hide the main hud.
+   if(!IsWidgetOnScreen(EHUDs::HS_Ingame))
+   {
+      AddHUD(static_cast<uint8>(EHUDs::HS_Ingame));
+   }
+}
+
 bool AHUDManager::ShowHiddenWidget(UMyUserWidget* widgetToApply) const
 {
    if(widgetToApply->GetClass()->IsChildOf(UAnimHudWidget::StaticClass()))
@@ -409,9 +422,7 @@ void AHUDManager::InjectDependentClasses()
    InjectDependency(GetIngameHUD()->GetSocialWindow());
    InjectDependency(GetIngameHUD()->GetSocialWindow()->dialogWheel);
    InjectDependency(GetIngameHUD()->GetShopHUD());
-   InjectDependency(gameMode->GetMinigameManager());
-   InjectDependency(gameMode->GetQuestManager());
-   InjectDependency(gameMode->GetTriggerManager());
+
    InjectDependency(GetBreakMenu());
    InjectDependency(GetConfirmationBox());
    InjectDependency(GetInputBox());

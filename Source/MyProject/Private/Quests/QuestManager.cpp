@@ -63,10 +63,13 @@ void UQuestManager::UpdateQuestClassList()
 
 void UQuestManager::Init()
 {
-   controllerRef = Cast<AUserInput>(GetOuter()->GetWorld()->GetFirstPlayerController());
-
-   // Widgets may not be initialized due to begin play order so setup next frame.
-   GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UQuestManager::SetupWidgetReferences);
+   if(!HasAuthority() || !IsRunningDedicatedServer())
+   {
+      controllerRef = Cast<AUserInput>(GetOuter()->GetWorld()->GetFirstPlayerController());
+      hudManagerRef = controllerRef->GetHUDManager();
+      // Widgets may not be initialized due to begin play order so setup next frame.
+      GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UQuestManager::SetupWidgetReferences);
+   }
 
    completedQuests.Reserve(4);
    failedQuests.Reserve(4);
@@ -94,20 +97,22 @@ void UQuestManager::SetupWidgetReferences()
 
 void UQuestManager::CompleteSubgoal(AQuest* quest, int goalIndex)
 {
-   quest->CompleteSubGoal(goalIndex);
+   if(quest)
+   {
+      quest->CompleteSubGoal(goalIndex);
+   }
 }
 
 bool UQuestManager::AddNewQuest(TSubclassOf<AQuest> questClassToSpawn)
 {
-   auto condition = [questClassToSpawn](AQuest* quest)
-   {
+   auto condition = [questClassToSpawn](AQuest* quest) {
       return questClassToSpawn == quest->GetClass();
    };
 
    if(IsValid(questClassToSpawn) && !activeQuests.ContainsByPredicate(condition))
    {
       AQuest* quest =
-      questListRef->GetWorld()->SpawnActorDeferred<AQuest>(questClassToSpawn.Get(), FTransform(), nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+          questListRef->GetWorld()->SpawnActorDeferred<AQuest>(questClassToSpawn.Get(), FTransform(), nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
       quest->FinishSpawning(FTransform());
 
       activeQuests.Add(quest);
@@ -120,17 +125,26 @@ bool UQuestManager::AddNewQuest(TSubclassOf<AQuest> questClassToSpawn)
 
 void UQuestManager::OnSubgoalSwitched(AQuest* quest, int goalIndex)
 {
-   if(currentGoalActor)
+   if(!HasAuthority() || !IsRunningDedicatedServer())
    {
-      currentGoalActor->Destroy();
-   }
+      if(currentGoalActor)
+      {
+         currentGoalActor->Destroy();
+      }
 
-   if(quest->GetGoalAtIndex(goalIndex)->GetGoalStyleInfo().goalLocation != FGoalStyleInfo::invalidGoalLocation)
-   {
-      currentGoalActor = controllerRef->GetWorld()->SpawnActorAbsolute<AGoalActor>(
-      goalActorClass,
-      FTransform(quest->GetGoalAtIndex(goalIndex)->GetGoalStyleInfo().goalLocation), FActorSpawnParameters());
+      if(quest->GetGoalAtIndex(goalIndex)->GetGoalStyleInfo().goalLocation != FGoalStyleInfo::invalidGoalLocation)
+      {
+         currentGoalActor = controllerRef->GetWorld()->SpawnActorAbsolute<AGoalActor>(
+             goalActorClass, FTransform(quest->GetGoalAtIndex(goalIndex)->GetGoalStyleInfo().goalLocation), FActorSpawnParameters());
+      }
    }
+}
+
+bool UQuestManager::HasAuthority() const
+{
+   AActor* Outer = Cast<AActor>(GetOuter());
+   check(Outer);
+   return Outer->HasAuthority();
 }
 
 void UQuestManager::OnQuestCompleted(AQuest* questToEnd)
@@ -139,10 +153,8 @@ void UQuestManager::OnQuestCompleted(AQuest* questToEnd)
    switch(questToEnd->GetQuestState())
    {
       case EQuestState::currentQuests: break;
-      case EQuestState::failedQuests: failedQuests.Add(questToEnd);
-         break;
-      case EQuestState::completedQuests: completedQuests.Add(questToEnd);
-         break;
+      case EQuestState::failedQuests: failedQuests.Add(questToEnd); break;
+      case EQuestState::completedQuests: completedQuests.Add(questToEnd); break;
    }
 
    if(questToEnd == questListRef->GetCurrentlySelectedQuest())
@@ -172,8 +184,7 @@ void UQuestManager::OnEnemyDie(AUnit* deadUnit)
    if(AEnemy* enemy = Cast<AEnemy>(deadUnit))
    {
       // For updating UI, we need to use TaskGraphMainThread
-      auto dieFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, enemy]()
-      {
+      auto dieFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, enemy]() {
          for(AQuest* quest : activeQuests)
          {
             for(const int goalIndex : quest->GetCurrentGoalIndices())
@@ -197,7 +208,10 @@ void UQuestManager::OnEnemyDie(AUnit* deadUnit)
             }
 
             // Regardless if whether this goal finishes the quest or not, update the quest journal
-            if(quest == questJournalRef->GetSelectedQuest()) { questJournalRef->UpdateDetailWindow(); }
+            if(quest == questJournalRef->GetSelectedQuest())
+            {
+               questJournalRef->UpdateDetailWindow();
+            }
          }
       });
    }
@@ -205,8 +219,7 @@ void UQuestManager::OnEnemyDie(AUnit* deadUnit)
 
 void UQuestManager::OnTalkNPC(ANPC* talkedToNPC, FGameplayTag conversationTopic)
 {
-   auto talkFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, talkedToNPC, conversationTopic]()
-   {
+   auto talkFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, talkedToNPC, conversationTopic]() {
       for(AQuest* quest : activeQuests)
       {
          for(const int goalIndex : quest->GetCurrentGoalIndices())
@@ -228,7 +241,8 @@ void UQuestManager::OnTalkNPC(ANPC* talkedToNPC, FGameplayTag conversationTopic)
                         return;
                      }
                   }
-               } else if(UUpGatherGoal* gatherGoal = Cast<UUpGatherGoal>(goal))
+               }
+               else if(UUpGatherGoal* gatherGoal = Cast<UUpGatherGoal>(goal))
                {
                   if(conversationTopic == FGameplayTag::RequestGameplayTag("Dialog.Quest.Turn In Rewards"))
                   {
@@ -257,7 +271,8 @@ bool UQuestManager::TurnInItemsFromGatherGoal(int gatherItemId, int numItemsToGa
       if(!res.bSuccessfulOperation)
       {
          numItemsToRemove = res.numUpdatedItemsRemaining;
-      } else
+      }
+      else
       {
          return true;
       }
@@ -272,12 +287,14 @@ void UQuestManager::OnItemPickedUp(const ABaseHero* heroPickingItem, const FBack
       const int     numItemsPickedUp = itemUpdateResult.numUpdatedItemsRequested - itemUpdateResult.numUpdatedItemsRemaining;
       const FMyItem newItem{itemUpdateResult.itemId, numItemsPickedUp};
 
-      auto itemPickupFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, newItem]() { RecalculateItemCountsForGoals(newItem); });
+      auto itemPickupFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, newItem]() {
+         RecalculateItemCountsForGoals(newItem);
+      });
    }
 }
 
-void UQuestManager::OnItemPurchased
-(const ABaseHero* purchasingHero, const FBackpackUpdateResult& addPurchasedItemResult, const TArray<FBackpackUpdateResult>& removePaymentItemsResults)
+void UQuestManager::OnItemPurchased(const ABaseHero* purchasingHero, const FBackpackUpdateResult& addPurchasedItemResult,
+                                    const TArray<FBackpackUpdateResult>& removePaymentItemsResults)
 {
    OnItemPickedUp(purchasingHero, addPurchasedItemResult);
    for(const FBackpackUpdateResult& backpackUpdateResult : removePaymentItemsResults)
@@ -325,8 +342,7 @@ void UQuestManager::RecalculateItemCountsForGoals(const FMyItem item)
 
 void UQuestManager::OnInteracted(TSubclassOf<AInteractableBase> interactableClass, const FText& decoratorName)
 {
-   auto itemPickupFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, interactableClass, decoratorName]()
-   {
+   auto itemPickupFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, interactableClass, decoratorName]() {
       for(AQuest* quest : activeQuests)
       {
          for(const int goalIndex : quest->GetCurrentGoalIndices())
