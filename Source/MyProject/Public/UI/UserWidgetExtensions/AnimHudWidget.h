@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "MyUserWidget.h"
@@ -7,7 +5,7 @@
 #include "AnimHudWidget.generated.h"
 
 /**
- *
+ * Inherit from ths if we want our widget to play an animation when it is toggled on and off from the screen
  */
 UCLASS()
 class MYPROJECT_API UAnimHudWidget : public UMyUserWidget

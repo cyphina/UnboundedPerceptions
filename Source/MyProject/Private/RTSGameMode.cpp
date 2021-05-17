@@ -36,6 +36,12 @@ void ARTSGameMode::BeginPlay()
    Super::BeginPlay();
 }
 
+void ARTSGameMode::PostLogin(APlayerController* NewPlayer)
+{
+   Super::PostLogin(NewPlayer);
+   __noop;
+}
+
 bool ARTSGameMode::SaveGame(FString saveName)
 {
    return saveLoadManager->SaveToFilePath(FPaths::ProjectDir().Append("\\SavedGames\\" + saveName));
@@ -43,10 +49,10 @@ bool ARTSGameMode::SaveGame(FString saveName)
 
 bool ARTSGameMode::LoadGame(FString fileName)
 {
-   bLoading           = true;
+   bLoading                  = true;
    const bool successfulLoad = saveLoadManager->LoadFromFilePath(FPaths::ProjectDir().Append("\\SavedGames\\" + fileName));
 
-   if (successfulLoad) saveLoadManager->SetupLoad();
+   if(successfulLoad) saveLoadManager->SetupLoad();
 
    bLoading = false;
    return successfulLoad;

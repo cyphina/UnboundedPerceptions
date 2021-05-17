@@ -146,12 +146,12 @@ void UActionSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointer
 {
    if(AUserInput* CPCRef = Cast<AUserInput>(GetOwningPlayer<AUserInput>()))
    {
-      UToolTipWidget* ttWidget = CreateWidget<UToolTipWidget>(CPCRef, CPCRef->GetHUDManager()->toolTipWidgetClass);
+      UToolTipWidget* ToolTipWidget = CreateWidget<UToolTipWidget>(CPCRef, CPCRef->GetHUDManager()->toolTipWidgetClass);
 
-      if(ttWidget)
+      if(ToolTipWidget)
       {
-         ShowDesc(ttWidget);
-         SetToolTip(ttWidget);
+         ShowDesc(ToolTipWidget);
+         SetToolTip(ToolTipWidget);
       }
    }
 }

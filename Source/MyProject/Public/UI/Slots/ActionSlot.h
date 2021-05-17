@@ -46,7 +46,14 @@ class MYPROJECT_API UActionSlot : public UUserWidget
    UFUNCTION(BlueprintCallable, Category = "Action")
    void SetImageFromMaterial(UMaterialInstanceDynamic* image);
 
+   /**
+    * @brief Normally we don't have to change the index of any slots but if we have several slots that are dynamically generated then we need to change them with this function instead of in the designer
+    * @param NewSlotIndex
+    */
    UFUNCTION(BlueprintCallable, Category = "Action")
+   void SetSlotIndex(int NewSlotIndex) { slotIndex = NewSlotIndex; }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Action")
    int GetSlotIndex() const { return slotIndex; }
 
    void SetIsEnabled(bool bInIsEnabled) override;

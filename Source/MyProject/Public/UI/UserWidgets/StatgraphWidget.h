@@ -5,18 +5,17 @@
 #include "RTSAttributeSet.h"
 #include "StatgraphWidget.generated.h"
 
+class AUnit;
+
 /**
  * Widget that displays our stats in a bar graph format
  */
-
-class AUnit;
-
 UCLASS()
 class MYPROJECT_API UStatgraphWidget : public URTSBrowserWidgetBase
 {
    GENERATED_BODY()
 
-public:
+ public:
    /**
    * Sends data to the browser relating to elemental affinities
    */
@@ -60,7 +59,7 @@ public:
    UFUNCTION(BlueprintCallable)
    void Cleanup();
 
-protected:
+ protected:
    void NativeOnInitialized() override final;
 
    UPROPERTY(EditDefaultsOnly)
@@ -72,7 +71,7 @@ protected:
    // Listens to get updates when the hero whose character menu is currently displayed has their stat changed. First value is for adj val updates, second value is for base val updates
    TPair<FDelegateHandle, FDelegateHandle> statListeners;
 
-private:
+ private:
    /**
     * Sends data to the browser to update one of the stats. If the stat is on screen, it will be updated
     */
@@ -93,8 +92,8 @@ private:
    /**
     * A check to see if the focused unit is a hero. In theory this UI will only be open if a hero is focused but ya never know
     */
-   FORCEINLINE const AUnit* CheckIfFocusedUnitHero() const;
+   const AUnit* CheckIfFocusedUnitHero() const;
 
-   UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (AllowPrivateAccess="true"))
+   UPROPERTY(BlueprintReadOnly, Category = "References", Meta = (AllowPrivateAccess = "true"))
    class AUserInput* cpcRef;
 };

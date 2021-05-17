@@ -21,6 +21,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "BasePlayer.h"
+#include "DamageNumberWidgetComponent.h"
 
 #include "MyCharacterMovementComponent.h"
 #include "PartyDelegateContext.h"
@@ -116,12 +117,10 @@ void AUnit::SetupMovementComponent() const
 
 void AUnit::SetupDamageInidicatorContainerWidget()
 {
-   damageIndicatorWidget = CreateDefaultSubobject<UWidgetComponent>("DamageNumbers");
-   damageIndicatorWidget->SetWidgetSpace(EWidgetSpace::Screen);
-   damageIndicatorWidget->SetDrawSize(FVector2D(200, 200));
-   damageIndicatorWidget->SetPivot(FVector2D(0.5f, 0.5f));
-   damageIndicatorWidget->SetManuallyRedraw(false);
-   damageIndicatorWidget->SetRedrawTime(0.f);
+   damageIndicatorWidget = CreateDefaultSubobject<UDamageNumberWidgetComponent>("DamageNumbers");
+   damageIndicatorWidget->SetDrawAtDesiredSize(true);
+   damageIndicatorWidget->SetRelativeLocation(FVector(0, 0, 180));
+   damageIndicatorWidget->SetupAttachment(RootComponent);
    damageIndicatorWidget->SetInitialSharedLayerName("DamageIndicatorLayer");
    damageIndicatorWidget->SetInitialLayerZOrder(1);
    damageIndicatorWidget->bUseAttachParentBound = true;
@@ -169,16 +168,18 @@ void AUnit::BeginPlay()
 
    if(!HasAuthority() || !IsRunningDedicatedServer())
    {
-      GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
-         damageIndicatorWidget->SetWidgetClass(controllerRef->GetHUDManager()->damageIndicatorContainerClass);
-         URTSDamageNumberContainer* damageNumberContainerWidget = Cast<URTSDamageNumberContainer>(damageIndicatorWidget->GetUserWidgetObject());
-         damageIndicatorWidget->SetOwnerPlayer(controllerRef->GetLocalPlayer());
-         if(damageNumberContainerWidget)
-         {
-            damageNumberContainerWidget->SetOwningUnit(this);
-         }
-         damageIndicatorWidget->SetRelativeLocation(FVector::ZeroVector);
-      });
+      GetWorld()->GetTimerManager().SetTimerForNextTick(
+          [this]()
+          {
+             damageIndicatorWidget->SetWidgetClass(controllerRef->GetHUDManager()->damageIndicatorContainerClass);
+             URTSDamageNumberContainer* damageNumberContainerWidget = Cast<URTSDamageNumberContainer>(damageIndicatorWidget->GetUserWidgetObject());
+             damageIndicatorWidget->SetOwnerPlayer(controllerRef->GetLocalPlayer());
+             if(damageNumberContainerWidget)
+             {
+                damageNumberContainerWidget->SetOwningUnit(this);
+             }
+             damageIndicatorWidget->SetRelativeLocation(FVector::ZeroVector);
+          });
    }
 
    StoreUnitHeight();
@@ -190,7 +191,7 @@ void AUnit::BeginPlay()
    }
 
    GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed);
-
+   damageIndicatorWidget->SetPivot(FVector2D(0.5f, 1.f + 0.25f * GetSimpleCollisionHalfHeight() / 88.f));
    visionComponent->SetRelativeLocation(FVector::ZeroVector);
 }
 
@@ -201,9 +202,12 @@ void AUnit::PossessedBy(AController* newController)
 
    if(!IsEnabled())
    {
-      GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
-         SetEnabled(false);
-      });
+      // Delay since BasePlayer's Unit registration delegates may not be set
+      GetWorld()->GetTimerManager().SetTimerForNextTick(
+          [this]()
+          {
+             SetEnabled(false);
+          });
    }
 }
 

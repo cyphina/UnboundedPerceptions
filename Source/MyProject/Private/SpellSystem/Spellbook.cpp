@@ -35,12 +35,17 @@ void USpellBook::Init()
 
       if(!heroRef->HasAuthority() || !IsRunningDedicatedServer())
       {
-         cpcRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
-         if(cpcRef)
+         if(UWorld* World = GetWorld())
          {
-            GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
-               cpcRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->OnSlotSelected().AddUObject(this, &USpellBook::OnSpellSlotSelected);
-            });
+            cpcRef = Cast<AUserInput>(World->GetFirstPlayerController());
+            if(cpcRef)
+            {
+               GetWorld()->GetTimerManager().SetTimerForNextTick(
+                   [this]()
+                   {
+                      cpcRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->OnSlotSelected().AddUObject(this, &USpellBook::OnSpellSlotSelected);
+                   });
+            }
          }
       }
    }
@@ -140,23 +145,25 @@ void USpellBook::OnRespec()
    // TODO: Implement this
 }
 
-bool USpellBook::LearnNewSpell(TSubclassOf<UMySpell> spellToLearn)
+bool USpellBook::LearnNewSpell(TSubclassOf<UMySpell> NewSpellLearned)
 {
    if(heroRef)
    {
       URTSIngameWidget::NativeDisplayHelpText(GetWorld(), NSLOCTEXT("Spellbook", "LearnNewSpell", "Learned a new spell"));
-      learnedSpells.AddTail(spellToLearn);
-      learnableSpells.RemoveNode(spellToLearn);
-      SpellGameContext::OnSpellLearnedEvent.Broadcast(*heroRef, spellToLearn);
+      learnedSpells.AddTail(NewSpellLearned);
+      learnableSpells.RemoveNode(NewSpellLearned);
 
-      for(SpellNode* s : spellNodes[spellToLearn].unlockedSpellNodes)
+      for(SpellNode* UnlockableSpell : spellNodes[NewSpellLearned].unlockedSpellNodes)
       {
-         if(IsSpellLearnable(s->spellRef))
+         if(IsSpellLearnable(UnlockableSpell->spellRef))
          {
-            unknownSpells.RemoveNode(s->spellRef);
-            learnableSpells.AddTail(spellToLearn);
+            unknownSpells.RemoveNode(UnlockableSpell->spellRef);
+            learnableSpells.AddTail(UnlockableSpell->spellRef);
          }
       }
+
+      SpellGameContext::OnSpellLearnedEvent.Broadcast(*heroRef, NewSpellLearned);
+
       return true;
    }
    return false;
@@ -182,7 +189,7 @@ bool USpellBook::TryUpgradeSpellLevel(UMySpell* spellObject, FGameplayAbilitySpe
 
 void USpellBook::OnSpellSlotSelected(int index)
 {
-   if(cpcRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef()->GetSpellBook() == this)
+   if(cpcRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroFromSpellbook()->GetSpellBook() == this)
    {
       check(index >= 0 && index < availableSpells.Num());
       UMySpell* spellObject = availableSpells[index].GetDefaultObject();

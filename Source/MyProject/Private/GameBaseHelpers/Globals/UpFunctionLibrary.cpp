@@ -21,6 +21,14 @@ const TArray<ABaseHero*>& UUpFunctionLibrary::GetHeroes(const UObject* worldCont
    return controllerRef->GetBasePlayer()->GetHeroes();
 }
 
+AUnit* UUpFunctionLibrary::GetFocusedUnit(const UObject* worldContextObject)
+{
+   AUserInput* controllerRef = Cast<AUserInput>(worldContextObject->GetWorld()->GetFirstPlayerController());
+   check(controllerRef);
+
+   return controllerRef->GetBasePlayer()->GetFocusedUnit();
+}
+
 ABaseHero* UUpFunctionLibrary::GetHeroFromIndex(const UObject* worldContextObject, int heroIndex)
 {
    return GetHeroes(worldContextObject)[heroIndex];

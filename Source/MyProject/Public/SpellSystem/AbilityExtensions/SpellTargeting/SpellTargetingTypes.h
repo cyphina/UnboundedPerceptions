@@ -27,7 +27,7 @@ class UUpSpellTargeting : public UObject
        PURE_VIRTUAL(UUpSpellTargeting::ClickResponse, );
 
    /** Used to target the correct kind of entity (a location, actor, or unit) */
-   virtual bool IsProperTargetSet(UTargetComponent* targetComp) const PURE_VIRTUAL(UUpSpellTargeting::IsProperTargetSet, return false; );
+   virtual bool IsProperTargetSet(UTargetComponent* targetComp) const PURE_VIRTUAL(UUpSpellTargeting::IsProperTargetSet, return false;);
 
    virtual void ManualSetSpellTarget(UTargetComponent* targetComp, const FHitResult& hitResult) const PURE_VIRTUAL(UUpSpellTargeting::ManualSetSpellTarget, );
 

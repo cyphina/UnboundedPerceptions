@@ -156,7 +156,7 @@ void UTargetedAttackComponent::OnUnitAttackSwingDone()
 
    if(USpellDataLibrary::IsInvisible(agent->GetAbilitySystemComponent()))
    {
-      agent->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Invisibility")));
+      agent->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Invisibility")));
    }
 }
 
@@ -276,7 +276,10 @@ void UTargetedAttackComponent::PlayAttackAnimation()
       if(agent)
       {
          const float attackSpeedAnimMultiplier = 1 + AgentAttackSpeed() / 100;
-         attackAnim->PlayAttackAnimation(agent, attackSpeedAnimMultiplier);
+         if(!agent->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying())
+         {
+            attackAnim->PlayAttackAnimation(agent, attackSpeedAnimMultiplier);
+         }
       }
    }
 }

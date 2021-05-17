@@ -17,7 +17,7 @@
 #include "TextFormatter.h"
 #include "Engine/CompositeCurveTable.h"
 
-UCompositeCurveTable* USpellFunctionLibrary::effectPowerTableRef      = nullptr;
+UCompositeCurveTable* USpellFunctionLibrary::effectPowerTableRef = nullptr;
 
 USpellFunctionLibrary::USpellFunctionLibrary(const FObjectInitializer& o) : Super(o)
 {
@@ -211,6 +211,11 @@ void USpellFunctionLibrary::SpellConfirmSwap(TSubclassOf<UMySpell> confirmSpell,
    }
 
    SpellSwap(spellToReplace, replacementSpell, ownerRef);
+}
+
+UObject* USpellFunctionLibrary::GetDefaultObjectFromSpellClass(TSubclassOf<UMySpell> spellClass)
+{
+   return spellClass.GetDefaultObject();
 }
 
 void USpellFunctionLibrary::SpellSwap(TSubclassOf<UMySpell> originalSpell, TSubclassOf<UMySpell> newSpell, AUnit* ownerRef)

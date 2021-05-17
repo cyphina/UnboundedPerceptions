@@ -66,9 +66,12 @@ void UQuestManager::Init()
    if(!HasAuthority() || !IsRunningDedicatedServer())
    {
       controllerRef = Cast<AUserInput>(GetOuter()->GetWorld()->GetFirstPlayerController());
-      hudManagerRef = controllerRef->GetHUDManager();
-      // Widgets may not be initialized due to begin play order so setup next frame.
-      GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UQuestManager::SetupWidgetReferences);
+      if(controllerRef)
+      {
+         hudManagerRef = controllerRef->GetHUDManager();
+         // Widgets may not be initialized due to begin play order so setup next frame.
+         GetWorld()->GetTimerManager().SetTimerForNextTick(this, &UQuestManager::SetupWidgetReferences);
+      }
    }
 
    completedQuests.Reserve(4);

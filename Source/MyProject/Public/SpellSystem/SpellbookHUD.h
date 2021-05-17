@@ -21,19 +21,17 @@ class MYPROJECT_API USpellbookHUD : public USlotContainer
    GENERATED_BODY()
 
  public:
-   ABaseHero* GetHeroRef() const { return heroWithOpenSpellbookRef; }
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   ABaseHero* GetHeroFromSpellbook() const;
+
+   /** When we click on the button to level up our skills, the background changes to let the user know that clicking on their skills will add a point to it */
+   UFUNCTION()
+   void ChangeBackgroundColorWhenLeveling();
 
    UPROPERTY()
    class AHUDManager* hudManagerRef;
 
-   UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
-   ABaseHero* heroWithOpenSpellbookRef;
-
    bool bLevelingUp = false;
-
-   /** When we click on the button to level up our skills, the background changes to let the user know that clicking on their skills will add a point to it*/
-   UFUNCTION()
-   void ChangeBackgroundColorWhenLeveling();
 
    int GetNumValidItems() const override;
 
@@ -73,10 +71,12 @@ class MYPROJECT_API USpellbookHUD : public USlotContainer
    void ColorLearnableSpellSlots();
    void ColorUnknownSpellSlots();
 
-   void OnSpellLearned(const ABaseHero& heroThatLearnedSpell, TSubclassOf<UMySpell> spellClass);
+   void OnSpellLearned(const ABaseHero& heroThatLearnedSpell, TSubclassOf<UMySpell> LearnedSpellClass);
    void OnSpellUpgraded(const ABaseHero& heroThatLearnedSpell, TSubclassOf<UMySpell> spellClass);
    void OnHeroLeveledUp(ABaseHero* heroThatLeveledUp);
 
    const FLinearColor canLearnSpellColor     = FLinearColor(0.62, 0.61, 0, 1.0);
    const FLinearColor tooHighLevelSpellColor = FLinearColor(0.6, 0, 0.02, 1.0);
+
+   ABaseHero* heroSelectedWhenOpeningMenu;
 };

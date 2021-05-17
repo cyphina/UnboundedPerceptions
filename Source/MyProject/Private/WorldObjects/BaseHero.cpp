@@ -56,13 +56,6 @@ void ABaseHero::BeginPlay()
    equipment->OnEquipmentContainerChanged().BindUObject(this, &ABaseHero::OnEquipped);
 
    LoadSavedTriggers();
-
-   if(IsEnabled())
-   {
-      GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
-         SetEnabled(true);
-      });
-   }
 }
 
 void ABaseHero::Tick(float deltaSeconds)

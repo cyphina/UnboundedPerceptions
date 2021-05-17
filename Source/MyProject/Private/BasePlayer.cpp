@@ -17,16 +17,18 @@ ABasePlayer::ABasePlayer()
 void ABasePlayer::BeginPlay()
 {
    Super::BeginPlay();
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnAllyActiveChanged().AddUObject(this, &ABasePlayer::OnAllyActiveChanged);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnSummonActiveChanged().AddUObject(this, &ABasePlayer::OnSummonActiveChanged);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroActiveChanged().AddUObject(this, &ABasePlayer::OnHeroActiveChanged);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnEnemySelectedWithoutDebugging().BindUObject(this,
-                                                                                                                                         &ABasePlayer::SetFocusedUnit);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnAllySelectedDelegate.AddDynamic(this, &ABasePlayer::OnAllySelected);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnAllyDeselectedDelegate.AddDynamic(this, &ABasePlayer::OnAllyDeselected);
+   if(UPartyDelegateContext* PartyDelegates = GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>())
+   {
+      PartyDelegates->OnAllyActiveChanged().AddUObject(this, &ABasePlayer::OnAllyActiveChanged);
+      PartyDelegates->OnSummonActiveChanged().AddUObject(this, &ABasePlayer::OnSummonActiveChanged);
+      PartyDelegates->OnHeroActiveChanged().AddUObject(this, &ABasePlayer::OnHeroActiveChanged);
+      PartyDelegates->OnEnemySelectedWithoutDebugging().BindUObject(this, &ABasePlayer::SetFocusedUnit);
 
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroSelectedDelegate.AddDynamic(this, &ABasePlayer::OnHeroSelected);
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UPartyDelegateContext>()->OnHeroDeselectedDelegate.AddDynamic(this, &ABasePlayer::OnHeroDeselected);
+      PartyDelegates->OnAllySelectedDelegate.AddDynamic(this, &ABasePlayer::OnAllySelected);
+      PartyDelegates->OnAllyDeselectedDelegate.AddDynamic(this, &ABasePlayer::OnAllyDeselected);
+      PartyDelegates->OnHeroSelectedDelegate.AddDynamic(this, &ABasePlayer::OnHeroSelected);
+      PartyDelegates->OnHeroDeselectedDelegate.AddDynamic(this, &ABasePlayer::OnHeroDeselected);
+   }
 
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnUnitSlotSelected().AddUObject(this, &ABasePlayer::OnUnitSlotSelected);
    Cast<ARTSPawn>(GetWorld()->GetFirstPlayerController()->GetPawn())->OnGroupTabbed().AddUObject(this, &ABasePlayer::OnGroupTabbed);

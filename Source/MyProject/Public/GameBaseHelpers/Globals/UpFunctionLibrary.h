@@ -7,6 +7,7 @@
 
 class AHUDManager;
 class ABaseHero;
+class AUnit;
 
 UCLASS()
 class MYPROJECT_API UUpFunctionLibrary : public UBlueprintFunctionLibrary
@@ -19,6 +20,9 @@ class MYPROJECT_API UUpFunctionLibrary : public UBlueprintFunctionLibrary
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Global Accessors", meta = (WorldContext = "WorldContextObject"))
    static const TArray<ABaseHero*>& GetHeroes(const UObject* worldContextObject);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Global Accessors", meta = (WorldContext = "WorldContextObject"))
+   static AUnit* GetFocusedUnit(const UObject* worldContextObject);
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Global Accessors", meta = (WorldContext = "WorldContextObject"))
    static ABaseHero* GetHeroFromIndex(const UObject* worldContextObject, int heroIndex);

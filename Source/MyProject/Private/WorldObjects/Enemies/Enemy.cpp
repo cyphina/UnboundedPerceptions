@@ -92,9 +92,9 @@ void AEnemy::SetUnitSelected(bool value)
 void AEnemy::SetEnabled(bool bEnabled)
 {
    Super::SetEnabled(bEnabled);
-   if(UPartyDelegateContext* store = Cast<ULocalPlayer>(controllerRef->Player)->GetSubsystem<UPartyDelegateContext>())
+   if(UPartyDelegateContext* Store = Cast<ULocalPlayer>(controllerRef->Player)->GetSubsystem<UPartyDelegateContext>())
    {
-      store->OnEnemyActiveChanged().Broadcast(this, bEnabled);
+      Store->OnEnemyActiveChanged().Broadcast(this, bEnabled);
    }
 }
 
@@ -103,14 +103,14 @@ void AEnemy::SpawnItemDrops()
    controllerRef->GetBasePlayer()->UpdateEXP(expGiven);
    controllerRef->GetBasePlayer()->UpdateGold(moneyGiven);
 
-   for(FItemDrop& itemDrop : itemDrops)
+   for(FItemDrop& ItemDrop : itemDrops)
    {
-      const int dropRoll = FMath::FRandRange(0, 100);
-      if(itemDrop.dropPerc > dropRoll)
+      const int DropRoll = FMath::FRandRange(0, 100);
+      if(ItemDrop.dropPerc > DropRoll)
       {
-         APickup* itemPickup = GetWorld()->SpawnActorDeferred<APickup>(APickup::StaticClass(), GetActorTransform());
-         itemPickup->item    = itemDrop.itemInfo;
-         UGameplayStatics::FinishSpawningActor(itemPickup, GetActorTransform());
+         APickup* ItemPickup = GetWorld()->SpawnActorDeferred<APickup>(APickup::StaticClass(), GetActorTransform());
+         ItemPickup->item    = ItemDrop.itemInfo;
+         UGameplayStatics::FinishSpawningActor(ItemPickup, GetActorTransform());
       }
    }
 }

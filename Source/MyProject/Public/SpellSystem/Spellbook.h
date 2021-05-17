@@ -49,7 +49,7 @@ class MYPROJECT_API USpellBook : public UObject
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Spellbook")
    TArray<int> GetUnknownSpellIndices() const;
 
-   UFUNCTION(BlueprintCallable, Category = "Spellbook")
+   UFUNCTION()
    void OnSpellSlotSelected(int index);
 
    /**
@@ -80,7 +80,7 @@ class MYPROJECT_API USpellBook : public UObject
 
    bool TryUpgradeSpellLevel(UMySpell* spellObject, FGameplayAbilitySpec* abilityInfo);
 
-   bool LearnNewSpell(TSubclassOf<UMySpell> spellToLearn);
+   bool LearnNewSpell(TSubclassOf<UMySpell> NewSpellLearned);
 
    void CacheInitialLearnableAndUnknownSpells(TSubclassOf<UMySpell> spell);
 

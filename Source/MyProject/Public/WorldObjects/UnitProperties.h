@@ -19,7 +19,7 @@ struct FUnitProperties
 
    /** If this unit is disabled it shouldn't be able to do anything at all. */
    UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification")
-   bool bIsEnabled = false;
+   bool bIsEnabled = true;
 
    /** If this unit has been selected, then information on it will be displayed */
    bool isSelected = false;

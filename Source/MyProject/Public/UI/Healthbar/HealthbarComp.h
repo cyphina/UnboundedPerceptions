@@ -7,7 +7,7 @@ class AUnit;
 struct FUpDamage;
 
 /**
- * WidgetComponent class containing a healthbar widget.  This component is attached ot our unit to display its health
+ * WidgetComponent class containing a healthbar widget.  This component is attached to our unit to display its health
  */
 UCLASS()
 class MYPROJECT_API UHealthbarComp : public UWidgetComponent
@@ -15,9 +15,6 @@ class MYPROJECT_API UHealthbarComp : public UWidgetComponent
    GENERATED_BODY()
 
  public:
-   UPROPERTY(BlueprintReadWrite)
-   UUserWidget* widgetRef;
-
    UHealthbarComp();
 
  protected:
@@ -28,12 +25,8 @@ class MYPROJECT_API UHealthbarComp : public UWidgetComponent
    UPROPERTY()
    AUnit* unitRef;
 
-   float healthPercentage;
-
    UPROPERTY()
    UHealthbar* healthBar;
-
-   TSubclassOf<UUserWidget> widgetClass;
 
    void OnDamageReceived(const FUpDamage& damage);
    void OnHealingReceived(const FUpDamage& damage);

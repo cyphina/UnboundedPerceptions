@@ -5,6 +5,7 @@
 #include "SpellbookSlot.generated.h"
 
 class ABaseHero;
+
 /**
  * Slot for skills we can learn inside the spellbook
  */

@@ -103,7 +103,9 @@ void UStatgraphWidget::ShowElementalDefense()
       UpdateInformation("updateStatInfo", heroInfoString);
    }
    else
+   {
       UE_LOG(LogTemp, Error, TEXT("Somehow stat browser widget was told to read data from a null or non-hero"));
+   }
 }
 
 void UStatgraphWidget::ShowMechanics()
@@ -148,7 +150,9 @@ void UStatgraphWidget::ShowMechanics()
       UpdateInformation("updateStatInfo", heroInfoString);
    }
    else
+   {
       UE_LOG(LogTemp, Error, TEXT("Somehow stat browser widget was told to read data from a null or non-hero"));
+   }
 }
 
 void UStatgraphWidget::ShowVitals()
@@ -177,7 +181,9 @@ void UStatgraphWidget::ShowVitals()
       UpdateInformation("updateStatInfo", heroInfoString);
    }
    else
+   {
       UE_LOG(LogTemp, Error, TEXT("Somehow stat browser widget was told to read data from a null or non-hero"));
+   }
 }
 
 void UStatgraphWidget::SwapHero()
@@ -195,7 +201,9 @@ void UStatgraphWidget::SwapHero()
       UpdateInformation("updateName", heroInfoString);
    }
    else
+   {
       UE_LOG(LogTemp, Error, TEXT("Somehow stat browser widget was told to read data from a null or non-hero"));
+   }
 }
 
 void UStatgraphWidget::UpdateStat(const FGameplayAttribute& attributeModified, float newAttributeValue, AUnit* unitAffected)
@@ -235,7 +243,7 @@ void UStatgraphWidget::CreateAndSendStatUpdate(const FGameplayAttribute& attribu
 FReply UStatgraphWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
    Super::NativeOnMouseMove(InGeometry, InMouseEvent);
-   if(UNLIKELY(GetBrowser() && !GetBrowser()->IsBrowserLoading()))
+   if(GetBrowser() && !GetBrowser()->IsBrowserLoading())
    {
       const FVector2D screenSpaceTolocalWidgetPosition{InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition())};
       GetBrowser()->TriggerMouseMove(screenSpaceTolocalWidgetPosition);
@@ -246,7 +254,13 @@ FReply UStatgraphWidget::NativeOnMouseMove(const FGeometry& InGeometry, const FP
 
 const AUnit* UStatgraphWidget::CheckIfFocusedUnitHero() const
 {
-   const auto focusedUnit = cpcRef->GetBasePlayer()->GetFocusedUnit();
-   if(LIKELY(focusedUnit && focusedUnit->GetClass()->IsChildOf(ABaseHero::StaticClass()))) return focusedUnit;
+   if(const auto focusedUnit = cpcRef->GetBasePlayer()->GetFocusedUnit(); focusedUnit && focusedUnit->GetClass()->IsChildOf(ABaseHero::StaticClass()))
+   {
+      return focusedUnit;
+   }
+   else if(cpcRef->GetBasePlayer()->GetSelectedHeroes().Num() > 0)
+   {
+      return cpcRef->GetBasePlayer()->GetSelectedHeroes()[0];
+   }
    return nullptr;
 }

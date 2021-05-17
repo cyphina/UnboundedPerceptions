@@ -161,6 +161,8 @@ class MYPROJECT_API ARTSGameMode : public AGameModeBase
  protected:
    void BeginPlay() override;
 
+   void PostLogin(APlayerController* NewPlayer) override;
+
  private:
    const FString startingLevelName = "StartMap";
    const FString sylphiaApartment  = "SylphiaApartment";

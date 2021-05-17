@@ -10,7 +10,7 @@
 #include "WorldObject.h"
 #include "Unit.generated.h"
 
-class UWidgetComponent;
+class UDamageNumberWidgetComponent;
 class URTSDamageEffect;
 class UUpStatComponent;
 class URTSVisionComponent;
@@ -166,12 +166,12 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    UTargetComponent* targetComponent;
 
    UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
-   UWidgetComponent* damageIndicatorWidget;
+   UDamageNumberWidgetComponent* damageIndicatorWidget;
 
    UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
    URTSAbilitySystemComponent* abilitySystemComponent;
 
-   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
+   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "WorldObject Classification", meta = (AllowPrivateAccess = true))
    FUnitProperties unitProperties;
 
    /**

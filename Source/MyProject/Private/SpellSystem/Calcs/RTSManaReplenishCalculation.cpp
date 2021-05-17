@@ -21,7 +21,7 @@ void URTSManaReplenishCalculation::Execute_Implementation(const FGameplayEffectC
 
    if(targetComponent)
    {
-      targetUnit = Cast<AUnit>(targetComponent->AvatarActor);
+      targetUnit = Cast<AUnit>(targetComponent->GetAvatarActor());
    }
 
    const FAggregatorEvaluateParameters evalParams;

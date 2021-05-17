@@ -74,6 +74,10 @@ class MYPROJECT_API USpellFunctionLibrary : public UBlueprintFunctionLibrary
    UFUNCTION(BlueprintCallable, meta = (DisplayName = "Spell Confirm Swap"), Category = "Spell Functionality Extender")
    static void SpellConfirmSwap(TSubclassOf<UMySpell> confirmSpell, TSubclassOf<UMySpell> originalSpell, AUnit* ownerRef, bool bSwapInConfirm);
 
+   /** Exposes methodlogy to get CDO from class to BP */
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "BP Helper")
+   static UObject* GetDefaultObjectFromSpellClass(TSubclassOf<UMySpell> spellClass);
+
  private:
    static UCompositeCurveTable* effectPowerTableRef;
 };

@@ -34,7 +34,8 @@ public class MyProject : ModuleRules
 			"GameplayAbilities",
 			"AIModule",
 			"BLU",
-			"JSON"
+			"JSON",
+			"TreeLayout"
 		});
 
 		// Uncomment if you are using online features

@@ -119,7 +119,7 @@ void USpellbookSlot::ShowDesc(UToolTipWidget* tooltip)
    const FText costAndManaDesc = FText::Format(LOCTEXT("SpellSlotCostAndMana", "Costs {0} mana \r\n{1} second cooldown \r\n{2} Element"),
                                                spellObj->GetCost(abilitySystemCompRef), spellObj->GetCDDuration(abilitySystemCompRef), spellObj->GetElem());
    FText       preReqNamesDesc =
-       spellObj->GetPreReqNames().Num() > 0 ? LOCTEXT("LearnedSpellReqsStart", "Must have learned - ") : LOCTEXT("NoSpellReqs", "No spell requirements");
+       spellObj->GetPreReqNames().Num() > 0 ? LOCTEXT("LearnedSpellReqsStart", "Must have learned ") : LOCTEXT("NoSpellReqs", "No spell requirements");
    const FText levelRequirementString = FText::Format(LOCTEXT("LevelReq", "Requires Level: {0}"), spellObj->GetReqLevel(abilitySystemCompRef));
 
    for(auto& preReqName : spellObj->GetPreReqNames())
@@ -141,7 +141,7 @@ ABaseHero* USpellbookSlot::GetHeroRef() const
 {
    if(AUserInput* CPCRef = Cast<AUserInput>(GetOwningPlayer<AUserInput>()))
    {
-      return CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroRef();
+      return CPCRef->GetWidgetProvider()->GetIngameHUD()->GetSpellBookMenu()->GetHeroFromSpellbook();
    }
    return nullptr;
 }
