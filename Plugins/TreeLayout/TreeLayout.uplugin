@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "TreeLayout",
+	"Description": "Provides a widget that lays data out in a tree format.",
+	"Category": "Other",
+	"CreatedBy": "Cyphina",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "TreeLayout",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}

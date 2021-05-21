@@ -1,0 +1,22 @@
+{
+	"RemapUnityFiles": 
+	{
+		"Module.TreeLayout.cpp.obj": [
+			"TreeLayout.cpp.obj",
+			"TreeLayoutFunctionLibrary.cpp.obj",
+			"TreeLayoutStrategies.cpp.obj",
+			"TreeLayoutWidget.cpp.obj",
+			"TreePanel.cpp.obj",
+			"UpTree.cpp.obj",
+			"UpTreeStructs.cpp.obj"
+		],
+		"Module.TreeLayout.gen.cpp.obj": [
+			"TreeLayout.init.gen.cpp.obj",
+			"TreeLayoutFunctionLibrary.gen.cpp.obj",
+			"TreeLayoutStrategies.gen.cpp.obj",
+			"TreeLayoutWidget.gen.cpp.obj",
+			"UpTree.gen.cpp.obj",
+			"UpTreeStructs.gen.cpp.obj"
+		]
+	}
+}

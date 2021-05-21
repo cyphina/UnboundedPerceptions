@@ -6,7 +6,6 @@ Content/KiteDemo
 Content/StarterContent
 Content/SoulCity
 Content/ParagonYin
-Plugins
 BluCache
 
 # Visual Studio 2015 user specific files
@@ -79,6 +78,3 @@ Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
-
-#Plugins
-Plugins/*

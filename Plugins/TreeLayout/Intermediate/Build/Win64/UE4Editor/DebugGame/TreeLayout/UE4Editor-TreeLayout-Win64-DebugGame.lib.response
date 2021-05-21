@@ -1,0 +1,14 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UE4Editor-TreeLayout-Win64-DebugGame.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"C:\MyProject\Intermediate\Build\Win64\MyProjectEditor\DebugGame\Engine\SharedPCH.Engine.NonOptimized.Cpp17.h.obj"
+"C:\MyProject\Plugins\TreeLayout\Intermediate\Build\Win64\UE4Editor\DebugGame\TreeLayout\Module.TreeLayout.cpp.obj"
+"C:\MyProject\Plugins\TreeLayout\Intermediate\Build\Win64\UE4Editor\DebugGame\TreeLayout\Module.TreeLayout.gen.cpp.obj"
+"C:\MyProject\Plugins\TreeLayout\Intermediate\Build\Win64\UE4Editor\DebugGame\TreeLayout\Default.rc2.res"
+/OUT:"C:\MyProject\Plugins\TreeLayout\Intermediate\Build\Win64\UE4Editor\DebugGame\TreeLayout\UE4Editor-TreeLayout-Win64-DebugGame.lib"
+/INCLUDE:IMPLEMENT_MODULE_TreeLayout
