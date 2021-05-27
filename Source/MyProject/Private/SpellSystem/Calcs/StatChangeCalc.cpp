@@ -39,9 +39,9 @@ void UStatChangeCalc::Execute_Implementation(const FGameplayEffectCustomExecutio
    AUnit *                  sourceUnit = nullptr, *targetUnit = nullptr;
    // if our components exist
    if (ownerComponent)
-      sourceUnit = Cast<AUnit>(ownerComponent->AvatarActor); // If our AbilitySystemComponents are valid, we get each their owning actors and put them in variables. This is mostly to prevent crashing
+      sourceUnit = Cast<AUnit>(ownerComponent->GetAvatarActor()); // If our AbilitySystemComponents are valid, we get each their owning actors and put them in variables. This is mostly to prevent crashing
                                                              // by trying to get the AvatarActor variable from
-   if (targetComponent) targetUnit = Cast<AUnit>(targetComponent->AvatarActor); // a null pointer.
+   if (targetComponent) targetUnit = Cast<AUnit>(targetComponent->GetAvatarActor()); // a null pointer.
 
    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Emerald, FString("Stat Buff Activated!"));
 

@@ -42,7 +42,7 @@ class MYPROJECT_API UGameSpeedWidget : public UUserWidget
 
    /**Used to index what speed to go at in our predefined game speeds*/
    UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
-   int speedIndex = 0;
+   int speedIndex = 2;
 
    /** Array with possible speed multipliers the game can run off of */
    const TArray<float, TFixedAllocator<5>> gameSpeeds = {0, 0.5, 1, 1.5, 2, 5};

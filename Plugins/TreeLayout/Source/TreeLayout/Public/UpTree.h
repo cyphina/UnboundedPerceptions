@@ -49,7 +49,7 @@ class UUpTree : public UObject
    UFUNCTION(BlueprintCallable)
    void ResetTree();
 
-#if WITH_EDITORONLY_DATA
+#if WITH_EDITOR
    /**
     * @brief Creates connectors between threads (links between nodes that some of the tree layout algorithms generate for optimization purposes)
     * @return Returns connectors used to build curves between threads.

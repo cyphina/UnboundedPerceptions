@@ -168,11 +168,14 @@ void USkillSlot::ShowCDVisuals() const
 
 URTSAbilitySystemComponent* USkillSlot::GetOwningAbilityComponent() const
 {
-   if(const AUnit* focusedUnit = GetOwningPlayer<AUserInput>()->GetBasePlayer()->GetFocusedUnit())
+   if(AUserInput* CPC = GetOwningPlayer<AUserInput>())
    {
-      if(URTSAbilitySystemComponent* abilityComp = focusedUnit->FindComponentByClass<URTSAbilitySystemComponent>())
+      if(const AUnit* focusedUnit = CPC->GetBasePlayer()->GetFocusedUnit())
       {
-         return abilityComp;
+         if(URTSAbilitySystemComponent* abilityComp = focusedUnit->FindComponentByClass<URTSAbilitySystemComponent>())
+         {
+            return abilityComp;
+         }
       }
    }
    return nullptr;

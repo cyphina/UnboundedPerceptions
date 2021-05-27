@@ -28,7 +28,7 @@
 namespace AttackCVars
 {
    bool                           bPrintAttackTimings = false;
-   static FAutoConsoleVariableRef CVarPrintAttackTimings(TEXT("printAttackTimings"), bPrintAttackTimings,
+   static FAutoConsoleVariableRef CVarPrintAttackTimings(TEXT("Up_DebugPrintAttackTimings"), bPrintAttackTimings,
                                                          TEXT("Prints out messages when we start attacking and when we actually hit the unit."));
 }
 
@@ -39,17 +39,30 @@ UTargetedAttackComponent::UTargetedAttackComponent()
 
 void UTargetedAttackComponent::BeginAttack(AUnit* target)
 {
-   if(USpellDataLibrary::IsAttackable(target->GetAbilitySystemComponent()) && !USpellDataLibrary::IsStunned(agent->GetAbilitySystemComponent()))
+   if(USpellDataLibrary::IsAttackable(target->GetAbilitySystemComponent()))
    {
-      agent->GetTargetComponent()->SetTarget(target);
-      if(URTSStateComponent* stateComp = agent->GetUnitController()->FindComponentByClass<URTSStateComponent>())
+      if(!USpellDataLibrary::IsStunned(agent->GetAbilitySystemComponent()))
       {
-         if(stateComp->GetState() != EUnitState::STATE_ATTACK_MOVE)
+         agent->GetTargetComponent()->SetTarget(target);
+         if(URTSStateComponent* stateComp = agent->GetUnitController()->FindComponentByClass<URTSStateComponent>())
          {
-            stateComp->ChangeState(EUnitState::STATE_ATTACKING);
+            if(stateComp->GetState() != EUnitState::STATE_ATTACK_MOVE)
+            {
+               stateComp->ChangeState(EUnitState::STATE_ATTACKING);
+            }
          }
+         GetWorld()->GetTimerManager().SetTimer(attackChecksHandle, this, &UTargetedAttackComponent::FollowAndTryAttackTarget, 0.05f, true, 0.f);
       }
-      GetWorld()->GetTimerManager().SetTimer(attackChecksHandle, this, &UTargetedAttackComponent::FollowAndTryAttackTarget, 0.05f, true, 0.f);
+      else
+      {
+         // TODO: Check if queue component
+         agent->GetUnitController()->ClearCommandQueue();
+         agent->GetUnitController()->QueueAction(
+             [this, target]()
+             {
+                BeginAttack(target);
+             });
+      }
    }
 }
 
@@ -61,12 +74,15 @@ void UTargetedAttackComponent::BeginAttackMove(FVector targetLocation)
 
       if(!bAttackAnimationPlaying)
       {
-         agent->GetUnitController()->AdjustPosition(agent->GetUnitController()->SMALL_MOVE_IGNORE_RANGE, attackMoveLocation, [this]() {
-            if(UUpAIHelperLibrary::IsTargetInRange(agent, attackMoveLocation, agent->GetUnitController()->SMALL_MOVE_IGNORE_RANGE))
-            {
-               agent->GetUnitController()->FinishCurrentAction();
-            }
-         });
+         agent->GetUnitController()->AdjustPosition(
+             agent->GetUnitController()->SMALL_MOVE_IGNORE_RANGE, attackMoveLocation,
+             [this]()
+             {
+                if(UUpAIHelperLibrary::IsTargetInRange(agent, attackMoveLocation, agent->GetUnitController()->SMALL_MOVE_IGNORE_RANGE))
+                {
+                   agent->GetUnitController()->FinishCurrentAction();
+                }
+             });
       }
 
       if(URTSStateComponent* stateComp = agent->GetUnitController()->FindComponentByClass<URTSStateComponent>())
@@ -86,34 +102,39 @@ void UTargetedAttackComponent::BeginPlay()
 {
    Super::BeginPlay();
 
-   GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
-      agent = Cast<AUnitController>(GetOwner())->GetUnitOwner();
-      agent->GetUnitController()->OnUnitStopped().AddUObject(this, &UTargetedAttackComponent::OnUnitStopped);
+   GetWorld()->GetTimerManager().SetTimerForNextTick(
+       [this]()
+       {
+          agent = Cast<AUnitController>(GetOwner())->GetUnitOwner();
+          agent->GetUnitController()->OnUnitStopped().AddUObject(this, &UTargetedAttackComponent::OnUnitStopped);
 
-      if(attackAnimStrategy)
-      {
-         animAttackStrategyInst = NewObject<UObject>(this, attackAnimStrategy.Get());
-         if(IAttackAnim* attackAnimInterface = Cast<IAttackAnim>(animAttackStrategyInst))
-         {
-            attackAnim.SetObject(animAttackStrategyInst);
-            attackAnim.SetInterface(attackAnimInterface);
+          if(attackAnimStrategy)
+          {
+             animAttackStrategyInst = NewObject<UObject>(this, attackAnimStrategy.Get());
+             if(IAttackAnim* attackAnimInterface = Cast<IAttackAnim>(animAttackStrategyInst))
+             {
+                attackAnim.SetObject(animAttackStrategyInst);
+                attackAnim.SetInterface(attackAnimInterface);
 
-            if(FOnHitNotify* hitDelegate = attackAnimInterface->OnAttackNotify(agent))
-            {
-               hitDelegate->AddUObject(this, &UTargetedAttackComponent::OnUnitAttackSwingDone);
-               attackAnimInterface->OnAttackAnimFinished()->AddWeakLambda(this, [this]() {
-                  GetWorld()->GetTimerManager().SetTimer(
-                      attackUpdateHandle,
-                      [this]() {
-                         bReadyToAttack = true;
-                      },
-                      AttackTimerThreshold(), false);
-                  bAttackAnimationPlaying = false;
-               });
-            }
-         }
-      }
-   });
+                if(FOnHitNotify* hitDelegate = attackAnimInterface->OnAttackNotify(agent))
+                {
+                   hitDelegate->AddUObject(this, &UTargetedAttackComponent::OnUnitAttackSwingDone);
+                   attackAnimInterface->OnAttackAnimFinished()->AddWeakLambda(this,
+                                                                              [this]()
+                                                                              {
+                                                                                 GetWorld()->GetTimerManager().SetTimer(
+                                                                                     attackUpdateHandle,
+                                                                                     [this]()
+                                                                                     {
+                                                                                        bReadyToAttack = true;
+                                                                                     },
+                                                                                     AttackTimerThreshold(), false);
+                                                                                 bAttackAnimationPlaying = false;
+                                                                              });
+                }
+             }
+          }
+       });
 }
 
 void UTargetedAttackComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -136,9 +157,11 @@ void UTargetedAttackComponent::SearchForTargetInRange()
 
 bool UTargetedAttackComponent::AttemptReposition()
 {
-   return agent->GetUnitController()->AdjustPosition(AgentAttackRange(), AgentTargetUnit(), [this]() {
-      OnFinishReposition();
-   });
+   return agent->GetUnitController()->AdjustPosition(AgentAttackRange(), AgentTargetUnit(),
+                                                     [this]()
+                                                     {
+                                                        OnFinishReposition();
+                                                     });
 }
 
 void UTargetedAttackComponent::OnUnitAttackSwingDone()
@@ -270,7 +293,6 @@ void UTargetedAttackComponent::PlayAttackAnimation()
       GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, "Starting Swing Animation!");
    }
 
-   bAttackAnimationPlaying = true;
    if(attackAnim)
    {
       if(agent)
@@ -278,6 +300,7 @@ void UTargetedAttackComponent::PlayAttackAnimation()
          const float attackSpeedAnimMultiplier = 1 + AgentAttackSpeed() / 100;
          if(!agent->GetMesh()->GetAnimInstance()->IsAnyMontagePlaying())
          {
+            bAttackAnimationPlaying = true;
             attackAnim->PlayAttackAnimation(agent, attackSpeedAnimMultiplier);
          }
       }

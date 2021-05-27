@@ -20,11 +20,11 @@ void URTSStunEffectCalc::Execute_Implementation
 
    if(ownerComponent)
    {
-      sourceUnit = Cast<AUnit>(ownerComponent->AvatarActor);
+      sourceUnit = Cast<AUnit>(ownerComponent->GetAvatarActor());
    }
    if(targetComponent)
    {
-      targetUnit = Cast<AUnit>(targetComponent->AvatarActor);
+      targetUnit = Cast<AUnit>(targetComponent->GetAvatarActor());
    }
 
    if(targetUnit)

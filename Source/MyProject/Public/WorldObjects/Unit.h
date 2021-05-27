@@ -148,6 +148,10 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    void Tick(float deltaSeconds) override;
    void PossessedBy(AController* newController) override;
 
+#if WITH_EDITOR
+   virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
    UPROPERTY(BlueprintReadOnly, VisibleDefaultsOnly)
    class UHealthbarComp* healthBar;
 
@@ -197,6 +201,9 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    */
    UPROPERTY(EditDefaultsOnly)
    UMaterialInterface* originalMaterial;
+
+   UPROPERTY(EditDefaultsOnly)
+   TSubclassOf<AUnitController> unitControllerClass;
 
    class AUserInput* controllerRef;
 

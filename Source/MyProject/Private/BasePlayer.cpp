@@ -28,10 +28,14 @@ void ABasePlayer::BeginPlay()
       PartyDelegates->OnAllyDeselectedDelegate.AddDynamic(this, &ABasePlayer::OnAllyDeselected);
       PartyDelegates->OnHeroSelectedDelegate.AddDynamic(this, &ABasePlayer::OnHeroSelected);
       PartyDelegates->OnHeroDeselectedDelegate.AddDynamic(this, &ABasePlayer::OnHeroDeselected);
+      PartyDelegates->OnUnitDeselectedDelegate.AddDynamic(this, &ABasePlayer::OnUnitDeselected);
    }
 
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UUIDelegateContext>()->OnUnitSlotSelected().AddUObject(this, &ABasePlayer::OnUnitSlotSelected);
-   Cast<ARTSPawn>(GetWorld()->GetFirstPlayerController()->GetPawn())->OnGroupTabbed().AddUObject(this, &ABasePlayer::OnGroupTabbed);
+   if(ARTSPawn* Pawn = Cast<ARTSPawn>(GetWorld()->GetFirstPlayerController()->GetPawn()))
+   {
+      Pawn->OnGroupTabbed().AddUObject(this, &ABasePlayer::OnGroupTabbed);
+   }
 
    for(TActorIterator<ABaseHero> actItr(GetWorld()); actItr; ++actItr)
    {
@@ -157,6 +161,10 @@ void ABasePlayer::OnAllyDeselected(AAlly* allyRef)
 
 void ABasePlayer::OnUnitDeselected(AUnit* unitRef)
 {
+   if(IsValid(GetFocusedUnit()) && GetFocusedUnit() == unitRef)
+   {
+      SetFocusedUnit(nullptr);
+   }
 }
 
 void ABasePlayer::OnUnitSlotSelected(AUnit* unitSelected)

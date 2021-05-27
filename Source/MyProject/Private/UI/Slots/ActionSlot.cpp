@@ -91,6 +91,20 @@ void UActionSlot::SetIsEnabled(bool bInIsEnabled)
    }
 }
 
+void UActionSlot::RemakeDescription()
+{
+   if(AUserInput* CPCRef = Cast<AUserInput>(GetOwningPlayer<AUserInput>()))
+   {
+      UToolTipWidget* NewToolTipWidget = CreateWidget<UToolTipWidget>(CPCRef, CPCRef->GetHUDManager()->toolTipWidgetClass);
+      if(NewToolTipWidget)
+      {
+         ShowDesc(NewToolTipWidget);
+         SetToolTip(NewToolTipWidget);
+         FSlateApplication::Get().UpdateToolTip(true);
+      }
+   }
+}
+
 UActionSlotStyle* UActionSlot::GetStyleCDO() const
 {
    return style ? style.GetDefaultObject() : nullptr;
@@ -144,16 +158,7 @@ FReply UActionSlot::NativeOnMouseButtonDoubleClick(const FGeometry& InGeometry, 
 
 void UActionSlot::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-   if(AUserInput* CPCRef = Cast<AUserInput>(GetOwningPlayer<AUserInput>()))
-   {
-      UToolTipWidget* ToolTipWidget = CreateWidget<UToolTipWidget>(CPCRef, CPCRef->GetHUDManager()->toolTipWidgetClass);
-
-      if(ToolTipWidget)
-      {
-         ShowDesc(ToolTipWidget);
-         SetToolTip(ToolTipWidget);
-      }
-   }
+   RemakeDescription();
 }
 
 void UActionSlot::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)

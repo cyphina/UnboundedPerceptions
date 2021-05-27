@@ -12,7 +12,7 @@
 namespace AttackCVars
 {
    bool                           bUseOldDamageNumbers = false;
-   static FAutoConsoleVariableRef CVarUseOldDamageNumbers(TEXT("useOldDamageNumbers"), bUseOldDamageNumbers,
+   static FAutoConsoleVariableRef CVarUseOldDamageNumbers(TEXT("Up_DebugUseOldDamageNumbers"), bUseOldDamageNumbers,
                                                           TEXT("Uses text render component instead of widgets to show damage numbers."));
 }
 
@@ -29,11 +29,11 @@ void URTSUnitDamageCalculation::Execute_Implementation(const FGameplayEffectCust
 
    if(ownerComponent)
    {
-      sourceUnit = Cast<AUnit>(ownerComponent->AvatarActor);
+      sourceUnit = Cast<AUnit>(ownerComponent->GetAvatarActor());
    }
    if(targetComponent)
    {
-      targetUnit = Cast<AUnit>(targetComponent->AvatarActor);
+      targetUnit = Cast<AUnit>(targetComponent->GetAvatarActor());
    }
 
    if(sourceUnit && targetUnit)

@@ -61,7 +61,9 @@ TSharedRef<SWidget> UPannableContentPanel::RebuildWidget()
    return MyContentPanel.ToSharedRef();
 }
 
+#if WITH_EDITOR
 const FText UPannableContentPanel::GetPaletteCategory()
 {
    return NSLOCTEXT("UMG", "Panel", "Panel");
 }
+#endif

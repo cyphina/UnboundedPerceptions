@@ -46,5 +46,8 @@ class MYPROJECT_API UPannableContentPanel : public UContentWidget
    TSharedPtr<SPannableContentPanel> MyContentPanel;
 
  private:
+
+#if WITH_EDITOR
    virtual const FText GetPaletteCategory() override;
+#endif
 };

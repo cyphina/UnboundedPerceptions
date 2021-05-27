@@ -152,6 +152,8 @@ class MYPROJECT_API UMySpell : public UGameplayAbility
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Spell")
    FSpellDefaults spellDefaults;
 
+   virtual FPrimaryAssetId GetPrimaryAssetId() const override;
+
  private:
    UFUNCTION(BlueprintCallable, Category = "Spell Helper")
    FGameplayEffectSpecHandle SetScaling(FGameplayEffectSpecHandle specHandle);

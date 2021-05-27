@@ -159,7 +159,7 @@ void UUpTree::ResetTree()
                       });
 }
 
-#if WITH_EDITORONLY_DATA
+#if WITH_EDITOR
 TArray<FUpTreeConnector> UUpTree::MakeThreadConnections() const
 {
    TArray<FUpTreeConnector> connections;

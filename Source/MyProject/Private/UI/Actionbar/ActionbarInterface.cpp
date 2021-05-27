@@ -42,7 +42,7 @@ void UActionbarInterface::OnUnitSelected()
 }
 
 
-void UActionbarInterface::OnUnitDeselected()
+void UActionbarInterface::OnUnitDeselected(AUnit* DeselectedUnit)
 {
    if(CPC->GetBasePlayer()->GetSelectedUnits().Num() == 1)
    {

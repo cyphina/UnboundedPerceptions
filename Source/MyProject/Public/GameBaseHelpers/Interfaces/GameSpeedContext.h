@@ -16,6 +16,6 @@ class IGameSpeedContext
    GENERATED_BODY()
 
  public:
-   virtual float            GetGameSpeed() const       = 0;
-   virtual FUpdateGameSpeed OnGameSpeedUpdated() const = 0;
+   virtual float             GetGameSpeed() const       = 0;
+   virtual FUpdateGameSpeed& OnGameSpeedUpdated() const = 0;
 };

@@ -222,6 +222,11 @@ int UMySpell::GetLevel(const UAbilitySystemComponent* abilityComponent) const
    return 0;
 }
 
+FPrimaryAssetId UMySpell::GetPrimaryAssetId() const
+{
+   return FPrimaryAssetId("Spell", *GetName());
+}
+
 FGameplayEffectSpecHandle UMySpell::SetScaling(FGameplayEffectSpecHandle specHandle)
 {
    const FDamageScalarStruct damageScalings = GetDamage(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo()));

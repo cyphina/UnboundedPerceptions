@@ -59,7 +59,7 @@ void ARTSGameState::BeginPlay()
       }
    }
 
-#if WITH_EDITORONLY_DATA
+#if WITH_EDITOR
    if(HasAuthority() || !IsRunningDedicatedServer())
    {
       if(ARTSGameMode* RTSGameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode()))
@@ -76,7 +76,7 @@ void ARTSGameState::CleanupUnitLists()
    Cast<ARTSGameState>(GetWorld()->GetGameState())->allyList.Shrink();
 }
 
-#if WITH_EDITORONLY_DATA
+#if WITH_EDITOR
 void ARTSGameState::CheckMapBounds()
 {
    GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {

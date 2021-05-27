@@ -30,6 +30,7 @@ void URTSDamageNumberContainer::SetOwningUnit(AUnit* newOwningUnit)
 void URTSDamageNumberContainer::ReleaseDamageNumberWidget(URTSDamageNumberWidget* destroyedDamageNumberWidget)
 {
    widgetPool.Release(destroyedDamageNumberWidget);
+   destroyedDamageNumberWidget->RemoveFromParent();
 }
 
 void URTSDamageNumberContainer::ReleaseSlateResources(bool bReleaseChildren)

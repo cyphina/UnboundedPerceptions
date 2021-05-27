@@ -16,9 +16,9 @@
 
 #define LOCTEXT_NAMESPACE "SpellbookSlot"
 
-const  FLinearColor USpellbookSlot::tooHighLevelSpellColor = FLinearColor(0.6, 0, 0.02, 1.0);
-const  FLinearColor USpellbookSlot::canLearnSpellColor    = FLinearColor(0.62, 0.61, 0, 1.0);
-const  FLinearColor USpellbookSlot::learnedSpellColor = FLinearColor::White;
+const FLinearColor USpellbookSlot::tooHighLevelSpellColor = FLinearColor(0.6, 0, 0.02, 1.0);
+const FLinearColor USpellbookSlot::canLearnSpellColor     = FLinearColor(0.62, 0.61, 0, 1.0);
+const FLinearColor USpellbookSlot::learnedSpellColor      = FLinearColor::White;
 
 void USpellbookSlot::UpdateSlotColor()
 {
@@ -115,7 +115,10 @@ void USpellbookSlot::ShowDesc(UToolTipWidget* tooltip)
       return;
    }
 
-   const auto  spellObj        = spellClassRef.GetDefaultObject();
+   const auto  spellObj           = spellClassRef.GetDefaultObject();
+   const int   adjustedSpellLevel = heroRef->GetSpellBook()->HasLearnedSpell(slotIndex) ? spellObj->GetLevel(abilitySystemCompRef) : 0;
+   const FText titleAndLevelCap =
+       FText::Format(LOCTEXT("SpellSlotTitleAndLevelCap", "{0} ({1}/{2})"), spellObj->GetSpellName(), adjustedSpellLevel, spellObj->GetSpellDefaults().MaxLevel);
    const FText costAndManaDesc = FText::Format(LOCTEXT("SpellSlotCostAndMana", "Costs {0} mana \r\n{1} second cooldown \r\n{2} Element"),
                                                spellObj->GetCost(abilitySystemCompRef), spellObj->GetCDDuration(abilitySystemCompRef), spellObj->GetElem());
    FText       preReqNamesDesc =
@@ -131,7 +134,7 @@ void USpellbookSlot::ShowDesc(UToolTipWidget* tooltip)
    {
       if(AUserInput* CPCRef = Cast<AUserInput>(GetOwningPlayer<AUserInput>()))
       {
-         tooltip->SetupTTBoxText(spellObj->GetSpellName(), levelRequirementString, preReqNamesDesc,
+         tooltip->SetupTTBoxText(titleAndLevelCap, levelRequirementString, preReqNamesDesc,
                                  USpellFunctionLibrary::ParseDesc(spellObj->GetDescription(), abilitySystemCompRef, spellObj), costAndManaDesc);
       }
    }

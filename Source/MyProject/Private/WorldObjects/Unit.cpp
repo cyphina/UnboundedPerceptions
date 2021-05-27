@@ -211,6 +211,17 @@ void AUnit::PossessedBy(AController* newController)
    }
 }
 
+#if WITH_EDITOR
+void AUnit::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+   Super::PostEditChangeProperty(PropertyChangedEvent);
+   if(PropertyChangedEvent.Property != NULL && PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(AUnit, unitControllerClass))
+   {
+      AIControllerClass = unitControllerClass;
+   }
+}
+#endif
+
 void AUnit::HideInvisibleUnits()
 {
    if(LIKELY(!GameplayModifierCVars::bShowEnemyPerspective))
@@ -266,29 +277,32 @@ void AUnit::SetEnabled(bool bEnabled)
       SetActorTickEnabled(true);
       GetCapsuleComponent()->SetEnableGravity(true);
       GetCharacterMovement()->GravityScale = 1;
-      // bCanAffectNavigationGeneration       = true;
-      unitProperties.bIsEnabled = true;
+      bCanAffectNavigationGeneration       = true;
+      unitProperties.bIsEnabled            = true;
       damageIndicatorWidget->SetActive(true);
    }
    else
    {
-      GetUnitController()->StopCurrentAction();
-      GetUnitController()->StopAutomation();
-      GetCapsuleComponent()->SetVisibility(false, true);
-      SetActorEnableCollision(false);
-      SetActorTickEnabled(false);
-      GetCapsuleComponent()->SetEnableGravity(false);
-      GetCharacterMovement()->GravityScale = 0;
-      GetCapsuleComponent()->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
-      bCanAffectNavigationGeneration = false;
-      unitProperties.bIsEnabled      = false;
-      damageIndicatorWidget->SetActive(false);
+      if(AUnitController* UnitController = GetUnitController())
+      {
+         UnitController->StopCurrentAction();
+         UnitController->StopAutomation();
+         GetCapsuleComponent()->SetVisibility(false, true);
+         SetActorEnableCollision(false);
+         SetActorTickEnabled(false);
+         GetCapsuleComponent()->SetEnableGravity(false);
+         GetCharacterMovement()->GravityScale = 0;
+         GetCapsuleComponent()->SetAllPhysicsLinearVelocity(FVector::ZeroVector);
+         bCanAffectNavigationGeneration = false;
+         unitProperties.bIsEnabled      = false;
+         damageIndicatorWidget->SetActive(false);
+      }
    }
 }
 
 void AUnit::OnUpdateGameSpeed(float speedMultiplier)
 {
-   GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed) * speedMultiplier;
+   // GetCharacterMovement()->MaxWalkSpeed = statComponent->GetMechanicAdjValue(EMechanics::MovementSpeed) * speedMultiplier;
 }
 
 void AUnit::SetUnitSelected(bool value)
@@ -305,7 +319,7 @@ void AUnit::SetUnitSelected(bool value)
    else
    {
       controllerRef->GetBasePlayer()->RemoveSelectedUnit(this);
-      controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnUnitDeselectedDelegate.Broadcast();
+      controllerRef->GetLocalPlayer()->GetSubsystem<UPartyDelegateContext>()->OnUnitDeselectedDelegate.Broadcast(this);
    }
 }
 

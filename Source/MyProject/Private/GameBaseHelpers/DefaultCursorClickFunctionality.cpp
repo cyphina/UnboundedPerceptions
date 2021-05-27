@@ -91,7 +91,9 @@ void DefaultCursorClickFunctionality::HandleRightClick()
             {
                const FVector location = clickHitResult.Location;
                pawnRef->CreateClickVisual(location);
-               pawnRef->CancelSelectedUnitsActionBeforePlayerCommand();
+               // TODO: Find a better way to check this
+               pawnRef->CancelSelectedUnitsActionBeforePlayerCommand(EUnitState::STATE_MOVING,
+                                                                     {EUnitState::STATE_CASTING, EUnitState::STATE_CHANNELING, EUnitState::STATE_INCANTATION});
 
                if(!pawnRef->GetStaticFormationEnabled())
                {
@@ -115,7 +117,7 @@ void DefaultCursorClickFunctionality::HandleRightClick()
             {
                if(AUnit* unit = Cast<AUnit>(clickHitResult.GetActor()))
                {
-                  pawnRef->CancelSelectedUnitsActionBeforePlayerCommand();
+                  pawnRef->CancelSelectedUnitsActionBeforePlayerCommand(EUnitState::STATE_ATTACKING);
                   if(!unit->GetIsUnitHidden())
                   {
                      if(!controllerRef->IsInputKeyDown(FKey("SpaceBar")))
@@ -191,21 +193,25 @@ void DefaultCursorClickFunctionality::HandleShiftRightClick()
             const FVector location = clickHitResult.Location;
             pawnRef->CreateClickVisual(location);
 
-            QueueActionToSelectedUnits([location](AUnit* unit) {
-               unit->GetUnitController()->Move(location);
-            });
+            QueueActionToSelectedUnits(
+                [location](AUnit* unit)
+                {
+                   unit->GetUnitController()->Move(location);
+                });
          }
          break;
          case ENEMY_OBJECT_CHANNEL:
          {
             AEnemy* enemy = Cast<AEnemy>(clickHitResult.GetActor());
 
-            QueueActionToSelectedUnits([enemy](AUnit* unit) {
-               if(UTargetedAttackComponent* targetedAttackComp = unit->GetUnitController()->FindComponentByClass<UTargetedAttackComponent>())
-               {
-                  targetedAttackComp->BeginAttack(enemy);
-               }
-            });
+            QueueActionToSelectedUnits(
+                [enemy](AUnit* unit)
+                {
+                   if(UTargetedAttackComponent* targetedAttackComp = unit->GetUnitController()->FindComponentByClass<UTargetedAttackComponent>())
+                   {
+                      targetedAttackComp->BeginAttack(enemy);
+                   }
+                });
          }
          break;
          default: break;
@@ -247,12 +253,14 @@ void DefaultCursorClickFunctionality::AttackMoveQueue()
    if(clickHitResult.IsValidBlockingHit())
    {
       const FVector moveLocation = clickHitResult.Location;
-      QueueActionToSelectedUnits([moveLocation](AUnit* unit) {
-         if(UTargetedAttackComponent* targetedAttackComp = unit->GetUnitController()->FindComponentByClass<UTargetedAttackComponent>())
-         {
-            targetedAttackComp->BeginAttackMove(moveLocation);
-         }
-      });
+      QueueActionToSelectedUnits(
+          [moveLocation](AUnit* unit)
+          {
+             if(UTargetedAttackComponent* targetedAttackComp = unit->GetUnitController()->FindComponentByClass<UTargetedAttackComponent>())
+             {
+                targetedAttackComp->BeginAttackMove(moveLocation);
+             }
+          });
 
       pawnRef->CreateClickVisual(moveLocation);
       ResetSecondaryCursorState();
@@ -271,9 +279,11 @@ void DefaultCursorClickFunctionality::SpellCastQueue()
             const TSubclassOf<UMySpell> selectedSpell = manSpellComp->GetCurrentlySelectedSpell();
             if(manSpellComp->OnSpellConfirmInput(clickHitResult, selectedSpell))
             {
-               focusedUnit->GetUnitController()->QueueAction([this, currentHitResult = this->clickHitResult, manSpellComp, selectedSpell]() {
-                  manSpellComp->StartSpellCastAction(currentHitResult, selectedSpell);
-               });
+               focusedUnit->GetUnitController()->QueueAction(
+                   [this, currentHitResult = this->clickHitResult, manSpellComp, selectedSpell]()
+                   {
+                      manSpellComp->StartSpellCastAction(currentHitResult, selectedSpell);
+                   });
                ResetSecondaryCursorState();
             }
          }
@@ -285,9 +295,11 @@ void DefaultCursorClickFunctionality::SpellCastQueue()
             const TSubclassOf<UMySpell> selectedSpell = manSpellComp->GetCurrentlySelectedSpell();
             if(manSpellComp->OnSpellConfirmInput(clickHitResult, selectedSpell))
             {
-               selectedUnit->GetUnitController()->QueueAction([this, currentHitResult = this->clickHitResult, manSpellComp, selectedSpell]() {
-                  manSpellComp->StartSpellCastAction(currentHitResult, selectedSpell);
-               });
+               selectedUnit->GetUnitController()->QueueAction(
+                   [this, currentHitResult = this->clickHitResult, manSpellComp, selectedSpell]()
+                   {
+                      manSpellComp->StartSpellCastAction(currentHitResult, selectedSpell);
+                   });
                ResetSecondaryCursorState();
             }
          }
@@ -310,12 +322,14 @@ void DefaultCursorClickFunctionality::ItemUsageQueue()
       const TSubclassOf<UMySpell> itemAbility    = UItemFunctionLibrary::GetConsumableInfo(heroUsingInventory->GetCurrentItem().GetValue()).abilityClass;
       const auto                  heroController = heroUsingInventory->GetHeroController();
 
-      heroController->QueueAction([heroController, currentHitResult = this->clickHitResult, itemAbility]() {
-         if(heroController->GetManualSpellComponent()->OnSpellConfirmInput(currentHitResult, itemAbility))
-         {
-            heroController->GetManualSpellComponent()->StartSpellCastAction(currentHitResult, itemAbility);
-         }
-      });
+      heroController->QueueAction(
+          [heroController, currentHitResult = this->clickHitResult, itemAbility]()
+          {
+             if(heroController->GetManualSpellComponent()->OnSpellConfirmInput(currentHitResult, itemAbility))
+             {
+                heroController->GetManualSpellComponent()->StartSpellCastAction(currentHitResult, itemAbility);
+             }
+          });
 
       ResetSecondaryCursorState();
    }

@@ -14,7 +14,7 @@ namespace AIHelperCVars
    static const int32 SOME_RANDOM_ID = 13456141;
 
    bool                           bPrintRange = false;
-   static FAutoConsoleVariableRef CVarPrintRange(TEXT("RTSDebug.PrintRange"), bPrintRange, TEXT("When checking to see if target is in range, logs the range."));
+   static FAutoConsoleVariableRef CVarPrintRange(TEXT("Up_DebugPrintRange"), bPrintRange, TEXT("When checking to see if target is in range, logs the range."));
 }
 
 bool UUpAIHelperLibrary::IsTargetInRange(const AActor* referenceActor, const FVector& targetLocation, const float range)

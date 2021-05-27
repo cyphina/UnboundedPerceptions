@@ -3,6 +3,7 @@
 #include "RTSAbilitySystemComponent.h"
 #include "SpellDataManager.h"
 #include "UpResourceManager.h"
+#include "UpStatComponent.h"
 
 bool USpellDataLibrary::BP_IsStunned(const URTSAbilitySystemComponent* abilityComponent)
 {
@@ -74,6 +75,16 @@ bool USpellDataLibrary::IsAttackable(const IGameplayTagAssetInterface* abilityCo
 {
    return !(abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Phased")) ||
             abilityComponent->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Combat.Effect.Buff.Ghost")));
+}
+
+float USpellDataLibrary::GetPercentageOfBaseStat(AUnit* UnitToGetStatFrom, const FGameplayAttribute& GameplayAttribute, float Percent)
+{
+   return GameplayAttribute.GetGameplayAttributeData(UnitToGetStatFrom->GetStatComponent()->GetAttSet())->GetBaseValue() * Percent;
+}
+
+float USpellDataLibrary::GetPercentageOfStat(AUnit* UnitToGetStatFrom, const FGameplayAttribute& GameplayAttribute, float Percent)
+{
+   return GameplayAttribute.GetNumericValue(UnitToGetStatFrom->GetStatComponent()->GetAttSet()) * Percent;
 }
 
 float USpellDataLibrary::GetSetByCallerTagMagnitude(UAbilitySystemComponent* AbilityComponent, FGameplayTag EffectName, FGameplayTag SetByCallerTag)

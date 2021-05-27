@@ -58,7 +58,7 @@ class MYPROJECT_API UActionbarInterface : public UMyUserWidget
    void OnUnitSelected();
    
    UFUNCTION()
-   void OnUnitDeselected();
+   void OnUnitDeselected(AUnit* DeselectedUnit);
    
    UFUNCTION()
    void OnAllAlliesCleared();

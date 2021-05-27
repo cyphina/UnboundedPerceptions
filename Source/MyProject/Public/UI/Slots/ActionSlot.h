@@ -58,6 +58,8 @@ class MYPROJECT_API UActionSlot : public UUserWidget
 
    void SetIsEnabled(bool bInIsEnabled) override;
 
+   void RemakeDescription();
+
  protected:
    /** Setup information on the tooltip widget before it is displayed*/
    UFUNCTION()

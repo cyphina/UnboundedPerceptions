@@ -185,7 +185,9 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    UFUNCTION()
    void OnAllyDeselected(AAlly* allyRef);
 
+   UFUNCTION()
    void OnUnitDeselected(AUnit* unitRef);
+
    void OnUnitSlotSelected(AUnit* unitSelected);
    void OnGroupTabbed(AUnit* newFocusedUnit);
    void OnAllyActiveChanged(AAlly* allyRef, bool isActive);

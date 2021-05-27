@@ -6,6 +6,7 @@
 #include "GameBaseHelpers/CursorClickFunctionality.h"
 #include "RTSPawn.generated.h"
 
+enum class EUnitState : uint8;
 class UBackpack;
 class ARTSPawn;
 class ABaseHero;
@@ -289,8 +290,7 @@ class MYPROJECT_API ARTSPawn : public APawn
     * Stop all selected unit actions, stops AI behavior, and hides the spell circle!
     * Doesn't stop movement since we don't want to lose velocity.
     */
-   UFUNCTION(BlueprintCallable, Category = "Action")
-   void CancelSelectedUnitsActionBeforePlayerCommand();
+   void CancelSelectedUnitsActionBeforePlayerCommand(EUnitState NewUnitState, TArray<EUnitState> ForbiddenStates = {});
 
    FOnGroupTabbed& OnGroupTabbed() const { return OnGroupTabbedEvent; }
 

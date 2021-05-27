@@ -17,15 +17,18 @@ void UChannelingBar::NativeOnInitialized()
 
 FText UChannelingBar::GetChannelingName()
 {
-   AUnit* channelingUnit = controllerRef->GetBasePlayer()->GetFocusedUnit();
-   if(IsValid(channelingUnit))
+   AUnit* ChannelingUnit = controllerRef->GetBasePlayer()->GetFocusedUnit();
+   if(IsValid(ChannelingUnit))
    {
-      if(USpellCastComponent* spellCastComp = channelingUnit->GetUnitController()->FindComponentByClass<USpellCastComponent>())
+      if(AUnitController* ChannelingUnitController = ChannelingUnit->GetUnitController())
       {
-         const TSubclassOf<UMySpell> channeledSpellClass = spellCastComp->GetCurrentSpell();
-         if(IsValid(channeledSpellClass))
+         if(USpellCastComponent* spellCastComp = ChannelingUnitController->FindComponentByClass<USpellCastComponent>())
          {
-            return channeledSpellClass.GetDefaultObject()->GetSpellName();
+            const TSubclassOf<UMySpell> ChanneledSpellClass = spellCastComp->GetCurrentSpell();
+            if(IsValid(ChanneledSpellClass))
+            {
+               return ChanneledSpellClass.GetDefaultObject()->GetSpellName();
+            }
          }
       }
    }
@@ -69,15 +72,18 @@ ESlateVisibility UChannelingBar::IsFocusedUnitChanneling()
 {
    if(ABasePlayer* BasePlayer = controllerRef->GetBasePlayer())
    {
-      AUnit* channelingUnit = BasePlayer->GetFocusedUnit();
+      AUnit* ChannelingUnit = BasePlayer->GetFocusedUnit();
 
-      if(IsValid(channelingUnit))
+      if(IsValid(ChannelingUnit))
       {
-         if(USpellCastComponent* channelingComp = channelingUnit->GetUnitController()->FindComponentByClass<USpellCastComponent>())
+         if(AUnitController* UnitController = ChannelingUnit->GetUnitController())
          {
-            if(channelingComp->GetCurrentChannelingTime() > 0 || channelingComp->GetCurrentIncantationTime() > 0)
+            if(USpellCastComponent* channelingComp = UnitController->FindComponentByClass<USpellCastComponent>())
             {
-               return ESlateVisibility::SelfHitTestInvisible;
+               if(channelingComp->GetCurrentChannelingTime() > 0 || channelingComp->GetCurrentIncantationTime() > 0)
+               {
+                  return ESlateVisibility::SelfHitTestInvisible;
+               }
             }
          }
       }

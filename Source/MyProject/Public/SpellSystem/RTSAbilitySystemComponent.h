@@ -17,7 +17,7 @@ struct FDefaultLearnedAbility
    GENERATED_BODY()
 
    UPROPERTY(EditAnywhere)
-   TSubclassOf<UMySpell> spellClass = nullptr;
+   TSoftClassPtr<UMySpell> spellClass = nullptr;
 
    UPROPERTY(EditAnywhere, Meta = (ClampMin = "1"))
    int initialLevel = 1;
@@ -31,7 +31,7 @@ UCLASS()
 class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
 {
    GENERATED_BODY()
-	
+
    URTSAbilitySystemComponent();
 
  public:
@@ -92,4 +92,5 @@ class MYPROJECT_API URTSAbilitySystemComponent : public UAbilitySystemComponent
  private:
    class AUnit* unitOwnerRef;
 
+   TUniquePtr<FThreadSafeCounter> abilitiesLoadedCounter = nullptr;
 };

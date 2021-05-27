@@ -83,7 +83,10 @@ void UActionbar_EnemyInterface::OnFocusedUnitSpellCasted(AUnit* focusedUnit, int
    {*/
    if(UObject* dataItem = TView_SkillList->GetItemAt(spellIndex))
    {
-      TView_SkillList->GetEntryWidgetFromItem<UEnemySkillSlot>(dataItem)->ShowCooldown();
+      if(UEnemySkillSlot* EnemySkillSlot = TView_SkillList->GetEntryWidgetFromItem<UEnemySkillSlot>(dataItem))
+      {
+         EnemySkillSlot->ShowCooldown();
+      }
    }
    //}
 }

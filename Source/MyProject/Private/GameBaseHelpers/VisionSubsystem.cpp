@@ -16,7 +16,7 @@ DECLARE_CYCLE_STAT(TEXT("Unit Vision Update"), STAT_UnitVision, STATGROUP_RTSUni
 namespace VisionCVars
 {
    static float                   VisionUpdateLoopTime = .1f;
-   static FAutoConsoleVariableRef CVarNumSecondsBeforeShowingInMinutes(TEXT("VisionUpdateLoopTime"), VisionUpdateLoopTime,
+   static FAutoConsoleVariableRef CVarNumSecondsBeforeShowingInMinutes(TEXT("Up_DebugVisionUpdateLoopTime"), VisionUpdateLoopTime,
                                                                        TEXT("How long between vision updates in seconds"), ECVF_Default);
 }
 

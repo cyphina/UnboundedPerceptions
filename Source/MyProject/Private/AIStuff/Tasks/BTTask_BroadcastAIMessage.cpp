@@ -7,7 +7,7 @@
 namespace BroadcastAIMessage
 {
    bool                           bLogAIBroadcastMessages;
-   static FAutoConsoleVariableRef CVarEnableEnemyControl(TEXT("up.enableEnemyControl"), bLogAIBroadcastMessages,
+   static FAutoConsoleVariableRef CVarEnableEnemyControl(TEXT("Up_BroadcastAIMessages"), bLogAIBroadcastMessages,
                                                          TEXT("When this flag is set to 1, we print log information for all AI Broadcast Message Tasks"));
 
 }

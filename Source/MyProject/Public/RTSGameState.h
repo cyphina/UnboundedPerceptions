@@ -66,7 +66,7 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsConte
 
    float GetGameSpeed() const override { return speedModifier; }
 
-   FUpdateGameSpeed OnGameSpeedUpdated() const override { return UpdateGameSpeedDelegate; }
+   FUpdateGameSpeed& OnGameSpeedUpdated() const override { return UpdateGameSpeedDelegate; }
 
    FVector2D GetCameraBoundX() const { return cameraBoundX; }
    FVector2D GetCameraBoundY() const { return cameraBoundY; }
@@ -95,7 +95,7 @@ class MYPROJECT_API ARTSGameState : public AGameStateBase, public IAllUnitsConte
    UFUNCTION()
    void CleanupUnitLists();
 
-#if WITH_EDITORONLY_DATA
+#if WITH_EDITOR
    UFUNCTION()
    void CheckMapBounds();
 #endif

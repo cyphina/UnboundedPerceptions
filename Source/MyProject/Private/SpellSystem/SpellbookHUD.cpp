@@ -168,6 +168,7 @@ void USpellbookHUD::OnSpellLearned(const ABaseHero& heroThatLearnedSpell, TSubcl
 
       spellbookSlots[slotWithLearnedSpellIndex]->SetColorAndOpacity(FColor::White);
       spellbookSlots[slotWithLearnedSpellIndex]->UpdateSlotLevelText();
+      spellbookSlots[slotWithLearnedSpellIndex]->RemakeDescription();
 
       for(const int learnableSpellIndex : spellBook->GetLearnableSpellsIndices())
       {
@@ -192,6 +193,7 @@ void USpellbookHUD::OnSpellUpgraded(const ABaseHero& heroThatLearnedSpell, TSubc
    {
       const uint32 slotWithUpgradedSpellIndex = GetHeroFromSpellbook()->GetSpellBook()->GetAvailableSpells().Find(spellClass);
       spellbookSlots[slotWithUpgradedSpellIndex]->UpdateSlotLevelText();
+      spellbookSlots[slotWithUpgradedSpellIndex]->RemakeDescription();
    }
 
    GetWorld()->GetTimerManager().SetTimerForNextTick(

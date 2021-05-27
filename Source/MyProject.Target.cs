@@ -9,7 +9,7 @@ public class MyProjectTarget : TargetRules
 	{
 		Type = TargetType.Game;
 		ExtraModuleNames.AddRange(new string[] {
-			"MyProject"
+			"MyProject",
 		});
 	}
 }

@@ -142,17 +142,24 @@ FString UBTTask_CastSpell::GetStaticDescription() const
 
 bool UBTTask_CastSpell::CheckPreconditions(AUnitController* unitController, USpellCastComponent* spellCastComponent)
 {
-   if(!spellCastComponent)
+   if(unitController)
    {
-      UE_LOG(LogTemp, Error, TEXT("%s No Spell Cast Component on Unit %s trying to perform task involving casting spells!"),
-             *unitController->GetUnitOwner()->GetGameName().ToString());
-      return false;
-   }
+      // Could be invalid while the pawn is not yet possessed
+      if(AUnit* UnitOwner = unitController->GetUnitOwner())
+      {
+         if(!spellCastComponent)
+         {
+            UE_LOG(LogActor, Error, TEXT("No Spell Cast Component on Unit %s trying to perform task involving casting spells!"), *UnitOwner->GetGameName().ToString());
+            return false;
+         }
 
-   if(!spellToCast)
-   {
-      UE_LOG(LogTemp, Error, TEXT("%s Unit %s has spell task without any spell set!"), *unitController->GetUnitOwner()->GetGameName().ToString());
-      return false;
+         if(!spellToCast)
+         {
+            UE_LOG(LogActor, Error, TEXT("Unit %s has spell task without any spell set!"), *UnitOwner->GetGameName().ToString());
+            return false;
+         }
+         return true;
+      }
    }
-   return true;
+   return false;
 }

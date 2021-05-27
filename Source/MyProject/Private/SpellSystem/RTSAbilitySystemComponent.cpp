@@ -13,6 +13,7 @@
 #include "SpellDataLibrary.h"
 #include "SpellDelegateStore.h"
 #include "UpStatComponent.h"
+#include "Engine/AssetManager.h"
 #include "SpellSystem/SpellFunctionLibrary.h"
 #include "SpellSystem/GameplayEffects/RTSDamageEffect.h"
 
@@ -23,33 +24,50 @@ URTSAbilitySystemComponent::URTSAbilitySystemComponent() : UAbilitySystemCompone
 void URTSAbilitySystemComponent::BeginPlay()
 {
    Super::BeginPlay();
-   unitOwnerRef = Cast<AUnit>(GetOwner());
+   unitOwnerRef           = Cast<AUnit>(GetOwner());
+   abilitiesLoadedCounter = MakeUnique<FThreadSafeCounter>();
 
    // TODO: Set this more elegantly I guess.
    if(Cast<ABaseHero>(GetOwner()))
    {
+      abilities.Reserve(6);
       abilities.SetNum(6);
    }
    else
    {
       abilities.Reserve(defaultAbilities.Num());
+      abilities.SetNum(defaultAbilities.Num());
    }
 
    if(unitOwnerRef->HasAuthority())
    {
-      int index = 0;
-      for(const FDefaultLearnedAbility& defaultAbility : defaultAbilities)
+      for(int i = 0; i < defaultAbilities.Num(); ++i)
       {
-         if(IsValid(defaultAbility.spellClass))
-         {
-            const int spellMaxLevel = defaultAbility.spellClass.GetDefaultObject()->GetMaxLevel();
-            const int initialLevel  = defaultAbility.initialLevel > spellMaxLevel ? spellMaxLevel : defaultAbility.initialLevel;
-            GiveAbility(FGameplayAbilitySpec(defaultAbility.spellClass.GetDefaultObject(), initialLevel));
-            abilities.EmplaceAt(index++, defaultAbility.spellClass);
-         }
+         FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
+         StreamableManager.RequestAsyncLoad(defaultAbilities[i].spellClass.ToSoftObjectPath(),
+                                            [this, i]()
+                                            {
+                                               UClass* LoadedClass = defaultAbilities[i].spellClass.Get();
+                                               if(LoadedClass)
+                                               {
+                                                  TSubclassOf<UMySpell> SpellClass    = LoadedClass;
+                                                  const int             spellMaxLevel = SpellClass.GetDefaultObject()->GetMaxLevel();
+                                                  const int             initialLevel =
+                                                      defaultAbilities[i].initialLevel > spellMaxLevel ? spellMaxLevel : defaultAbilities[i].initialLevel;
+                                                  GiveAbility(FGameplayAbilitySpec(SpellClass.GetDefaultObject(), initialLevel));
+                                                  abilities[i] = MoveTemp(SpellClass);
+
+                                                  abilitiesLoadedCounter->Increment();
+                                                  // On last spell loaded, empty the default abilities array
+                                                  if(abilitiesLoadedCounter->GetValue() == defaultAbilities.Num())
+                                                  {
+                                                     defaultAbilities.Empty();
+                                                     abilitiesLoadedCounter.Release();
+                                                  }
+                                               }
+                                            });
       }
    }
-   defaultAbilities.Empty();
 
    if(GetOwner()->HasAuthority())
    {
@@ -57,7 +75,10 @@ void URTSAbilitySystemComponent::BeginPlay()
       GiveAbility(FGameplayAbilitySpec(USpellDataManager::GetData().GetSpellClass(USpellDataLibrary::GetConfirmSpellTargetTag())));
    }
 
-   InitAbilityActorInfo(GetWorld()->GetGameInstance()->GetFirstLocalPlayerController(), unitOwnerRef);
+   if(APlayerController* PC = GetWorld()->GetGameInstance()->GetFirstLocalPlayerController())
+   {
+      InitAbilityActorInfo(PC, unitOwnerRef);
+   }
 }
 
 int URTSAbilitySystemComponent::FindSlotIndexOfSpell(TSubclassOf<UMySpell> spellToLookFor) const

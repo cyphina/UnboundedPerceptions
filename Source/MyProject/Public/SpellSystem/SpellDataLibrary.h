@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "SpellDataLibrary.generated.h"
 
+class AUnit;
 struct FGameplayEffectSpec;
 class UAbilitySystemComponent;
 class URTSAbilitySystemComponent;
@@ -65,6 +66,12 @@ class MYPROJECT_API USpellDataLibrary : public UBlueprintFunctionLibrary
    /** Check to see if this unit is still targetable by attacks? Will only stop new attacks from being casted on this unit,
      * not ones already initiated before the unit becomes un-targetable. */
    static bool IsAttackable(const IGameplayTagAssetInterface* abilityComponent);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   static float GetPercentageOfBaseStat(AUnit* UnitToGetStatFrom, const FGameplayAttribute& GameplayAttribute, float Percent);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure)
+   static float GetPercentageOfStat(AUnit* UnitToGetStatFrom, const FGameplayAttribute& GameplayAttribute, float Percent);
 
    UFUNCTION(BlueprintCallable, BlueprintPure)
    static float GetSetByCallerTagMagnitude(UAbilitySystemComponent* AbilityComponent, UPARAM(meta = (Categories = "Combat.EffectName")) FGameplayTag EffectName,

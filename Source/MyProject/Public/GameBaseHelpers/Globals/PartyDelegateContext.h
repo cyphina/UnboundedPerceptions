@@ -27,7 +27,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnBaseHeroDeselected, ABaseHero*, d
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGroundSelected); // SelectGround,
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitSelected);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnUnitDeselected);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUnitDeselected, AUnit*, deselectedUnit);
 
 DECLARE_DELEGATE_OneParam(FOnEnemySelectedWithoutDebugging, AUnit*);
 

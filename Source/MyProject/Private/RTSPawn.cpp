@@ -49,14 +49,14 @@
 namespace MouseCVars
 {
    bool                           bPrintMouseHover = false;
-   static FAutoConsoleVariableRef CVarPrintMouseHover(TEXT("printMouseHover"), bPrintMouseHover,
+   static FAutoConsoleVariableRef CVarPrintMouseHover(TEXT("Up_DebugPrintMouseHover"), bPrintMouseHover,
                                                       TEXT("Turn on the capability to print out whatever our mouse is hovering over."));
 }
 
 namespace GameplayModifierCVars
 {
    bool                           bEnableEnemyControl;
-   static FAutoConsoleVariableRef CVarEnableEnemyControl(TEXT("enableEnemyControl"), bEnableEnemyControl,
+   static FAutoConsoleVariableRef CVarEnableEnemyControl(TEXT("Up_DebugEnableEnemyControl"), bEnableEnemyControl,
                                                          TEXT("When this flag is set to 1, we change the control scheme to allow enemy controls"));
 }
 
@@ -208,15 +208,17 @@ void ARTSPawn::PossessedBy(AController* newController)
 
       if(!HasAuthority() || !IsRunningDedicatedServer())
       {
-         GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
-            controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnSkillSlotSelected().AddUObject(this, &ARTSPawn::OnSkillSlotSelected);
-            controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnEffectSlotSelected().AddUObject(this, &ARTSPawn::OnEffectSlotSelected);
-            controllerRef->GetHUDManager()->GetIngameHUD()->GetEquipHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnEquipmentSlotSelected);
-            controllerRef->GetHUDManager()->GetIngameHUD()->GetShopHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnShopSlotSelected);
-            controllerRef->GetHUDManager()->GetIngameHUD()->GetStorageHUD()->OnStorageInventoryClosed().AddUObject(this, &ARTSPawn::OnStorageInventoryClosed);
-            controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnInventorySlotSelected);
-            controllerRef->GetHUDManager()->GetIngameHUD()->GetStorageHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnStorageSlotSelected);
-         });
+         GetWorld()->GetTimerManager().SetTimerForNextTick(
+             [this]()
+             {
+                controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnSkillSlotSelected().AddUObject(this, &ARTSPawn::OnSkillSlotSelected);
+                controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnEffectSlotSelected().AddUObject(this, &ARTSPawn::OnEffectSlotSelected);
+                controllerRef->GetHUDManager()->GetIngameHUD()->GetEquipHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnEquipmentSlotSelected);
+                controllerRef->GetHUDManager()->GetIngameHUD()->GetShopHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnShopSlotSelected);
+                controllerRef->GetHUDManager()->GetIngameHUD()->GetStorageHUD()->OnStorageInventoryClosed().AddUObject(this, &ARTSPawn::OnStorageInventoryClosed);
+                controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnInventorySlotSelected);
+                controllerRef->GetHUDManager()->GetIngameHUD()->GetStorageHUD()->OnSlotSelected().AddUObject(this, &ARTSPawn::OnStorageSlotSelected);
+             });
       }
    }
 
@@ -367,29 +369,41 @@ void ARTSPawn::CreateSelectionRect_Impl()
 {
    if(GetCursorState() != ECursorStateEnum::UI)
    {
-      float locX, locY;
-      controllerRef->GetMousePosition(locX, locY);
-      endMousePos = FVector2D(locX, locY);
-      if(IsSelectionRectActive())
+      if(ABasePlayer* BasePlayer = controllerRef->GetBasePlayer())
       {
-         controllerRef->GetHUD()->DrawRect(GetSelectionRectColor(), startMousePos.X, startMousePos.Y, endMousePos.X - startMousePos.X, endMousePos.Y - startMousePos.Y);
-
-         TArray<T*> actorsInSelectRect;
-         controllerRef->GetHUD()->GetActorsInSelectionRectangle<T>(startMousePos, endMousePos, actorsInSelectRect, false, false);
-
-         // Only update if we just overlapped a new actor (not one we already have selected)
-         if(controllerRef->GetBasePlayer()->GetSelectedUnits().Num() != actorsInSelectRect.Num())
+         float locX, locY;
+         controllerRef->GetMousePosition(locX, locY);
+         endMousePos = FVector2D(locX, locY);
+         if(IsSelectionRectActive())
          {
-            for(T* unitInSelectionRect : actorsInSelectRect)
+            controllerRef->GetHUD()->DrawRect(GetSelectionRectColor(), startMousePos.X, startMousePos.Y, endMousePos.X - startMousePos.X,
+                                              endMousePos.Y - startMousePos.Y);
+
+            TArray<T*> actorsInSelectRect;
+            controllerRef->GetHUD()->GetActorsInSelectionRectangle<T>(startMousePos, endMousePos, actorsInSelectRect, false, false);
+
+            // Only update if we just overlapped a new actor (not one we already have selected)
+            if(BasePlayer->GetSelectedUnits().Num() != actorsInSelectRect.Num())
             {
-               if(IsValid(unitInSelectionRect))
+               for(T* unitInSelectionRect : actorsInSelectRect)
                {
-                  if(unitInSelectionRect->IsEnabled() && !unitInSelectionRect->GetUnitSelected())
+                  if(IsValid(unitInSelectionRect))
                   {
-                     if(IsUnitOnScreen(unitInSelectionRect))
+                     if(unitInSelectionRect->IsEnabled() && !unitInSelectionRect->GetUnitSelected())
                      {
-                        unitInSelectionRect->SetUnitSelected(true);
-                        break;
+                        if(IsUnitOnScreen(unitInSelectionRect))
+                        {
+                           if(const AUnit* FocusedUnit = BasePlayer->GetFocusedUnit())
+                           {
+                              if(FocusedUnit->GetIsEnemy())
+                              {
+                                 BasePlayer->ClearSelectedUnits();
+                              }
+                           }
+
+                           unitInSelectionRect->SetUnitSelected(true);
+                           break;
+                        }
                      }
                   }
                }
@@ -457,9 +471,11 @@ void ARTSPawn::CursorHover()
                {
                   if(basePlayer->GetSelectedUnits().Num() > 0)
                   {
-                     const auto selectedEnemy = controllerRef->GetBasePlayer()->GetSelectedUnits().FindByPredicate([](const AUnit* unit) {
-                        return unit->GetClass()->IsChildOf(AEnemy::StaticClass());
-                     });
+                     const auto selectedEnemy = controllerRef->GetBasePlayer()->GetSelectedUnits().FindByPredicate(
+                         [](const AUnit* unit)
+                         {
+                            return unit->GetClass()->IsChildOf(AEnemy::StaticClass());
+                         });
 
                      if(selectedEnemy)
                      {
@@ -664,18 +680,19 @@ void ARTSPawn::PanReset()
 template <bool UseX, bool UseMinLimit>
 void ARTSPawn::EdgeMove()
 {
-   FVector           offset;
-   FTimerHandle*     handle;
-   TFunction<bool()> movePred;
-   ECursorStateEnum  cursorState;
+   FVector           Offset;
+   FTimerHandle*     TimerHandle;
+   TFunction<bool()> MovePred;
+   ECursorStateEnum  CursorState;
 
    if constexpr(UseX)
    {
-      handle = &moveXHandle;
+      TimerHandle = &moveXHandle;
       if constexpr(UseMinLimit)
       {
-         offset   = FVector(0, -1 * baseCameraMoveSpeed, 0);
-         movePred = [this]() {
+         Offset   = FVector(0, -1 * baseCameraMoveSpeed, 0);
+         MovePred = [this]()
+         {
             float mouseX, mouseY;
             if(controllerRef && controllerRef->GetMousePosition(mouseX, mouseY))
             {
@@ -683,12 +700,13 @@ void ARTSPawn::EdgeMove()
             }
             return false;
          };
-         cursorState = ECursorStateEnum::PanLeft;
+         CursorState = ECursorStateEnum::PanLeft;
       }
       else
       {
-         offset   = FVector(0, baseCameraMoveSpeed, 0);
-         movePred = [this]() {
+         Offset   = FVector(0, baseCameraMoveSpeed, 0);
+         MovePred = [this]()
+         {
             float mouseX, mouseY;
             if(controllerRef && controllerRef->GetMousePosition(mouseX, mouseY))
             {
@@ -696,17 +714,18 @@ void ARTSPawn::EdgeMove()
             }
             return false;
          };
-         cursorState = ECursorStateEnum::PanRight;
+         CursorState = ECursorStateEnum::PanRight;
       }
    }
    else
    {
-      handle = &moveYHandle;
+      TimerHandle = &moveYHandle;
 
       if constexpr(UseMinLimit)
       {
-         offset   = FVector(-1 * baseCameraMoveSpeed, 0, 0);
-         movePred = [this]() {
+         Offset   = FVector(-1 * baseCameraMoveSpeed, 0, 0);
+         MovePred = [this]()
+         {
             float mouseX, mouseY;
             if(controllerRef && controllerRef->GetMousePosition(mouseX, mouseY))
             {
@@ -714,12 +733,13 @@ void ARTSPawn::EdgeMove()
             }
             return false;
          };
-         cursorState = ECursorStateEnum::PanDown;
+         CursorState = ECursorStateEnum::PanDown;
       }
       else
       {
-         offset   = FVector(baseCameraMoveSpeed, 0, 0);
-         movePred = [this]() {
+         Offset   = FVector(baseCameraMoveSpeed, 0, 0);
+         MovePred = [this]()
+         {
             float mouseX, mouseY;
             if(controllerRef && controllerRef->GetMousePosition(mouseX, mouseY))
             {
@@ -727,26 +747,27 @@ void ARTSPawn::EdgeMove()
             }
             return false;
          };
-         cursorState = ECursorStateEnum::PanUp;
+         CursorState = ECursorStateEnum::PanUp;
       }
    }
 
-   if(!GetWorld()->GetTimerManager().IsTimerActive(*handle))
+   if(!GetWorld()->GetTimerManager().IsTimerActive(*TimerHandle))
    {
       GetWorld()->GetTimerManager().SetTimer(
-          *handle,
-          [this, offset, handle, movePred]() {
-             if(movePred())
+          *TimerHandle,
+          [this, Offset, TimerHandle, MovePred]()
+          {
+             if(MovePred())
              {
-                AddActorLocalOffset(offset * camMoveSpeedMultiplier / 10);
+                AddActorLocalOffset(Offset * camMoveSpeedMultiplier / 10);
              }
              else
              {
-                GetWorld()->GetTimerManager().ClearTimer(*handle);
+                GetWorld()->GetTimerManager().ClearTimer(*TimerHandle);
              }
           },
           0.001f, true, 0.f);
-      cursorDirections.Add(cursorState);
+      cursorDirections.Add(CursorState);
    }
 }
 
@@ -814,7 +835,7 @@ void ARTSPawn::Stop()
    {
       selectedUnit->GetUnitController()->StopMovement();
    }
-   CancelSelectedUnitsActionBeforePlayerCommand();
+   CancelSelectedUnitsActionBeforePlayerCommand(EUnitState::STATE_IDLE);
 }
 
 void ARTSPawn::SelectALlAllies()
@@ -825,11 +846,19 @@ void ARTSPawn::SelectALlAllies()
    }
 }
 
-void ARTSPawn::CancelSelectedUnitsActionBeforePlayerCommand()
+void ARTSPawn::CancelSelectedUnitsActionBeforePlayerCommand(EUnitState NewUnitState, TArray<EUnitState> ForbiddenStates)
 {
    for(AUnit* selectedUnit : controllerRef->GetBasePlayer()->GetSelectedUnits())
    {
-      selectedUnit->GetUnitController()->HaltUnit();
+      if(!ForbiddenStates.Contains(selectedUnit->GetUnitController()->GetState()))
+      {
+         if(NewUnitState != selectedUnit->GetUnitController()->GetState())
+         {
+            selectedUnit->GetUnitController()->StopCurrentAction();
+         }
+      }
+      selectedUnit->GetUnitController()->ClearCommandQueue();
+      selectedUnit->GetUnitController()->StopAutomation();
    }
 
    bHasSecondaryCursor = false;
@@ -843,7 +872,8 @@ void ARTSPawn::RightClick()
    {
       GetWorld()->GetTimerManager().SetTimer(
           autoClickTimerHandle,
-          [this]() {
+          [this]()
+          {
              clickFunctionalityClass->HandleRightClick();
           },
           0.1f, true, 0.f);
@@ -860,7 +890,8 @@ void ARTSPawn::RightClickShift()
    {
       GetWorld()->GetTimerManager().SetTimer(
           autoClickTimerHandle,
-          [this]() {
+          [this]()
+          {
              clickFunctionalityClass->HandleShiftRightClick();
           },
           0.1f, true, 0.f);
@@ -992,32 +1023,38 @@ void ARTSPawn::UseAbility(int abilityIndex)
       {
          if(UManualSpellComponent* manSpellComp = selectedUnit->GetUnitController()->FindComponentByClass<UManualSpellComponent>())
          {
-            const TSubclassOf<UMySpell> currentSpell = selectedUnit->GetAbilitySystemComponent()->GetAbilities()[abilityIndex];
-            if(currentSpell.GetDefaultObject()->GetSpellDefaults().Targeting == UUpSpellTargeting_None::StaticClass())
+            if(const TSubclassOf<UMySpell> CurrentSpell = selectedUnit->GetAbilitySystemComponent()->GetAbilities()[abilityIndex]; IsValid(CurrentSpell))
             {
-               selectedUnit->GetUnitController()->QueueAction([currentSpell, manSpellComp]() {
-                  manSpellComp->GetSpellCastComp()->BeginCastSpell(currentSpell);
-               });
-            }
-            else
-            {
-               if(bQuickCast)
+               if(CurrentSpell.GetDefaultObject()->GetSpellDefaults().Targeting == UUpSpellTargeting_None::StaticClass())
                {
-                  if(controllerRef->GetHitResultUnderCursor(SELECTABLE_BY_CLICK_CHANNEL, false, hitResult))
-                  {
-                     if(manSpellComp->OnSpellConfirmInput(hitResult, currentSpell))
-                     {
-                        selectedUnit->GetUnitController()->QueueAction([this, hitResult = this->hitResult, manSpellComp, currentSpell]() {
-                           manSpellComp->StartSpellCastAction(hitResult, currentSpell);
-                        });
-                        HideSpellCircle();
-                        SetSecondaryCursor();
-                     }
-                  }
+                  selectedUnit->GetUnitController()->QueueAction(
+                      [CurrentSpell, manSpellComp]()
+                      {
+                         manSpellComp->GetSpellCastComp()->BeginCastSpell(CurrentSpell);
+                      });
                }
                else
                {
-                  controllerRef->GetLocalPlayer()->GetSubsystem<UGameplayDelegateContext>()->OnSkillActivated().Broadcast(abilityIndex);
+                  if(bQuickCast)
+                  {
+                     if(controllerRef->GetHitResultUnderCursor(SELECTABLE_BY_CLICK_CHANNEL, false, hitResult))
+                     {
+                        if(manSpellComp->OnSpellConfirmInput(hitResult, CurrentSpell))
+                        {
+                           selectedUnit->GetUnitController()->QueueAction(
+                               [this, hitResult = this->hitResult, manSpellComp, CurrentSpell]()
+                               {
+                                  manSpellComp->StartSpellCastAction(hitResult, CurrentSpell);
+                               });
+                           HideSpellCircle();
+                           SetSecondaryCursor();
+                        }
+                     }
+                  }
+                  else
+                  {
+                     controllerRef->GetLocalPlayer()->GetSubsystem<UGameplayDelegateContext>()->OnSkillActivated().Broadcast(abilityIndex);
+                  }
                }
             }
          }
@@ -1081,7 +1118,8 @@ void ARTSPawn::ControlGroupDoubleTapHoldFollow()
 
       GetWorld()->GetTimerManager().SetTimer(
           smoothCameraTransitionTimerHandle,
-          [this, distance, endTimeMultiplier]() {
+          [this, distance, endTimeMultiplier]()
+          {
              smoothCameraTransitionTime += GetWorld()->GetDeltaSeconds();
 
              if(smoothCameraTransitionTime > 0.1 * endTimeMultiplier)
@@ -1124,9 +1162,11 @@ void ARTSPawn::MakeControlGroup(int controlGroupIndex)
    auto& allies = controllerRef->GetBasePlayer()->GetSelectedAllies();
    auto& cgroup = controlGroups[controlGroupIndex];
 
-   Algo::Transform(allies, cgroup, [](AAlly* ally) {
-      return MakeWeakObjectPtr(ally);
-   });
+   Algo::Transform(allies, cgroup,
+                   [](AAlly* ally)
+                   {
+                      return MakeWeakObjectPtr(ally);
+                   });
 }
 
 void ARTSPawn::OnSkillSlotSelected(int skillIndex)

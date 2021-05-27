@@ -34,11 +34,11 @@ void URTSHealthReplenishCalculation::Execute_Implementation(const FGameplayEffec
 
    if(ownerComponent)
    {
-      sourceUnit = Cast<AUnit>(ownerComponent->AvatarActor);
+      sourceUnit = Cast<AUnit>(ownerComponent->GetAvatarActor());
    }
    if(targetComponent)
    {
-      targetUnit = Cast<AUnit>(targetComponent->AvatarActor);
+      targetUnit = Cast<AUnit>(targetComponent->GetAvatarActor());
    }
 
    if(sourceUnit && targetUnit)

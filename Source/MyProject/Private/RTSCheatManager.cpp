@@ -29,6 +29,7 @@
 #include "WorldObjects/Enemies/Enemy.h"
 
 #include "EventSystem/EventManager.h"
+#include "MySpell.h"
 
 void URTSCheatManager::InitCheatManager()
 {
@@ -41,9 +42,11 @@ void URTSCheatManager::InitCheatManager()
 void URTSCheatManager::Up_LevelUp(FString heroName)
 {
    GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::White, TEXT("Leveling Up via Cheats!"));
-   if(ABaseHero* heroRef = *userInputRef->GetBasePlayer()->GetHeroes().FindByPredicate([heroName](ABaseHero* hero) {
-         return hero->GetGameName().ToString() == heroName;
-      }))
+   if(ABaseHero* heroRef = *userInputRef->GetBasePlayer()->GetHeroes().FindByPredicate(
+          [heroName](ABaseHero* hero)
+          {
+             return hero->GetGameName().ToString() == heroName;
+          }))
    {
       heroRef->LevelUp();
    }
@@ -51,9 +54,11 @@ void URTSCheatManager::Up_LevelUp(FString heroName)
 
 void URTSCheatManager::Up_LevelUpToLevel(FString heroName, int level)
 {
-   if(ABaseHero* heroRef = *userInputRef->GetBasePlayer()->GetHeroes().FindByPredicate([heroName](ABaseHero* hero) {
-         return hero->GetGameName().ToString() == heroName;
-      }))
+   if(ABaseHero* heroRef = *userInputRef->GetBasePlayer()->GetHeroes().FindByPredicate(
+          [heroName](ABaseHero* hero)
+          {
+             return hero->GetGameName().ToString() == heroName;
+          }))
    {
       while(heroRef->GetStatComponent()->GetUnitLevel() < level)
       {
@@ -123,7 +128,8 @@ void URTSCheatManager::Up_AddQuest(FString questName)
 
 void URTSCheatManager::Up_FinishQuest(FString questName, int isSucessful)
 {
-   auto pred = [questName](AQuest* quest) {
+   auto pred = [questName](AQuest* quest)
+   {
       return quest->GetQuestInfo().name.ToString() == questName;
    };
    AQuest* quest = *gameModeRef->GetQuestManager()->activeQuests.FindByPredicate(pred);
@@ -139,8 +145,12 @@ void URTSCheatManager::Up_EquipSpell(FString spellNameTag, int slot)
    {
       if(slot >= 0 && slot < focusedUnit->GetAbilitySystemComponent()->GetAbilities().Num())
       {
-         focusedUnit->GetAbilitySystemComponent()->SetSpellAtSlot(
-             USpellDataManager::GetData().GetSpellClass(FGameplayTag::RequestGameplayTag(*(FString("Skill.Name.") + spellNameTag))), slot);
+         const TSubclassOf<UMySpell> SpellClass = USpellDataManager::GetData().GetSpellClass(FGameplayTag::RequestGameplayTag(*(FString("Skill.Name.") + spellNameTag)));
+         if(SpellClass)
+         {
+            focusedUnit->GetAbilitySystemComponent()->GiveAbility(SpellClass.GetDefaultObject());
+            focusedUnit->GetAbilitySystemComponent()->SetSpellAtSlot(SpellClass, slot);
+         }
       }
    }
 }
@@ -157,9 +167,11 @@ void URTSCheatManager::Up_RefreshHeroSpells(FString heroName)
 {
    if(!heroName.IsEmpty())
    {
-      if(ABaseHero* heroRef = *userInputRef->GetBasePlayer()->GetHeroes().FindByPredicate([heroName](ABaseHero* hero) {
-            return hero->GetGameName().ToString() == heroName;
-         }))
+      if(ABaseHero* heroRef = *userInputRef->GetBasePlayer()->GetHeroes().FindByPredicate(
+             [heroName](ABaseHero* hero)
+             {
+                return hero->GetGameName().ToString() == heroName;
+             }))
       {
          heroRef->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Name")));
       }

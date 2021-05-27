@@ -82,20 +82,23 @@ void AUnitController::BeginPlay()
       SetupTurnActorTimeline();
    }
 
-   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnUnitDieGlobal().AddWeakLambda(this, [this](AUnit* deadUnit) {
-      UTargetComponent* targetComp = GetUnitOwner()->GetTargetComponent();
-      if(targetComp->IsTargetingUnit())
-      {
-         if(deadUnit == targetComp->GetTargetUnit())
-         {
-            targetComp->ResetTarget();
-            if(GetState() != EUnitState::STATE_IDLE)
-            {
-               StopCurrentAction();
-            }
-         }
-      }
-   });
+   GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UGameplayDelegateContext>()->OnUnitDieGlobal().AddWeakLambda(
+       this,
+       [this](AUnit* deadUnit)
+       {
+          UTargetComponent* targetComp = GetUnitOwner()->GetTargetComponent();
+          if(targetComp->IsTargetingUnit())
+          {
+             if(deadUnit == targetComp->GetTargetUnit())
+             {
+                targetComp->ResetTarget();
+                if(GetState() != EUnitState::STATE_IDLE)
+                {
+                   StopCurrentAction();
+                }
+             }
+          }
+       });
 }
 
 void AUnitController::Tick(float deltaSeconds)
@@ -108,10 +111,14 @@ void AUnitController::Tick(float deltaSeconds)
    // Process only at the end of the frame so if we get toggled to idle in between actions it won't activate the queue.
    if(!commandQueue.IsEmpty() && !GetWorld()->GetFirstPlayerController()->IsInputKeyDown(EKeys::LeftShift) && GetState() == EUnitState::STATE_IDLE)
    {
-      TFunction<void()> command;
-      commandQueue.Dequeue(command);
-      --queueCount;
-      command();
+      // Stun doesn't clear existing command cue. However, anything cued while stunned should not start executing until after stun wears off.
+      if(!USpellDataLibrary::IsStunned(GetUnitOwner()->GetAbilitySystemComponent()))
+      {
+         TFunction<void()> command;
+         commandQueue.Dequeue(command);
+         --queueCount;
+         command();
+      }
    }
 }
 
@@ -149,13 +156,16 @@ void AUnitController::OnDamageReceived(const FUpDamage& d)
 {
    if(!d.DidMiss())
    {
-      d.sourceUnit->GetCombatInfo()->bMissLastHit = false;
-      GetUnitOwner()->GetStatComponent()->ModifyStats<false>(GetUnitOwner()->GetStatComponent()->GetVitalCurValue(EVitals::Health) - d.damage, EVitals::Health);
-
-      if(d.effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Lifesteal")))
+      if(AUnit* SourceUnit = d.sourceUnit)
       {
-         d.sourceUnit->GetStatComponent()->ModifyStats<false>(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) + d.damage, EVitals::Health);
+         SourceUnit->GetCombatInfo()->bMissLastHit = false;
+         if(d.effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Lifesteal")))
+         {
+            SourceUnit->GetStatComponent()->ModifyStats<false>(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) + d.damage, EVitals::Health);
+         }
       }
+
+      GetUnitOwner()->GetStatComponent()->ModifyStats<false>(GetUnitOwner()->GetStatComponent()->GetVitalCurValue(EVitals::Health) - d.damage, EVitals::Health);
 
       if(GetUnitOwner()->GetStatComponent()->GetVitalAdjValue(EVitals::Health) <= 0)
       {
@@ -223,6 +233,16 @@ EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation, flo
             }
          }
       }
+   }
+   else
+   {
+      // TODO: Check if queue component exists
+      ClearCommandQueue();
+      QueueAction(
+          [this, newLocation, stopRange]()
+          {
+             Move(newLocation, stopRange);
+          });
    }
    return moveRequestResult;
 }
@@ -363,7 +383,8 @@ void AUnitController::Turn(float turnValue)
 
 void AUnitController::QueueTurnAfterMovement(FVector targetLoc)
 {
-   queuedTurnAction = [this, targetLoc]() {
+   queuedTurnAction = [this, targetLoc]()
+   {
       if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetLoc))
          TurnTowardsPoint(targetLoc);
       else
@@ -378,7 +399,8 @@ void AUnitController::QueueTurnAfterMovement(FVector targetLoc)
 
 void AUnitController::QueueTurnAfterMovement(AActor* targetActor)
 {
-   queuedTurnAction = [this, targetActor]() {
+   queuedTurnAction = [this, targetActor]()
+   {
       if(!UUpAIHelperLibrary::IsFacingTarget(GetUnitOwner(), targetActor->GetActorLocation()))
       {
          TurnTowardsActor(targetActor);
@@ -414,7 +436,8 @@ bool AUnitController::AdjustPosition(float range, FVector targetLoc)
 
 bool AUnitController::AdjustPosition(float range, FVector targetLoc, EPathFollowingRequestResult::Type& outPathReqRes)
 {
-   this->onPosAdjDoneAct = [this]() {
+   this->onPosAdjDoneAct = [this]()
+   {
       FinishCurrentAction();
    };
 

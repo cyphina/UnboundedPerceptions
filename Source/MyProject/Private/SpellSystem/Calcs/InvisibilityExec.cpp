@@ -11,7 +11,7 @@ void UInvisibilityExec::Execute_Implementation(const FGameplayEffectCustomExecut
    AUnit *                  sourceUnit = nullptr;
 
    if (ownerComponent)
-      sourceUnit = Cast<AUnit>(ownerComponent->AvatarActor);
+      sourceUnit = Cast<AUnit>(ownerComponent->GetAvatarActor());
 
    if(sourceUnit->GetIsEnemy())
    {

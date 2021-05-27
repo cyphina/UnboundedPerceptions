@@ -4,6 +4,9 @@
 #include "GameplayTagContainer.h"
 #include "SpellDefaults.generated.h"
 
+class UUpSpellTargeting;
+class UMySpell;
+
 /**
  * @brief Default values describing what a spell does
  */
