@@ -5,6 +5,8 @@
 #include "Stats/StatEnums.h"
 #include "BaseHero.generated.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(Up_Log_Hero, Log, All);
+
 class ABasePlayer;
 class ABaseHero;
 class Inventory;
@@ -111,7 +113,7 @@ class MYPROJECT_API ABaseHero : public AAlly
    /**
     * @brief Range of how close we have to be to an object to interact with it.
     */
-   static const int INTERACT_RANGE = 150;
+   static constexpr int INTERACT_RANGE = 150;
 
    /**
     * @brief Multiplier to increase amount of xp needed for next level

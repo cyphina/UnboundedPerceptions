@@ -22,20 +22,16 @@ AHUDManager* ANPC::hudManagerRef = nullptr;
 // Sets default values
 ANPC::ANPC()
 {
-   PrimaryActorTick.bCanEverTick      = true;
-   onDialogEndTriggerData.triggerType = ETriggerType::OpenHUDTrigger;
-   onDialogEndTriggerData.enabled     = true;
-
-   TArray<FString> triggerValues;
-   triggerValues.Add(FString::FromInt(static_cast<uint8>(EHUDs::HS_Social)));
-   onDialogEndTriggerData.triggerValues = triggerValues;
-   onDialogEndTriggerData.numCalls      = -1;
+   PrimaryActorTick.bCanEverTick = true;
 
    GetCapsuleComponent()->SetCollisionProfileName("NPC");
    GetMesh()->SetCollisionProfileName("NoCollision");
+
    auto arrowComp = FindComponentByClass<UArrowComponent>();
    if(arrowComp)
+   {
       arrowComp->DestroyComponent();
+   }
 
    GetMesh()->SetRenderCustomDepth(false);
    GetMesh()->CustomDepthStencilValue = 255;
@@ -61,12 +57,24 @@ void ANPC::BeginPlay()
    TArray<FTriggerData> savedTriggers;
    Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode())->GetTriggerManager()->GetTriggerRecords().MultiFind(*GetGameName().ToString(), savedTriggers);
 
-   for(FTriggerData& finishedTriggerActivation : savedTriggers) {
+   for(FTriggerData& finishedTriggerActivation : savedTriggers)
+   {
       controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
    }
 }
 
-// Called every frame
+void ANPC::Destroyed()
+{
+   Super::Destroyed();
+   if(controllerRef)
+   {
+      if(controllerRef->GetBasePlayer()->GetHeroBlockingInteraction()->GetCurrentInteractable() == this)
+      {
+         controllerRef->GetBasePlayer()->SetHeroBlockingInteraction(nullptr);
+      }
+   }
+}
+
 void ANPC::Tick(float DeltaTime)
 {
    Super::Tick(DeltaTime);
@@ -77,20 +85,20 @@ void ANPC::SetSpecificDialog(FGameplayTag topic, FName newConversationName)
    // If our this conversationTopic was a quest giving dialog, decrease the available quest count because its being removed
    FName oldConversationName = GetConversationName(topic);
 
-   if(IsQuestDialog(oldConversationName) && IsTopicLearned(topic))
-      --numAvailableQuests;
+   if(IsQuestDialog(oldConversationName) && IsTopicLearned(topic)) --numAvailableQuests;
    // If this conversationTopic is a questGiving dialog, increase the quest count because it's the new conversation for this topic
-   if(IsQuestDialog(newConversationName) && IsTopicLearned(topic))
-      ++numAvailableQuests;
+   if(IsQuestDialog(newConversationName) && IsTopicLearned(topic)) ++numAvailableQuests;
    conversationTopics[topic] = newConversationName;
 }
 
 FName ANPC::GetConversationName(FGameplayTag conversationTopic) const
 {
    // does this NPC know anything about the topic?
-   if(conversationTopics.Contains(conversationTopic)) {
+   if(conversationTopics.Contains(conversationTopic))
+   {
       return conversationTopics[conversationTopic];
-   } else // if no, return some default reply like "I'm not sure what that is sire!"
+   }
+   else // if no, return some default reply like "I'm not sure what that is sire!"
    {
       check(defaultResponseName != "");
       return defaultResponseName;
@@ -104,11 +112,15 @@ TArray<FGameplayTag> ANPC::GetConversationTopics() const
    return keys;
 }
 
+void ANPC::OnConversationFinished()
+{
+   BP_OnConversationFinished();
+}
+
 void ANPC::Interact_Implementation(ABaseHero* hero)
 {
    // Check to see there is a brain component (behavior tree component stored in brain component base class field)
-   if(npcAIController->GetBrainComponent())
-      npcAIController->GetBrainComponent()->StopLogic("Talking To Hero");
+   if(npcAIController->GetBrainComponent()) npcAIController->GetBrainComponent()->StopLogic("Talking To Hero");
 
    GetController()->StopMovement();
 
@@ -119,13 +131,17 @@ void ANPC::Interact_Implementation(ABaseHero* hero)
    SetActorRotation(FRotationMatrix::MakeFromX(FVector(projectedDirection)).Rotator());
 
    // If this npc wants to converse, we go to another screen after the initial conversation where we can interact more
-   if(Execute_CanInteract(this)) {
+   if(Execute_CanInteract(this))
+   {
       hudManagerRef->GetIngameHUD()->GetSocialWindow()->SetNPC(this);
       SetupAppropriateView();
       // If they have a conversation starter
-      if(conversationStarterName != "") {
+      if(conversationStarterName != "")
+      {
          hudManagerRef->ShowDialogWithSource(conversationStarterName, EDialogBoxCloseCase::finishedInitialTalkNPC);
-      } else {
+      }
+      else
+      {
          // If there was no entry for conversationStarterName, just display a default one
          hudManagerRef->ShowDialogCustomLines(TArray<FDialogData>{FDialogData({}, NSLOCTEXT("NPCDialog", "Default", "This person is silent..."), FName())},
                                               EDialogBoxCloseCase::finishedInitialTalkNPC);
@@ -134,29 +150,31 @@ void ANPC::Interact_Implementation(ABaseHero* hero)
 
    // Check to see if any quests wanted us to talk to this NPC
    NPCDelegateContext::OnNPCTalkedEvent.Broadcast(this);
-   controllerRef->GetBasePlayer()->heroInBlockingInteraction = hero;
-   AddConversedDialog(conversationStarterName);
+   controllerRef->GetBasePlayer()->SetHeroBlockingInteraction(hero);
+   // TODO: Fix this
+   // AddConversedDialog(conversationStarterName);
 }
 
 void ANPC::OnDoneInitialTalk()
 {
    // If the NPC doesn't want to talk after the initial dialog
-   if(!bWantsToConverse) {
-      if(npcAIController->GetBrainComponent())
-         npcAIController->GetBrainComponent()->RestartLogic();
-      controllerRef->GetBasePlayer()->heroInBlockingInteraction = nullptr;
-   } else {
+   if(!bWantsToConverse)
+   {
+      if(npcAIController->GetBrainComponent()) npcAIController->GetBrainComponent()->RestartLogic();
+      controllerRef->GetBasePlayer()->SetHeroBlockingInteraction(nullptr);
+   }
+   else
+   {
       // If NPC does want to talk, open up the conversation screen
-      hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Social));
+      hudManagerRef->AddHUD(EHUDs::HS_Social);
    }
 }
 
 void ANPC::OnDoneTalking()
 {
    // Resume AI of NPC if it has a behavior tree active
-   if(npcAIController->GetBrainComponent())
-      npcAIController->GetBrainComponent()->RestartLogic();
-   controllerRef->GetBasePlayer()->heroInBlockingInteraction = nullptr;
+   if(npcAIController->GetBrainComponent()) npcAIController->GetBrainComponent()->RestartLogic();
+   controllerRef->GetBasePlayer()->SetHeroBlockingInteraction(nullptr);
 }
 
 void ANPC::SetupAppropriateView()
@@ -171,7 +189,7 @@ FVector ANPC::GetInteractableLocation_Implementation() const
 
 bool ANPC::CanInteract_Implementation() const
 {
-   return !controllerRef->GetBasePlayer()->heroInBlockingInteraction;
+   return !controllerRef->GetBasePlayer()->GetHeroBlockingInteraction();
 }
 
 void ANPC::MakeNPCData(FNPCSaveInfo& npcSaveInfo)
@@ -183,7 +201,8 @@ void ANPC::MakeNPCData(FNPCSaveInfo& npcSaveInfo)
    npcSaveInfo.defaultResponseName     = GetDefaultResponseName();
 
    npcSaveInfo.conversationTopicKeys = GetConversationTopics();
-   for(FGameplayTag key : npcSaveInfo.conversationTopicKeys) {
+   for(const FGameplayTag& key : npcSaveInfo.conversationTopicKeys)
+   {
       npcSaveInfo.conversationTopicValues.Add(GetConversationName(key));
    }
 
@@ -197,11 +216,12 @@ void ANPC::ReloadNPCData(const FNPCSaveInfo& npcSaveInfo)
    conversationStarterName = npcSaveInfo.conversationStarterName;
    defaultResponseName     = npcSaveInfo.defaultResponseName;
 
-   for(int i = 0; i < npcSaveInfo.conversationTopicKeys.Num(); ++i) {
+   for(int i = 0; i < npcSaveInfo.conversationTopicKeys.Num(); ++i)
+   {
       conversationTopics.Add(npcSaveInfo.conversationTopicKeys[i], npcSaveInfo.conversationTopicValues[i]);
    }
 
-   dialogAlreadyConversed = npcSaveInfo.previousConversations;
+   // dialogAlreadyConversed = npcSaveInfo.previousConversations;
 }
 
 void ANPC::SaveNPCData(FMapSaveInfo& mapInfo)
@@ -214,28 +234,28 @@ void ANPC::SaveNPCData(FMapSaveInfo& mapInfo)
 void ANPC::LoadNPCData(FMapSaveInfo& mapInfo)
 {
    auto npcSaveInfo = mapInfo.npcsInfo.FindByHash<ANPC*>(GetTypeHash(*this), this);
-   if(npcSaveInfo)
-      ReloadNPCData(*npcSaveInfo);
+   if(npcSaveInfo) ReloadNPCData(*npcSaveInfo);
 }
 
 void ANPC::CountQuestDialogs()
 {
    // Check if default conversation is a quest
    FName conversationName = defaultResponseName;
-   if(conversationName.ToString().StartsWith("Quest"))
-      ++numAvailableQuests;
+   if(conversationName.ToString().StartsWith("Quest")) ++numAvailableQuests;
 
    // Loop through all of our dialogTopics we know
    TArray<FGameplayTag> topics;
 
    // if this NPC wants to converse and we can talk to him/her about more than one topic
-   if(bWantsToConverse && conversationTopics.GetKeys(topics) > 0) {
-      for(FGameplayTag topic : topics) {
-         if(IsTopicLearned(topic)) {
+   if(bWantsToConverse && conversationTopics.GetKeys(topics) > 0)
+   {
+      for(FGameplayTag topic : topics)
+      {
+         if(IsTopicLearned(topic))
+         {
             conversationName = GetConversationName(topic);
 
-            if(IsQuestDialog(conversationName))
-               ++numAvailableQuests;
+            if(IsQuestDialog(conversationName)) ++numAvailableQuests;
          }
       }
    }
@@ -253,7 +273,8 @@ bool ANPC::IsTopicLearned(FGameplayTag topic) const
 
 void ANPC::OnTopicLearned(FGameplayTag topicLearned)
 {
-   if(IsQuestDialog(GetConversationName(topicLearned))) {
+   if(IsQuestDialog(GetConversationName(topicLearned)))
+   {
       ++numAvailableQuests;
    }
 }

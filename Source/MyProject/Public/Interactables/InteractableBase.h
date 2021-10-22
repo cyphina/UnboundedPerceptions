@@ -14,14 +14,16 @@ struct FMapSaveInfo;
 struct FInteractableSaveInfo;
 struct FInteractableSaveInfoWrapper;
 
-/**To name an interactable, add a named decorator to it.  Else there will be no name*/
-
+/**
+ * Some pieces of functionality require there be a decorator added to this object to use it.
+ * You can create a decorator within the details panel of any blueprint or actor for this interactable base.
+ */
 UCLASS()
 class MYPROJECT_API AInteractableBase : public AActor, public IInteractable, public IWorldObject
 {
    GENERATED_BODY()
 
-public:
+ public:
    AInteractableBase();
 
    UFUNCTION(BlueprintCallable, Category = "Accessors")
@@ -35,20 +37,16 @@ public:
    bool    CanInteract_Implementation() const override;
 
    virtual void SaveInteractable(FMapSaveInfo& mapData); // Saves data about interactable on a map when transitioning to another level or when game is saving
-   virtual void LoadInteractable
-   (FMapSaveInfo& mapData); // Loads data about an interactable when transitioning to the map with the interactable.  Specific implementation in every subclass
+   virtual void LoadInteractable(
+       FMapSaveInfo& mapData); // Loads data about an interactable when transitioning to the map with the interactable.  Specific implementation in every subclass
 
-protected:
+ protected:
    virtual void Tick(float DeltaTime) override;
    void         BeginPlay() override;
 
    /**An interactable decorator which extends the functionality of interactables*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (AllowPrivateAccess = "true"))
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Export, Meta = (AllowPrivateAccess = "true"))
    UInteractableActorDecoratorBase* decorator;
-
-   /*Scene root so that we can transform child components without having to worry about its parent's transformations*/
-   UPROPERTY(VisibleAnywhere)
-   USceneComponent* sceneRoot;
 
    /*Scene component represents the location a character must arrive to to interact with the interactable*/
    UPROPERTY(VisibleAnywhere)

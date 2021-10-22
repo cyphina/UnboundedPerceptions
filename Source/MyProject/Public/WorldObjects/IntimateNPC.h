@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EventSystem/Trigger.h"
+#include "EventSystem/DEPRECATED_Trigger.h"
 #include "GameplayTagContainer.h"
 #include "WorldObjects/NPC.h"
 #include "IntimateNPC.generated.h"

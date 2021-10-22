@@ -23,7 +23,7 @@ class MYPROJECT_API AStorageContainer : public AInteractableBase
  public:
    AStorageContainer();
 
-   void    Interact_Implementation(ABaseHero* hero) override;
+   void    Interact_Implementation(ABaseHero* Hero) override;
    bool    CanInteract_Implementation() const override;
    FVector GetInteractableLocation_Implementation() const override;
    UBackpack* GetBackpack() const { return backpack; }

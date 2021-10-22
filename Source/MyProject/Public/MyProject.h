@@ -25,4 +25,4 @@
 #define NPC_OBJECT_QUERY EObjectTypeQuery::ObjectTypeQuery9
 #define TRIGGER_OBJECT_QUERY EObjectTypeQuery::ObjectTypeQuery10
 #define VISION_BLOCKER_OBJECT_QUERY EObjectTypeQuery::ObjectTypeQuery11
-#define FRIENDLY_OBJECT_QUERY EObjectTypeQuery::ObjectTypeQuery15
+#define FRIENDLY_OBJECT_QUERY EObjectTypeQuery::ObjectTypeQuery12

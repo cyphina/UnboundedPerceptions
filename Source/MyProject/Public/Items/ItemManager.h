@@ -2,9 +2,12 @@
 #include "Item.h"
 #include "ItemManager.generated.h"
 
-/**Struct so we can store our item information in a table and reference item information by ID*/
+/**
+ * Struct so we can store our item information in a table and reference item information by ID
+ */
 USTRUCT(Blueprintable)
-struct FItemLookupRow : public FTableRowBase {
+struct FItemLookupRow : public FTableRowBase
+{
    GENERATED_USTRUCT_BODY()
 
    /**Every item name should be unique*/
@@ -12,13 +15,13 @@ struct FItemLookupRow : public FTableRowBase {
    FText name = FText::GetEmpty();
 
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-   UTexture2D* image;
+   TSoftObjectPtr<UTexture2D> image;
 
-   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MultiLine = true))
    FText description = FText::GetEmpty();
 
    /**Tag with description of item application*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (Categories = "Item"))
    FGameplayTag itemType;
 
    /**Can this item be stacked in an inventory slot?*/
@@ -50,7 +53,10 @@ class MYPROJECT_API UItemManager : public UObject
 
    FORCEINLINE static UItemManager& Get()
    {
-      if (SingletonManager == nullptr) { InitializeManager(); }
+      if(SingletonManager == nullptr)
+      {
+         InitializeManager();
+      }
       return *SingletonManager;
    }
 
@@ -72,14 +78,15 @@ class MYPROJECT_API UItemManager : public UObject
    FConsumableLookupRow* GetConsumableInfo(FName consumableID) const;
    TArray<FName>         GetAllConsumableIDs() const;
 
+   static UDataTable* GetItemLookupTable() { return itemLookupTable; }
+
  private:
    static UItemManager* SingletonManager; // Our single spellmanager
 
-   UPROPERTY()
-   UDataTable* itemLookupTable;       // Data table with the basic item information
+   inline static UDataTable* itemLookupTable = nullptr; // Data table with the basic item information
 
    UPROPERTY()
-   UDataTable* equipLookupTable;      // Data table with equipment information
+   UDataTable* equipLookupTable; // Data table with equipment information
 
    UPROPERTY()
    UDataTable* consumableLookupTable; // Data table with consumable information

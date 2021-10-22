@@ -8,8 +8,9 @@ namespace AttackCVars
 
 namespace GameplayModifierCVars
 {
-   extern bool bEnableEnemyControl;
-   inline bool bShowEnemyPerspective = false;
+   extern float interactPointMoveRange;
+   extern float vectorMoveStopRange;
+   extern bool  bEnableEnemyControl;
+   inline bool  bEnableEnemyAI        = true;
+   inline bool  bShowEnemyPerspective = false;
 }
-
-

@@ -1,7 +1,8 @@
 #pragma once
 
 #include "QuestStructs.h"
-#include "EventSystem/Trigger.h"
+#include "QuestEnums.h"
+#include "EventSystem/DEPRECATED_Trigger.h"
 #include "GameFramework/Info.h"
 #include "UpGoal.h"
 #include "Quest.generated.h"
@@ -15,7 +16,7 @@ class MYPROJECT_API AQuest : public AInfo
 {
    GENERATED_BODY()
 
-public:
+ public:
    UFUNCTION(BlueprintCallable, BlueprintPure)
    const FQuestInfo& GetQuestInfo() const { return questInfo; }
 
@@ -60,7 +61,7 @@ public:
    UFUNCTION(BlueprintCallable, Category = "Setup")
    void SetupStartingGoals();
 
-protected:
+ protected:
    UFUNCTION()
    void BeginPlay() override;
 
@@ -76,12 +77,12 @@ protected:
    UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Information")
    FQuestInfo questInfo;
 
-private:
+ private:
    /**
    * Called at spawn time to find out how many items already obtained for find type goal
    */
    void FindInitialItemAmount(int goalIndex);
-   
+
    void SetupUnlockedGoals(int completedGoalIndex, ARTSGameMode* gameModeRef);
 
    UPROPERTY(BlueprintReadOnly, Category = "Bookkeeping", meta = (AllowPrivateAccess = true))

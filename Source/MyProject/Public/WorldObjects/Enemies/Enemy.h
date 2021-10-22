@@ -17,11 +17,16 @@ struct FSpellCombination
    TArray<int>                    vulnerabilityThreshold; // continue with action if target passes this threshold
 };
 
-USTRUCT(BlueprintType, NoExport)
+USTRUCT(BlueprintType)
 struct FItemDrop
 {
+   GENERATED_BODY()
+
+   UPROPERTY(EditAnywhere)
    FMyItem itemInfo;
-   int     dropPerc; // clamped from (0-100)
+
+   UPROPERTY(EditAnywhere, Meta = (ClampMin = "0", ClampMax = "100"))
+   int dropPerc;
 };
 
 /**
@@ -57,7 +62,7 @@ class MYPROJECT_API AEnemy : public AUnit
    void SetEnabled(bool bEnabled) override;
 
    /**List of items that can be dropped on death*/
-   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Enemy Parameters")
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Enemy Parameters", Meta=(TitleProperty="itemInfo"))
    TArray<FItemDrop> itemDrops;
 
    /**How much money given on death*/

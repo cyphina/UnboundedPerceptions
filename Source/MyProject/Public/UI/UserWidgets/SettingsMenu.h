@@ -54,7 +54,7 @@ class MYPROJECT_API USettingsMenu : public UMyUserWidget
     */
    void ChangeQualityValue(bool inc, UPARAM(ref) int& qualityValue, int numQualityVals);
 
-public:
+ public:
    UFUNCTION(BlueprintCallable, Category = "Setings Change Functionality")
    void ChangeResolution(bool inc);
 
@@ -81,6 +81,9 @@ public:
 
    UFUNCTION(BlueprintCallable, Category = "Setings Change Functionality")
    void ChangeEffectVolume(float val);
+
+   UFUNCTION(BlueprintCallable, Category = "Setings Change Functionality")
+   void ChangeUIScale(float val);
 
    UFUNCTION(BlueprintCallable, Category = "Setings Change Functionality")
    void ToggleQuickCast();

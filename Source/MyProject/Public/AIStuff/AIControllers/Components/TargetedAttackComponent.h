@@ -5,12 +5,14 @@
 #include "Components/ActorComponent.h"
 #include "TargetedAttackComponent.generated.h"
 
+class ARTSProjectile;
 struct FDamageScalarStruct;
 class URTSProjectileStrategy;
 class UMySpell;
 class IGameSpeedContext;
 class IAttackAnim;
 class AUnit;
+enum class ECombatType : uint8;
 
 /**
  * Initiated when we call BeginAttack()
@@ -57,7 +59,7 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
     * @param targetLocation - Location to move to
     */
    UFUNCTION(BlueprintCallable, Category = "Action")
-   void BeginAttackMove(FVector targetLocation);
+   void BeginAttackMove(const FVector& targetLocation);
 
    /**
    * @brief Allows us to replace the next attack with a spell (allows for effects like AA's chilling touch or Viper Strike). \n
@@ -68,7 +70,7 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
    virtual void OverrideAttackWithSpell(TSubclassOf<UMySpell> overridingSpell);
 
    bool GetIsReadyToAttack() const { return bReadyToAttack; }
-   
+
  protected:
    void BeginPlay() override;
    void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -76,11 +78,17 @@ class MYPROJECT_API UTargetedAttackComponent : public UActorComponent
    UPROPERTY(EditDefaultsOnly, meta = (MustImplement = "AttackAnim"))
    TSubclassOf<UObject> attackAnimStrategy = nullptr;
 
-   UPROPERTY()
-   UObject* animAttackStrategyInst;
-
    UPROPERTY(EditDefaultsOnly)
+   ECombatType combatStyle;
+
+   UPROPERTY()
+   UObject* animAttackStrategyInst = nullptr;
+
+   UPROPERTY(EditDefaultsOnly, Meta = (EditCondition = "combatStyle != ECombatType::Melee"))
    TSubclassOf<URTSProjectileStrategy> projectileStrategyClass = nullptr;
+
+   UPROPERTY(EditDefaultsOnly, Meta = (EditCondition = "combatStyle != ECombatType::Melee"))
+   TSubclassOf<ARTSProjectile> projectileClass = nullptr;
 
    TScriptInterface<IAttackAnim> attackAnim;
 

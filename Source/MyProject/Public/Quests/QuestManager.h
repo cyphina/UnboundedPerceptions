@@ -5,6 +5,7 @@
 #include "Items/Item.h"
 #include "QuestManager.generated.h"
 
+enum class EQuestState : uint8;
 class ABasePlayer;
 class AQuest;
 class AUserInput;
@@ -44,23 +45,27 @@ class MYPROJECT_API UQuestManager : public UObject
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Quest Managing")
    AGoalActor* GetGoalActor() const { return currentGoalActor; }
 
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Quest Data")
+   const TArray<AQuest*>& GetActiveQuests() const { return activeQuests; }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Quest Data")
+   const TArray<AQuest*>& GetCompletedQuests() const { return completedQuests; }
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Quest Data")
+   const TArray<AQuest*>& GetFailedQuests() const { return failedQuests; }
+
+   /** Find a quest the player has found (a quest already loaded) */
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Quest Helper")
+   AQuest* FindObtainedQuestByClass(TSubclassOf<AQuest> QuestToFindClass) const;
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Quest Helper")
+   AQuest* FindObtainedQuestByQuestStateAndClass(TSubclassOf<AQuest> QuestToFindClass, EQuestState QuestStateFilter) const;
+
    /**
-    *Map of quest GameplayTagName to quest class so we can add new quests via triggers
+    * Map of quest GameplayTagName to quest class so we can add new quests via triggers
     */
    UPROPERTY(EditAnywhere)
    TMap<FGameplayTag, TSubclassOf<AQuest>> questClassList;
-
-   /**List of all quests currently happening*/
-   UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
-   TArray<AQuest*> activeQuests;
-
-   /**Completed quests*/
-   UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
-   TArray<AQuest*> completedQuests;
-
-   /**Failed quests*/
-   UPROPERTY(BlueprintReadWrite, Category = "Quest Managing")
-   TArray<AQuest*> failedQuests;
 
    UPROPERTY(EditDefaultsOnly, Category = "Quest HUD")
    TSubclassOf<AGoalActor> goalActorClass;
@@ -146,6 +151,15 @@ class MYPROJECT_API UQuestManager : public UObject
    AGoalActor* currentGoalActor;
 
    int currentDistance;
+
+   /** List of all quests currently happening */
+   TArray<AQuest*> activeQuests;
+
+   /** Completed quests */
+   TArray<AQuest*> completedQuests;
+
+   /** Failed quests */
+   TArray<AQuest*> failedQuests;
 
    FOnSubgoalCompleted OnSubgoalCompletedEvent;
 

@@ -5,12 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interactables/InteractableActorDecoratorBase.h"
-#include "EventSystem/Trigger.h"
-#include "EventSystem/RTSConditional.h"
+#include "EventSystem/DEPRECATED_RTSConditional.h"
 #include "TriggerInteractableDecorator.generated.h"
 
 class UMyGameInstance;
 class ARTSGameMode;
+class URTSTriggerBase;
 
 /** Decorates an InteractableBase to make an object that activates trigger(s) when interacted with */
 
@@ -19,8 +19,6 @@ class MYPROJECT_API UTriggerInteractableDecorator : public UInteractableActorDec
 {
    GENERATED_BODY()
 
-   ARTSGameMode* gameModeRef;
-
  public:
    UTriggerInteractableDecorator();
 
@@ -28,6 +26,6 @@ class MYPROJECT_API UTriggerInteractableDecorator : public UInteractableActorDec
    bool Interact() override;
 
    /**Set this trigger to something when you want to interact*/
-   UPROPERTY(EditAnywhere, Category = "Trigger")
-   TArray<FTriggerData> triggersActivatedOnInteract;
+   UPROPERTY(EditAnywhere, Instanced, Category = "Trigger")
+   TArray<URTSTriggerBase*> triggersActivatedOnInteract;
 };

@@ -6,6 +6,7 @@
 #include "UserInput.h"
 #include "MyGameInstance.h"
 #include "UIDelegateContext.h"
+#include "Engine/UserInterfaceSettings.h"
 
 USettingsMenu::USettingsMenu() : Super()
 {
@@ -23,47 +24,54 @@ USettingsMenu::USettingsMenu() : Super()
 
 void USettingsMenu::ChangeQualityValue(bool inc, UPARAM(ref) int& qualityValue, int numQualityVals)
 {
-   if(inc) {
+   if(inc)
+   {
       if(qualityValue < numQualityVals - 1)
+      {
          ++qualityValue;
-   } else {
+      }
+   }
+   else
+   {
       if(qualityValue > 0)
+      {
          --qualityValue;
+      }
    }
 }
 
 void USettingsMenu::ChangeResolution(bool inc)
 {
    ChangeQualityValue(inc, resolutionIndex, resolutionCategories.Num());
-   FString command = "r.SetRes " + resolutionCategories[resolutionIndex].ToString() + "w";
+   const FString command = "r.SetRes " + resolutionCategories[resolutionIndex].ToString() + "w";
    CPC->ConsoleCommand(command);
 }
 
 void USettingsMenu::ChangeGraphicsQuality(bool inc)
 {
    ChangeQualityValue(inc, graphicQualityIndex, qualityCategories.Num());
-   FString command = "sg.TextureQuality " + FString::FromInt(graphicQualityIndex);
+   const FString command = "sg.TextureQuality " + FString::FromInt(graphicQualityIndex);
    CPC->ConsoleCommand(command);
 }
 
 void USettingsMenu::ChangeShadowQuality(bool inc)
 {
    ChangeQualityValue(inc, shadowQualityIndex, qualityCategories.Num());
-   FString command = "sg.ShadowQuality " + FString::FromInt(shadowQualityIndex);
+   const FString command = "sg.ShadowQuality " + FString::FromInt(shadowQualityIndex);
    CPC->ConsoleCommand(command);
 }
 
 void USettingsMenu::ChangePostProcessingQuality(bool inc)
 {
    ChangeQualityValue(inc, ppQualityIndex, qualityCategories.Num());
-   FString command = "sg.PostProcessQuality " + FString::FromInt(ppQualityIndex);
+   const FString command = "sg.PostProcessQuality " + FString::FromInt(ppQualityIndex);
    CPC->ConsoleCommand(command);
 }
 
 void USettingsMenu::ChangeAntiAliasingQuality(bool inc)
 {
    ChangeQualityValue(inc, aaQualityIndex, qualityCategories.Num());
-   FString command = "sg.AntiAliasingQuality " + FString::FromInt(aaQualityIndex);
+   const FString command = "sg.AntiAliasingQuality " + FString::FromInt(aaQualityIndex);
    CPC->ConsoleCommand(command);
 }
 
@@ -72,9 +80,13 @@ void USettingsMenu::ChangeFrameRateCap(bool inc)
    ChangeQualityValue(inc, frameRateIndex, fPSCategories.Num());
    FString command;
    if(frameRateIndex != fPSCategories.Num() - 1)
+   {
       command = "t.MaxFPS " + fPSCategories[frameRateIndex].ToString();
+   }
    else
+   {
       command = "t.MaxFPS 0";
+   }
    CPC->ConsoleCommand(command);
 }
 
@@ -93,9 +105,18 @@ void USettingsMenu::ChangeEffectVolume(float val)
    // TODO: Implement any sounds haha
 }
 
+void USettingsMenu::ChangeUIScale(float val)
+{
+   UUserInterfaceSettings* UISettings = GetMutableDefault<UUserInterfaceSettings>(UUserInterfaceSettings::StaticClass());
+   if(UISettings)
+   {
+      UISettings->ApplicationScale = val;
+   }
+}
+
 void USettingsMenu::ToggleQuickCast()
 {
-  GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnQuickCastSettingToggled().Broadcast();
+   GetOwningLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnQuickCastSettingToggled().Broadcast();
 }
 
 void USettingsMenu::ToggleStaticFormation()

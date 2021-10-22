@@ -34,7 +34,7 @@ void AShopNPC::OnAskToPurchaseItem(int purchaseItemSlotIndex)
 {
    const FMyItem itemToBuy = GetItemsToSell()->GetItem(purchaseItemSlotIndex);
 
-   if(IsValid(controllerRef->GetBasePlayer()->heroInBlockingInteraction))
+   if(IsValid(controllerRef->GetBasePlayer()->GetHeroBlockingInteraction()))
    {
       const FItemPrice* itemPrice = GetItemPrice(itemToBuy.id);
       if(itemPrice)
@@ -43,20 +43,25 @@ void AShopNPC::OnAskToPurchaseItem(int purchaseItemSlotIndex)
          {
             if(EnoughFunds(*itemPrice, 1))
             {
-               controllerRef->GetHUDManager()->ShowConfirmationBox(
-               FOnConfirmation::CreateWeakLambda(this, [this, itemToBuy, itemPrice]() { return OnItemPurchased(itemToBuy, *itemPrice); }), confirmTitleText,
-               ensurePurchaseSingleText);
+               controllerRef->GetHUDManager()->ShowConfirmationBox(FOnConfirmation::CreateWeakLambda(this,
+                                                                                                     [this, itemToBuy, itemPrice]()
+                                                                                                     {
+                                                                                                        return OnItemPurchased(itemToBuy, *itemPrice);
+                                                                                                     }),
+                                                                   confirmTitleText, ensurePurchaseSingleText);
             }
-         } else
-         {
-            controllerRef->GetHUDManager()->ShowInputBox(
-            FOnInputConfirmed::CreateWeakLambda(this, [this, itemToBuy, itemPrice](FString howManyItemsPurchased)
-            {
-               return OnItemsPurchased(itemToBuy, *itemPrice, howManyItemsPurchased);
-            }),
-            confirmTitleText, ensurePurchaseText);
          }
-      } else
+         else
+         {
+            controllerRef->GetHUDManager()->ShowInputBox(FOnInputConfirmed::CreateWeakLambda(this,
+                                                                                             [this, itemToBuy, itemPrice](FString howManyItemsPurchased)
+                                                                                             {
+                                                                                                return OnItemsPurchased(itemToBuy, *itemPrice, howManyItemsPurchased);
+                                                                                             }),
+                                                         confirmTitleText, ensurePurchaseText);
+         }
+      }
+      else
       {
          UE_LOG(LogTemp, Warning, TEXT("Trying to buy an item that has no error price set!"));
       }
@@ -90,7 +95,7 @@ bool AShopNPC::EnoughFunds(const FItemPrice& itemPrice, int numPurchasing) const
 
 UBackpack* AShopNPC::GetInteractingHeroBackpack() const
 {
-   ABaseHero* interactingHero = Cast<AUserInput>(GetWorld()->GetFirstPlayerController())->GetBasePlayer()->heroInBlockingInteraction;
+   ABaseHero* interactingHero = Cast<AUserInput>(GetWorld()->GetFirstPlayerController())->GetBasePlayer()->GetHeroBlockingInteraction();
    if(IsValid(interactingHero))
    {
       return &interactingHero->GetBackpack();
@@ -101,8 +106,7 @@ UBackpack* AShopNPC::GetInteractingHeroBackpack() const
 const FItemPrice& AShopNPC::BP_GetItemPrice(int itemID) const
 {
    const FItemPrice* itemPrice = GetItemPrice(itemID);
-   check(itemPrice)
-   return *const_cast<FItemPrice*>(itemPrice);
+   check(itemPrice) return *const_cast<FItemPrice*>(itemPrice);
 }
 
 const FItemPrice* AShopNPC::GetItemPrice(int itemID) const
@@ -122,7 +126,7 @@ bool AShopNPC::OnItemPurchased(const FMyItem itemPurchased, const FItemPrice& it
       const FBackpackUpdateResult         itemGainedUpdate  = GetInteractingHeroBackpack()->AddItem(itemPurchased);
       const TArray<FBackpackUpdateResult> itemsTradedUpdate = GetInteractingHeroBackpack()->RemoveItems(itemPrice.tradeItems);
 
-      ABaseHero* purchasingHero = controllerRef->GetBasePlayer()->heroInBlockingInteraction;
+      ABaseHero* purchasingHero = controllerRef->GetBasePlayer()->GetHeroBlockingInteraction();
 
       if(UItemDelegateContext* itemDelegateContext = controllerRef->GetLocalPlayer()->GetSubsystem<UItemDelegateContext>())
       {
@@ -156,10 +160,11 @@ bool AShopNPC::OnItemsPurchased(const FMyItem itemToBuy, const FItemPrice& itemP
 
             if(Algo::AllOf(itemPayPackUpdateResult))
             {
-               ABaseHero* purchasingHero = basePlayer->heroInBlockingInteraction;
-               controllerRef->GetLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemPurchased().Broadcast(
-               purchasingHero, itemBuyUpdateResult, itemPayPackUpdateResult);
-            } else
+               ABaseHero* purchasingHero = basePlayer->GetHeroBlockingInteraction();
+               controllerRef->GetLocalPlayer()->GetSubsystem<UItemDelegateContext>()->OnItemPurchased().Broadcast(purchasingHero, itemBuyUpdateResult,
+                                                                                                                  itemPayPackUpdateResult);
+            }
+            else
             {
                UE_LOG(LogTemp, Error, TEXT("Error paying for %d item(s) %d"), itemToBuy.count, itemToBuy.id);
             }

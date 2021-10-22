@@ -8,13 +8,23 @@ UItemManager* UItemManager::SingletonManager = nullptr;
 UItemManager::UItemManager()
 {
    static ConstructorHelpers::FObjectFinder<UDataTable> ItemLookupTableFinder(TEXT("/Game/RTS_Tutorial/Tables/ItemList"));
-   if (ItemLookupTableFinder.Object) itemLookupTable = ItemLookupTableFinder.Object;
+   if(ItemLookupTableFinder.Object)
+   {
+      itemLookupTable = ItemLookupTableFinder.Object;
+   }
 
    static ConstructorHelpers::FObjectFinder<UDataTable> EquipLookupTableFinder(TEXT("/Game/RTS_Tutorial/Tables/EquipList"));
-   if (EquipLookupTableFinder.Object) equipLookupTable = EquipLookupTableFinder.Object;
+   if(EquipLookupTableFinder.Object)
+   {
+      equipLookupTable = EquipLookupTableFinder.Object;
+   }
 
    static ConstructorHelpers::FObjectFinder<UDataTable> ConsumableLookupTableFinder(TEXT("/Game/RTS_Tutorial/Tables/ConsumableList"));
-   if (ConsumableLookupTableFinder.Object) consumableLookupTable = ConsumableLookupTableFinder.Object;
+   if(ConsumableLookupTableFinder.Object)
+   {
+      consumableLookupTable = ConsumableLookupTableFinder.Object;
+      consumableLookupTable->AddToRoot();
+   }
 }
 
 FItemLookupRow* UItemManager::GetItemInfo(int itemID) const
@@ -25,10 +35,10 @@ FItemLookupRow* UItemManager::GetItemInfo(int itemID) const
    return reinterpret_cast<FItemLookupRow*>(itemLookupTable->FindRowUnchecked(*FString::FromInt(itemID)));
 }
 
-FEquipLookupRow* UItemManager::GetEquipInfo(int equipID) const 
+FEquipLookupRow* UItemManager::GetEquipInfo(int equipID) const
 {
 #if UE_EDITOR
-   check(equipID > 0);
+   check(equipID > 0);     
 #endif
    return reinterpret_cast<FEquipLookupRow*>(equipLookupTable->FindRowUnchecked(*FString::FromInt(equipID)));
 }

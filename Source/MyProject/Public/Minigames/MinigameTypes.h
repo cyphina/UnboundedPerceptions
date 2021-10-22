@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GameplayTagContainer.h"
-#include "Trigger.h"
+class URTSTrigger;
 
 /**Type of minigame*/
 UENUM(BlueprintType)
@@ -18,10 +18,13 @@ struct FMinigameData
 {
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Minigame Properties")
    EMinigameType minigameType;
+
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Minigame Properties")
-   TArray<FTriggerData> endTriggers;
+   TArray<URTSTrigger*> endTriggers;
+
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Minigame Properties")
-   TArray<FTriggerData> failTriggers;
+   TArray<URTSTrigger*> failTriggers;
+
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Minigame Properties")
    FGameplayTagContainer gameParameters;
 };

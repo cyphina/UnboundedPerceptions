@@ -35,14 +35,15 @@ bool UDialogWheel::OnWidgetAddToViewport_Implementation()
 
 bool UDialogWheel::HandleSelectedLeafNode()
 {
-   if(currentlySelectedTopicNode->GetChildTagNodes().Num() == 0) {
-      hudManagerRef->AddHUD(static_cast<int>(EHUDs::HS_Social));
+   if(currentlySelectedTopicNode->GetChildTagNodes().Num() == 0)
+   {
+      hudManagerRef->AddHUD(EHUDs::HS_Social);
 
       const FName conversationName = socialWindowRef->GetNPC()->GetConversationName(currentlySelectedTopicNode->GetCompleteTag());
 
       hudManagerRef->ShowDialogWithSource(conversationName, EDialogBoxCloseCase::finishedNPCConvo);
       NPCDelegateContext::OnNPCConversationEvent.Broadcast(socialWindowRef->GetNPC(), currentlySelectedTopicNode->GetCompleteTag());
-      socialWindowRef->GetNPC()->AddConversedDialog(conversationName);
+      socialWindowRef->GetNPC()->AddConversedDialog(currentlySelectedTopicNode->GetCompleteTag());
       return true;
    }
    return false;
@@ -51,7 +52,8 @@ bool UDialogWheel::HandleSelectedLeafNode()
 void UDialogWheel::UpdateDialogWheel()
 {
    conversationTopicTagNodes.Empty();
-   for(TSharedPtr<FGameplayTagNode> it : currentlySelectedTopicNode->GetChildTagNodes()) {
+   for(TSharedPtr<FGameplayTagNode> it : currentlySelectedTopicNode->GetChildTagNodes())
+   {
       if(CPC->GetBasePlayer()->GetDialogTopics().HasTag(it->GetSingleTagContainer().First())) conversationTopicTagNodes.Add(it.Get());
    }
 
@@ -63,20 +65,30 @@ void UDialogWheel::SelectNextConversationTopics(int selectedIndex)
    previouslySelectedTopicNode = currentlySelectedTopicNode;
    currentlySelectedTopicNode  = conversationTopicTagNodes[selectedIndex];
 
-   if(HandleSelectedLeafNode()) return;
+   if(HandleSelectedLeafNode())
+   {
+      return;
+   }
 
    UpdateDialogWheel();
 }
 
 void UDialogWheel::SelectPreviousConversationTopics()
 {
-   if(currentlySelectedTopicNode->GetSimpleTagName() != ROOT_DIALOG_NODE_NAME) {
+   if(currentlySelectedTopicNode->GetSimpleTagName() != ROOT_DIALOG_NODE_NAME)
+   {
       currentlySelectedTopicNode = previouslySelectedTopicNode;
       if(previouslySelectedTopicNode->GetSimpleTagName() != ROOT_DIALOG_NODE_NAME)
+      {
          previouslySelectedTopicNode = previouslySelectedTopicNode->GetParentTagNode().Get();
+      }
       else
+      {
          previouslySelectedTopicNode = nullptr;
-   } else {
+      }
+   }
+   else
+   {
       // If this was the root node, and we want to go back, then it means we're going back from this dialog menu back to the different NPC interaction option screen
       socialWindowRef->SetMainView();
       return;

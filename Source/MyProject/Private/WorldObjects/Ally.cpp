@@ -54,9 +54,12 @@ void AAlly::SetEnabled(bool bEnabled)
 
    if(!HasAuthority() || !IsRunningDedicatedServer())
    {
-      if(ULocalPlayer* player = Cast<ULocalPlayer>(controllerRef->Player))
+      if(controllerRef)
       {
-         player->GetSubsystem<UPartyDelegateContext>()->OnAllyActiveChanged().Broadcast(this, bEnabled);
+         if(ULocalPlayer* player = Cast<ULocalPlayer>(controllerRef->Player))
+         {
+            player->GetSubsystem<UPartyDelegateContext>()->OnAllyActiveChanged().Broadcast(this, bEnabled);
+         }
       }
    }
 }
@@ -89,27 +92,30 @@ void AAlly::SetUnitSelected(bool value)
    }
 }
 
-bool AAlly::GetOverlappingObjects(TArray<FHitResult>& hits)
+bool AAlly::GetOverlappingObjects(TArray<FHitResult>& hits) const
 {
    if(!HasAuthority() || !IsRunningDedicatedServer())
    {
-      const FVector start = controllerRef->GetCameraPawn()->GetCameraComponent()->GetComponentLocation();
-      const FVector end   = GetActorLocation();
-
-      //// For debugging trace
-      // const FName TraceTag("MyTraceTag");
-      // GetWorld()->DebugDrawTraceTag = TraceTag;
-      // FCollisionQueryParams params;
-      // params.TraceTag = TraceTag;
-
-      FQuat cameraRotation = controllerRef->GetCameraPawn()->GetCameraComponent()->GetComponentQuat();
-      cameraRotation.W *= -1;
-      GetWorld()->SweepMultiByChannel(hits, start, end, cameraRotation, FADE_CHANNEL, FCollisionShape::MakeBox(FVector(200, 200, 100)));
-      if(!hits.Num())
+      if(const ARTSPawn* CameraPawn = controllerRef->GetCameraPawn())
       {
-         return false;
+         const FVector start = CameraPawn->GetCameraComponent()->GetComponentLocation();
+         const FVector end   = GetActorLocation();
+
+         //// For debugging trace
+         // const FName TraceTag("MyTraceTag");
+         // GetWorld()->DebugDrawTraceTag = TraceTag;
+         // FCollisionQueryParams params;
+         // params.TraceTag = TraceTag;
+
+         FQuat cameraRotation = controllerRef->GetCameraPawn()->GetCameraComponent()->GetComponentQuat();
+         cameraRotation.W *= -1;
+         GetWorld()->SweepMultiByChannel(hits, start, end, cameraRotation, FADE_CHANNEL, FCollisionShape::MakeBox(FVector(200, 200, 100)));
+         if(!hits.Num())
+         {
+            return false;
+         }
+         return true;
       }
-      return true;
    }
    return false;
 }

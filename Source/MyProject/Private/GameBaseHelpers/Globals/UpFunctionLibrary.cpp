@@ -3,6 +3,7 @@
 #include "MyProject.h"
 #include "UpFunctionLibrary.h"
 #include "RTSGameMode.h"
+#include "UpResourceManager.h"
 #include "UserInput.h"
 
 void UUpFunctionLibrary::ActivateTrigger(const FTriggerData& triggerData, const UObject* worldContextObject)
@@ -11,6 +12,21 @@ void UUpFunctionLibrary::ActivateTrigger(const FTriggerData& triggerData, const 
    {
       gameModeRef->GetTriggerManager()->ActivateTrigger(triggerData);
    }
+}
+
+TArray<ABaseHero*> UUpFunctionLibrary::GetAllHeroes(const UObject* WorldContextObject)
+{
+   TArray<ABaseHero*> AllHeroesSpawned;
+
+   if(UWorld* World = WorldContextObject ? WorldContextObject->GetWorld() : nullptr)
+   {
+      for(TActorIterator<ABaseHero> ActItr(World, ABaseHero::StaticClass()); ActItr; ++ActItr)
+      {
+         AllHeroesSpawned.Add(*ActItr);
+      }
+   }
+
+   return AllHeroesSpawned;
 }
 
 const TArray<ABaseHero*>& UUpFunctionLibrary::GetHeroes(const UObject* worldContextObject)
@@ -41,4 +57,16 @@ AHUDManager* UUpFunctionLibrary::GetHUDManager(const UObject* worldContextObject
       return controllerRef->GetHUDManager();
    }
    return nullptr;
+}
+
+FName UUpFunctionLibrary::GetStreamingLevelNameFromActor(const AActor* Actor)
+{
+   if(Actor)
+   {
+      if(const ULevel* Level = Actor->GetLevel())
+      {
+         return Level->GetOuter()->GetFName();
+      }
+   }
+   return "No Stream Level";
 }

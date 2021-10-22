@@ -110,6 +110,8 @@ void DefaultCursorClickFunctionality::HandleRightClick()
                {
                   MoveInFormation(location);
                }
+
+               UE_LOG(Up_Log_PlayerActions, Log, TEXT("Played issued move command with destination %s"), *location.ToString());
             }
             break;
             case ENEMY_OBJECT_CHANNEL:
@@ -128,6 +130,7 @@ void DefaultCursorClickFunctionality::HandleRightClick()
                      {
                         IssueAttackToFocusedUnit(unit);
                      }
+                     UE_LOG(Up_Log_PlayerActions, Log, TEXT("Played issued attack command to target %s"), *unit->GetGameName().ToString());
                   }
                   else
                   {
@@ -319,7 +322,7 @@ void DefaultCursorClickFunctionality::ItemUsageQueue()
 
       ABaseHero* heroUsingInventory = controllerRef->GetBasePlayer()->GetHeroes()[hIndex];
 
-      const TSubclassOf<UMySpell> itemAbility    = UItemFunctionLibrary::GetConsumableInfo(heroUsingInventory->GetCurrentItem().GetValue()).abilityClass;
+      const TSubclassOf<UMySpell> itemAbility    = UItemFunctionLibrary::GetConsumableInfo(heroUsingInventory->GetCurrentItem().GetValue()).abilityClass.LoadSynchronous();
       const auto                  heroController = heroUsingInventory->GetHeroController();
 
       heroController->QueueAction(
@@ -382,10 +385,12 @@ void DefaultCursorClickFunctionality::SelectEnemy()
             {
                selectedUnit->SetUnitSelected(true);
             }
+            UE_LOG(Up_Log_PlayerActions, Log, TEXT("Player selected enemy %s"), *selectedUnit->GetGameName().ToString());
          }
          else
          {
             selectedUnit->SetUnitSelected(true);
+            UE_LOG(Up_Log_PlayerActions, Log, TEXT("Player selected ally %s"), *selectedUnit->GetGameName().ToString());
          }
       }
    }
@@ -422,6 +427,8 @@ void DefaultCursorClickFunctionality::ClickCastSpell()
                {
                   focusedUnit->GetUnitController()->HaltUnit();
                   manSpellCastComp->StartSpellCastAction(clickHitResult, currentSpell);
+                  UE_LOG(Up_Log_PlayerActions, Log, TEXT("Player selected focused unit %s and clicked selected spell %s on target %s"),
+                         *focusedUnit->GetGameName().ToString(), *currentSpell.GetDefaultObject()->GetSpellName().ToString(), *clickHitResult.GetActor()->GetName());
                }
             }
          }
@@ -443,6 +450,7 @@ void DefaultCursorClickFunctionality::ClickCastSpell()
                }
             }
          }
+         UE_LOG(Up_Log_PlayerActions, Log, TEXT("Player targeted %s with all selected units"), *clickHitResult.GetActor()->GetName());
       }
    }
 }

@@ -26,18 +26,20 @@ void APickup::Interact_Implementation(ABaseHero* hero)
 {
    if(CanInteract_Implementation())
    {
-      if(hero->OnPickupItem().Execute(item)) { Destroy(); }
+      if(hero->OnPickupItem().Execute(item))
+      {
+         Destroy();
+      }
    }
 }
 
 FVector APickup::GetInteractableLocation_Implementation() const
 {
-   return GetActorLocation();
+   return Super::GetInteractableLocation_Implementation();
 }
 
-void APickup::OnComponentBeginOverlap
-(UPrimitiveComponent* hitComp, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex, bool bFromSweep,
- const FHitResult&    sweepResult)
+void APickup::OnComponentBeginOverlap(UPrimitiveComponent* hitComp, AActor* otherActor, UPrimitiveComponent* otherComp, int32 otherBodyIndex, bool bFromSweep,
+                                      const FHitResult& sweepResult)
 {
    // TODO: Set this object as clickable when we are in range so the player can't hover over it in FOW.
 }
@@ -54,7 +56,8 @@ void APickup::LoadInteractable(FMapSaveInfo& mapData)
    {
       GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Pickup named %s was found"), *GetName()));
       Destroy();
-   } else
+   }
+   else
    {
       GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, FString::Printf(TEXT("Pickup named %s not found"), *GetName()));
    }

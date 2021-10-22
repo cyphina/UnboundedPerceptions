@@ -19,10 +19,13 @@ EBTNodeResult::Type UBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& ownerCom
    myMemory->AICon               = Cast<AAIController>(ownerComp.GetAIOwner());
    myMemory->patrolComp          = myMemory->AICon->FindComponentByClass<UPatrolComponent>();
 
-   if(myMemory->AICon && myMemory->patrolComp->GetPatrolPoints().Num() > 0) {
+   if(myMemory->AICon && myMemory->patrolComp->GetPatrolPoints().Num() > 0)
+   {
       UBlackboardComponent* blackboardComp = ownerComp.GetBlackboardComponent();
-      if(blackboardComp) {
-         if(myMemory->patrolComp->GetPatrolPoints().Num() > 0) {
+      if(blackboardComp)
+      {
+         if(myMemory->patrolComp->GetPatrolPoints().Num() > 0)
+         {
             return PatrolToNextLocation(ownerComp, nodeMemory);
          }
       }
@@ -34,7 +37,8 @@ EBTNodeResult::Type UBTTask_Patrol::PatrolToNextLocation(UBehaviorTreeComponent&
 {
    FBTPatrolTaskMemory* myMemory = (FBTPatrolTaskMemory*)nodeMemory;
 
-   if(myMemory->patrolComp->Patrol()) {
+   if(myMemory->patrolComp->Patrol())
+   {
       const FAIRequestID requestId = myMemory->AICon->GetCurrentMoveRequestID();
 
       // Without a request ID, the new move request creation will somehow trigger the message instantly, infinitely looping OnMessage and PatrolToNextLocation
@@ -60,8 +64,8 @@ void UBTTask_Patrol::OnMessage(UBehaviorTreeComponent& OwnerComp, uint8* NodeMem
    }
 
    // Found a target so move on from this task
-   if(Message == UnitMessages::AIMessage_FoundTarget) { // Move finishes on
-      
+   if(Message == UnitMessages::AIMessage_FoundTarget)
+   {
       Super::OnMessage(OwnerComp, NodeMemory, Message, RequestID, bSuccess);
       FinishLatentTask(OwnerComp, EBTNodeResult::Aborted);
       return;

@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Interactables/InteractableActorDecoratorBase.h"
-#include "RTSConditional.h"
+#include "DEPRECATED_RTSConditional.h"
 #include "ConditionalInteractableDecorator.generated.h"
 
 /**
@@ -17,21 +17,16 @@ class MYPROJECT_API UConditionalInteractableDecorator : public UInteractableActo
 {
    GENERATED_BODY()
 
-public:
+ public:
    UPROPERTY(EditAnywhere, BlueprintReadOnly)
    TArray<FConditionData> conditions;
 
-   /**Name of the custom conversation if conditions not met.  If empty, uses default notification (generated from conditions)*/
+   /** Name of the custom conversation if conditions not met.  If empty, uses default notification (generated from conditions)*/
    UPROPERTY(EditAnywhere)
    FName customDialogConversation;
 
    void Init() override;
+
+   /** If this returns false, the interactable won't trigger any logic when interacted with */
    bool Interact() override;
-
-private:
-   ARTSGameMode* gameModeRef;
-   AUserInput*   cpcRef;
-
-   UPROPERTY()
-   class AHUDManager* hudManagerRef;
 };

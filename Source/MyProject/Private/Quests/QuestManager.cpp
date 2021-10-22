@@ -108,22 +108,95 @@ void UQuestManager::CompleteSubgoal(AQuest* quest, int goalIndex)
 
 bool UQuestManager::AddNewQuest(TSubclassOf<AQuest> questClassToSpawn)
 {
-   auto condition = [questClassToSpawn](AQuest* quest) {
+   auto PredQuestMatch = [questClassToSpawn](AQuest* quest)
+   {
       return questClassToSpawn == quest->GetClass();
    };
 
-   if(IsValid(questClassToSpawn) && !activeQuests.ContainsByPredicate(condition))
+   if(IsValid(questClassToSpawn))
    {
-      AQuest* quest =
-          questListRef->GetWorld()->SpawnActorDeferred<AQuest>(questClassToSpawn.Get(), FTransform(), nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-      quest->FinishSpawning(FTransform());
+      if(!activeQuests.ContainsByPredicate(PredQuestMatch))
+      {
+         {
+            AQuest* quest = questListRef->GetWorld()->SpawnActorDeferred<AQuest>(questClassToSpawn.Get(), FTransform(), nullptr, nullptr,
+                                                                                 ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+            quest->FinishSpawning(FTransform());
 
-      activeQuests.Add(quest);
-      quest->SetupStartingGoals();
+            activeQuests.Add(quest);
+            quest->SetupStartingGoals();
 
-      OnQuestStartedDelegate.Broadcast(quest);
+            OnQuestStartedDelegate.Broadcast(quest);
+         }
+      }
+      else
+      {
+         UE_LOG(LogTemp, Warning, TEXT("Trying to add quest %s twice!"), *questClassToSpawn.GetDefaultObject()->GetQuestInfo().name.ToString())
+      }
    }
    return false;
+}
+
+AQuest* UQuestManager::FindObtainedQuestByClass(TSubclassOf<AQuest> QuestToFindClass) const
+{
+   const auto predQuestMatchingClass = [QuestToFindClass](const AQuest* quest)
+   {
+      return quest->GetClass() == QuestToFindClass;
+   };
+
+   if(AQuest* FoundQuest = *GetActiveQuests().FindByPredicate(predQuestMatchingClass))
+   {
+      return FoundQuest;
+   }
+
+   if(AQuest* FoundQuest = *GetCompletedQuests().FindByPredicate(predQuestMatchingClass))
+   {
+      return FoundQuest;
+   }
+
+   if(AQuest* FoundQuest = *GetFailedQuests().FindByPredicate(predQuestMatchingClass))
+   {
+      return FoundQuest;
+   }
+
+   return nullptr;
+}
+
+AQuest* UQuestManager::FindObtainedQuestByQuestStateAndClass(TSubclassOf<AQuest> QuestToFindClass, EQuestState QuestStateFilter) const
+{
+   const auto predQuestMatchingClass = [QuestToFindClass](const AQuest* quest)
+   {
+      return quest->GetClass() == QuestToFindClass;
+   };
+
+   switch(QuestStateFilter)
+   {
+      case EQuestState::CurrentQuests:
+      {
+         if(AQuest* FoundQuest = *GetActiveQuests().FindByPredicate(predQuestMatchingClass))
+         {
+            return FoundQuest;
+         }
+         break;
+      }
+      case EQuestState::CompletedQuests:
+      {
+         if(AQuest* FoundQuest = *GetCompletedQuests().FindByPredicate(predQuestMatchingClass))
+         {
+            return FoundQuest;
+         }
+         break;
+      }
+      case EQuestState::FailedQuests:
+      {
+         if(AQuest* FoundQuest = *GetFailedQuests().FindByPredicate(predQuestMatchingClass))
+         {
+            return FoundQuest;
+         }
+         break;
+      }
+      default: break;
+   }
+   return nullptr;
 }
 
 void UQuestManager::OnSubgoalSwitched(AQuest* quest, int goalIndex)
@@ -155,9 +228,9 @@ void UQuestManager::OnQuestCompleted(AQuest* questToEnd)
    activeQuests.Remove(questToEnd);
    switch(questToEnd->GetQuestState())
    {
-      case EQuestState::currentQuests: break;
-      case EQuestState::failedQuests: failedQuests.Add(questToEnd); break;
-      case EQuestState::completedQuests: completedQuests.Add(questToEnd); break;
+      case EQuestState::CurrentQuests: break;
+      case EQuestState::FailedQuests: failedQuests.Add(questToEnd); break;
+      case EQuestState::CompletedQuests: completedQuests.Add(questToEnd); break;
    }
 
    if(questToEnd == questListRef->GetCurrentlySelectedQuest())
@@ -171,7 +244,7 @@ void UQuestManager::OnQuestCompleted(AQuest* questToEnd)
       }
    }
 
-   if(questToEnd->GetQuestState() == EQuestState::completedQuests)
+   if(questToEnd->GetQuestState() == EQuestState::CompletedQuests)
    {
       controllerRef->GetBasePlayer()->UpdateEXP(questToEnd->GetQuestInfo().questReward.exp);
       controllerRef->GetBasePlayer()->UpdateGold(questToEnd->GetQuestInfo().questReward.gold);
@@ -187,82 +260,86 @@ void UQuestManager::OnEnemyDie(AUnit* deadUnit)
    if(AEnemy* enemy = Cast<AEnemy>(deadUnit))
    {
       // For updating UI, we need to use TaskGraphMainThread
-      auto dieFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, enemy]() {
-         for(AQuest* quest : activeQuests)
-         {
-            for(const int goalIndex : quest->GetCurrentGoalIndices())
-            {
-               if(UUpGoal* goal = quest->GetGoalAtIndex(goalIndex))
-               {
-                  if(UUpHuntingGoal* huntingGoal = Cast<UUpHuntingGoal>(goal))
-                  {
-                     if(enemy->GetGameName().EqualTo(huntingGoal->GetEnemyToHuntClass().GetDefaultObject()->GetGameName()))
-                     {
-                        huntingGoal->SetNumCurrentlyHunted(huntingGoal->GetNumCurrentlyHunted() + 1);
-                        if(huntingGoal->GetNumCurrentlyHunted() >= huntingGoal->GetNumberOfEnemiesToHunt())
-                        {
-                           quest->CompleteSubGoal(goalIndex);
-                           return;
-                        }
-                        questListRef->GetQuestListSlot(quest)->GetGoalEntryWithGoalIndex(goalIndex)->UpdateText();
-                     }
-                  }
-               }
-            }
+      auto dieFuture = Async(EAsyncExecution::TaskGraphMainThread,
+                             [this, enemy]()
+                             {
+                                for(AQuest* quest : activeQuests)
+                                {
+                                   for(const int goalIndex : quest->GetCurrentGoalIndices())
+                                   {
+                                      if(UUpGoal* goal = quest->GetGoalAtIndex(goalIndex))
+                                      {
+                                         if(UUpHuntingGoal* huntingGoal = Cast<UUpHuntingGoal>(goal))
+                                         {
+                                            if(enemy->GetGameName().EqualTo(huntingGoal->GetEnemyToHuntClass().GetDefaultObject()->GetGameName()))
+                                            {
+                                               huntingGoal->SetNumCurrentlyHunted(huntingGoal->GetNumCurrentlyHunted() + 1);
+                                               if(huntingGoal->GetNumCurrentlyHunted() >= huntingGoal->GetNumberOfEnemiesToHunt())
+                                               {
+                                                  quest->CompleteSubGoal(goalIndex);
+                                                  return;
+                                               }
+                                               questListRef->GetQuestListSlot(quest)->GetGoalEntryWithGoalIndex(goalIndex)->UpdateText();
+                                            }
+                                         }
+                                      }
+                                   }
 
-            // Regardless if whether this goal finishes the quest or not, update the quest journal
-            if(quest == questJournalRef->GetSelectedQuest())
-            {
-               questJournalRef->UpdateDetailWindow();
-            }
-         }
-      });
+                                   // Regardless if whether this goal finishes the quest or not, update the quest journal
+                                   if(quest == questJournalRef->GetSelectedQuest())
+                                   {
+                                      questJournalRef->UpdateDetailWindow();
+                                   }
+                                }
+                             });
    }
 }
 
 void UQuestManager::OnTalkNPC(ANPC* talkedToNPC, FGameplayTag conversationTopic)
 {
-   auto talkFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, talkedToNPC, conversationTopic]() {
-      for(AQuest* quest : activeQuests)
-      {
-         for(const int goalIndex : quest->GetCurrentGoalIndices())
-         {
-            if(UUpGoal* goal = quest->GetGoalAtIndex(goalIndex))
-            {
-               if(UUpTalkGoal* talkGoal = Cast<UUpTalkGoal>(goal))
-               {
-                  if(talkGoal->GetNPCToTurnInItemsTo() == talkedToNPC->GetClass())
-                  {
-                     if(talkGoal->GetTopicToTalkAbout() == FGameplayTag::EmptyTag)
-                     {
-                        quest->CompleteSubGoal(goalIndex);
-                        return;
-                     }
-                     if(talkGoal->GetTopicToTalkAbout() == conversationTopic)
-                     {
-                        quest->CompleteSubGoal(goalIndex);
-                        return;
-                     }
-                  }
-               }
-               else if(UUpGatherGoal* gatherGoal = Cast<UUpGatherGoal>(goal))
-               {
-                  if(conversationTopic == FGameplayTag::RequestGameplayTag("Dialog.Quest.Turn In Rewards"))
-                  {
-                     if(gatherGoal->GetNumCurrentlyGathered() >= gatherGoal->GetNumberOfItemToGather())
-                     {
-                        if(TurnInItemsFromGatherGoal(gatherGoal->GetItemToGatherId(), gatherGoal->GetNumberOfItemToGather()))
-                        {
-                           quest->CompleteSubGoal(goalIndex);
-                           return;
-                        }
-                     }
-                  }
-               }
-            }
-         }
-      }
-   });
+   auto talkFuture = Async(EAsyncExecution::TaskGraphMainThread,
+                           [this, talkedToNPC, conversationTopic]()
+                           {
+                              for(AQuest* quest : activeQuests)
+                              {
+                                 for(const int goalIndex : quest->GetCurrentGoalIndices())
+                                 {
+                                    if(UUpGoal* goal = quest->GetGoalAtIndex(goalIndex))
+                                    {
+                                       if(UUpTalkGoal* talkGoal = Cast<UUpTalkGoal>(goal))
+                                       {
+                                          if(talkGoal->GetNPCToTurnInItemsTo() == talkedToNPC->GetClass())
+                                          {
+                                             if(talkGoal->GetTopicToTalkAbout() == FGameplayTag::EmptyTag)
+                                             {
+                                                quest->CompleteSubGoal(goalIndex);
+                                                return;
+                                             }
+                                             if(talkGoal->GetTopicToTalkAbout() == conversationTopic)
+                                             {
+                                                quest->CompleteSubGoal(goalIndex);
+                                                return;
+                                             }
+                                          }
+                                       }
+                                       else if(UUpGatherGoal* gatherGoal = Cast<UUpGatherGoal>(goal))
+                                       {
+                                          if(conversationTopic == FGameplayTag::RequestGameplayTag("Dialog.Quest.Turn In Rewards"))
+                                          {
+                                             if(gatherGoal->GetNumCurrentlyGathered() >= gatherGoal->GetNumberOfItemToGather())
+                                             {
+                                                if(TurnInItemsFromGatherGoal(gatherGoal->GetItemToGatherId(), gatherGoal->GetNumberOfItemToGather()))
+                                                {
+                                                   quest->CompleteSubGoal(goalIndex);
+                                                   return;
+                                                }
+                                             }
+                                          }
+                                       }
+                                    }
+                                 }
+                              }
+                           });
 }
 
 bool UQuestManager::TurnInItemsFromGatherGoal(int gatherItemId, int numItemsToGather)
@@ -290,9 +367,11 @@ void UQuestManager::OnItemPickedUp(const ABaseHero* heroPickingItem, const FBack
       const int     numItemsPickedUp = itemUpdateResult.numUpdatedItemsRequested - itemUpdateResult.numUpdatedItemsRemaining;
       const FMyItem newItem{itemUpdateResult.itemId, numItemsPickedUp};
 
-      auto itemPickupFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, newItem]() {
-         RecalculateItemCountsForGoals(newItem);
-      });
+      auto itemPickupFuture = Async(EAsyncExecution::TaskGraphMainThread,
+                                    [this, newItem]()
+                                    {
+                                       RecalculateItemCountsForGoals(newItem);
+                                    });
    }
 }
 
@@ -345,31 +424,33 @@ void UQuestManager::RecalculateItemCountsForGoals(const FMyItem item)
 
 void UQuestManager::OnInteracted(TSubclassOf<AInteractableBase> interactableClass, const FText& decoratorName)
 {
-   auto itemPickupFuture = Async(EAsyncExecution::TaskGraphMainThread, [this, interactableClass, decoratorName]() {
-      for(AQuest* quest : activeQuests)
-      {
-         for(const int goalIndex : quest->GetCurrentGoalIndices())
-         {
-            // If this goal is to interact with something, and the interactable's name matches the name in this goal
-            if(UUpGoal* goal = quest->GetGoalAtIndex(goalIndex))
-            {
-               if(UUpInteractGoal* interactGoal = Cast<UUpInteractGoal>(goal))
-               {
-                  if(interactGoal->GetInteractableClass()->IsChildOf(interactableClass))
-                  {
-                     if(interactGoal->GetInteractableName().EqualTo(decoratorName) || interactGoal->GetInteractableName().IsEmpty())
-                     {
-                        quest->CompleteSubGoal(goalIndex);
-                        if(quest == questJournalRef->GetSelectedQuest())
-                        {
-                           questJournalRef->UpdateDetailWindow();
-                        }
-                        return;
-                     }
-                  }
-               }
-            }
-         }
-      }
-   });
+   auto itemPickupFuture = Async(EAsyncExecution::TaskGraphMainThread,
+                                 [this, interactableClass, decoratorName]()
+                                 {
+                                    for(AQuest* quest : activeQuests)
+                                    {
+                                       for(const int goalIndex : quest->GetCurrentGoalIndices())
+                                       {
+                                          // If this goal is to interact with something, and the interactable's name matches the name in this goal
+                                          if(UUpGoal* goal = quest->GetGoalAtIndex(goalIndex))
+                                          {
+                                             if(UUpInteractGoal* interactGoal = Cast<UUpInteractGoal>(goal))
+                                             {
+                                                if(interactGoal->GetInteractableClass()->IsChildOf(interactableClass))
+                                                {
+                                                   if(interactGoal->GetInteractableName().EqualTo(decoratorName) || interactGoal->GetInteractableName().IsEmpty())
+                                                   {
+                                                      quest->CompleteSubGoal(goalIndex);
+                                                      if(quest == questJournalRef->GetSelectedQuest())
+                                                      {
+                                                         questJournalRef->UpdateDetailWindow();
+                                                      }
+                                                      return;
+                                                   }
+                                                }
+                                             }
+                                          }
+                                       }
+                                    }
+                                 });
 }

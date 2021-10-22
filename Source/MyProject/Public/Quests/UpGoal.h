@@ -3,7 +3,7 @@
 #pragma once
 
 #include "GameplayTagContainer.h"
-#include "Trigger.h"
+#include "RTSTrigger.h"
 #include "UpGoal.generated.h"
 
 class AEnemy;
@@ -41,7 +41,7 @@ struct FGoalStyleInfo
    FLinearColor circleColor = FLinearColor::White;
 
    /** Location to spawn the tracker */
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Minimap", Meta=(MakeEditWidget))
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Minimap", Meta = (MakeEditWidget))
    FVector goalLocation = invalidGoalLocation;
 
    static const FVector invalidGoalLocation;
@@ -51,17 +51,12 @@ struct FGoalStyleInfo
 USTRUCT(BlueprintType, NoExport)
 struct FGoalInfo
 {
-   FGoalInfo() :
-      canFailQuest(false), canCompleteQuest(false),
-      updatedDescription(FText())
-   {
-   }
+   FGoalInfo() : canFailQuest(false), canCompleteQuest(false), updatedDescription(FText()) {}
 
-   FGoalInfo
-   (EGoalState gS, bool  isC, FText   gText, TArray<FText> aN, int aTH, bool sUQD, FText uD, TArray<int> fSGI, bool sUR, float r, FLinearColor cC,
-    bool       cFQ, bool cCQ, FVector gL) :
-      canFailQuest(cFQ), canCompleteQuest(cCQ),
-      updatedDescription(uD)
+   FGoalInfo(EGoalState gS, bool isC, FText gText, TArray<FText> aN, int aTH, bool sUQD, FText uD, TArray<int> fSGI, bool sUR, float r, FLinearColor cC, bool cFQ,
+             bool cCQ, FVector gL) :
+       canFailQuest(cFQ),
+       canCompleteQuest(cCQ), updatedDescription(uD)
    {
    }
 
@@ -95,7 +90,7 @@ class MYPROJECT_API UUpGoal : public UObject
 {
    GENERATED_BODY()
 
-public:
+ public:
    UFUNCTION(BlueprintCallable)
    const FGoalInfo& GetGoalInfo() const { return goalInfo; }
 
@@ -110,12 +105,12 @@ public:
    bool bPrereqGoalsFinished() const { return requiredSubgoalIndices.Num() > 0; }
 
    /**Should any triggers be run when this goal begins?*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
-   TArray<FTriggerData> prevGoalTriggers;
+   UPROPERTY(EditAnywhere, Instanced, BlueprintReadWrite, Category = "Goal Game Data")
+   TArray<URTSTriggerBase*> prevGoalTriggers;
 
    /**Should any triggers be run when this goal is over?*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Game Data")
-   TArray<FTriggerData> afterGoalTriggers;
+   UPROPERTY(EditAnywhere, Instanced, BlueprintReadWrite, Category = "Goal Game Data")
+   TArray<URTSTriggerBase*> afterGoalTriggers;
 
    EGoalState GetGoalState() const { return goalState; }
 
@@ -123,7 +118,7 @@ public:
 
    virtual FText MakeGoalText() const PURE_VIRTUAL(UUpGoal::MakeGoalText, return FText::GetEmpty(););
 
-protected:
+ protected:
    UPROPERTY(EditAnywhere, Category = "Goal Properties")
    FGoalInfo goalInfo;
 
@@ -137,8 +132,8 @@ protected:
    UPROPERTY(EditAnywhere, Category = "Goal Game Data")
    TArray<int> requiredSubgoalIndices;
 
-   static const FText EmptyGoalArgText; 
-   
+   static const FText EmptyGoalArgText;
+
    // TODO: Maybe add some delegates to when the goals are completed? If I can find a reason to that is...
 };
 
@@ -147,7 +142,7 @@ class MYPROJECT_API UUpHuntingGoal : public UUpGoal
 {
    GENERATED_BODY()
 
-public:
+ public:
    UFUNCTION(BlueprintCallable, BlueprintPure)
    int GetNumCurrentlyHunted() const { return numCurrentlyHunted; }
 
@@ -162,7 +157,7 @@ public:
 
    FText MakeGoalText() const override;
 
-protected:
+ protected:
    UPROPERTY(EditAnywhere, Category = "Goal Specifications")
    TSubclassOf<AEnemy> enemyToHunt;
 
@@ -177,10 +172,7 @@ class MYPROJECT_API UUpGatherGoal : public UUpGoal
 {
    GENERATED_BODY()
 
-public:
-
-   UUpGatherGoal();
-   
+ public:
    UFUNCTION(BlueprintCallable, BlueprintPure)
    int GetNumCurrentlyGathered() const { return numItemsCurrentlyGathered; }
 
@@ -198,9 +190,9 @@ public:
 
    FText MakeGoalText() const override;
 
-protected:
+ protected:
    // TODO: Statically load this and set it up?
-   UPROPERTY(EditAnywhere, Category = "Goal Specifications")
+   UPROPERTY(EditAnywhere, Category = "Goal Specifications", Meta = (RowType = ItemLookupRow))
    FDataTableRowHandle itemToGatherId;
 
    UPROPERTY(EditAnywhere, Category = "Goal Specifications")
@@ -217,10 +209,9 @@ class MYPROJECT_API UUpInteractGoal : public UUpGoal
 {
    GENERATED_BODY()
 
-public:
-
+ public:
    UUpInteractGoal();
-   
+
    UFUNCTION(BlueprintCallable)
    TSubclassOf<AInteractableBase> GetInteractableClass() const { return interactableClass; }
 
@@ -229,7 +220,7 @@ public:
 
    FText MakeGoalText() const override;
 
-protected:
+ protected:
    UPROPERTY(EditAnywhere, Category = "Goal Specifications")
    TSubclassOf<AInteractableBase> interactableClass;
 
@@ -242,21 +233,20 @@ class MYPROJECT_API UUpTalkGoal : public UUpGoal
 {
    GENERATED_BODY()
 
-public:
-
+ public:
    UUpTalkGoal();
-   
+
    FText MakeGoalText() const override;
 
    TSubclassOf<ANPC> GetNPCToTurnInItemsTo() const { return npcToTurnInItemsTo; }
 
    FGameplayTag GetTopicToTalkAbout() const { return topicToTalkAbout; }
 
-protected:
+ protected:
    UPROPERTY(EditAnywhere, Category = "Goal Specifications")
    TSubclassOf<ANPC> npcToTurnInItemsTo;
 
-   UPROPERTY(EditAnywhere, Category = "Goal Specifications", meta = (Categories="Dialog"))
+   UPROPERTY(EditAnywhere, Category = "Goal Specifications", meta = (Categories = "Dialog"))
    FGameplayTag topicToTalkAbout;
 };
 
@@ -268,10 +258,10 @@ class MYPROJECT_API UUpCustomGoal : public UUpGoal
 {
    GENERATED_BODY()
 
-public:
+ public:
    FText MakeGoalText() const override;
 
-protected:
+ protected:
    /** Goal's custom description*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Goal Specifications")
    FText goalDescription;

@@ -33,6 +33,8 @@
 #include "UpStatComponent.h"
 #include "TargetComponent.h"
 
+DEFINE_LOG_CATEGORY(Up_Log_Combat);
+
 AUnit::AUnit(const FObjectInitializer& objectInitializer) :
     Super(objectInitializer.SetDefaultSubobjectClass<UMyCharacterMovementComponent>(CharacterMovementComponentName))
 {
@@ -55,6 +57,8 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
    selectionCircleDecal->SetupAttachment(RootComponent);
    selectionCircleDecal->bUseAttachParentBound = true;
 
+   SetupSelectionCircle();
+
    SetupHealthbarComponent();
 
    SetupCharacterCollision();
@@ -63,15 +67,12 @@ AUnit::AUnit(const FObjectInitializer& objectInitializer) :
 
    SetupDamageInidicatorContainerWidget();
 
-   combatInfo              = MakeUnique<UpCombatInfo>();
-   combatInfo->combatStyle = ECombatType::Melee;
+   combatInfo = MakeUnique<UpCombatInfo>();
 
    // Turn this off to make sure the unit highlights when hovered over
    GetMesh()->SetRenderCustomDepth(false);
    GetMesh()->bUseAttachParentBound = true;
 }
-
-AUnit::~AUnit() = default;
 
 void AUnit::SetupHealthbarComponent()
 {
@@ -140,12 +141,15 @@ void AUnit::SetupSelectionCircle() const
 {
    if(selectionCircleDecal)
    {
-      selectionCircleDecal->DecalSize = FVector(GetCapsuleComponent()->GetScaledCapsuleRadius());
-      selectionCircleDecal->SetUsingAbsoluteScale(true);
-      selectionCircleDecal->SetWorldScale3D(FVector::OneVector);
+      const float ScaledCapsuleRadius = GetCapsuleComponent()->GetScaledCapsuleRadius();
+      selectionCircleDecal->DecalSize = FVector(30.f, ScaledCapsuleRadius, ScaledCapsuleRadius);
+      selectionCircleDecal->SetUsingAbsoluteScale(false);
+      selectionCircleDecal->SetRelativeScale3D(FVector::OneVector);
       selectionCircleDecal->SetRelativeRotation(FRotator(90, 0, 0));
+      selectionCircleDecal->SetUsingAbsoluteLocation(false);
       selectionCircleDecal->SetRelativeLocation(FVector(0, 0, -90));
       selectionCircleDecal->bUseAttachParentBound = true;
+      selectionCircleDecal->SetComponentTickEnabled(false);
    }
 }
 
@@ -166,7 +170,7 @@ void AUnit::BeginPlay()
       controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
    }
 
-   if(!HasAuthority() || !IsRunningDedicatedServer())
+   if(HasAuthority() || !IsRunningDedicatedServer())
    {
       GetWorld()->GetTimerManager().SetTimerForNextTick(
           [this]()
@@ -183,7 +187,6 @@ void AUnit::BeginPlay()
    }
 
    StoreUnitHeight();
-   SetupSelectionCircle();
 
    if(const ARTSGameState* gameStateRef = Cast<ARTSGameState>(GetWorld()->GetGameState()))
    {
@@ -215,7 +218,7 @@ void AUnit::PossessedBy(AController* newController)
 void AUnit::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
    Super::PostEditChangeProperty(PropertyChangedEvent);
-   if(PropertyChangedEvent.Property != NULL && PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(AUnit, unitControllerClass))
+   if(PropertyChangedEvent.Property != nullptr && PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(AUnit, unitControllerClass))
    {
       AIControllerClass = unitControllerClass;
    }

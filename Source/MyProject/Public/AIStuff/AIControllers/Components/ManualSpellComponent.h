@@ -25,9 +25,10 @@ class MYPROJECT_API UManualSpellComponent : public UActorComponent, public IManu
 
  public:
    /**
-    * Called right after we press our spell key and then click on a target to confirm our spell
-    * From a raycast (left click) we can test to see if the target clicked on is a proper target for our spell
-    * @param result - Result of the target we found with a click
+    * Called right after we press our spell key and then click on a target to confirm our spell.
+    * From a raycast (left click) we can test to see if the target clicked on is a proper target for our spell.
+    * @param hitResult - Result of the target we found with a click
+    * @param selectedSpell - The selected spell (can be selected via actionbar clicking/key or item selection)
     * @return -  Returns true if the target clicked was a valid spell target
     */
    bool OnSpellConfirmInput(const FHitResult& hitResult, TSubclassOf<UMySpell> selectedSpell);

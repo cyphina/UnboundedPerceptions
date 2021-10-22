@@ -34,12 +34,12 @@ void UDialogUI::SetShopView()
 {
    socialHUDState = ESocialHUDState::Shop;
    HideOrShowAllButtons(false);
-
 }
 
 void UDialogUI::SetMainView()
 {
-   switch(socialHUDState) {
+   switch(socialHUDState)
+   {
       case ESocialHUDState::Conversation: SetConversationView(); break; // Show social menu and enable talk buttons
       case ESocialHUDState::Intimate: SetIntimateView(); break;         // Show social menu and enable gift buttons
       case ESocialHUDState::Shop: SetShopView(); break;                 //Show social menu and enable shop buttons
@@ -78,7 +78,7 @@ void UDialogUI::Psychosis()
 
 void UDialogUI::Shop()
 {
-   hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Shop_General));
+   hudManagerRef->AddHUD(EHUDs::HS_Shop_General);
 }
 
 bool UDialogUI::OnWidgetAddToViewport_Implementation()
@@ -88,7 +88,9 @@ bool UDialogUI::OnWidgetAddToViewport_Implementation()
 
    // Hide the ingame widget so we just see social options
    if(hudManagerRef->IsWidgetOnScreen(EHUDs::HS_Actionbar))
-      hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Actionbar));
+   {
+      hudManagerRef->AddHUD(EHUDs::HS_Actionbar);
+   }
 
    dialogWheel->OnWidgetAddToViewport();
 
@@ -97,8 +99,14 @@ bool UDialogUI::OnWidgetAddToViewport_Implementation()
 
 void UDialogUI::Leave()
 {
-   hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Social));
-   if(!hudManagerRef->IsWidgetOnScreen(EHUDs::HS_Actionbar)) { hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Actionbar)); }
+   hudManagerRef->AddHUD(EHUDs::HS_Social);
+   if(!hudManagerRef->IsWidgetOnScreen(EHUDs::HS_Actionbar))
+   {
+      hudManagerRef->AddHUD(EHUDs::HS_Actionbar);
+   }
    // Reactivate patrolling and remove global reference to current blocking interactable
-   if(npcRef) { npcRef->OnDoneTalking(); }
+   if(npcRef)
+   {
+      npcRef->OnDoneTalking();
+   }
 }

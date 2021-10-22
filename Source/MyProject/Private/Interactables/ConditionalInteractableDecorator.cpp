@@ -9,34 +9,37 @@
 void UConditionalInteractableDecorator::Init()
 {
    UInteractableActorDecoratorBase::Init();
-   cpcRef      = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
-   gameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
 }
 
 bool UConditionalInteractableDecorator::Interact()
 {
-   for(FConditionData condition : conditions) {
-      if(!gameModeRef->GetConditionalManager()->GetCondition(condition)) {
-         // We'll use the trigger system to display a message that we cannot interact with this object because we failed the preconditions
-         FTriggerData triggerData;
+   for(FConditionData Condition : conditions)
+   {
+      if(const ARTSGameMode* GameMode = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode()))
+      {
+         const bool ConditionEval = !GameMode->GetConditionalManager()->GetCondition(Condition);
+         if(ConditionEval)
+         {
+            if(customDialogConversation == "")
+            {
+               TArray<FDialogData> dialogData;
+               const FText         ConditionString = GameMode->GetConditionalManager()->GetConditionString(conditions);
+               dialogData.Add(FDialogData({}, ConditionString, TEXT("")));
 
-         if(customDialogConversation == "") {
-            TArray<FDialogData> dialogData;
-            triggerData.enabled     = true;
-            triggerData.numCalls    = 1;
-            triggerData.triggerType = ETriggerType::DisplayDialogTrigger;
-            // Create a message formulaically depending on the conditions
-            triggerData.triggerValues.Emplace(gameModeRef->GetConditionalManager()->GetConditionString(conditions).ToString());
-            gameModeRef->GetTriggerManager()->ActivateTrigger(triggerData);
-         } else { // If we have a custom messagecustom message
-                  // Create a trigger so we don't have to dependency inject the AHUDManager
-            triggerData.enabled          = true;
-            triggerData.numCalls         = 1;
-            triggerData.triggerType      = ETriggerType::DisplayConversationTrigger;
-            triggerData.triggerValues.Add(customDialogConversation.ToString());
-            gameModeRef->GetTriggerManager()->ActivateTrigger(triggerData);
+               if(const AUserInput* PC = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+               {
+                  PC->GetHUDManager()->ShowDialogCustomLines(dialogData, EDialogBoxCloseCase::finishedInteractableDialog);
+               }
+            }
+            else
+            {
+               if(const AUserInput* PC = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+               {
+                  PC->GetHUDManager()->ShowDialogWithSource(customDialogConversation, EDialogBoxCloseCase::finishedInteractableDialog);
+               }
+            }
+            return false;
          }
-         return false;
       }
    }
 

@@ -1,13 +1,13 @@
-#include "MyProject.h"
 #include "BasePlayer.h"
 #include "EngineUtils.h"
 #include "GameplayDelegateContext.h"
-#include "WorldObjects/BaseHero.h"
-#include "Quests/QuestManager.h"
 #include "GameplayTagContainer.h"
+#include "MyProject.h"
 #include "PartyDelegateContext.h"
+#include "Quests/QuestManager.h"
 #include "RTSPawn.h"
 #include "UIDelegateContext.h"
+#include "WorldObjects/BaseHero.h"
 
 ABasePlayer::ABasePlayer()
 {
@@ -35,14 +35,6 @@ void ABasePlayer::BeginPlay()
    if(ARTSPawn* Pawn = Cast<ARTSPawn>(GetWorld()->GetFirstPlayerController()->GetPawn()))
    {
       Pawn->OnGroupTabbed().AddUObject(this, &ABasePlayer::OnGroupTabbed);
-   }
-
-   for(TActorIterator<ABaseHero> actItr(GetWorld()); actItr; ++actItr)
-   {
-      if(actItr->GetOwningPlayer() == GetWorld()->GetFirstPlayerController())
-      {
-         allHeroes.Add(*actItr);
-      }
    }
 }
 
@@ -100,11 +92,6 @@ void ABasePlayer::UpdateActiveParty(TArray<ABaseHero*> newHeroes)
    }
 
    partyUpdatedEvent.Broadcast();
-}
-
-void ABasePlayer::AddHeroToRoster(ABaseHero* newHero)
-{
-   allHeroes.Add(newHero);
 }
 
 void ABasePlayer::UpdateGold(int32 amount)
@@ -186,7 +173,9 @@ void ABasePlayer::OnGroupTabbed(AUnit* newFocusedUnit)
 void ABasePlayer::OnAllyActiveChanged(AAlly* allyRef, bool isActive)
 {
    if(isActive)
+   {
       allies.Add(allyRef);
+   }
    else
    {
       allies.RemoveSingle(allyRef);
@@ -216,7 +205,11 @@ void ABasePlayer::OnHeroActiveChanged(ABaseHero* heroRef, bool isActive)
 void ABasePlayer::OnSummonActiveChanged(ASummon* summonRef, bool isActive)
 {
    if(isActive)
+   {
       summons.Add(summonRef);
+   }
    else
+   {
       summons.RemoveSingle(summonRef);
+   }
 }

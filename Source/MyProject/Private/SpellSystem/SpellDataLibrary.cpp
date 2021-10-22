@@ -118,7 +118,7 @@ FGameplayTag USpellDataLibrary::GetEffectNameTagFromActiveHandle(UAbilitySystemC
    return assetTags.Filter(GetEffectNameTag()).First();
 }
 
-void USpellDataLibrary::RemoveEffectWtihNameTag(UAbilitySystemComponent* ASC, FGameplayTag EffectName, int StacksToRemove)
+void USpellDataLibrary::RemoveEffectWithNameTag(UAbilitySystemComponent* ASC, FGameplayTag EffectName, int StacksToRemove)
 {
    const auto effectsWithTag = ASC->GetActiveEffectsWithAllTags(EffectName.GetSingleTagContainer());
    if(effectsWithTag.Num() > 0)

@@ -38,6 +38,7 @@ struct FUnitMechanicStruct
 {
    UPROPERTY(BlueprintReadWrite, EditAnywhere)
    EMechanics mech;
+
    UPROPERTY(BlueprintReadWrite, EditAnywhere)
    int defaultValue;
 };
@@ -46,19 +47,19 @@ struct FUnitMechanicStruct
 USTRUCT(BlueprintType, NoExport)
 struct FDefaultStats
 {
-   UPROPERTY(BlueprintReadWrite, EditAnywhere)
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (TitleProperty = "att"))
    TArray<FUnitAttributeStruct> defaultAttributes;
 
-   UPROPERTY(BlueprintReadWrite, EditAnywhere)
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (TitleProperty = "stat"))
    TArray<FUnitScalingStatsStruct> defaultUnitScalingStats;
 
-   UPROPERTY(EditAnywhere, Category = "ShootingStats")
+   UPROPERTY(EditAnywhere, Category = "ShootingStats", meta = (TitleProperty = "vit"))
    TArray<FUnitVitalStruct> defaultVitals;
 
-   UPROPERTY(EditAnywhere, Category = "ShootingStats")
+   UPROPERTY(EditAnywhere, Category = "ShootingStats", meta = (TitleProperty = "mech"))
    TArray<FUnitMechanicStruct> defaultMechanics;
 
    /**Element of standard attacks (Defaults to "None" aka nonelemental)*/
-   UPROPERTY(EditAnywhere, Category = "ShootingStats")
+   UPROPERTY(EditAnywhere, Category = "ShootingStats", Meta = (Categories = "Combat.Element"))
    FGameplayTag element = FGameplayTag::RequestGameplayTag("Combat.Element.None");
 };

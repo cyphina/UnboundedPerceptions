@@ -37,7 +37,7 @@ class MYPROJECT_API AAlly : public AUnit
     * Check to see if things are above us so we know to make the roofs transparent as we walk underneath them. Used in BPs (will try to move this to C++ soon)
     */
    UFUNCTION(BlueprintCallable, BlueprintCosmetic)
-   bool GetOverlappingObjects(TArray<FHitResult>& hits);
+   bool GetOverlappingObjects(TArray<FHitResult>& hits) const;
 
    UFUNCTION(BlueprintPure, BlueprintCallable, Category = "AI")
    AAllyAIController* GetAllyAIController() const { return allyController; }
@@ -45,7 +45,7 @@ class MYPROJECT_API AAlly : public AUnit
    /** Players who are tired of microing can switch to one of the various AI modes which vary in their offensive and defensive play. */
    UFUNCTION(Server, Reliable, BlueprintCallable, Category = "AI Mode")
    void SwitchAIModes(EAllyBehavioralMode newMode);
-	
+
    /** Polymorphic selection override for caching units in basePlayer */
    void SetUnitSelected(bool value) override;
 

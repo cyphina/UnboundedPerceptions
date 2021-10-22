@@ -584,18 +584,19 @@
 /I ThirdParty\PhysX3\APEX_1.4\shared\general\RenderDebug\public
 /I ThirdParty\PhysX3\APEX_1.4\shared\general\PairFilter\include
 /I ThirdParty\PhysX3\APEX_1.4\shared\internal\include
-/I "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.28.29910\INCLUDE"
+/I "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\MSVC\14.29.30037\INCLUDE"
 /I "C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.2\include\um"
 /I "C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\ucrt"
 /I "C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\shared"
 /I "C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\um"
 /I "C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\winrt"
-/FI"C:\MyProject\Intermediate\Build\Win64\MyProjectEditor\DebugGame\Engine\SharedPCH.Engine.NonOptimized.h"
-/Yu"C:\MyProject\Intermediate\Build\Win64\MyProjectEditor\DebugGame\Engine\SharedPCH.Engine.NonOptimized.h"
-/Fp"C:\MyProject\Intermediate\Build\Win64\MyProjectEditor\DebugGame\Engine\SharedPCH.Engine.NonOptimized.h.pch"
+/FI"C:\MyProject\Intermediate\Build\Win64\MyProjectEditor\DebugGame\Engine\SharedPCH.Engine.NonOptimized.Cpp17.h"
+/Yu"C:\MyProject\Intermediate\Build\Win64\MyProjectEditor\DebugGame\Engine\SharedPCH.Engine.NonOptimized.Cpp17.h"
+/Fp"C:\MyProject\Intermediate\Build\Win64\MyProjectEditor\DebugGame\Engine\SharedPCH.Engine.NonOptimized.Cpp17.h.pch"
 "C:\MyProject\Plugins\TreeLayout\Intermediate\Build\Win64\UE4Editor\DebugGame\TreeLayout\Module.TreeLayout.cpp"
 /FI"C:\MyProject\Plugins\TreeLayout\Intermediate\Build\Win64\UE4Editor\DebugGame\TreeLayout\Definitions.TreeLayout.h"
 /Fo"C:\MyProject\Plugins\TreeLayout\Intermediate\Build\Win64\UE4Editor\DebugGame\TreeLayout\Module.TreeLayout.cpp.obj"
 /TP
 /GR-
 /W4
+/std:c++17

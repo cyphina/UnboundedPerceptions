@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "EventSystem/Trigger.h"
+#include "EventSystem/DEPRECATED_Trigger.h"
 #include "GameFramework/Character.h"
 #include "GameplayTagContainer.h"
 #include "Interactables/Interactable.h"
@@ -16,84 +16,17 @@ class ANPCAIController;
 struct FMapSaveInfo;
 struct FNPCSaveInfo;
 
-// NPC Base Class for people we might be able to talk to
+/** NPC Base Class for people we might be able to talk to */
 UCLASS(HideCategories = (Rendering, Replication, Clothing, "Character Movement", Physics))
 class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInteractable
 {
    GENERATED_BODY()
 
-   UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
-   FText name;
-
-   static class AHUDManager* hudManagerRef;
-
-   UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true))
-   ANPCAIController* npcAIController;
-
-   /**
-    *Exposed name of default conversation to be quickly set in object properties.  This conversation is whatever they NPC will tell you before your
-    * conversation digresses, so it may change when new events occur.  Rather than caching dialog, loading it form our table is fine
-    * because our table is a map (constant time searches)
-    */
-   UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true), Category = "NPCConversationSettings")
-   FName conversationStarterName;
-
-   /**
-    *Name of the conversation the NPC will have if it doesn't know the topic asked about
-    */
-   UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true), Category = "NPCConversationSettings")
-   FName defaultResponseName = "Default";
-
-   /**
-    *Maps DialogTopics to names in the dialogTable. For names not in the map, the NPC will not have a detailed conversation when asked about that topic
-    */
-   UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true), Category = "NPCConversationSettings")
-   TMap<FGameplayTag, FName> conversationTopics;
-
-   FTriggerData onDialogEndTriggerData;
-
-   /**
-    *TODO: Move this to CPC and have a single map <NPCNAME,DialogAlreadyConversedSet> for global access
-    * List of dialogs (not topics) that we've already talked to this NPC about.  Sometimes used in conditionals
-    */
-   TSet<FName> dialogAlreadyConversed;
-
-   /**Number of available quests to partake currently
-    * This can be determined by looking at the number of conversationTopics + defaultConversationTopics to see which topics start with Quest
-    * since topics which start with Quest will have a quest trigger.  A quest trigger is always followed by a conversation change trigger which will
-    * change the topic to a conversation that doesn't involve accepting a quest.
-    */
-   int numAvailableQuests;
-
-   /**Counts how many dialogs we can have with this NPC currently that gives us quests*/
-   void CountQuestDialogs();
-
-   /**Checks if a dialog is a quest dialog by checking if its name starts with Quest*/
-   bool IsQuestDialog(FName conversationName) const;
-
-   /**Checks to see if this topic is already learned by the player*/
-   inline bool IsTopicLearned(FGameplayTag topic) const;
-
-   /**Bound to OnTopicLearned delegate in BasePlayer to check if the questCount changes*/
-   UFUNCTION()
-   void OnTopicLearned(FGameplayTag topicLearned);
-
-   /**We need this if we're trying to debug a level in the editor.
-    *We don't need this for the real game since they start at the starting level where things are initialized
-    *If we don't have this we have a problem with the system that determines if an NPC has a quest to give*/
-#if UE_EDITOR
-   FTimerHandle BeginPlayDelayTimer;
-#endif
-
- protected:
-   AUserInput* controllerRef;
-   void        MakeNPCData(FNPCSaveInfo& npcSaveInfo);
-   void        ReloadNPCData(const FNPCSaveInfo& npcSaveInfo);
-
  public:
    ANPC();
 
    void         BeginPlay() override;
+   virtual void Destroyed() override;
    virtual void Tick(float DeltaTime) override final;
 
    static void SetHUDManagerRef(AHUDManager* newHudManager) { hudManagerRef = newHudManager; }
@@ -105,8 +38,8 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
    // ABaseHero* currentlyTalkingHero = false;
 
    /**
-    * Does this NPC allow us to have a conversation (open up social menu) or does he/she just say something then walk away
-    */
+       * Does this NPC allow us to have a conversation (open up social menu) or does he/she just say something then walk away
+       */
    UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (ExposeOnSpawn = true), Category = "NPCConversationSettings")
    bool bWantsToConverse = false;
 
@@ -167,22 +100,16 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
    bool GetWantsToConverse() const { return bWantsToConverse; }
 
    /**
-    *Accessor to see what happens after finishing talking with an NPC
-    */
-   UFUNCTION(BlueprintCallable, Category = "Accessors")
-   FTriggerData& GetOnDialogFinishedTrigger() { return onDialogEndTriggerData; }
-
-   /**
     *Get a list of dialogs already talked about with this NPC
     */
    UFUNCTION(BlueprintCallable, Category = "Accessors")
-   TArray<FName> GetAlreadyConversedDialogs() { return dialogAlreadyConversed.Array(); }
+   const FGameplayTagContainer& GetAlreadyConversedDialogs() { return dialogAlreadyConversed; }
 
    /**
     *Adds a new DIALOG to the list of DIALOGS alredy talked about
     */
    UFUNCTION(BlueprintCallable, Category = "Accessors")
-   void AddConversedDialog(FName conversedDialog) { dialogAlreadyConversed.Add(conversedDialog); }
+   void AddConversedDialog(FGameplayTag ConversedDialogTopicTag) { dialogAlreadyConversed.AddTag(ConversedDialogTopicTag); }
 
 #pragma endregion
 
@@ -196,21 +123,94 @@ class MYPROJECT_API ANPC : public ACharacter, public IWorldObject, public IInter
     */
    virtual void OnDoneTalking();
 
+   UFUNCTION(BlueprintImplementableEvent, DisplayName = "OnConversationFinished")
+   void BP_OnConversationFinished();
+
+   virtual void OnConversationFinished();
+
    virtual void Interact_Implementation(ABaseHero* hero) override;
 
-   /**
-    * Sets up the dialogue UI to the proper state (conversation/intimate view) after interacting with this NPC
-    */
-   virtual void SetupAppropriateView();
-
    FVector GetInteractableLocation_Implementation() const override final;
+
    /**
-    *NPCs can always be interacted with.  To create an NPC that doesn't interact at all, just create some blank humanoid static mesh (Persona Like)
+    * NPCs can always be interacted with.  To create an NPC that doesn't interact at all, just create some blank humanoid static mesh (Persona Like)
     */
    bool CanInteract_Implementation() const override;
 
    virtual void SaveNPCData(FMapSaveInfo& mapInfo);
    virtual void LoadNPCData(FMapSaveInfo& mapInfo);
+
+ protected:
+   AUserInput* controllerRef;
+   void        MakeNPCData(FNPCSaveInfo& npcSaveInfo);
+   void        ReloadNPCData(const FNPCSaveInfo& npcSaveInfo);
+
+ private:
+   /**
+   * Sets up the dialogue UI to the proper state (conversation/intimate view) after interacting with this NPC
+   */
+   virtual void SetupAppropriateView();
+
+   UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true))
+   FText name;
+
+   static class AHUDManager* hudManagerRef;
+
+   UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true))
+   ANPCAIController* npcAIController;
+
+   /**
+    *Exposed name of default conversation to be quickly set in object properties.  This conversation is whatever they NPC will tell you before your
+    * conversation digresses, so it may change when new events occur.  Rather than caching dialog, loading it form our table is fine
+    * because our table is a map (constant time searches)
+    */
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true), Category = "NPCConversationSettings")
+   FName conversationStarterName;
+
+   /**
+    *Name of the conversation the NPC will have if it doesn't know the topic asked about
+    */
+   UPROPERTY(BlueprintReadWrite, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true), Category = "NPCConversationSettings")
+   FName defaultResponseName = "Default";
+
+   /**
+    *Maps DialogTopics to names in the dialogTable. For names not in the map, the NPC will not have a detailed conversation when asked about that topic
+    */
+   UPROPERTY(BlueprintReadOnly, EditAnywhere, meta = (AllowPrivateAccess = true), Meta = (ExposeOnSpawn = true), Category = "NPCConversationSettings")
+   TMap<FGameplayTag, FName> conversationTopics;
+
+   /**
+    *TODO: Move this to CPC and have a single map <NPCNAME,DialogAlreadyConversedSet> for global access
+    * List of dialogs (not topics) that we've already talked to this NPC about.  Sometimes used in conditionals
+    */
+   FGameplayTagContainer dialogAlreadyConversed;
+
+   /**Number of available quests to partake currently
+    * This can be determined by looking at the number of conversationTopics + defaultConversationTopics to see which topics start with Quest
+    * since topics which start with Quest will have a quest trigger.  A quest trigger is always followed by a conversation change trigger which will
+    * change the topic to a conversation that doesn't involve accepting a quest.
+    */
+   int numAvailableQuests;
+
+   /**Counts how many dialogs we can have with this NPC currently that gives us quests*/
+   void CountQuestDialogs();
+
+   /**Checks if a dialog is a quest dialog by checking if its name starts with Quest*/
+   bool IsQuestDialog(FName conversationName) const;
+
+   /**Checks to see if this topic is already learned by the player*/
+   inline bool IsTopicLearned(FGameplayTag topic) const;
+
+   /**Bound to OnTopicLearned delegate in BasePlayer to check if the questCount changes*/
+   UFUNCTION()
+   void OnTopicLearned(FGameplayTag topicLearned);
+
+   /**We need this if we're trying to debug a level in the editor.
+    *We don't need this for the real game since they start at the starting level where things are initialized
+    *If we don't have this we have a problem with the system that determines if an NPC has a quest to give*/
+#if UE_EDITOR
+   FTimerHandle BeginPlayDelayTimer;
+#endif
 };
 
 FORCEINLINE uint8 GetTypeHash(const ANPC& npc)

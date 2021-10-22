@@ -15,6 +15,8 @@
 #include "UnitController.h"
 #include "UserInput.h"
 
+DEFINE_LOG_CATEGORY(Up_Log_PlayerActions);
+
 void CursorClickFunctionalityBase::IssueMoveToSelectedUnits(FVector moveLocation)
 {
    for(AUnit* unit : controllerRef->GetBasePlayer()->GetSelectedUnits())
@@ -75,6 +77,7 @@ void CursorClickFunctionalityBase::IssueAttackMoveToSelectedUnits(FVector attack
    {
       unit->GetUnitController()->FindComponentByClass<UTargetedAttackComponent>()->BeginAttackMove(attackLocation);
    }
+   UE_LOG(Up_Log_PlayerActions, Log, TEXT("Player issued attack move towards %s for selected units."), *attackLocation.ToString());
 }
 
 void CursorClickFunctionalityBase::IssueAttackMoveToFocusedUnit(FVector attackLocation)
@@ -82,6 +85,8 @@ void CursorClickFunctionalityBase::IssueAttackMoveToFocusedUnit(FVector attackLo
    if(AUnit* focusedUnit = controllerRef->GetBasePlayer()->GetFocusedUnit())
    {
       focusedUnit->GetUnitController()->FindComponentByClass<UTargetedAttackComponent>()->BeginAttackMove(attackLocation);
+      UE_LOG(Up_Log_PlayerActions, Log, TEXT("Played issued attack move command to unit %s with destination %s"), *focusedUnit->GetGameName().ToString(),
+             *attackLocation.ToString());
    }
 }
 
@@ -96,7 +101,7 @@ void CursorClickFunctionalityBase::CancelSelectedUnitsSelectedSpell()
    }
 }
 
-void CursorClickFunctionalityBase::SelectionRectSetup()
+void CursorClickFunctionalityBase::SelectionRectSetup() const
 {
    float floatX, floatY;
    controllerRef->GetMousePosition(floatX, floatY);
@@ -107,31 +112,35 @@ void CursorClickFunctionalityBase::QueueActionToSelectedUnits(const TFunction<vo
 {
    for(AUnit* unit : controllerRef->GetBasePlayer()->GetSelectedUnits())
    {
-      unit->GetUnitController()->QueueAction([unit, queuedAction]() {
-         queuedAction(unit);
-      });
+      unit->GetUnitController()->QueueAction(
+          [unit, queuedAction]()
+          {
+             queuedAction(unit);
+          });
    }
 }
 
 void CursorClickFunctionalityBase::IssueInteractCommandToSelectedHeroes()
 {
-   if(AInteractableBase* interactableObject = Cast<AInteractableBase>(pawnRef->GetHitActorClick(clickHitResult)))
+   if(AInteractableBase* InteractableObject = Cast<AInteractableBase>(pawnRef->GetHitActorClick(clickHitResult)))
    {
-      for(ABaseHero* hero : controllerRef->GetBasePlayer()->GetSelectedHeroes())
+      for(ABaseHero* Hero : controllerRef->GetBasePlayer()->GetSelectedHeroes())
       {
-         hero->GetHeroController()->BeginInteract(interactableObject);
+         Hero->GetHeroController()->BeginInteract(InteractableObject);
       }
+      UE_LOG(Up_Log_PlayerActions, Log, TEXT("Player selected interactable %s"), *InteractableObject->GetGameName().ToString());
    }
 }
 
 void CursorClickFunctionalityBase::IssueTalkComandToSelectedHeroes()
 {
-   if(ANPC* interactableObject = Cast<ANPC>(pawnRef->GetHitActorClick(clickHitResult)))
+   if(ANPC* NPC = Cast<ANPC>(pawnRef->GetHitActorClick(clickHitResult)))
    {
       for(ABaseHero* hero : controllerRef->GetBasePlayer()->GetSelectedHeroes())
       {
-         hero->GetHeroController()->BeginInteract(interactableObject);
+         hero->GetHeroController()->BeginInteract(NPC);
       }
+      UE_LOG(Up_Log_PlayerActions, Log, TEXT("Player selected NPC %s"), *NPC->GetGameName().ToString());
    }
 }
 
@@ -140,16 +149,18 @@ void CursorClickFunctionalityBase::IssueItemUseCommandToHeroWithInventory()
    pawnRef->GetHitResultClick(clickHitResult);
    if(clickHitResult.IsValidBlockingHit())
    {
-      ABaseHero* heroUsingInventory = GetHeroUsingInventory();
+      ABaseHero* HeroUsingInventory = GetHeroUsingInventory();
 
-      const auto heroController = heroUsingInventory->GetHeroController();
+      const auto HeroController = HeroUsingInventory->GetHeroController();
 
-      const TSubclassOf<UMySpell> spellToCast = heroController->GetManualSpellComponent()->GetCurrentlySelectedSpell();
-      if(heroController->GetManualSpellComponent()->OnSpellConfirmInput(clickHitResult, spellToCast))
+      const TSubclassOf<UMySpell> SpellToCast = HeroController->GetManualSpellComponent()->GetCurrentlySelectedSpell();
+      if(HeroController->GetManualSpellComponent()->OnSpellConfirmInput(clickHitResult, SpellToCast))
       {
-         heroController->HaltUnit();
-         heroController->GetManualSpellComponent()->StartSpellCastAction(clickHitResult, spellToCast);
+         HeroController->HaltUnit();
+         HeroController->GetManualSpellComponent()->StartSpellCastAction(clickHitResult, SpellToCast);
          pawnRef->SetSecondaryCursor();
+         UE_LOG(Up_Log_PlayerActions, Log, TEXT("Hero %s using item %d on selected target %s"), *HeroUsingInventory->GetGameName().ToString(),
+                HeroUsingInventory->GetCurrentItemId(), *clickHitResult.GetActor()->GetName());
       }
    }
 }

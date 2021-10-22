@@ -3,17 +3,10 @@
 #pragma once
 
 #include "GameplayTagContainer.h"
+#include "QuestEnums.h"
 #include "Item.h"
 
 class UUpGoal;
-
-/** Organize quest types based on importance to story */
-UENUM(BlueprintType)
-enum class EQuestCategory : uint8 { MainQuest, SideQuest, Event };
-
-/** State of quest completion */
-UENUM(BlueprintType)
-enum class EQuestState : uint8 { currentQuests, completedQuests, failedQuests };
 
 /** Struct for possible quest rewards */
 USTRUCT(BlueprintType, NoExport)
@@ -62,7 +55,7 @@ struct FQuestInfo
    /**
     * Difficulty from 1 (easy) to 10 (extremely hard)
     */
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta=(ClampMin="1", ClampMax="10"))
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (ClampMin = "1", ClampMax = "10"))
    float difficulty;
 
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -76,10 +69,10 @@ struct FQuestInfo
 
    const TArray<UUpGoal*>& GetSubgoals() const { return subgoals; }
 
-private:
+ private:
    /**
     * A list of all the goals in this quest information
     */
-   UPROPERTY(EditAnywhere, Instanced, Meta=(AllowPrivateAccess))
+   UPROPERTY(EditAnywhere, Instanced, Meta = (AllowPrivateAccess))
    TArray<UUpGoal*> subgoals;
 };

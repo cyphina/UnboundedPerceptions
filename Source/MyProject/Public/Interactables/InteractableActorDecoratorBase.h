@@ -24,24 +24,21 @@
  * chain decorators together.
  * Don't add more of the same type since it's not necessary since the decorators that could use more than one take in an array of data that can be parsed.
  */
-UCLASS(BlueprintType, Blueprintable, DefaultToInstanced, EditInlineNew)
+UCLASS(Abstract, BlueprintType, Blueprintable, DefaultToInstanced, EditInlineNew)
 class MYPROJECT_API UInteractableActorDecoratorBase : public UObject
 {
    GENERATED_BODY()
 
  public:
-   /**The next decorator to add to this interactable (if there is one).  Kind of like a node in a linked list, but each decorator adds some functionality*/
-   UPROPERTY(EditAnywhere)
-   UInteractableActorDecoratorBase* decoratedInteractable;
-
    /**
     * Initialize some values for the decorator that need to be initialized usually at BeginPlay.  Called by the InteractableBase to setup the decorator during
     * InteractableBase::BeginPlay()
     */
    virtual void Init()
    {
-      if (decoratedInteractable) {
-         decoratedInteractable->Rename(nullptr, this);
+      if(decoratedInteractable)
+      {
+         decoratedInteractable->Rename(nullptr, this->GetOuter());
          decoratedInteractable->Init();
       }
    }
@@ -52,5 +49,46 @@ class MYPROJECT_API UInteractableActorDecoratorBase : public UObject
     */
    virtual bool Interact() PURE_VIRTUAL(UInteractableActorDecoratorBase::Interact, return true;);
 
-   virtual FText GetName() const { return decoratedInteractable->GetName(); }
+   virtual FText GetName() const
+   {
+      if(decoratedInteractable)
+      {
+         return decoratedInteractable->GetName();
+      }
+
+      if(UObject* Outer = GetOuter())
+      {
+         return FText::FromString(Outer->GetName());
+      }
+      return FText::GetEmpty();
+   }
+
+   /**The next decorator to add to this interactable (if there is one).  Kind of like a node in a linked list, but each decorator adds some functionality*/
+   UPROPERTY(EditAnywhere)
+   UInteractableActorDecoratorBase* decoratedInteractable = nullptr;
+
+ protected:
+   virtual void PostLoad() override
+   {
+      Super::PostLoad();
+      if(decoratedInteractable)
+      {
+         UObject* Outer = this->GetOuter();
+         decoratedInteractable->Rename(nullptr, Outer, REN_ForceGlobalUnique | REN_ForceNoResetLoaders);
+      }
+   }
+
+   virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override
+   {
+      Super::PostEditChangeProperty(PropertyChangedEvent);
+      if(PropertyChangedEvent.Property != nullptr &&
+         PropertyChangedEvent.GetPropertyName() == GET_MEMBER_NAME_CHECKED(UInteractableActorDecoratorBase, decoratedInteractable))
+      {
+         if(decoratedInteractable)
+         {
+            UObject* Outer = this->GetOuter();
+            decoratedInteractable->Rename(nullptr, Outer, REN_ForceGlobalUnique | REN_ForceNoResetLoaders);
+         }
+      }
+   }
 };

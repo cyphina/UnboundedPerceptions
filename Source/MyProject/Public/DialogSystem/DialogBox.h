@@ -5,12 +5,13 @@
 #include "CoreMinimal.h"
 #include "UI/UserWidgetExtensions/MyUserWidget.h"
 #include "DialogManager.h"
-#include "EventSystem/Trigger.h"
+#include "EventSystem/DEPRECATED_Trigger.h"
 #include "DialogBox.generated.h"
 
 /**What to do after the dialog box is closed*/
 UENUM(BlueprintType)
-enum class EDialogBoxCloseCase : uint8 {
+enum class EDialogBoxCloseCase : uint8
+{
    finishedInitialTalkNPC,     // Finished the initial dialog conversation
    finishedNPCConvo,           // Cleanup after we finished having a conversation with a NPC
    finishedInteractableDialog, // Cleanup after dialog box has been popped up from interacting with an interactable
@@ -32,6 +33,54 @@ class MYPROJECT_API UDialogBox : public UMyUserWidget
 {
    GENERATED_BODY()
 
+ public:
+   UDialogBox(const FObjectInitializer& ObjectInitializer);
+
+   void NativeConstruct() override;
+   bool OnWidgetAddToViewport_Implementation() override;
+
+   /** Used primarily to get current dialog line when first dialog is loaded up */
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Dialog Iteration")
+   const FDialogData& GetCurrentLine() const { return dialogLines[currentNodeNum]; }
+
+   /**
+    *Iterate through dialog lines.  After called, will return the next line to be displayed
+    */
+   UFUNCTION(BlueprintCallable, Category = "Dialog Iteration")
+   const FDialogData& GetNextLine();
+
+   /**
+    *Used when added to viewport and when choosing to talk about some topic via SocialWindow
+    *Puts all dialogs with the dialogTopic + # into the dialogLines variable via the DialogManager which
+    *acts as an interface to our dialogTable
+    */
+   UFUNCTION(BlueprintCallable, Category = "DialogInformation")
+   void SetConversation(FName dialogTopic);
+
+   /**
+    *Used when added to viewport in the case of some character reflecting upon his/her action (like attempting to open a locked door)
+    *Passes in lines that aren't on the dialogTable.  Reads lines from start to end of the array
+    */
+   UFUNCTION(BlueprintCallable, Category = "DialogInformation")
+   void SetDialogLines(TArray<FDialogData> newDialogLines);
+
+   /**When this dialogBox is opened, we need to tell it what kind of event opened it so it respond properly when it's closed*/
+   void SetDialogSource(EDialogBoxCloseCase newDialogSource) { dialogSource = newDialogSource; }
+
+   UFUNCTION(BlueprintCallable, Category = "DialogInformation")
+   FName GetDialogTopic() const { return dialogTopic; }
+
+   /** display buttons so player can pick something to say and setup the next node index each button should return when clicked */
+   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Choices")
+   void ShowChoices(const TArray<FDialogData>& choiceLines);
+
+   /**Picks a response option and returns next dialog node to display after a choice is picked and triggers/conditions associated with that choice are activated
+    * @param choice - Index of the choice that is picked (0,1,2,...up to num choices)
+    */
+   UFUNCTION(BlueprintCallable, Category = "Choices")
+   const FDialogData& PickChoice(int choice);
+
+ private:
    UPROPERTY()
    ARTSGameMode* gameModeRef;
 
@@ -98,51 +147,4 @@ class MYPROJECT_API UDialogBox : public UMyUserWidget
     *Default values for our maps keep resetting so we can set them in these functions.  Only call these in the constructor
     */
    void InitDialogPortraitMaps();
-
- public:
-   UDialogBox(const FObjectInitializer& ObjectInitializer);
-
-   void NativeConstruct() override;
-   bool OnWidgetAddToViewport_Implementation() override;
-
-   /** Used primarily to get current dialog line when first dialog is loaded up */
-   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Dialog Iteration")
-   const FDialogData& GetCurrentLine() const { return dialogLines[currentNodeNum]; }
-
-   /**
-    *Iterate through dialog lines.  After called, will return the next line to be displayed
-    */
-   UFUNCTION(BlueprintCallable, Category = "Dialog Iteration")
-   const FDialogData& GetNextLine();
-
-   /**
-    *Used when added to viewport and when choosing to talk about some topic via SocialWindow
-    *Puts all dialogs with the dialogTopic + # into the dialogLines variable via the DialogManager which
-    *acts as an interface to our dialogTable
-    */
-   UFUNCTION(BlueprintCallable, Category = "DialogInformation")
-   void SetConversation(FName dialogTopic);
-
-   /**
-    *Used when added to viewport in the case of some character reflecting upon his/her action (like attempting to open a locked door)
-    *Passes in lines that aren't on the dialogTable.  Reads lines from start to end of the array
-    */
-   UFUNCTION(BlueprintCallable, Category = "DialogInformation")
-   void SetDialogLines(TArray<FDialogData> newDialogLines);
-
-   /**When this dialogBox is opened, we need to tell it what kind of event opened it so it respond properly when it's closed*/
-   void SetDialogSource(EDialogBoxCloseCase newDialogSource) { dialogSource = newDialogSource; }
-
-   UFUNCTION(BlueprintCallable, Category = "DialogInformation")
-   FName GetDialogTopic() const { return dialogTopic; }
-
-   /** display buttons so player can pick something to say and setup the next node index each button should return when clicked */
-   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Choices")
-   void ShowChoices(const TArray<FDialogData>& choiceLines);
-
-   /**Picks a response option and returns next dialog node to display after a choice is picked and triggers/conditions associated with that choice are activated
-    * @param choice - Index of the choice that is picked (0,1,2,...up to num choices)
-    */
-   UFUNCTION(BlueprintCallable, Category = "Choices")
-   const FDialogData& PickChoice(int choice);
 };

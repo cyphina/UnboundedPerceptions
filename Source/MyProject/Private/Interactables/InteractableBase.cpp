@@ -7,28 +7,26 @@
 #include "Interactables/NamedInteractableDecorator.h"
 #include "TriggerInteractableDecorator.h"
 #include "LevelSaveStructs.h"
+#include "RTSTrigger.h"
 
 // Sets default values
 AInteractableBase::AInteractableBase()
 {
    PrimaryActorTick.bCanEverTick = false;
 
-   sceneRoot = CreateDefaultSubobject<USceneComponent>(FName("Scene"));
-   SetRootComponent(sceneRoot);
-
    interactableMesh = CreateDefaultSubobject<UStaticMeshComponent>(FName("Mesh"));
    interactableMesh->SetCollisionProfileName("Interactable");
+   SetRootComponent(interactableMesh);
 
    sceneLocation = CreateDefaultSubobject<USceneComponent>(FName("InteractLocation"));
-
-   interactableMesh->SetupAttachment(RootComponent);
-   sceneLocation->SetupAttachment(RootComponent);
+   sceneLocation->SetupAttachment(interactableMesh);
 }
 
 void AInteractableBase::BeginPlay()
 {
    Super::BeginPlay();
-   if (decorator) {
+   if(decorator)
+   {
       // decorator->Rename(0,this);
       decorator->Init();
    }
@@ -40,11 +38,15 @@ FInteractableSaveInfoWrapper AInteractableBase::SaveInteractableData()
    UInteractableActorDecoratorBase* decor = decorator;
 
    // Save trigger decoration since it is the only decoration with modified state
-   while (decor) {
-      if (decor->GetClass() == UTriggerInteractableDecorator::StaticClass()) {
+   while(decor)
+   {
+      if(decor->GetClass() == UTriggerInteractableDecorator::StaticClass())
+      {
          UTriggerInteractableDecorator* triggerDecor = Cast<UTriggerInteractableDecorator>(decor);
-         for (FTriggerData& finishedTriggerActivation : triggerDecor->triggersActivatedOnInteract) {
-            interactableSaveInfo.interactableInfo.triggerDecoratorInfo.Add(FTriggerInteractableDecoratorSaveInfo(finishedTriggerActivation.numCalls, finishedTriggerActivation.enabled));
+         for(const URTSTriggerBase* finishedTriggerActivation : triggerDecor->triggersActivatedOnInteract)
+         {
+            interactableSaveInfo.interactableInfo.triggerDecoratorInfo.Add(
+                FTriggerInteractableDecoratorSaveInfo(finishedTriggerActivation->GetTriggerLimit(), finishedTriggerActivation->GetEnabled()));
          }
          break;
       }
@@ -61,23 +63,24 @@ FInteractableSaveInfoWrapper AInteractableBase::SaveInteractableData()
 void AInteractableBase::LoadInteractableData(FInteractableSaveInfo& interactableInfo)
 {
    // Restore transform is moveable else we get warnings
-   if(GetRootComponent()->Mobility.GetValue() == EComponentMobility::Movable)
-      SetActorTransform(interactableInfo.transform); 
+   if(GetRootComponent()->Mobility.GetValue() == EComponentMobility::Movable) SetActorTransform(interactableInfo.transform);
 
    // Reloading the level should save the decorators, but we have to restore state of the trigger decorators
    UInteractableActorDecoratorBase* decor = decorator;
 
-
    // Loop through the decorators set on this actor during level editing to find trigger decorators
-   while (decor != nullptr) {
-      if (decor->GetClass() == UTriggerInteractableDecorator::StaticClass()) {
+   while(decor != nullptr)
+   {
+      if(decor->GetClass() == UTriggerInteractableDecorator::StaticClass())
+      {
          // Restore state of all trigger decorators
          UTriggerInteractableDecorator* triggerDecor = Cast<UTriggerInteractableDecorator>(decor);
          // Ensure we have the same number of triggers saved as the data we loaded
          check(triggerDecor->triggersActivatedOnInteract.Num() == interactableInfo.triggerDecoratorInfo.Num());
-         for (int i = 0; i < triggerDecor->triggersActivatedOnInteract.Num(); ++i) {
-            triggerDecor->triggersActivatedOnInteract[i].numCalls = interactableInfo.triggerDecoratorInfo[i].numCalls;
-            triggerDecor->triggersActivatedOnInteract[i].enabled  = interactableInfo.triggerDecoratorInfo[i].enabled;
+         for(int i = 0; i < triggerDecor->triggersActivatedOnInteract.Num(); ++i)
+         {
+            triggerDecor->triggersActivatedOnInteract[i]->SetTriggerLimit(interactableInfo.triggerDecoratorInfo[i].numCalls);
+            triggerDecor->triggersActivatedOnInteract[i]->SetEnabled(interactableInfo.triggerDecoratorInfo[i].enabled);
          }
          break;
       }
@@ -85,7 +88,8 @@ void AInteractableBase::LoadInteractableData(FInteractableSaveInfo& interactable
    }
 
    // If for some reason we don't have a trigger decorator but the load data says we need one (sometimes this gets deleted during hotreload)
-   if (!decor && interactableInfo.triggerDecoratorInfo.Num() > 0) {
+   if(!decor && interactableInfo.triggerDecoratorInfo.Num() > 0)
+   {
       UE_LOG(LogActor, Error, TEXT("Warning, interactable base missing trigger decorator.  Creating placeholder but it needs to be populated with right data"));
       decor = NewObject<UTriggerInteractableDecorator>(this);
    }
@@ -98,15 +102,17 @@ void AInteractableBase::Tick(float DeltaTime)
 
 FText AInteractableBase::GetGameName() const
 {
-   if (decorator) return decorator->GetName();
+   if(decorator)
+   {
+      return decorator->GetName();
+   }
    return FText::GetEmpty();
 }
 
 void AInteractableBase::SetGameName(FText value)
 {
    UInteractableActorDecoratorBase* nextDecorator = decorator;
-   while (nextDecorator)
-      ;
+   while(nextDecorator)
    {
       nextDecorator = nextDecorator->decoratedInteractable;
    }
@@ -115,7 +121,7 @@ void AInteractableBase::SetGameName(FText value)
 
 void AInteractableBase::Interact_Implementation(ABaseHero* hero)
 {
-   if (IInteractable::Execute_CanInteract(this)) // calls Interact on decorator in the process
+   if(IInteractable::Execute_CanInteract(this)) // calls Interact on decorator in the process
    {
       // TODO: Maybe delay this for interactables with channeling times or ones that open up modals?
       hero->GetHeroController()->FinishCurrentAction();
@@ -130,7 +136,10 @@ FVector AInteractableBase::GetInteractableLocation_Implementation() const
 
 bool AInteractableBase::CanInteract_Implementation() const
 {
-   if (!decorator || decorator->Interact()) return true;
+   if(!decorator || decorator->Interact())
+   {
+      return true;
+   }
    return false;
 }
 
@@ -143,5 +152,7 @@ void AInteractableBase::LoadInteractable(FMapSaveInfo& mapData)
 {
    FInteractableSaveInfoWrapper* interactableInfo = mapData.interactablesInfo.FindByHash<AInteractableBase*>(GetTypeHash(*this), this);
    if(interactableInfo)
+   {
       LoadInteractableData(interactableInfo->interactableInfo);
+   }
 }

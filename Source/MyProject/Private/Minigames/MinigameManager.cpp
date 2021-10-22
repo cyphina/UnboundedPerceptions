@@ -4,6 +4,7 @@
 #include "MinigamePawn.h"
 #include "RTSGameMode.h"
 #include "RTSGameState.h"
+#include "RTSTrigger.h"
 #include "UI/HUDManager.h"
 #include "UserInput.h"
 
@@ -58,16 +59,16 @@ void UMinigameManager::EndMiniGame(AUserInput* controllerRef)
 
          if(bSuccess)
          {
-            for(const FTriggerData& finishedTriggerActivation : minigamePawn->GetMinigameData().endTriggers)
+            for(URTSTrigger* finishedSuccessTriggerActivation : minigamePawn->GetMinigameData().endTriggers)
             {
-               controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
+               finishedSuccessTriggerActivation->TriggerEvent();
             }
          }
          else
          {
-            for(const FTriggerData& finishedTriggerActivation : minigamePawn->GetMinigameData().failTriggers)
+            for(URTSTrigger* finishedFailTriggerActivation : minigamePawn->GetMinigameData().failTriggers)
             {
-               controllerRef->GetGameMode()->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
+               finishedFailTriggerActivation->TriggerEvent();
             }
          }
 

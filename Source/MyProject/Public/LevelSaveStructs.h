@@ -8,10 +8,22 @@
 #include "SaveGameStructs.h"
 #include "Interactables/InteractableBase.h"
 
+inline FArchive& operator<<(FArchive& Archive, FGameplayTagContainer TagContainer)
+{
+   for(const FGameplayTag& conversationNameTag : TagContainer)
+   {
+      FName TagName = conversationNameTag.GetTagName();
+      Archive << TagName;
+   }
+   return Archive;
+}
+
 /**Saves state of NPC before leaving level*/
-struct FNPCSaveInfo {
+struct FNPCSaveInfo
+{
    FText      name;
    FTransform transform;
+
    /**Should this actor even be spawned?  Maybe as part of a quest, this actor is somewhere else... at least temporarily*/
    bool enabled;
 
@@ -19,9 +31,9 @@ struct FNPCSaveInfo {
    FName conversationStarterName;
    FName defaultResponseName;
 
-   TArray<FGameplayTag> conversationTopicKeys;
-   TArray<FName>        conversationTopicValues;
-   TSet<FName>          previousConversations;
+   TArray<FGameplayTag>  conversationTopicKeys;
+   TArray<FName>         conversationTopicValues;
+   FGameplayTagContainer previousConversations;
 
    friend FArchive& operator<<(FArchive& ar, FNPCSaveInfo& saveData)
    {
@@ -38,7 +50,8 @@ struct FNPCSaveInfo {
    }
 };
 
-struct FNPCIntimateSaveInfo : FNPCSaveInfo {
+struct FNPCIntimateSaveInfo : FNPCSaveInfo
+{
    int relationshipPoints;
    int currentRelationshipEventIndex;
 
@@ -61,8 +74,8 @@ struct FNPCIntimateSaveInfo : FNPCSaveInfo {
 };
 
 template <typename ElementType>
-struct NPCSaveKeyFuncs : DefaultKeyFuncs<ElementType, true> {
-
+struct NPCSaveKeyFuncs : DefaultKeyFuncs<ElementType, true>
+{
    using KeyInitType = typename TCallTraits<ElementType>::ParamType;
 
    /** Calculates a hash index for a key. */
@@ -70,7 +83,10 @@ struct NPCSaveKeyFuncs : DefaultKeyFuncs<ElementType, true> {
 
    /** Used when trying to ensure bucket has correct value in hashtable.  Matches the interactable actor with the struct holding its data.*/
    template <typename ComparableKey>
-   static FORCEINLINE bool Matches(KeyInitType A, ComparableKey B) { return A.name.ToString() == B->GetGameName().ToString(); }
+   static FORCEINLINE bool Matches(KeyInitType A, ComparableKey B)
+   {
+      return A.name.ToString() == B->GetGameName().ToString();
+   }
 
    /** Overload used when adding values */
    static FORCEINLINE bool Matches(KeyInitType& A, KeyInitType& B) { return A.name.ToString() == B.name.ToString(); }
@@ -78,12 +94,12 @@ struct NPCSaveKeyFuncs : DefaultKeyFuncs<ElementType, true> {
 
 /**We only need to store trigger interactable save info since that's the only one with state that changes from its default, that is, when we load up a level, the
  *rest of the decorators are already set with the default values in the level editor, whereas a trigger may have values different from the default*/
-struct FTriggerInteractableDecoratorSaveInfo {
+struct FTriggerInteractableDecoratorSaveInfo
+{
    int  numCalls;
    bool enabled;
 
-   FTriggerInteractableDecoratorSaveInfo(int numCalls, bool enabled) :
-      numCalls{numCalls}, enabled{enabled} {}
+   FTriggerInteractableDecoratorSaveInfo(int numCalls, bool enabled) : numCalls{numCalls}, enabled{enabled} {}
 
    FTriggerInteractableDecoratorSaveInfo() = default; // makes this struct a POD
 
@@ -98,7 +114,8 @@ struct FTriggerInteractableDecoratorSaveInfo {
 /** Save only details about interactables that have some kind of state (Pickup, Trigger, Door).  Spawner will create what it sees instead of drag dropping into world.
  * Do not directly use this class, instead use the wrapper.
  */
-struct FInteractableSaveInfo {
+struct FInteractableSaveInfo
+{
    FTransform                                    transform;
    TArray<FTriggerInteractableDecoratorSaveInfo> triggerDecoratorInfo;
    TSubclassOf<AInteractableBase>                interactableClass;
@@ -113,8 +130,8 @@ struct FInteractableSaveInfo {
 };
 
 // Created so I can use the template function I created on a FInteractableSaveInfo
-struct FInteractableSaveInfoWrapper {
-
+struct FInteractableSaveInfoWrapper
+{
    FInteractableSaveInfo interactableInfo;
 
    friend FArchive& operator<<(FArchive& ar, FInteractableSaveInfoWrapper& saveData)
@@ -124,7 +141,8 @@ struct FInteractableSaveInfoWrapper {
    }
 };
 
-struct FDoorInteractableSaveInfo {
+struct FDoorInteractableSaveInfo
+{
    FInteractableSaveInfo interactableInfo;
    bool                  isLocked;
 
@@ -136,7 +154,8 @@ struct FDoorInteractableSaveInfo {
    }
 };
 
-struct FStorageContainerSaveInfo {
+struct FStorageContainerSaveInfo
+{
    FInteractableSaveInfo interactableInfo;
    FBackpackSaveInfo     backpackInfo;
 
@@ -149,17 +168,20 @@ struct FStorageContainerSaveInfo {
 };
 
 template <typename ElementType>
-struct InteractableSaveKeyFuncs : DefaultKeyFuncs<ElementType, true> {
-
-   using KeyInitType = typename TCallTraits<ElementType>::ParamType ;
-   using ElementInitType = typename TCallTraits<ElementType>::ParamType ;
+struct InteractableSaveKeyFuncs : DefaultKeyFuncs<ElementType, true>
+{
+   using KeyInitType     = typename TCallTraits<ElementType>::ParamType;
+   using ElementInitType = typename TCallTraits<ElementType>::ParamType;
 
    /** Calculates a hash index for a key. */
    static FORCEINLINE uint32 GetKeyHash(KeyInitType& Key) { return GetTypeHash(Key.interactableInfo.transform.GetLocation()); }
 
    /** Allows us to check if an interactable is in this map. This map stores interactable info structs, so we need to show a way to compare between the two types */
    template <typename ComparableKey>
-   static FORCEINLINE bool Matches(KeyInitType& A, ComparableKey& B) { return A.interactableInfo.transform.GetLocation() == B->GetActorLocation(); }
+   static FORCEINLINE bool Matches(KeyInitType& A, ComparableKey& B)
+   {
+      return A.interactableInfo.transform.GetLocation() == B->GetActorLocation();
+   }
 
    /** I assume this is the overload used when adding values to check elements in the same bucket to ensure uniqueness */
    static FORCEINLINE bool Matches(KeyInitType& A, KeyInitType& B) { return A.interactableInfo.transform.GetLocation() == B.interactableInfo.transform.GetLocation(); }
@@ -167,7 +189,8 @@ struct InteractableSaveKeyFuncs : DefaultKeyFuncs<ElementType, true> {
 
 /**Holds all the data that needs to be saved transitioning from map to map.
  *By holding specific data for types of interactables, we can reduce the time it takes to search through the data to*/
-struct FMapSaveInfo {
+struct FMapSaveInfo
+{
    TSet<FInteractableSaveInfoWrapper, InteractableSaveKeyFuncs<FInteractableSaveInfoWrapper>> interactablesInfo;
    TSet<FDoorInteractableSaveInfo, InteractableSaveKeyFuncs<FDoorInteractableSaveInfo>>       doorInteractables;
    TSet<FStorageContainerSaveInfo, InteractableSaveKeyFuncs<FStorageContainerSaveInfo>>       wardrobeInteractables;

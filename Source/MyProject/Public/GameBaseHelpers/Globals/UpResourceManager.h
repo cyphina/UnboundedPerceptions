@@ -37,7 +37,8 @@ namespace UpResourceManager
    };
 
    /**Returns the Simpson quadrature's coefficient*/
-   static const TFunction<float(float)> SimpsonSpacing = [](const float space) {
+   static const TFunction<float(float)> SimpsonSpacing = [](const float space)
+   {
       return 1.f / 3 * space;
    };
 
@@ -45,12 +46,14 @@ namespace UpResourceManager
     * First param x is the value
     * Second param n gives larger diminishing returns if set to a larger number
     */
-   const TFunction<float(float, float)> DiminishFunc = [](float x, float n) {
+   const TFunction<float(float, float)> DiminishFunc = [](float x, float n)
+   {
       return (FMath::Pow(x + 1.f, 1.f - n) - 1.f) / (1.f - n);
    };
 
    /** Simple numerical integration from 0 to x, primarily used to estimate integral of the diminishing function*/
-   const TFunction<float(float, TFunction<float(float)>)> SimpsonApprox = [](float x, TFunction<float(float)> f) {
+   const TFunction<float(float, TFunction<float(float)>)> SimpsonApprox = [](float x, TFunction<float(float)> f)
+   {
       GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("Function values: %f, %f, %f"), f(0), f(x / 2), x));
       return SimpsonSpacing(x / 2) * (f(0) + 4 * f(x / 2) + f(x));
    };
@@ -58,35 +61,57 @@ namespace UpResourceManager
    /** Helper to score how large a vector's angle is compared to the vector (0,1,0)*/
    float FindOrientation(const FVector& v);
 
+   template <class ObjectType>
+   ObjectType* FindTriggerObjectInWorld(UWorld* WorldRef, TSubclassOf<ObjectType> ActorClass, FText NameToMatch = FText::GetEmpty())
+   {
+      static_assert(std::is_base_of<AActor, ObjectType>::value, "Template parameter should derive from Actor");
+
+      for(TActorIterator<ObjectType> ActItr(WorldRef, ActorClass); ActItr; ++ActItr)
+      {
+         if(IWorldObject* WorldObject = Cast<IWorldObject>(*ActItr))
+         {
+            if(NameToMatch.IsEmpty() || NameToMatch.EqualTo(WorldObject->GetGameName()))
+            {
+               return *ActItr;
+            }
+         }
+         else
+         {
+            break;
+         }
+      }
+      return nullptr;
+   }
+
    /**
     * Finds an actor in the world with a certain name.
     * Make sure when you pass a world reference to this class, you pass it one from an actor or from a function that has (meta=WorldContextObject)
-    * @param nameToMatch - Name of an object that implements IWorldObject
-    * @param worldRef - Reference to the world (from an Actor or UObject with an actor outer)
+    * @param NameToMatch - Name of an object that implements IWorldObject
+    * @param WorldRef - Reference to the world (from an Actor or UObject with an actor outer)
     */
    template <class T>
-   T* FindTriggerObjectInWorld(FStringView nameToMatch, UWorld* worldRef)
+   T* FindTriggerObjectInWorld(FStringView NameToMatch, UWorld* WorldRef)
    {
 #if UE_EDITOR
       static_assert(std::is_base_of<IWorldObject, T>::value, "Template parameter should derive from IWorldObject");
 #endif
 
-      for(TActorIterator<T> actItr(worldRef); actItr; ++actItr)
+      for(TActorIterator<T> ActItr(WorldRef); ActItr; ++ActItr)
       {
-         if((*actItr)->GetGameName().ToString() == nameToMatch)
+         if((*ActItr)->GetGameName().ToString() == NameToMatch)
          {
-            return *actItr;
+            return *ActItr;
          }
       }
 
 #if UE_EDITOR
-      UE_LOG(LogTemp, Warning, TEXT("Could not find object named %s"), nameToMatch.GetData());
+      UE_LOG(LogTemp, Warning, TEXT("Could not find object named %s"), NameToMatch.GetData());
 #endif
       return nullptr;
    }
 
    template <>
-   ABaseHero* FindTriggerObjectInWorld<ABaseHero>(FStringView nameToMatch, UWorld* worldRef);
+   ABaseHero* FindTriggerObjectInWorld<ABaseHero>(FStringView NameToMatch, UWorld* WorldRef);
 
    /**Executes a function inside an arbitrary UObject using UObject Reflection (granted T is a subclass of UObject)*/
    void ExecuteFunctionFromWorldObject(UObject* objectRef, FName functionToExecute);

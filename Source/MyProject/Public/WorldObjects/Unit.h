@@ -23,6 +23,7 @@ struct UpCombatInfo;
 struct FUpDamage;
 
 DECLARE_STATS_GROUP(TEXT("RTSUnits"), STATGROUP_RTSUnits, STATCAT_Advanced);
+DECLARE_LOG_CATEGORY_EXTERN(Up_Log_Combat, Log, All);
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDamageReceived, const FUpDamage&);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnitDamageDealt, const FUpDamage&);
@@ -56,7 +57,6 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
 
  public:
    AUnit(const FObjectInitializer& oI);
-   ~AUnit();
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Accessors")
    FORCEINLINE AUnitController* GetUnitController() const { return unitController; }
@@ -143,6 +143,9 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
 
    TSubclassOf<URTSMoveExecution> GetCustomMoveLogic() const { return customMoveLogic; }
 
+   /** Exposed for editor widget use */
+   TSubclassOf<AUnitController> GetUnitControllerClass() { return unitControllerClass; }
+
  protected:
    void BeginPlay() override;
    void Tick(float deltaSeconds) override;
@@ -196,14 +199,14 @@ class MYPROJECT_API AUnit : public ACharacter, public IWorldObject, public IAbil
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<URTSMoveExecution> customMoveLogic;
 
+   UPROPERTY(EditDefaultsOnly, meta = (BlueprintBaseOnly = true, AllowAbstract = false))
+   TSubclassOf<AUnitController> unitControllerClass;
+
    /**
    * @brief Material reference to unit's base material so that if it changes (due to effects) we can revert it back
    */
    UPROPERTY(EditDefaultsOnly)
    UMaterialInterface* originalMaterial;
-
-   UPROPERTY(EditDefaultsOnly)
-   TSubclassOf<AUnitController> unitControllerClass;
 
    class AUserInput* controllerRef;
 

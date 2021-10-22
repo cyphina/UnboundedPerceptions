@@ -1,16 +1,26 @@
 #pragma once
+#include "WorldObject.generated.h"
 
-// abstract class
-// minimalAPI
+UINTERFACE(BlueprintType, meta = (CannotImplementInterfaceInBlueprint))
+class UWorldObject : public UInterface
+{
+   GENERATED_BODY()
+};
+
 class MYPROJECT_API IWorldObject
 {
-protected:
+   GENERATED_BODY()
+
+ protected:
    // bool isSelected = false; //everything can be selected, but selection of non hero worldobjects will do different things like just display information
    // int objectID = 0;
 
-public:
+ public:
    /**Get name as referred to by game UI.  May be unique (if I'm lazy it will be, else we can use gameplayTags as another unique ID)*/
-   virtual void  SetGameName(FText value) = 0;
+   UFUNCTION(BlueprintCallable)
+   virtual void SetGameName(FText value) = 0;
+
+   UFUNCTION(BlueprintCallable)
    virtual FText GetGameName() const = 0;
 
    ///**Get image that is shown when a WorldObject is selected*/
@@ -27,6 +37,4 @@ public:
    ///**Field to see if a WorldObject is selectable*/
    // virtual void					SetCanTarget(bool value) = 0;
    // virtual bool					GetCanTarget() const = 0;
-
-   virtual ~IWorldObject() {}
 };

@@ -3,7 +3,7 @@
 #include "Components/BoxComponent.h"
 #include "CoreMinimal.h"
 #include "Curves/CurveFloat.h"
-#include "EventSystem/RTSConditional.h"
+#include "EventSystem/DEPRECATED_RTSConditional.h"
 #include "GameFramework/Actor.h"
 #include "Interactables/InteractableBase.h"
 #include "RTSDoor.generated.h"

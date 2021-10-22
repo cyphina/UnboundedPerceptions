@@ -3,7 +3,8 @@
 
 bool UNamedInteractableDecorator::Interact()
 {
-   if (!decoratedInteractable || decoratedInteractable->Interact()) {
+   if(!decoratedInteractable || decoratedInteractable->Interact())
+   {
       return true;
    }
    return false;

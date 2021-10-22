@@ -43,7 +43,17 @@ ARTSProjectile* ARTSProjectile::MakeRTSProjectile(UWorld* worldToSpawnIn, UTarge
 {
    if(AUnit* unitShooter = Cast<AUnit>(targetComp->GetOwner()))
    {
+      if(!IsValid(projectileClass))
+      {
+         return nullptr;
+      }
+
       ARTSProjectile* projectile = worldToSpawnIn->SpawnActorDeferred<ARTSProjectile>(projectileClass, initialTransform, unitShooter);
+
+      if(!projectile)
+      {
+         return nullptr;
+      }
 
       if(!projectileStrategy)
       {
@@ -141,6 +151,23 @@ ARTSProjectile* ARTSProjectile::MakeRTSProjectile(UWorld* worldToSpawnIn, UTarge
    return nullptr;
 }
 
+TArray<TEnumAsByte<EObjectTypeQuery>> ARTSProjectile::GetHittableObjectTypes()
+{
+   TArray<TEnumAsByte<EObjectTypeQuery>> HittableObjectTypes;
+
+   if(collisionComponent->GetCollisionResponseToChannel(ENEMY_OBJECT_CHANNEL) == ECR_Block)
+   {
+      HittableObjectTypes.Add(ENEMY_OBJECT_QUERY);
+   }
+
+   if(collisionComponent->GetCollisionResponseToChannel(ALLY_OBJECT_CHANNEL) == ECR_Block)
+   {
+      HittableObjectTypes.Add(FRIENDLY_OBJECT_QUERY);
+   }
+
+   return HittableObjectTypes;
+}
+
 void ARTSProjectile::FireInDirection(const FVector& shootDirection) const
 {
    projectileMovementComponent->Velocity = shootDirection * projectileMovementComponent->InitialSpeed;
@@ -161,38 +188,53 @@ void ARTSProjectile::OnSweep(UPrimitiveComponent* overlappedComponent, AActor* o
    UAbilitySystemComponent* collidedActorAbilityComp = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(overlappedActor);
    if(collidedActorAbilityComp)
    {
-      const FGameplayEffectSpecHandle* damageEffect = hitEffects.FindByPredicate([](const FGameplayEffectSpecHandle& effectHandle) {
-         if(effectHandle.Data->Def->GetClass()->IsChildOf(URTSDamageEffect::StaticClass()))
-         {
-            return true;
-         }
-         return false;
-      });
+      const FGameplayEffectSpecHandle* damageEffect = hitEffects.FindByPredicate(
+          [](const FGameplayEffectSpecHandle& effectHandle)
+          {
+             if(effectHandle.Data->Def->GetClass()->IsChildOf(URTSDamageEffect::StaticClass()))
+             {
+                return true;
+             }
+             return false;
+          });
 
+      // Apply damage to see if the effect is a hit or miss.
       // REMARK: Note that projectiles without damage are at the mercy of hitting depending on the very last attack done without damage, so for now all projectils should have a little damage
       if(damageEffect)
       {
          collidedActorAbilityComp->ApplyGameplayEffectSpecToSelf(*damageEffect->Data.Get());
-         hitEffects.RemoveSingle(*damageEffect);
+      }
+      else
+      {
+         return;
       }
 
       if(AUnit* unitShooter = Cast<AUnit>(GetOwner()))
       {
          if(!unitShooter->GetCombatInfo()->bMissLastHit)
          {
+            hitTarget = overlappedActor;
+            OnProjectileHitNoDodge(sweepResult.Location);
+
+            // ! Temporal dependency - The logic inside the projectile might need all the effects including the damage effect so only remove it after handling that logic.
+            hitEffects.RemoveSingleSwap(*damageEffect);
+
+            // Apply every other effect besides the damage effect.
             for(FGameplayEffectSpecHandle eff : hitEffects)
             {
                collidedActorAbilityComp->ApplyGameplayEffectSpecToSelf(*eff.Data.Get());
             }
 
-            OnProjectileHitNoDodge(sweepResult.Location);
-
-            GetWorld()->GetTimerManager().SetTimerForNextTick([this]() {
-               Destroy();
-            });
+            GetWorld()->GetTimerManager().SetTimerForNextTick(
+                [this]()
+                {
+                   Destroy();
+                });
          }
          else
          {
+            // Remove damage effect to prevent it from reapplying if the projectile curves back
+            hitEffects.RemoveSingle(*damageEffect);
             OnProjectileDodge(sweepResult.Location);
          }
       }

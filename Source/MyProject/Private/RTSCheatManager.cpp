@@ -31,6 +31,8 @@
 #include "EventSystem/EventManager.h"
 #include "MySpell.h"
 
+#include "Globals/RTSGlobalCVars.h"
+
 void URTSCheatManager::InitCheatManager()
 {
    Super::InitCheatManager();
@@ -132,7 +134,8 @@ void URTSCheatManager::Up_FinishQuest(FString questName, int isSucessful)
    {
       return quest->GetQuestInfo().name.ToString() == questName;
    };
-   AQuest* quest = *gameModeRef->GetQuestManager()->activeQuests.FindByPredicate(pred);
+
+   AQuest* quest = *gameModeRef->GetQuestManager()->GetActiveQuests().FindByPredicate(pred);
    if(quest)
    {
       quest->CompleteQuest();
@@ -158,9 +161,13 @@ void URTSCheatManager::Up_EquipSpell(FString spellNameTag, int slot)
 void URTSCheatManager::Up_RefreshSpells()
 {
    for(AUnit* ally : userInputRef->GetGameState()->GetAllAllyUnits())
+   {
       ally->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Name")));
+   }
    for(AUnit* enemy : userInputRef->GetGameState()->GetAllEnemyUnits())
+   {
       enemy->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Skill.Name")));
+   }
 }
 
 void URTSCheatManager::Up_RefreshHeroSpells(FString heroName)
@@ -266,6 +273,7 @@ void URTSCheatManager::Up_ToggleEnemyAI()
    static int AI_IS_ACTIVE = 1;
    if(AI_IS_ACTIVE)
    {
+      GameplayModifierCVars::bEnableEnemyAI = false;
       for(AUnit* unit : gameStateRef->GetAllEnemyUnits())
       {
          if(UBehaviorTreeComponent* BTComp = unit->GetUnitController()->FindComponentByClass<UBehaviorTreeComponent>())
@@ -273,10 +281,12 @@ void URTSCheatManager::Up_ToggleEnemyAI()
             BTComp->StopTree();
          }
       }
+      GEngine->AddOnScreenDebugMessage(13213, 5.f, FColor::Silver, TEXT("Enemy AI Toggled Off"));
       AI_IS_ACTIVE = 0;
    }
    else
    {
+      GameplayModifierCVars::bEnableEnemyAI = true;
       for(AUnit* unit : gameStateRef->GetAllEnemyUnits())
       {
          if(UBehaviorTreeComponent* BTComp = unit->GetUnitController()->FindComponentByClass<UBehaviorTreeComponent>())
@@ -284,6 +294,7 @@ void URTSCheatManager::Up_ToggleEnemyAI()
             BTComp->StartLogic();
          }
       }
+      GEngine->AddOnScreenDebugMessage(13213, 5.f, FColor::Silver, TEXT("Enemy AI Toggled On"));
    }
    AI_IS_ACTIVE = 1;
 }

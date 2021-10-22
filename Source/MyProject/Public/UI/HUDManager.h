@@ -9,7 +9,7 @@
 #include "HUDTypes.h"
 #include "UserWidgetExtensions/AnimHudWidget.h"
 #include "UserWidgetExtensions/MyUserWidget.h"
-#include "EventSystem/Trigger.h"
+#include "EventSystem/DEPRECATED_Trigger.h"
 #include "DialogStructs.h"
 #include "RTSInputBox.h"
 
@@ -38,7 +38,7 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    void BeginPlay() override;
 
  public:
-   void AddHUD(uint8 newState) override;
+   void AddHUD(EHUDs newState) override;
    void HideHUD(EHUDs newState) override;
 
    void ShowDialogWithSource(FName conversationName, EDialogBoxCloseCase dialogSource) override;
@@ -47,7 +47,7 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    void ShowConfirmationBox(const FOnConfirmation& funcToCallOnConfirmed, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty()) override;
    void ShowInputBox(const FOnInputConfirmed& funcToCallOnConfirmed, FText newTitle = FText::GetEmpty(), FText newDesc = FText::GetEmpty()) override;
 
-   void BP_AddHUD(uint8 newState) override { AddHUD(newState); }
+   void BP_AddHUD(EHUDs newState) override { AddHUD(newState); }
    void BP_RemoveHUD(EHUDs newState) override { HideHUD(newState); }
 
    void BP_AddHUDDialog(FName conversationName, EDialogBoxCloseCase dialogSource) override { ShowDialogWithSource(conversationName, dialogSource); }
@@ -73,7 +73,7 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    */
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<UDIRender> damageIndicatorClass;
-	
+
    UPROPERTY(EditDefaultsOnly)
    TSubclassOf<URTSDamageNumberContainer> damageIndicatorContainerClass;
 
@@ -119,7 +119,7 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
    * @param canOpenCombat - Can this HUD be opened during combat?  If not, then don't let the player perform regular actions when it's open by switching to the UI cursor
    * @param bBlocking - Can other MyUserWidgets be opened while this one is open?
    */
-   bool ApplyHUD(uint8 newState, bool enableClickEvents, bool canOpenCombat, bool bBlocking = false);
+   bool ApplyHUD(EHUDs newState, bool enableClickEvents, bool canOpenCombat, bool bBlocking = false);
 
    /**
    * @brief Helper function to update tracking of widgets on screen or widgets blocking actions
@@ -148,14 +148,13 @@ class MYPROJECT_API AHUDManager : public AInfo, public IHUDProvider, public IWid
 
    void OnMinigameStarted(EMinigameType minigameType);
    void OnMinigameEnded(EMinigameType minigameType);
-	
 
    /**
     * @brief Number of huds we have total. As long as we add new HUD types before this ENUM entry it should be properly updated
     */
    static const int HUDCount = static_cast<uint8>(EHUDs::HS_Count);
 
-   AUserInput*   playerControllerRef;
+   AUserInput* playerControllerRef;
 
    /**
     * @brief Widgets that are on screen

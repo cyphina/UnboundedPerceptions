@@ -15,7 +15,10 @@ void UMyGameInstance::Init()
    Super::Init();
 }
 
-void UMyGameInstance::Shutdown() { Super::Shutdown(); }
+void UMyGameInstance::Shutdown()
+{
+   Super::Shutdown();
+}
 
 void UMyGameInstance::SaveLevelData(FName levelName)
 {
@@ -73,9 +76,10 @@ void UMyGameInstance::LoadLevelData(FName levelName)
             (*actItr)->LoadInteractable(mapData);
             INC_DWORD_STAT(STAT_StatsItemLoadCount);
          }
-      } else
+      }
+      else
       {
-         // If we haven't traveled to this level yet then create an entry in our table for it so we can store data when we leave 
+         // If we haven't traveled to this level yet then create an entry in our table for it so we can store data when we leave
          mapInfo.Add(levelName, FMapSaveInfo());
       }
    }

@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Trigger.h"
 #include "GameplayTags.h"
 #include "StoryStructs.generated.h"
+
+class URTSTrigger;
 
 USTRUCT(BlueprintType, NoExport)
 struct FUpSection {
@@ -13,7 +14,7 @@ struct FUpSection {
 
    /**Triggers to be set when the section begins*/
    UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Section")
-   TArray<FTriggerData> triggers;
+   TArray<URTSTrigger*> sectionTriggers;
 };
 
 USTRUCT(BlueprintType, NoExport)

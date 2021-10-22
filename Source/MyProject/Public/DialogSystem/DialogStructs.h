@@ -10,12 +10,12 @@ struct FDialogData {
    FDialogData(TArray<int> nextDialogs, FText dialog, FName actorName) : nextDialogs(nextDialogs), dialog(dialog), actorName(actorName) {}
 
    /**Indices of the next nodes that can be reached from this one*/
-   UPROPERTY(BlueprintReadWrite, Category = "Dialog")
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialog")
    TArray<int> nextDialogs;
    /**Dialog to be displayed when this node is reached*/
-   UPROPERTY(BlueprintReadWrite, Category = "Dialog")
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialog")
    FText dialog;
    /**Name of the speaker for the current node*/
-   UPROPERTY(BlueprintReadWrite, Category = "Dialog")
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialog")
    FName actorName;
 };

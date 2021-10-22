@@ -5,7 +5,7 @@
 #include "QuestManager.h"
 #include "Transform.h"
 #include "UpFunctionLibrary.h"
-#include "EventSystem/Trigger.h"
+#include "EventSystem/DEPRECATED_Trigger.h"
 #include "UI/QuestJournal.h"
 #include "UI/QuestListSlot.h"
 #include "UI/UserWidgets/RTSIngameWidget.h"
@@ -19,7 +19,7 @@ void AQuest::BeginPlay()
 void AQuest::CompleteQuest_Implementation()
 {
    currentGoalIndices.Empty();
-   currentState = EQuestState::completedQuests;
+   currentState = EQuestState::CompletedQuests;
 
    if(ARTSGameMode* gameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode()))
    {
@@ -75,9 +75,9 @@ void AQuest::SetupUnlockedGoals(int completedGoalIndex, ARTSGameMode* gameModeRe
 
             gameModeRef->GetQuestManager()->OnSubgoalUnlocked().Broadcast(this, index);
 
-            for(FTriggerData& finishedTriggerActivation : goal->prevGoalTriggers)
+            for(auto& finishedTriggerActivation : goal->prevGoalTriggers)
             {
-               gameModeRef->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
+               // TODO: Fix this gameModeRef->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
             }
          }
       }
@@ -116,9 +116,9 @@ void AQuest::CompleteSubGoal(int goalIndex)
 
       SetupUnlockedGoals(goalIndex, gameModeRef);
 
-      for(FTriggerData& finishedTriggerActivation : completedGoal->afterGoalTriggers)
+      for(auto& finishedTriggerActivation : completedGoal->afterGoalTriggers)
       {
-         gameModeRef->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
+         // TODO: Fix this gameModeRef->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
       }
 
       if(completedGoal->GetGoalInfo().canCompleteQuest || currentGoalIndices.Num() == 0)
@@ -149,9 +149,9 @@ void AQuest::SetupStartingGoals()
                   FindInitialItemAmount(i);
                }
 
-               for(FTriggerData& finishedTriggerActivation : goal->prevGoalTriggers)
+               for(auto& finishedTriggerActivation : goal->prevGoalTriggers)
                {
-                  UUpFunctionLibrary::ActivateTrigger(finishedTriggerActivation, this);
+                  // TODO: Fix this UUpFunctionLibrary::ActivateTrigger(finishedTriggerActivation, this);
                }
             }
             else

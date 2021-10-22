@@ -26,7 +26,8 @@ public class MyProjectEditorVisualizations : ModuleRules
 			"Kismet",
 			"KismetCompiler",
 			"GameplayAbilities",
-			"GameplayTags"
+			"GameplayTags",
+			"ToolMenus",
 		});
 	}
 }

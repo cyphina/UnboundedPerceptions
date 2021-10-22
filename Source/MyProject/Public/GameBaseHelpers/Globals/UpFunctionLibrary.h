@@ -2,7 +2,7 @@
 
 #pragma once
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "Trigger.h"
+#include "DEPRECATED_Trigger.h"
 #include "UpFunctionLibrary.generated.h"
 
 class AHUDManager;
@@ -19,6 +19,9 @@ class MYPROJECT_API UUpFunctionLibrary : public UBlueprintFunctionLibrary
    static void ActivateTrigger(const FTriggerData& triggerData, const UObject* worldContextObject);
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Global Accessors", meta = (WorldContext = "WorldContextObject"))
+   static TArray<ABaseHero*> GetAllHeroes(const UObject* WorldContextObject);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Global Accessors", meta = (WorldContext = "WorldContextObject"))
    static const TArray<ABaseHero*>& GetHeroes(const UObject* worldContextObject);
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Global Accessors", meta = (WorldContext = "WorldContextObject"))
@@ -29,4 +32,7 @@ class MYPROJECT_API UUpFunctionLibrary : public UBlueprintFunctionLibrary
 
    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Global Accessors", meta = (WorldContext = "WorldContextObject"))
    static AHUDManager* GetHUDManager(const UObject* worldContextObject);
+
+   UFUNCTION(BlueprintCallable, BlueprintPure, Category = "BP Helpers", meta = (WorldContext = "WorldContextObject"))
+   static FName GetStreamingLevelNameFromActor(const AActor* Actor);
 };

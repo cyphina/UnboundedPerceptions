@@ -18,7 +18,7 @@ void UItemSlot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointer
    if(inventoryRef->GetBackpackItemAtSlot(slotIndex))
    {
       UDraggedActionWidget* dragVisual = CreateDragIndicator();
-      dragVisual->SetDraggedImage(UItemFunctionLibrary::GetItemInfo(inventoryRef->GetBackpackItemAtSlot(slotIndex).id).image);
+      dragVisual->SetDraggedImage(UItemFunctionLibrary::GetItemInfo(inventoryRef->GetBackpackItemAtSlot(slotIndex).id).image.LoadSynchronous());
 
       URTSItemDrag* dragOp        = NewObject<URTSItemDrag>(this);
       dragOp->Pivot               = EDragPivot::CenterCenter;

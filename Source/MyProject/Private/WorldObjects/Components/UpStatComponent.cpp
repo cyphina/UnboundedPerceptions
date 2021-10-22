@@ -80,8 +80,11 @@ float UUpStatComponent::GetElementalStatValueFromElemTag(const FGameplayTag& ele
 
    if(!map.Contains(elemTag))
    {
-      UE_LOG(LogAbilitySystem, Error, TEXT("Problem with element tag in damage formula calculation. Most likely elem tag not properly set in damage effect. Defaulting to standard element."))
-      return bGetBaseValue ? GetSkillBaseValue(map[elemTag]) : GetSkillAdjValue(map[elemTag]);
+      UE_LOG(LogAbilitySystem, Error,
+             TEXT("Problem with element tag %s in damage formula calculation. Most likely elem tag not properly set in damage effect. Defaulting to standard element."),
+             *elemTag.ToString())
+      return bGetBaseValue ? GetSkillBaseValue(map[FGameplayTag::RequestGameplayTag("Combat.Element.None")])
+                           : GetSkillAdjValue(map[FGameplayTag::RequestGameplayTag("Combat.Element.None")]);
    }
 
    if(bGetBaseValue)

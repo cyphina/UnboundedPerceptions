@@ -4,6 +4,7 @@
 #include "EnvironmentQuery/EnvQueryTypes.h"
 #include "UnitTargetData.h"
 #include "State/IUnitState.h"
+#include "Components/TimelineComponent.h"
 #include "UnitController.generated.h"
 
 struct FAIMessage;
@@ -48,7 +49,9 @@ class MYPROJECT_API AUnitController : public AAIController
     * @return Returns a enum that denotes if the move was successful or why it failed.
     */
    UFUNCTION(BlueprintCallable, Category = "Action")
-   EPathFollowingRequestResult::Type Move(FVector newLocation, float stopRange = 50);
+   EPathFollowingRequestResult::Type Move(FVector newLocation, float stopRange);
+
+   EPathFollowingRequestResult::Type Move(FVector newLocation);
 
    /** Similar to Move function but moves towards a target  actor */
    UFUNCTION(BlueprintCallable, Category = "Action")
@@ -128,8 +131,8 @@ class MYPROJECT_API AUnitController : public AAIController
       queueCount = 0;
    }
 
-   static const int   CHASE_RANGE = 100;
-   static const float SMALL_MOVE_IGNORE_RANGE;
+   static constexpr int   CHASE_RANGE             = 100;
+   static constexpr float SMALL_MOVE_IGNORE_RANGE = 50.f;
 
  protected:
    void BeginPlay() override;
@@ -223,7 +226,9 @@ class MYPROJECT_API AUnitController : public AAIController
    FQuat        turnRotator;
    FQuat        startRotation;
 
+   UPROPERTY()
    FTimeline turnTimeline;
+
    FTimeline turnActorTimeline;
 
    FOnUnitStopped OnUnitStoppedEvent;

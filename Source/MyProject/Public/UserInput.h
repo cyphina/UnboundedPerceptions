@@ -34,13 +34,13 @@ class MYPROJECT_API AUserInput : public APlayerController
  public:
    AUserInput();
 
-   /**Replacement for BeginPlay because in 4.19 GameInstance BeginPlay always starts off but actor beginplay goes before PlayerController for some reason...*/
-
    void BeginPlay() override;
+   void OnPossess(APawn* InPawn) override;
    void Tick(float deltaSeconds) override;
 
    virtual void SetupInputComponent() override; // Bind functionality to input
 
+   /** Guaranteed valid pawn possesed by this PC when this function is called and references setup */
    FOnPlayerControllerSetup& OnPlayerControllerSetup() const { return PlayerControllerFinishSetupEvent; }
 
 #pragma region references
@@ -121,7 +121,10 @@ class MYPROJECT_API AUserInput : public APlayerController
 
    FORCEINLINE bool NotInMinigame();
 
+   //Called by client code when PS replicated from server
    void OnRep_PlayerState() override;
+
+   // Called by client code when Pawn replicated from server
    void OnRep_Pawn() override;
 #pragma endregion
 };

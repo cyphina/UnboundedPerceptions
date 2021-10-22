@@ -19,7 +19,7 @@ DECLARE_EVENT(ABasePlayer, OnPartyUpdated);
 
 /**
  * Class for data specific to the player that everyone needs to know.
- * Holds information that is replicated amongst clients about other clients
+ * Holds information that is replicated amongst clients about other clients.
  */
 UCLASS()
 class MYPROJECT_API ABasePlayer : public APlayerState
@@ -53,23 +53,16 @@ class MYPROJECT_API ABasePlayer : public APlayerState
 
    void RemoveSelectedHero(ABaseHero* heroToRemove) { selectedHeroes.RemoveSingle(heroToRemove); }
 
+   ABaseHero* GetHeroBlockingInteraction() const { return heroInBlockingInteraction; }
+
+   void SetHeroBlockingInteraction(ABaseHero* NewBlockingHero) { heroInBlockingInteraction = NewBlockingHero; }
+
    UFUNCTION(BlueprintCallable, Category = "Party")
    AUnit* GetFocusedUnit() const;
 
    /** TODO: Implement Party Leader */
    UFUNCTION(BlueprintCallable, Category = "Party")
    ABaseHero* GetPartyLeader() const { return nullptr; }
-
-   /**List of every hero in the game *discovered currently* that may not be in the party currently*/
-   UPROPERTY(BlueprintReadOnly, Category = "Party")
-   TArray<ABaseHero*> allHeroes;
-
-   /**
-    * If there's any hero that is interacting currently with something blocking (e.g., storage or dialog)
-    * TODO: Remove this and only let the party leader interact for simplicity
-    */
-   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
-   ABaseHero* heroInBlockingInteraction;
 
    /*List of all units summoned*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
@@ -98,10 +91,6 @@ class MYPROJECT_API ABasePlayer : public APlayerState
     */
    UFUNCTION(BlueprintCallable, Category = "Player Unit Management")
    void UpdateActiveParty(TArray<ABaseHero*> newHeroes);
-
-   /**Called when a new hero joins the team and can be assigned to the 4 man squad*/
-   UFUNCTION(BlueprintCallable, Category = "Player Unit Management")
-   void AddHeroToRoster(ABaseHero* newHero);
 
    /**
    *Update the coins
@@ -159,6 +148,13 @@ class MYPROJECT_API ABasePlayer : public APlayerState
    /** List of all alive selected allies */
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
    TArray<AAlly*> selectedAllies;
+
+   /**
+    * If there's any hero that is interacting currently with something blocking (e.g., storage or dialog)
+    * TODO: Remove this and only let the party leader interact for simplicity
+    */
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Party")
+   ABaseHero* heroInBlockingInteraction;
 
    TArray<ABaseHero*> selectedHeroes;
 

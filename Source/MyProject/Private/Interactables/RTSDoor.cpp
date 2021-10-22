@@ -1,6 +1,6 @@
 #include "MyProject.h"
 #include "RTSDoor.h"
-#include "EventSystem/RTSConditional.h"
+#include "EventSystem/DEPRECATED_RTSConditional.h"
 #include "HUDManager.h"
 #include "RTSGameMode.h"
 #include "UserInput.h"

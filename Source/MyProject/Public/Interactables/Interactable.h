@@ -26,13 +26,13 @@ class IInteractable
     * @param hero - The hero who interacted with this interactable
     */
    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
-   void         Interact(ABaseHero* hero);
+   void Interact(ABaseHero* hero);
 
    /** Classes using this interface must implement this function */
    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
-   FVector         GetInteractableLocation() const;
+   FVector GetInteractableLocation() const;
 
    /**Can this interactable be used?*/
    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "InteractDetails")
-   bool         CanInteract() const;
+   bool CanInteract() const;
 };

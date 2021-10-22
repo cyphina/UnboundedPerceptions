@@ -12,6 +12,8 @@
 class URTSAbilitySystemComponent;
 class AUnit;
 
+DECLARE_LOG_CATEGORY_EXTERN(Up_Log_Ability, Log, All);
+
 /* 
  * Abilities should start at level 1 not 0
  * Remember when creating spells in blueprints we must do a few things

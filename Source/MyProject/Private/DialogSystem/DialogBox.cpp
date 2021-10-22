@@ -6,7 +6,7 @@
 #include "WorldObjects/NPC.h"
 #include "UserInput.h"
 #include "BasePlayer.h"
-#include "EventSystem/RTSConditional.h"
+#include "EventSystem/DEPRECATED_RTSConditional.h"
 #include "UI/HUDManager.h"
 #include "WorldObjects/BaseHero.h"
 #include "DialogSystem/DialogUI.h"
@@ -29,7 +29,8 @@ void UDialogBox::NativeConstruct()
 
 bool UDialogBox::OnWidgetAddToViewport_Implementation()
 {
-   if(!hasValidDialog) {
+   if(!hasValidDialog)
+   {
       UE_LOG(LogTemp, Warning, TEXT("Set dialog before calling AddHud on the dialog UI widget"))
       return false;
    }
@@ -41,14 +42,18 @@ void UDialogBox::SetConversation(FName newDialogName)
    dialogTopic = newDialogName;
    dialogLines = UDialogManager::Get().LoadDialog(dialogTopic, dialogTopic.ToString() + FString("did not load correctly"));
    if(dialogLines.Num() > 0)
+   {
       hasValidDialog = true;
+   }
 }
 
 void UDialogBox::SetDialogLines(TArray<FDialogData> newDialogLines)
 {
    dialogLines = newDialogLines;
    if(dialogLines.Num() > 0)
+   {
       hasValidDialog = true;
+   }
 }
 
 #define LOCTEXT_NAMESPACE "Dialog"
@@ -56,24 +61,29 @@ void UDialogBox::SetDialogLines(TArray<FDialogData> newDialogLines)
 const FDialogData& UDialogBox::GetNextLine()
 {
    // If the current node is connected to two dialog nodes
-   if(dialogLines[currentNodeNum].nextDialogs.Num() > 1) {
+   if(dialogLines[currentNodeNum].nextDialogs.Num() > 1)
+   {
       HandleChoices();
    }
    // If the current node is only connected to one dialogNode
-   else if(dialogLines[currentNodeNum].nextDialogs.Num() == 1) {
+   else if(dialogLines[currentNodeNum].nextDialogs.Num() == 1)
+   {
       // Move to the next node.  If this node is a regular node, this is all we have to do
       currentNodeNum = dialogLines[currentNodeNum].nextDialogs[0];
       // if this dialogNode is a trigger node (activates an event trigger)
-      if(dialogLines[currentNodeNum].actorName == "Trigger") {
+      if(dialogLines[currentNodeNum].actorName == "Trigger")
+      {
          return HandleTriggers();
       }
       // else if this dialogNode is a condition node
-      else if(dialogLines[currentNodeNum].actorName == "Condition") {
+      else if(dialogLines[currentNodeNum].actorName == "Condition")
+      {
          return HandleConditions();
       }
    }
    // if this node is not connected to any other dialog nodes
-   else {
+   else
+   {
       // If there are no dialogNodes connected to this one, this is the end of the conversation so return some ending marker
       ResetDialog();
       return defaultDialog;
@@ -89,16 +99,21 @@ const FDialogData& UDialogBox::PickChoice(int choice)
 
    ///---Dialog node lookahead to check what kind of node is next ---
    // if the choice we picked leads to a dialogNode with more than one connection
-   if(dialogLines[currentNodeNum].nextDialogs.Num() > 1) {
-      if(dialogLines[currentNodeNum].actorName == "Condition") {
+   if(dialogLines[currentNodeNum].nextDialogs.Num() > 1)
+   {
+      if(dialogLines[currentNodeNum].actorName == "Condition")
+      {
          return HandleConditions();
       }
 
       HandleChoices();
       return dialogLines[currentNodeNum];
-   } else {
+   }
+   else
+   {
       // if the choice we picks leads to a trigger
-      if(dialogLines[currentNodeNum].actorName == "Trigger") {
+      if(dialogLines[currentNodeNum].actorName == "Trigger")
+      {
          return HandleTriggers();
       }
 
@@ -112,7 +127,8 @@ void UDialogBox::HandleChoices()
    // Don't move onto next node, instead set the buttons to have the text on each of the next nodes and make it so if those buttons
    // have a next node number, that clicking on it leads to the dialogNode with that offset.
    TArray<FDialogData> choiceLines;
-   for(int i : dialogLines[currentNodeNum].nextDialogs) {
+   for(int i : dialogLines[currentNodeNum].nextDialogs)
+   {
       choiceLines.Emplace(dialogLines[i]);
    }
    // Call GetNextLine() again since we don't want to display the trigger text
@@ -125,14 +141,17 @@ const FDialogData& UDialogBox::HandleTriggers()
    // Check for double slash (\\n) since when converting \n in FText to \n in FString, it replaces \n with \\n
    // Ensure there's three lines (TriggerType, TriggerObjects, TriggerValues)
    const TCHAR* delimArray[] = {TEXT("\n"), LINE_TERMINATOR};
-   if(dialogLines[currentNodeNum].dialog.ToString().ParseIntoArray(parsingInfo, delimArray, 2, false) == 3) {
+   if(dialogLines[currentNodeNum].dialog.ToString().ParseIntoArray(parsingInfo, delimArray, 2, false) == 3)
+   {
       FTriggerData triggerData = FTriggerData();
       triggerData.triggerType  = static_cast<ETriggerType>(FCString::Atoi(*parsingInfo[0]));
 
-      if(!parsingInfo[1].IsEmpty()) {
+      if(!parsingInfo[1].IsEmpty())
+      {
          parsingInfo[1].ParseIntoArray(triggerData.triggerObjects, TEXT(","));
       }
-      if(!parsingInfo[2].IsEmpty()) {
+      if(!parsingInfo[2].IsEmpty())
+      {
          parsingInfo[2].ParseIntoArray(triggerData.triggerValues, TEXT(","));
       }
 
@@ -145,40 +164,66 @@ const FDialogData& UDialogBox::HandleConditions()
 {
    // Check for double slash (\\n) since when converting \n in FText to \n in FString, it replaces \n with \\n
    // Ensure there's three lines (ConditionType, IsReversed, ConditionValues)
-   if(dialogLines[currentNodeNum].dialog.ToString().ParseIntoArray(parsingInfo, TEXT("\n"), false) == 3) {
+   if(dialogLines[currentNodeNum].dialog.ToString().ParseIntoArray(parsingInfo, TEXT("\n"), false) == 3)
+   {
       FConditionData conditionData  = FConditionData();
       conditionData.conditionalType = static_cast<EConditionalType>(FCString::Atoi(*parsingInfo[0]));
-      if(!parsingInfo[1].IsEmpty()) {
+      if(!parsingInfo[1].IsEmpty())
+      {
          // If this field is a 1 or T, then represent that as true.  Anything else will be false
-         if(parsingInfo[1] == "1" || parsingInfo[1] == "T") {
+         if(parsingInfo[1] == "1" || parsingInfo[1] == "T")
+         {
             conditionData.reverseResult = true;
-         } else
+         }
+         else
+         {
             conditionData.reverseResult = false;
+         }
       }
       if(!parsingInfo[2].IsEmpty())
+      {
          parsingInfo[2].ParseIntoArray(conditionData.conditionalValues, TEXT(","));
+      }
 
       // If this conditition is true, we move onto the first node
 
       if(dialogLines[currentNodeNum].nextDialogs.Num() > 1)
+      {
          return gameModeRef->GetConditionalManager()->GetCondition(conditionData) ? PickChoice(0) : PickChoice(1);
+      }
       else if(dialogLines[currentNodeNum].nextDialogs.Num() == 1)
+      {
          return gameModeRef->GetConditionalManager()->GetCondition(conditionData) ? GetNextLine() : defaultDialog;
+      }
       else
+      {
          return defaultDialog;
+      }
    }
    return defaultDialog;
 }
 
 void UDialogBox::ResetDialog()
 {
-   switch(dialogSource) {
+   switch(dialogSource)
+   {
       case EDialogBoxCloseCase::finishedInitialTalkNPC:
+      {
          // Depending on the type of NPC and various params UI will be manipulated differently
-         Cast<ANPC>(basePlayerRef->heroInBlockingInteraction->GetCurrentInteractable())->OnDoneInitialTalk();
+         Cast<ANPC>(basePlayerRef->GetHeroBlockingInteraction()->GetCurrentInteractable())->OnDoneInitialTalk();
          break;
-      case EDialogBoxCloseCase::finishedNPCConvo: hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_Social)); break;
-      case EDialogBoxCloseCase::finishedInteractableDialog: basePlayerRef->heroInBlockingInteraction = nullptr; break;
+      }
+      case EDialogBoxCloseCase::finishedNPCConvo:
+      {
+         Cast<ANPC>(basePlayerRef->GetHeroBlockingInteraction()->GetCurrentInteractable())->OnConversationFinished();
+         hudManagerRef->AddHUD(EHUDs::HS_Social);
+         break;
+      }
+      case EDialogBoxCloseCase::finishedInteractableDialog:
+      {
+         basePlayerRef->SetHeroBlockingInteraction(nullptr);
+         break;
+      }
       case EDialogBoxCloseCase::finishedTriggerActivation:
       case EDialogBoxCloseCase::none:
       default: break;

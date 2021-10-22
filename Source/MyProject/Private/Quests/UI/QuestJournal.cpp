@@ -161,7 +161,7 @@ void UQuestJournal::RemoveFromQuestJournal(AQuest* quest)
 
 void UQuestJournal::TrackQuest()
 {
-   if(GetSelectedQuest() && GetSelectedQuest()->GetQuestState() != EQuestState::completedQuests)
+   if(GetSelectedQuest() && GetSelectedQuest()->GetQuestState() != EQuestState::CompletedQuests)
    {
       UQuestList* questList = UUpFunctionLibrary::GetHUDManager(GetWorld())->GetIngameHUD()->GetQuestList();
       if(!questList->GetQuestListSlot(GetSelectedQuest()))

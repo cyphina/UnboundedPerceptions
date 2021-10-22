@@ -38,10 +38,9 @@
 #include "StorageContainer.h"
 #include "StorageInventory.h"
 #include "StoreInventory.h"
-
 #include "UIDelegateContext.h"
 #include "UpResourceManager.h"
-
+#include "Engine.h"
 #include "Algo/Transform.h"
 #include "GameBaseHelpers/DefaultCursorClickFunctionality.h"
 #include "GameBaseHelpers/ECursorStates.h"
@@ -60,9 +59,9 @@ namespace GameplayModifierCVars
                                                          TEXT("When this flag is set to 1, we change the control scheme to allow enemy controls"));
 }
 
-float const ARTSPawn::maxArmLength     = 4000.f;
-float const ARTSPawn::minArmLength     = 250.f;
-float const ARTSPawn::defaultArmLength = 2500.f;
+float constexpr ARTSPawn::maxArmLength     = 4000.f;
+float constexpr ARTSPawn::minArmLength     = 250.f;
+float constexpr ARTSPawn::defaultArmLength = 2500.f;
 
 ARTSPawn::ARTSPawn()
 {
@@ -193,7 +192,8 @@ void ARTSPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void ARTSPawn::PossessedBy(AController* newController)
 {
    Super::PossessedBy(newController);
-   PrimaryActorTick.bCanEverTick = true;
+   SetActorTickEnabled(true);
+
    if(controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()); controllerRef)
    {
       controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnItemSlotDroppedInventoryEvent.AddDynamic(this, &ARTSPawn::OnItemSlotDroppedFromInventory);
@@ -228,8 +228,36 @@ void ARTSPawn::PossessedBy(AController* newController)
 void ARTSPawn::UnPossessed()
 {
    Super::UnPossessed();
-   PrimaryActorTick.bCanEverTick = false;
+   SetActorTickEnabled(false);
    DisableInput(controllerRef);
+
+   if(controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()); controllerRef)
+   {
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnItemSlotDroppedInventoryEvent.RemoveDynamic(this, &ARTSPawn::OnItemSlotDroppedFromInventory);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnItemSlotDroppedStorageEvent.RemoveDynamic(this, &ARTSPawn::OnItemSlotDroppedFromStorage);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedEvent.RemoveDynamic(this, &ARTSPawn::OnSkillSlotDropped);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSkillSlotDroppedSBEvent.RemoveDynamic(this, &ARTSPawn::OnSkillSlotDroppedSB);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnSelectionLockToggled().RemoveAll(this);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnQuickCastSettingToggled().RemoveAll(this);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnStaticFormationToggled().RemoveAll(this);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnAutoclickToggled().RemoveAll(this);
+      controllerRef->GetLocalPlayer()->GetSubsystem<UUIDelegateContext>()->OnEnemySkillSlotClicked().RemoveAll(this);
+
+      if(!HasAuthority() || !IsRunningDedicatedServer())
+      {
+         GetWorld()->GetTimerManager().SetTimerForNextTick(
+             [this]()
+             {
+                controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnSkillSlotSelected().RemoveAll(this);
+                controllerRef->GetHUDManager()->GetIngameHUD()->GetActionbar()->OnEffectSlotSelected().RemoveAll(this);
+                controllerRef->GetHUDManager()->GetIngameHUD()->GetEquipHUD()->OnSlotSelected().RemoveAll(this);
+                controllerRef->GetHUDManager()->GetIngameHUD()->GetShopHUD()->OnSlotSelected().RemoveAll(this);
+                controllerRef->GetHUDManager()->GetIngameHUD()->GetStorageHUD()->OnStorageInventoryClosed().RemoveAll(this);
+                controllerRef->GetHUDManager()->GetIngameHUD()->GetInventoryHUD()->OnSlotSelected().RemoveAll(this);
+                controllerRef->GetHUDManager()->GetIngameHUD()->GetStorageHUD()->OnSlotSelected().RemoveAll(this);
+             });
+      }
+   }
 }
 
 void ARTSPawn::DisableInput(APlayerController* PlayerController)
@@ -325,7 +353,12 @@ void ARTSPawn::GetHitResultClick(FHitResult& clickHitResult) const
    if(controllerRef && controllerRef->DeprojectMousePositionToWorld(worldLocation, worldDirection))
    {
       const auto endPos = worldLocation + worldDirection * GetMaxArmLength() * CLICK_TRACE_LENGTH_MULTIPLIER;
+
       GetWorld()->LineTraceSingleByChannel(clickHitResult, worldLocation, endPos, SELECTABLE_BY_CLICK_CHANNEL);
+      if(MouseCVars::bPrintMouseHover)
+      {
+         DrawDebugLine(GetWorld(), worldLocation + FVector(2), endPos, FColor::Red, false, -1, 0, 0);
+      }
    }
 }
 
@@ -1243,7 +1276,7 @@ void ARTSPawn::HandleSellItemToStore(ABaseHero* heroWithInvShown, int itemUsedSl
 
 void ARTSPawn::OnStorageSlotSelected(int slotIndex)
 {
-   if(ABaseHero* heroUsingStorage = controllerRef->GetBasePlayer()->heroInBlockingInteraction)
+   if(ABaseHero* heroUsingStorage = controllerRef->GetBasePlayer()->GetHeroBlockingInteraction())
    {
       if(AStorageContainer* storageContainer = Cast<AStorageContainer>(heroUsingStorage->GetCurrentInteractable()))
       {
@@ -1266,7 +1299,7 @@ void ARTSPawn::OnEquipmentSlotSelected(int slotIndex)
 
 void ARTSPawn::OnShopSlotSelected(int slotIndex)
 {
-   Cast<AShopNPC>(controllerRef->GetBasePlayer()->heroInBlockingInteraction->GetCurrentInteractable())->OnAskToPurchaseItem(slotIndex);
+   Cast<AShopNPC>(controllerRef->GetBasePlayer()->GetHeroBlockingInteraction()->GetCurrentInteractable())->OnAskToPurchaseItem(slotIndex);
 }
 
 void ARTSPawn::OnEffectSlotSelected(int slotIndex)
@@ -1297,7 +1330,7 @@ void ARTSPawn::OnEffectSlotSelected(int slotIndex)
 
 void ARTSPawn::OnStorageInventoryClosed()
 {
-   controllerRef->GetBasePlayer()->heroInBlockingInteraction = nullptr;
+   controllerRef->GetBasePlayer()->SetHeroBlockingInteraction(nullptr);
 }
 
 void ARTSPawn::OnItemSlotDroppedFromInventory(int dragSlotIndex, int dropSlotIndex, UBackpack* dragPack, UBackpack* dropPack)

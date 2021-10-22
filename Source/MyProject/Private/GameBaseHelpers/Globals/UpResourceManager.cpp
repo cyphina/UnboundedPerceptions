@@ -30,14 +30,19 @@ void UpResourceManager::ExecuteFunctionFromWorldObject(UObject* objectRef, FName
 }
 
 template <>
-ABaseHero* UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(FStringView nameToMatch, UWorld* worldRef)
+ABaseHero* UpResourceManager::FindTriggerObjectInWorld<ABaseHero>(FStringView NameToMatch, UWorld* WorldRef)
 {
-   AUserInput* cpcRef = Cast<AUserInput>(worldRef->GetFirstPlayerController());
-   for(ABaseHero* hero : cpcRef->GetBasePlayer()->allHeroes)
+   static FName HeroStringTableName = "Up_ST_HeroNames";
+
+   AUserInput* cpcRef = Cast<AUserInput>(WorldRef->GetFirstPlayerController());
+   for(TActorIterator<ABaseHero> ActItr(WorldRef); ActItr; ++ActItr)
    {
-      if(hero->GetGameName().ToString() == nameToMatch)
+      if(ABaseHero* Hero = *ActItr)
       {
-         return Cast<ABaseHero>(hero);
+         if(Hero->GetGameName().EqualTo(FText::FromStringTable(HeroStringTableName, NameToMatch.GetData())))
+         {
+            return Hero;
+         }
       }
    }
    return nullptr;

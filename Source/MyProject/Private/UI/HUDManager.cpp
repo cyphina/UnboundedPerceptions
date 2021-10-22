@@ -30,7 +30,7 @@
 #include "DialogSystem/DialogBox.h"
 #include "DialogSystem/DialogUI.h"
 #include "DialogSystem/DialogWheel.h"
-#include "EventSystem/Trigger.h"
+#include "EventSystem/DEPRECATED_Trigger.h"
 
 #include "SpellSystem/SpellbookHUD.h"
 
@@ -123,9 +123,9 @@ void AHUDManager::SetupWidgetReferences()
    SetWidget(mainWidget->GetRemapMenu(), EHUDs::HS_KeyMap);
 }
 
-void AHUDManager::AddHUD(uint8 newState)
+void AHUDManager::AddHUD(EHUDs newState)
 {
-   if(!blockingWidget || currentlyDisplayedWidgetsBitSet[newState] == true)
+   if(!blockingWidget || IsWidgetOnScreen(newState) == true)
    {
       switch(newState)
       {
@@ -136,7 +136,7 @@ void AHUDManager::AddHUD(uint8 newState)
          case EHUDs::HS_QuestJournal: ApplyHUD(newState, true, false, true); break;
          case EHUDs::HS_QuestList: ApplyHUD(newState, true, true, false); break;
          case EHUDs::HS_Spellbook: ApplyHUD(newState, true, true, false); break;
-         case EHUDs::HS_Shop_General: ApplyHUD(static_cast<int>(EHUDs::HS_Shop_General), true, false, false); break;
+         case EHUDs::HS_Shop_General: ApplyHUD(EHUDs::HS_Shop_General, true, false, false); break;
          case EHUDs::HS_Storage: ApplyHUD(newState, true, true, false); break;
          case EHUDs::HS_Dialog:
          case EHUDs::HS_Confirmation:
@@ -162,7 +162,7 @@ void AHUDManager::AddHUD(uint8 newState)
 void AHUDManager::HideHUD(EHUDs newState)
 {
    UMyUserWidget* widgetToApply = widgetReferences[static_cast<uint8>(newState)];
-   if(currentlyDisplayedWidgetsBitSet[static_cast<uint8>(newState)]) // if our widget is already on screen, we probably pressed button to take it off
+   if(IsWidgetOnScreen(newState)) // if our widget is already on screen, we probably pressed button to take it off
    {
       HideWidgetOnScreen(widgetToApply);
       currentlyDisplayedWidgetsBitSet[static_cast<uint8>(newState)] = 0;
@@ -176,58 +176,57 @@ void AHUDManager::HideHUD(EHUDs newState)
 
 void AHUDManager::ShowDialogWithSource(FName conversationName, EDialogBoxCloseCase dialogSource)
 {
-   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_Dialog)] && conversationName != "")
+   if(!IsWidgetOnScreen(EHUDs::HS_Dialog) && conversationName != "")
    {
       GetIngameHUD()->GetDialogBox()->SetConversation(conversationName);
       GetIngameHUD()->GetDialogBox()->SetDialogSource(dialogSource);
    }
-   ApplyHUD(static_cast<int>(EHUDs::HS_Dialog), true, true, false);
+   ApplyHUD(EHUDs::HS_Dialog, true, true, false);
 }
 
 void AHUDManager::ShowDialogCustomLines(TArray<FDialogData> linesToDisplay, EDialogBoxCloseCase dialogSource)
 {
-   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_Dialog)] && linesToDisplay.Num() > 0)
+   if(!IsWidgetOnScreen(EHUDs::HS_Dialog) && linesToDisplay.Num() > 0)
    {
       GetIngameHUD()->GetDialogBox()->SetDialogLines(linesToDisplay);
       GetIngameHUD()->GetDialogBox()->SetDialogSource(dialogSource);
-      ApplyHUD(static_cast<int>(EHUDs::HS_Dialog), true, true, false);
+      ApplyHUD(EHUDs::HS_Dialog, true, true, false);
    }
 }
 
 void AHUDManager::ShowConfirmationBox(const FOnConfirmation& funcToCallOnConfirmed, FText newTitle, FText newDesc)
 {
-   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_Confirmation)])
+   if(!IsWidgetOnScreen(EHUDs::HS_Confirmation))
    {
       GetConfirmationBox()->SetOnConfirmationMade(funcToCallOnConfirmed);
       GetConfirmationBox()->SetTitle(newTitle);
       GetConfirmationBox()->SetDesc(newDesc);
-      ApplyHUD(static_cast<int>(EHUDs::HS_Confirmation), true, false, false);
+      ApplyHUD(EHUDs::HS_Confirmation, true, false, false);
    }
    else
    {
-      ApplyHUD(static_cast<int>(EHUDs::HS_Confirmation), true, false, false);
+      ApplyHUD(EHUDs::HS_Confirmation, true, false, false);
    }
 }
 
 void AHUDManager::ShowInputBox(const FOnInputConfirmed& funcToCallOnConfirmed, FText newTitle, FText newDesc)
 {
-   if(!currentlyDisplayedWidgetsBitSet[static_cast<int>(EHUDs::HS_InputBox)])
+   if(!IsWidgetOnScreen(EHUDs::HS_InputBox))
    {
       GetInputBox()->SetOnInputConfirmed(funcToCallOnConfirmed);
       GetInputBox()->SetTitle(newTitle);
       GetInputBox()->SetDesc(newDesc);
-      ApplyHUD(static_cast<int>(EHUDs::HS_InputBox), true, false, false);
+      ApplyHUD(EHUDs::HS_InputBox, true, false, false);
    }
    else
    {
-      ApplyHUD(static_cast<int>(EHUDs::HS_InputBox), true, false, false);
+      ApplyHUD(EHUDs::HS_InputBox, true, false, false);
    }
 }
 
-bool AHUDManager::ApplyHUD(uint8 newState, bool bEnableClickEvents, bool canOpenCombat, bool bBlocking)
+bool AHUDManager::ApplyHUD(EHUDs newState, bool bEnableClickEvents, bool canOpenCombat, bool bBlocking)
 {
-   check(newState >= 0 && newState < widgetReferences.Num());
-   UMyUserWidget* widgetToApply = widgetReferences[newState];
+   UMyUserWidget* widgetToApply = widgetReferences[static_cast<uint8>(newState)];
 
    if(!widgetToApply)
    {
@@ -235,13 +234,16 @@ bool AHUDManager::ApplyHUD(uint8 newState, bool bEnableClickEvents, bool canOpen
       return false;
    }
 
-   if(currentlyDisplayedWidgetsBitSet[newState]) // if our widget is already on screen, we probably pressed button to take it off
+   if(IsWidgetOnScreen(newState)) // if our widget is already on screen, we probably pressed button to take it off
    {
       HideWidgetOnScreen(widgetToApply);
    }
    else
    {
-      if(!ShowHiddenWidget(widgetToApply)) return false;
+      if(!ShowHiddenWidget(widgetToApply))
+      {
+         return false;
+      }
    }
 
    if(blockingWidget == widgetToApply)
@@ -256,7 +258,7 @@ bool AHUDManager::ApplyHUD(uint8 newState, bool bEnableClickEvents, bool canOpen
       }
    }
 
-   UpdateWidgetTracking(newState, bEnableClickEvents, canOpenCombat);
+   UpdateWidgetTracking(static_cast<uint8>(newState), bEnableClickEvents, canOpenCombat);
    return true;
 }
 
@@ -296,7 +298,7 @@ void AHUDManager::OnMinigameEnded(EMinigameType minigameType)
    // TODO: Check minigame tags to see if it's a minigame where we hide the main hud.
    if(!IsWidgetOnScreen(EHUDs::HS_Ingame))
    {
-      AddHUD(static_cast<uint8>(EHUDs::HS_Ingame));
+      AddHUD(EHUDs::HS_Ingame);
    }
 }
 

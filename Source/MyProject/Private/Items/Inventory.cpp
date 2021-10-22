@@ -6,6 +6,7 @@
 #include "InventoryView.h"
 #include "ItemDelegateContext.h"
 #include "ItemManager.h"
+#include "Engine/AssetManager.h"
 
 void UInventory::NativeOnInitialized()
 {
@@ -37,9 +38,11 @@ void UInventory::LoadItems()
 {
    if(GetBackpack())
    {
-      Algo::ForEach(GetInventorySlots(), [this](UActionSlot* actionSlot) {
-         ResetSlot(actionSlot);
-      });
+      Algo::ForEach(GetInventorySlots(),
+                    [this](UActionSlot* actionSlot)
+                    {
+                       ResetSlot(actionSlot);
+                    });
 
       const int maxUpdateIndex = FMath::Min(GetInventorySlots().Num(), GetBackpack()->GetItemMax());
       for(int i = 0; i < maxUpdateIndex; ++i)
@@ -69,8 +72,20 @@ void UInventory::UpdateSlot(int slotIndex)
    UActionSlot* actionSlot = GetInventorySlots()[slotIndex];
    if(const FMyItem item = GetBackpackItemAtSlot(slotIndex))
    {
-      FItemLookupRow* itemInfo = UItemManager::Get().GetItemInfo(item.id);
-      actionSlot->SetSlotImage(itemInfo->image);
+      FItemLookupRow*     itemInfo          = UItemManager::Get().GetItemInfo(item.id);
+      FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
+      StreamableManager.RequestAsyncLoad(itemInfo->image.ToSoftObjectPath(),
+                                         [actionSlot, itemInfo]()
+                                         {
+                                            UTexture2D* LoadedTexture = itemInfo->image.Get();
+                                            if(LoadedTexture)
+                                            {
+                                               if(actionSlot)
+                                               {
+                                                  actionSlot->SetSlotImage(LoadedTexture);
+                                               }
+                                            }
+                                         });
       if(itemInfo->isStackable)
       {
          actionSlot->SetInfo(FText::AsNumber(item.count));

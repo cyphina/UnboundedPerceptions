@@ -9,6 +9,8 @@ class AUserInput;
 class AUnit;
 class ABaseHero;
 
+DECLARE_LOG_CATEGORY_EXTERN(Up_Log_PlayerActions, Log, All);
+
 class MYPROJECT_API CursorClickFunctionalityBase
 {
  public:
@@ -31,7 +33,7 @@ class MYPROJECT_API CursorClickFunctionalityBase
    void IssueAttackMoveToFocusedUnit(FVector attackLocation);
 
    void CancelSelectedUnitsSelectedSpell();
-   void SelectionRectSetup();
+   void SelectionRectSetup() const;
    void QueueActionToSelectedUnits(const TFunction<void(AUnit*)>& queuedAction);
    void IssueInteractCommandToSelectedHeroes();
    void IssueTalkComandToSelectedHeroes();

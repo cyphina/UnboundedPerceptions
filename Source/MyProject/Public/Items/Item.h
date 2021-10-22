@@ -35,12 +35,12 @@ USTRUCT(BlueprintType, NoExport)
 struct FMyItemInfo
 {
    FMyItemInfo() :
-      name(FText::GetEmpty()), image(nullptr), description(FText::GetEmpty()), itemType(FGameplayTag()), isStackable(false), count(1), rarity(ERarity::Common)
+       name(FText::GetEmpty()), description(FText::GetEmpty()), itemType(FGameplayTag()), isStackable(false), count(1), rarity(ERarity::Common)
    {
    }
 
    FMyItemInfo(FText name, UTexture2D* image, FText desc, FGameplayTag itemType, bool isStackable, int count, ERarity rarity) :
-      image(image), itemType(itemType), isStackable(isStackable), count(count), rarity(rarity)
+       itemType(itemType), isStackable(isStackable), count(count), rarity(rarity)
    {
       this->name        = FText::Format(NSLOCTEXT("Items", "ItemName", "{0}"), name);
       this->description = FText::Format(NSLOCTEXT("Items", "ItemDesc", "{0}"), desc);
@@ -49,7 +49,6 @@ struct FMyItemInfo
    FMyItemInfo& operator=(const FMyItemInfo& item)
    {
       name        = item.name.IsEmpty() ? FText::GetEmpty() : item.name;
-      image       = item.image;
       description = item.description.IsEmpty() ? FText::GetEmpty() : item.description;
       itemType    = item.itemType;
       isStackable = item.isStackable;
@@ -67,13 +66,10 @@ struct FMyItemInfo
    FText name;
 
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-   UTexture2D* image;
-
-   UPROPERTY(EditAnywhere, BlueprintReadWrite)
    FText description;
 
    /**Tag with description of item application*/
-   UPROPERTY(EditAnywhere, BlueprintReadWrite)
+   UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (Categories = "Item"))
    FGameplayTag itemType;
 
    /**Can this item be stacked in an inventory slot?*/
@@ -111,15 +107,10 @@ struct FMyItem
    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Information")
    int count = 1;
 
-   FMyItem()
-   {
-   }
+   FMyItem() {}
 
-   explicit FMyItem(int id, int count = 1) :
-      id(id), count(count)
-   {
-   }
+   explicit FMyItem(int id, int count = 1) : id(id), count(count) {}
 
    explicit operator int() = delete;
-   operator bool() const { return id > 0; }
+            operator bool() const { return id > 0; }
 };

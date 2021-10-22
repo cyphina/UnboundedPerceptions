@@ -17,6 +17,8 @@
 #include "SpellTargetingTypes.h"
 #include "UnitMessages.h"
 
+DEFINE_LOG_CATEGORY(Up_Log_Ability);
+
 UMySpell::UMySpell() : UGameplayAbility()
 {
    CooldownGameplayEffectClass = UCoolDownEffect::StaticClass();
@@ -129,7 +131,7 @@ void UMySpell::RemoveEffectWtihNameTagFromAvatar(FGameplayTag EffectName, int St
 {
    for(int i = 0; i < NumEffectsToRemove; ++i)
    {
-      USpellDataLibrary::RemoveEffectWtihNameTag(GetAvatarAbilitySystemComponent(), EffectName, StacksToRemove);
+      USpellDataLibrary::RemoveEffectWithNameTag(GetAvatarAbilitySystemComponent(), EffectName, StacksToRemove);
    }
 }
 
@@ -262,9 +264,21 @@ FGameplayEffectSpecHandle UMySpell::CreateGameplayEffectFromTableValues(TSubclas
    UAbilitySystemComponent*  abilityComp = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetActorInfo().AvatarActor.Get());
    FGameplayEffectSpecHandle effect      = MakeOutgoingGameplayEffectSpec(effectClass, GetAbilityLevel());
 
-   effect.Data->DynamicGrantedTags.AddTag(GetElemTag());
-   effect.Data->DynamicGrantedTags.AddTag(name);
-   effect.Data->DynamicGrantedTags.AppendTags(assetTags);
+   if(GetElemTag() != FGameplayTag::EmptyTag)
+   {
+      effect.Data->DynamicGrantedTags.AddTag(GetElemTag());
+   }
+
+   if(name != FGameplayTag::EmptyTag)
+   {
+      effect.Data->DynamicGrantedTags.AddTag(name);
+   }
+
+   if(!assetTags.IsEmpty())
+   {
+      effect.Data->DynamicGrantedTags.AppendTags(assetTags);
+   }
+
    if(effect.Data->Def->DurationPolicy != EGameplayEffectDurationType::Instant)
    {
       effect.Data->Period = GetPeriod(abilityComp);
@@ -276,6 +290,7 @@ FGameplayEffectSpecHandle UMySpell::CreateGameplayEffectFromTableValues(TSubclas
    {
       SetScaling(effect);
    }
+
    return effect;
 }
 

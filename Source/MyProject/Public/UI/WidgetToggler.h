@@ -19,9 +19,9 @@ class IWidgetToggler
 {
    GENERATED_BODY()
 
-public:
+ public:
    /**Toggle a hud on the screen on/off.  C++ version.*/
-   virtual void AddHUD(uint8 newState) = 0;
+   virtual void AddHUD(EHUDs newState)  = 0;
    virtual void HideHUD(EHUDs newState) = 0;
 
    /**
@@ -55,7 +55,7 @@ public:
 
    /**Toggle a hud on the screen on/off.  BP_Version.  Do not call with huds that require open parameters, instead call their respective AddHUD function.*/
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Add HUD"))
-   virtual void BP_AddHUD(uint8 newState) = 0;
+   virtual void BP_AddHUD(EHUDs newState) = 0;
 
    UFUNCTION(BlueprintCallable, Category = "HUD Toggle", meta = (DisplayName = "Remove HUD"))
    virtual void BP_RemoveHUD(EHUDs newState) = 0;

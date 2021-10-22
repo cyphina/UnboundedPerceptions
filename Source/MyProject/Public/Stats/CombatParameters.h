@@ -13,5 +13,4 @@ struct UpCombatInfo
    bool            isDead       = false;
    bool            bMissLastHit = false;
    FThreadSafeBool isUnitHidden = false;
-   ECombatType combatStyle = ECombatType::Magic;
 };

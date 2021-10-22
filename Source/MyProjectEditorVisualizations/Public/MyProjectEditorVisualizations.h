@@ -1,23 +1,51 @@
 #pragma once
 
+#include "LevelEditor.h"
 #include "Modules/ModuleManager.h"
+#include "MultiBoxExtender.h"
 
-/* Precompiled header and custom module class for loading customization when created similar to in plugins.
- * Some hot reloading errors.  Here's what I found on the issue, and why we have to run run.bat else we get the GIsHotReload error:
- *
- * Since the editor module is not hot-reloaded, it is not considered to be compatible with the latest (hot-reloaded) game modules.
- *
- * Hot-reload only effects classes derived from UCLASS types.
- * If your custom module uses classes that are not UCLASS, these classes are not being updated with the hot-reload.
- * As you mentioned, compiling without a hot-reload will update everything at the same time and avoid the error.
- * Though it is not a plugin module, an example of this can be found here: https://issues.unrealengine.com/issue/UE-25350 .
- */
+class SCheckBox;
+class FLevelEditorModule;
+using LevelEditorExtender = FLevelEditorModule::FLevelEditorMenuExtender;
+class FUICommandList;
+class FExtensibilityManager;
+class FExtender;
+class FWorkspaceItem;
+class UToolMenu;
 
 DECLARE_LOG_CATEGORY_EXTERN(MyProjectEditorVisualizations, All, All);
 
-class FMyProjectEditorVisualizationsModule : public IModuleInterface
+/** Based on SLevelViewportToolBar.cpp */
+class FMyProjectEditorVisualizations : public IModuleInterface
 {
  public:
    virtual void StartupModule() override;
    virtual void ShutdownModule() override;
+
+   static TSharedRef<FWorkspaceItem> GetMenuRoot() { return MenuRoot; }
+
+ protected:
+   void CreateViewOptionExtension();
+
+ private:
+   void GenerateUpVisMenuExtension(FMenuBuilder& MenuBuilder);
+   void GenerateUpVisSubmenu(FMenuBuilder& MenuBuilder);
+
+   void DrawPatrolPoints(ECheckBoxState bChecked);
+   void DrawCameraPosition(ECheckBoxState bChecked);
+   void DrawCameraBounds(ECheckBoxState bChecked);
+
+   void TogglePatrolComponent();
+
+   TSharedPtr<FExtensibilityManager> LevelEditorMenuExtensionPoint;
+   TSharedPtr<FExtender>             ViewOptionMenuExtender;
+   static TSharedRef<FWorkspaceItem> MenuRoot;
+
+   bool bTogCameraBoundsVis = false;
+   bool bTogCameraPosVis    = false;
+   bool bTogPatrolPointsVis = true;
+
+   TSharedPtr<SWidget> TogCameraBoundsMenuWidget;
+   TSharedPtr<SWidget> TogCameraPositionMenuWidget;
+   TSharedPtr<SWidget> TogPatrolCompVisWidget;
 };

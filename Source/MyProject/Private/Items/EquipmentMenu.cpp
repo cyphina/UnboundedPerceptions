@@ -8,12 +8,13 @@
 #include "TextBlock.h"
 #include "UserInput.h"
 #include "ItemDelegateContext.h"
+#include "Engine/AssetManager.h"
 #include "UI/HUDManager.h"
 
 void UEquipmentMenu::NativeOnInitialized()
 {
    GetWorld()->GetFirstLocalPlayerFromController()->GetSubsystem<UItemDelegateContext>()->OnEquipmentChanged().AddUObject(this, &UEquipmentMenu::OnEquipmentChanged);
-   
+
    equipSlots[0] = helmetSlot;
    equipSlots[1] = bodySlot;
    equipSlots[2] = gloveSlot;
@@ -45,8 +46,18 @@ void UEquipmentMenu::SetupEquipImages()
       int index = 0;
       for(int equipId : *GetEquippedHero()->GetEquipment())
       {
-         if(equipId > 0) {
-            equipSlots[index]->SetSlotImage(UItemFunctionLibrary::GetItemInfo(equipId).image);
+         if(equipId > 0)
+         {
+            FStreamableManager& StreamableManager = UAssetManager::GetStreamableManager();
+            StreamableManager.RequestAsyncLoad(UItemFunctionLibrary::GetItemInfo(equipId).image.ToSoftObjectPath(),
+                                               [this, equipId, index]()
+                                               {
+                                                  UTexture2D* LoadedTexture = UItemFunctionLibrary::GetItemInfo(equipId).image.Get();
+                                                  if(LoadedTexture)
+                                                  {
+                                                     equipSlots[index]->SetSlotImage(LoadedTexture);
+                                                  }
+                                               });
          }
          else
          {
@@ -59,7 +70,8 @@ void UEquipmentMenu::SetupEquipImages()
 
 void UEquipmentMenu::OnEquipmentChanged(const ABaseHero* heroThatChanged, TArray<int> updatedInventorySlots)
 {
-   if(GetVisibility() != ESlateVisibility::Collapsed) {
+   if(GetVisibility() != ESlateVisibility::Collapsed)
+   {
       if(GetEquippedHero() == heroThatChanged) SetupEquipImages();
    }
 }

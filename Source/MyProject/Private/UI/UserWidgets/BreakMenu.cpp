@@ -22,24 +22,24 @@ void UBreakMenu::NativeConstruct()
 
 void UBreakMenu::Resume()
 {
-   hudManagerRef->AddHUD(static_cast<int>(EHUDs::HS_Break));
+   hudManagerRef->AddHUD(EHUDs::HS_Break);
 }
 
 void UBreakMenu::SaveLoad()
 {
-   hudManagerRef->AddHUD(static_cast<uint8>(EHUDs::HS_SaveLoad));
+   hudManagerRef->AddHUD(EHUDs::HS_SaveLoad);
    Resume();
 }
 
 void UBreakMenu::Options()
 {
-   hudManagerRef->AddHUD(static_cast<int>(EHUDs::HS_Settings));
+   hudManagerRef->AddHUD(EHUDs::HS_Settings);
    Resume();
 }
 
 void UBreakMenu::RemapKeys()
 {
-   hudManagerRef->AddHUD(static_cast<int>(EHUDs::HS_KeyMap));
+   hudManagerRef->AddHUD(EHUDs::HS_KeyMap);
    Resume();
 }
 

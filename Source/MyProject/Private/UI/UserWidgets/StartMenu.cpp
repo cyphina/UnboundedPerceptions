@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "MyProject.h"
 #include "StartMenu.h"
 #include "RTSGameMode.h"
@@ -11,7 +9,7 @@
 #include "DialogBox.h"
 #include "RTSGameState.h"
 #include "EventSystem/EventManager.h"
-#include "EventSystem/Trigger.h"
+#include "EventSystem/DEPRECATED_Trigger.h"
 
 void UStartMenu::NativeConstruct()
 {
@@ -26,6 +24,7 @@ bool UStartMenu::CheckIfSaveFileExists(FString saveFileName)
 {
    FString        saveFilesPath = FPaths::ProjectDir().Append("\\SavedGames\\");
    IPlatformFile& platformFile  = FPlatformFileManager::Get().GetPlatformFile();
+
    if(!platformFile.DirectoryExists(*saveFilesPath))
    {
       platformFile.CreateDirectory(*saveFilesPath);
@@ -64,6 +63,7 @@ void UStartMenu::GameEventStartSetup()
 {
    hudManagerRef->ShowDialogWithSource("SylphiaApartmentIntro", EDialogBoxCloseCase::none);
    gameModeRef->GetEventManager()->MoveToNextSection();
+
    FTriggerData addFirstQuestTrigger;
    addFirstQuestTrigger.enabled       = true;
    addFirstQuestTrigger.numCalls      = 1;

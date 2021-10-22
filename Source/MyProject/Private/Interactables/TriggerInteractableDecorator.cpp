@@ -2,6 +2,7 @@
 
 #include "MyProject.h"
 #include "TriggerInteractableDecorator.h"
+#include "RTSTrigger.h"
 #include "RTSGameMode.h"
 
 UTriggerInteractableDecorator::UTriggerInteractableDecorator()
@@ -11,14 +12,18 @@ UTriggerInteractableDecorator::UTriggerInteractableDecorator()
 void UTriggerInteractableDecorator::Init()
 {
    UInteractableActorDecoratorBase::Init();
-   gameModeRef = Cast<ARTSGameMode>(GetWorld()->GetAuthGameMode());
 }
 
 bool UTriggerInteractableDecorator::Interact()
 {
-   if (!decoratedInteractable || decoratedInteractable->Interact()) {
-      for (FTriggerData& finishedTriggerActivation : triggersActivatedOnInteract) {
-         gameModeRef->GetTriggerManager()->ActivateTrigger(finishedTriggerActivation);
+   if(!decoratedInteractable || decoratedInteractable->Interact())
+   {
+      for(URTSTriggerBase* Trigger : triggersActivatedOnInteract)
+      {
+         if(Trigger)
+         {
+            Trigger->TriggerEvent();
+         }
       }
       return true;
    }

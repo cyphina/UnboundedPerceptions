@@ -8,6 +8,8 @@ public class MyProjectEditor : ModuleRules
 	{
 		bEnforceIWYU = true;
 		PrivatePCHHeaderFile = "Public/MyProjectEditor.h";
+		CppStandard = CppStandardVersion.Cpp17;
+
 		PublicIncludePaths.AddRange(new string[] { "MyProjectEditor/Public" });
 		PrivateIncludePaths.AddRange(new string[] { "MyProjectEditor/Private" });
 		PublicDependencyModuleNames.AddRange(new string[]
@@ -35,7 +37,10 @@ public class MyProjectEditor : ModuleRules
 			"Kismet",
 			"KismetCompiler",
 			"GameplayAbilities",
-			"GameplayTags"
+			"GameplayTags",
+			"Blutility",
+			"UMGEditor",
+			"EditorScriptingUtilities"
 		});
 		}
 	}

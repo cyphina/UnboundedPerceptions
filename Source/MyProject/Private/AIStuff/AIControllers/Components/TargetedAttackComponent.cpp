@@ -35,6 +35,7 @@ namespace AttackCVars
 UTargetedAttackComponent::UTargetedAttackComponent()
 {
    attackAnimStrategy = UNullAttackAnim::StaticClass();
+   combatStyle        = ECombatType::Melee;
 }
 
 void UTargetedAttackComponent::BeginAttack(AUnit* target)
@@ -52,6 +53,7 @@ void UTargetedAttackComponent::BeginAttack(AUnit* target)
             }
          }
          GetWorld()->GetTimerManager().SetTimer(attackChecksHandle, this, &UTargetedAttackComponent::FollowAndTryAttackTarget, 0.05f, true, 0.f);
+         UE_LOG(Up_Log_Combat, Log, TEXT("%s is beginning to attack %s"), *agent->GetGameName().ToString(), *target->GetGameName().ToString());
       }
       else
       {
@@ -66,7 +68,7 @@ void UTargetedAttackComponent::BeginAttack(AUnit* target)
    }
 }
 
-void UTargetedAttackComponent::BeginAttackMove(FVector targetLocation)
+void UTargetedAttackComponent::BeginAttackMove(const FVector& targetLocation)
 {
    if(!USpellDataLibrary::IsStunned(agent->GetAbilitySystemComponent()))
    {
@@ -91,6 +93,7 @@ void UTargetedAttackComponent::BeginAttackMove(FVector targetLocation)
       }
 
       GetWorld()->GetTimerManager().SetTimer(targetSearchHandle, this, &UTargetedAttackComponent::SearchForTargetInRange, .1f, true, 0.f);
+      UE_LOG(Up_Log_Combat, Log, TEXT("%s is beginning to attack move towards %s"), *agent->GetGameName().ToString(), *attackMoveLocation.ToString());
    }
 }
 
@@ -335,7 +338,7 @@ void UTargetedAttackComponent::LockOnTarget() const
 void UTargetedAttackComponent::OnAttackSwingDoneEffect()
 {
    bool bDamageEffectSucceeded = false;
-   switch(agent->GetCombatInfo()->combatStyle)
+   switch(combatStyle)
    {
       case ECombatType::Melee:
       {
@@ -386,10 +389,17 @@ void UTargetedAttackComponent::CreateRangedProjectile(FDamageScalarStruct projec
 {
    const FVector    agentLocation = agent->GetActorLocation();
    const FTransform transform     = FTransform{FVector(agentLocation.X, agentLocation.Y, agentLocation.Z + agent->GetCapsuleComponent()->GetScaledCapsuleHalfHeight())};
-   ARTSProjectile*  projectile =
-       ARTSProjectile::MakeRTSProjectile(GetWorld(), agent->GetTargetComponent(), transform, ARTSProjectile::StaticClass(), projectileStrategyClass.GetDefaultObject());
 
-   projectile->hitEffects.Add(agent->GetAbilitySystemComponent()->MakeDamageEffect(projectileDamageScalars, GetAttackElement()));
+   if(IsValid(projectileStrategyClass))
+   {
+      ARTSProjectile* projectile =
+          ARTSProjectile::MakeRTSProjectile(GetWorld(), agent->GetTargetComponent(), transform, projectileClass, projectileStrategyClass.GetDefaultObject());
+
+      if(projectile)
+      {
+         projectile->hitEffects.Add(agent->GetAbilitySystemComponent()->MakeDamageEffect(projectileDamageScalars, GetAttackElement()));
+      }
+   }
 }
 
 bool UTargetedAttackComponent::CheckAndHandleTargetOutsideAnimationRange()

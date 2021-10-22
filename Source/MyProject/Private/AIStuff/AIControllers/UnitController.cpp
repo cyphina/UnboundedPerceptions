@@ -1,4 +1,5 @@
 
+
 #include "MyProject.h"
 
 #include "WorldObjects/Unit.h"
@@ -27,9 +28,18 @@
 #include "UnitMessages.h"
 #include "UserInput.h"
 #include "Navigation/CrowdFollowingComponent.h"
+#include "Runtime/Engine/Public/VisualLogger/VisualLogger.h"
 
-const FText AUnitController::FILLED_QUEUE_TEXT       = NSLOCTEXT("HelpMessages", "Queue", "Command Queue Filled!");
-const float AUnitController::SMALL_MOVE_IGNORE_RANGE = 50.f;
+DEFINE_LOG_CATEGORY_STATIC(Up_Vis_Unit, Log, All)
+
+const FText AUnitController::FILLED_QUEUE_TEXT = NSLOCTEXT("HelpMessages", "Queue", "Command Queue Filled!");
+
+namespace GameplayModifierCVars
+{
+   float                          vectorMoveStopRange = 50.f;
+   static FAutoConsoleVariableRef CVarPrintMouseHover(TEXT("Up_MoveStopRange"), vectorMoveStopRange,
+                                                      TEXT("How far from the location do we stop to satisfy basic move commands."));
+}
 
 AUnitController::AUnitController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -124,9 +134,9 @@ void AUnitController::Tick(float deltaSeconds)
 
 EUnitState AUnitController::GetState() const
 {
-   if(URTSStateComponent* stateComp = FindComponentByClass<URTSStateComponent>())
+   if(URTSStateComponent* StateComp = FindComponentByClass<URTSStateComponent>())
    {
-      return stateComp->GetState();
+      return StateComp->GetState();
    }
    return EUnitState::STATE_IDLE;
 }
@@ -145,6 +155,10 @@ void AUnitController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowi
          queuedTurnAction();
       }
    }
+   else
+   {
+      UE_LOG(LogPathFollowing, Warning, TEXT("Move Failed with Result %s"), *Result.ToString());
+   }
 }
 
 void AUnitController::Attack()
@@ -156,12 +170,12 @@ void AUnitController::OnDamageReceived(const FUpDamage& d)
 {
    if(!d.DidMiss())
    {
-      if(AUnit* SourceUnit = d.sourceUnit)
+      if(d.sourceUnit)
       {
-         SourceUnit->GetCombatInfo()->bMissLastHit = false;
+         d.sourceUnit->GetCombatInfo()->bMissLastHit = false;
          if(d.effects.HasTag(FGameplayTag::RequestGameplayTag("Combat.DamageEffects.Lifesteal")))
          {
-            SourceUnit->GetStatComponent()->ModifyStats<false>(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) + d.damage, EVitals::Health);
+            d.sourceUnit->GetStatComponent()->ModifyStats<false>(d.targetUnit->GetStatComponent()->GetVitalCurValue(EVitals::Health) + d.damage, EVitals::Health);
          }
       }
 
@@ -170,11 +184,19 @@ void AUnitController::OnDamageReceived(const FUpDamage& d)
       if(GetUnitOwner()->GetStatComponent()->GetVitalAdjValue(EVitals::Health) <= 0)
       {
          Die();
+         if(d.sourceUnit)
+         {
+            const FAIMessage msg(UnitMessages::AIMessage_TargetLoss, this);
+            FAIMessage::Send(d.sourceUnit->GetUnitController(), msg);
+         }
       }
    }
    else
    {
-      d.sourceUnit->GetCombatInfo()->bMissLastHit = true;
+      if(d.sourceUnit)
+      {
+         d.sourceUnit->GetCombatInfo()->bMissLastHit = true;
+      }
    }
 }
 
@@ -210,16 +232,22 @@ void AUnitController::ResumeCurrentMovement()
    ResumeMove(GetCurrentMoveRequestID());
 }
 
+EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation)
+{
+   return Move(newLocation, GameplayModifierCVars::vectorMoveStopRange);
+}
+
 EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation, float stopRange)
 {
    EPathFollowingRequestResult::Type moveRequestResult = EPathFollowingRequestResult::Type::Failed;
 
    if(!USpellDataLibrary::IsStunned(GetUnitOwner()->GetAbilitySystemComponent()))
    {
-      if(ABasePlayer* basePlayer = GetWorld()->GetFirstPlayerController()->GetPlayerState<ABasePlayer>())
+      if(ABasePlayer* BasePlayer = GetWorld()->GetFirstPlayerController()->GetPlayerState<ABasePlayer>())
       {
-         FVector shiftedLocation = newLocation; // Shift location a little bit if we're moving multiple units so they can group together ok
-         if(basePlayer->GetSelectedUnits().Num() > 1)
+         // Shift location a little bit if we're moving multiple units so they can group together ok
+         FVector shiftedLocation = newLocation;
+         if(BasePlayer->GetSelectedUnits().Num() > 1)
          {
             shiftedLocation = newLocation - ownerRef->GetActorLocation().GetSafeNormal() * ownerRef->GetCapsuleComponent()->GetScaledCapsuleRadius() / 2;
          }
@@ -227,9 +255,9 @@ EPathFollowingRequestResult::Type AUnitController::Move(FVector newLocation, flo
          ownerRef->GetTargetComponent()->SetTarget(shiftedLocation);
          if(!AdjustPosition(stopRange, shiftedLocation, moveRequestResult))
          {
-            if(URTSStateComponent* stateComponent = FindComponentByClass<URTSStateComponent>())
+            if(URTSStateComponent* StateComponent = FindComponentByClass<URTSStateComponent>())
             {
-               stateComponent->ChangeState(EUnitState::STATE_MOVING);
+               StateComponent->ChangeState(EUnitState::STATE_MOVING);
             }
          }
       }
@@ -312,6 +340,17 @@ void AUnitController::TurnTowardsPoint(FVector targetLocation)
    turnRotator   = UUpAIHelperLibrary::FindLookRotation(GetUnitOwner(), targetLocation);
    turnTimeline.SetPlayRate(rotationRate * ownerRef->GetCharacterMovement()->RotationRate.Yaw / FMath::Abs(ownerRef->GetActorQuat().AngularDistance(turnRotator)));
    turnTimeline.PlayFromStart();
+
+   FVisualLogger& Vlog = FVisualLogger::Get();
+   if(Vlog.IsRecording())
+   {
+      static constexpr float ArrowOffset       = 10.f;
+      FVector                ProjectedLocation = ownerRef->GetActorLocation();
+      ProjectedLocation.Z                      = targetLocation.Z + ArrowOffset;
+      const FVector TargetDiff                 = (ProjectedLocation - targetLocation) * 5;
+      UE_VLOG_ARROW(this, Up_Vis_Unit, Log, ProjectedLocation, ProjectedLocation + TargetDiff, FColor::Blue, TEXT(""));
+      UE_VLOG(this, Up_Vis_Unit, Log, TEXT("Turning %f degrees"), FMath::RadiansToDegrees(turnRotator.AngularDistance(GetUnitOwner()->GetActorQuat())));
+   }
 }
 
 void AUnitController::TurnTowardsActor(AActor* targetActor)
@@ -469,6 +508,7 @@ bool AUnitController::AdjustPosition(float range, AActor* targetActor)
       if(!previousMoveGoal || previousMoveGoal != targetActor)
       {
          // const float targetActorRadius = targetActor->GetSimpleCollisionRadius();
+         // TODO: Is bStopOnOverlap bad? Having it not on screws up interactable pathfinding
          MoveToActor(targetActor, range, false, true, false);
          QueueTurnAfterMovement(targetActor);
       }

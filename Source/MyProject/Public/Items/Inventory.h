@@ -67,11 +67,11 @@ class MYPROJECT_API UInventory : public USlotContainer
                            const FBackpackUpdateResult& addResult);
    void OnItemsSwapped(const UBackpack& pack1, const UBackpack& pack2, int slot1, int slot2);
 
-   /**backpack reference for whatever inventory we are displaying*/
+   /** Backpack reference for whatever inventory we are displaying */
    UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "UIInitialParams", Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true))
    UBackpack* backpack;
 
-   /**Used to easily set default rows and columns when creating inventory widget*/
+   /** Used to easily set default rows and columns when creating inventory widget */
    UPROPERTY(BlueprintReadOnly, EditAnywhere, category = "UIInitialParams", Meta = (AllowPrivateAccess = true, ExposeOnSpawn = true))
    int rows;
 

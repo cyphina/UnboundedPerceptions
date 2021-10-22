@@ -64,19 +64,23 @@ void URTSHealthReplenishCalculation::Execute_Implementation(const FGameplayEffec
          executionParams.AttemptCalculateCapturedAttributeMagnitude(healthRegenBonusCaptureDef, evalParams, healingBonus);
       }
 
-      float healthMult;
+      float healthMult = 0;
       executionParams.AttemptCalculateCapturedAttributeMagnitude(attributes.HealthDef, evalParams, healthMult);
-      float strMult;
+
+      float strMult = 0;
       executionParams.AttemptCalculateCapturedAttributeMagnitude(attributes.StrengthDef, evalParams, strMult);
-      float intMult;
+
+      float intMult = 0;
       executionParams.AttemptCalculateCapturedAttributeMagnitude(attributes.IntelligenceDef, evalParams, intMult);
-      float agiMult;
+
+      float agiMult = 0;
       executionParams.AttemptCalculateCapturedAttributeMagnitude(attributes.AgilityDef, evalParams, agiMult);
-      float undMult;
+
+      float undMult = 0;
       executionParams.AttemptCalculateCapturedAttributeMagnitude(attributes.UnderstandingDef, evalParams, undMult);
 
       const float healValue = (healthMult + strMult + intMult + agiMult + undMult) / 100 * (100 + healingBonus) / 100;
-      damage.damage = healValue;
+      damage.damage         = healValue;
 
       HealTarget(damage, tags.Filter(FGameplayTagContainer(FGameplayTag::RequestGameplayTag("Combat.DamageEffects"))));
    }

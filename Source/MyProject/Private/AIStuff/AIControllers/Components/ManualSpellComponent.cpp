@@ -57,7 +57,7 @@ bool UManualSpellComponent::PressedCastSpell(TSubclassOf<UMySpell> spellToCast)
 
                if(spell->GetTargeting()->IsChildOf(UUpSpellTargeting_None::StaticClass()))
                {
-                  unitWithPlayerControl->GetUnitController()->StopCurrentAction();            
+                  unitWithPlayerControl->GetUnitController()->StopCurrentAction();
                   GetSpellCastComp()->BeginCastSpell(spellToCast);
                }
                else
@@ -153,19 +153,25 @@ void UManualSpellComponent::BeginPlay()
 void UManualSpellComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
    Super::EndPlay(EndPlayReason);
-   if(AUserInput* userInput = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+   if(const AUserInput* UserInput = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
    {
-      userInput->GetLocalPlayer()->GetSubsystem<UGameplayDelegateContext>()->OnSkillActivated().RemoveAll(this);
+      if(const ULocalPlayer* LocalPlayer = UserInput->GetLocalPlayer())
+      {
+         if(const auto GameplayContext = LocalPlayer->GetSubsystem<UGameplayDelegateContext>())
+         {
+            GameplayContext->OnSkillActivated().RemoveAll(this);
+         }
+      }
    }
 }
 
 void UManualSpellComponent::DeselectSpell()
 {
-   if(AUserInput* cpcRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
+   if(const AUserInput* CPCRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController()))
    {
       currentlySelectedSpell = nullptr;
-      cpcRef->GetCameraPawn()->HideSpellCircle();
-      cpcRef->GetCameraPawn()->SetSecondaryCursor();
+      CPCRef->GetCameraPawn()->HideSpellCircle();
+      CPCRef->GetCameraPawn()->SetSecondaryCursor();
    }
 }
 

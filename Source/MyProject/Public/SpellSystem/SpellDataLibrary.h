@@ -90,7 +90,7 @@ class MYPROJECT_API USpellDataLibrary : public UBlueprintFunctionLibrary
     * @param StacksToRemove - If -1, removes all stacks.
     */
    UFUNCTION(BlueprintCallable, Meta = (DisplayName = "GetEffectNameTag"))
-   static void RemoveEffectWtihNameTag(UAbilitySystemComponent* ASC, FGameplayTag EffectName, int StacksToRemove = -1);
+   static void RemoveEffectWithNameTag(UAbilitySystemComponent* ASC, FGameplayTag EffectName, int StacksToRemove = -1);
 
    UFUNCTION(BlueprintCallable, BlueprintPure)
    static FGameplayTagContainer GetEffectNameTag();

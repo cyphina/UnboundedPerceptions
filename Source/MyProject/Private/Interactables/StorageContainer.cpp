@@ -42,19 +42,19 @@ void AStorageContainer::BeginPlay()
    sphereCollision->OnComponentEndOverlap.AddDynamic(this, &AStorageContainer::OnLeaveRange);
 }
 
-void AStorageContainer::Interact_Implementation(ABaseHero* hero)
+void AStorageContainer::Interact_Implementation(ABaseHero* Hero)
 {
    if(CanInteract_Implementation())
    {
       GetHUDProvider()->GetIngameHUD()->GetStorageHUD()->SetBackPack(backpack);
-      GetWidgetToggler()->AddHUD(static_cast<uint8>(EHUDs::HS_Storage));
-      GetPlayerControllerRef()->GetBasePlayer()->heroInBlockingInteraction = hero;
+      GetWidgetToggler()->AddHUD(EHUDs::HS_Storage);
+      GetPlayerControllerRef()->GetBasePlayer()->SetHeroBlockingInteraction(Hero);
    }
 }
 
 bool AStorageContainer::CanInteract_Implementation() const
 {
-   return Super::CanInteract_Implementation() && !GetPlayerControllerRef()->GetBasePlayer()->heroInBlockingInteraction;
+   return Super::CanInteract_Implementation() && !GetPlayerControllerRef()->GetBasePlayer()->GetHeroBlockingInteraction();
 }
 
 FVector AStorageContainer::GetInteractableLocation_Implementation() const
@@ -64,11 +64,12 @@ FVector AStorageContainer::GetInteractableLocation_Implementation() const
 
 void AStorageContainer::OnLeaveRange(UPrimitiveComponent* overlappedComp, AActor* otherActor, UPrimitiveComponent* otherComp, int otherBodyIndex)
 {
-   if(GetWidgetToggler() && GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Storage) && GetPlayerControllerRef()->GetBasePlayer()->heroInBlockingInteraction == otherActor)
+   if(GetWidgetToggler() && GetWidgetToggler()->IsWidgetOnScreen(EHUDs::HS_Storage) &&
+      GetPlayerControllerRef()->GetBasePlayer()->GetHeroBlockingInteraction() == otherActor)
    {
       GetHUDProvider()->GetIngameHUD()->GetStorageHUD()->SetBackPack(nullptr);
-      GetWidgetToggler()->AddHUD(static_cast<uint8>(EHUDs::HS_Storage));
-      GetPlayerControllerRef()->GetBasePlayer()->heroInBlockingInteraction = nullptr;
+      GetWidgetToggler()->AddHUD(EHUDs::HS_Storage);
+      GetPlayerControllerRef()->GetBasePlayer()->SetHeroBlockingInteraction(nullptr);
    }
 }
 

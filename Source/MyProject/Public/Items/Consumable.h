@@ -21,5 +21,5 @@ struct FConsumableLookupRow : public FTableRowBase {
 
    /**Class of ability that is activated when this consumable is used*/
    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-   TSubclassOf<UMySpell> abilityClass;
+   TSoftClassPtr<UMySpell> abilityClass;
 };

@@ -3,39 +3,78 @@
 #include "UserInput.h"
 #include "RTSGameState.h"
 #include "Quests/QuestManager.h"
+#include "RTSTrigger.h"
 #include "RTSGameMode.h"
+#include "RTSPawn.h"
 #include "SaveLoadClass.h"
+
+void AUPLevelScript::ConstrainCameraPanLevelBounds(ARTSGameState* GS)
+{
+   if(cameraBoundsY.X >= 0 && cameraBoundsY.Y >= 0)
+   {
+      GS->SetCameraBoundX(cameraBoundsX);
+   }
+   else
+   {
+      UE_LOG(LogTemp, Warning, TEXT("Map boundaries are set to negative values. Change this in the level blueprint (if level bp is derived from UPLevelScript"));
+   }
+
+   if(cameraBoundsY.X >= 0 && cameraBoundsY.Y >= 0)
+   {
+      GS->SetCameraBoundY(cameraBoundsY);
+   }
+   else
+   {
+      UE_LOG(LogTemp, Warning, TEXT("Map boundaries are set to negative values. Change this in the level blueprint (if level bp is derived from UPLevelScript"));
+   }
+}
 
 void AUPLevelScript::BeginPlay()
 {
-   controllerRef = Cast<AUserInput>(GetWorld()->GetFirstPlayerController());
-
-   if(ARTSGameState* GS = Cast<ARTSGameState>(GetWorld()->GetGameState()))
+   if(const UWorld* World = GetWorld())
    {
-      if(shouldTimePass)
+      if(ARTSGameState* GS = Cast<ARTSGameState>(World->GetGameState()))
       {
-         GS->AddGameTime(FUpTime(timeToPass.GetSecond(), timeToPass.GetMinute(), timeToPass.GetHour()),
-                         FUpDate(timeToPass.GetDay(), timeToPass.GetMonth(), timeToPass.GetYear()));
+         if(shouldTimePass)
+         {
+            GS->AddGameTime(FUpTime(timeToPass.GetSecond(), timeToPass.GetMinute(), timeToPass.GetHour()),
+                            FUpDate(timeToPass.GetDay(), timeToPass.GetMonth(), timeToPass.GetYear()));
+         }
+
+         ConstrainCameraPanLevelBounds(GS);
       }
 
-      if(cameraBoundsY.X >= 0 && cameraBoundsY.Y >= 0)
+      if(AUserInput* PC = Cast<AUserInput>(World->GetFirstPlayerController()))
       {
-         GS->SetCameraBoundX(cameraBoundsX);
-      }
-      else
-      {
-         UE_LOG(LogTemp, Warning, TEXT("Map boundaries are set to negative values. Change this in the level blueprint (if level bp is derived from UPLevelScript"));
+         controllerRef = PC;
+         if(controllerRef)
+         {
+            if(ARTSPawn* Pawn = controllerRef->GetCameraPawn())
+            {
+               Pawn->SetActorLocation(cameraStartLocation);
+            }
+            else
+            {
+               controllerRef->OnPlayerControllerSetup().AddDynamic(this, &AUPLevelScript::OnPlayerControllerSetup);
+            }
+         }
       }
 
-      if(cameraBoundsY.X >= 0 && cameraBoundsY.Y >= 0)
+      for(URTSTrigger* TriggerToRunOnLevelStart : triggersToRunOnLevelStart)
       {
-         GS->SetCameraBoundY(cameraBoundsY);
-      }
-      else
-      {
-         UE_LOG(LogTemp, Warning, TEXT("Map boundaries are set to negative values. Change this in the level blueprint (if level bp is derived from UPLevelScript"));
+         if(TriggerToRunOnLevelStart)
+         {
+            TriggerToRunOnLevelStart->TriggerEvent();
+         }
       }
    }
-
    Super::BeginPlay();
+}
+
+void AUPLevelScript::OnPlayerControllerSetup()
+{
+   if(ARTSPawn* Pawn = controllerRef->GetCameraPawn())
+   {
+      Pawn->SetActorLocation(cameraStartLocation);
+   }
 }

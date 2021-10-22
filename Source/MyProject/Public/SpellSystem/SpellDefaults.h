@@ -63,7 +63,7 @@ struct FSpellDefaults
     * per - Period
     * Use [row_name] to add formatting that reads from the Composite Curve Table holding effect power values (e.g. [Reflective_Armor_DamageReduction]).
     */
-   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters")
+   UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Default Spell Parameters", meta=(MultiLine=true))
    FText Desc = FText();
 
    /** A tag deriving from Combat.Element */
