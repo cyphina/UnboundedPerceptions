@@ -1,0 +1,2 @@
+C:\MyProject\Plugins\TankBattle\Intermediate\Build\Win64\UE4Editor\DebugGame\TankBattle\Definitions.TankBattle.h
+C:\MyProject\Plugins\TankBattle\Source\TankBattle\Public\TankBattle.h

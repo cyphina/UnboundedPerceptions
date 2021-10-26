@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "TankBattle",
+	"Description": "Tank Battle Minigame for Up",
+	"Category": "Other",
+	"CreatedBy": "Cyphina",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "TankBattle",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}

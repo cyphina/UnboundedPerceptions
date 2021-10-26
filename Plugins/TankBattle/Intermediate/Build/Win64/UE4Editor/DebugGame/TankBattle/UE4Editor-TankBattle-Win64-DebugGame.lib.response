@@ -1,0 +1,13 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UE4Editor-TankBattle-Win64-DebugGame.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"C:\MyProject\Intermediate\Build\Win64\MyProjectEditor\DebugGame\Engine\SharedPCH.Engine.NonOptimized.h.obj"
+"C:\MyProject\Plugins\TankBattle\Intermediate\Build\Win64\UE4Editor\DebugGame\TankBattle\TankBattle.cpp.obj"
+"C:\MyProject\Plugins\TankBattle\Intermediate\Build\Win64\UE4Editor\DebugGame\TankBattle\Default.rc2.res"
+/OUT:"C:\MyProject\Plugins\TankBattle\Intermediate\Build\Win64\UE4Editor\DebugGame\TankBattle\UE4Editor-TankBattle-Win64-DebugGame.lib"
+/INCLUDE:IMPLEMENT_MODULE_TankBattle
